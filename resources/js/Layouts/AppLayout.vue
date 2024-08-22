@@ -32,6 +32,7 @@ const logout = () => {
         <Head :title="title" />
 
         <Banner />
+        <!-- <pre>{{ $page.props.auth.user }}</pre> -->
 
         <div class="min-h-screen bg-gray-100">
             <nav class="bg-white border-b border-gray-100">

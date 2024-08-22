@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 // import { toast } from 'vue3-toastify';
-import { PropType, ref, Ref } from 'vue';
+import { type PropType, type Ref, ref } from 'vue'; 
 
 interface Losses {
   name: string;
@@ -48,7 +48,6 @@ function simulateBattle(attacker: Ship[], defender: Ship[]) {
   const { attackerLosses, defenderLosses } = calculateLosses(attacker, defender, attackerTotalCombatPower, defenderTotalCombatPower);
   attackerLossesObj.value = attackerLosses
   defenderLossesObj.value = defenderLosses
-  console.log(attackerLossesObj.value, defenderLossesObj.value);
 
   setTimeout(() => {
     calculationPending.value = false
@@ -110,7 +109,6 @@ function calculateLosses(attacker: Ship[], defender: Ship[], attackerTotalCombat
   for (let i = 0; i < attacker.length; i++) {
     const att = attacker[i];
     const def = defender[i];
-    // console.log(att, def);
     let lossRatio: number;
 
     if (att.Quantity === 0 || def.Quantity === 0) {

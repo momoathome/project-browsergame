@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Building;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class BuildingController extends Controller
 {
@@ -12,7 +13,18 @@ class BuildingController extends Controller
      */
     public function index()
     {
-        //
+        // Hole den aktuell angemeldeten Benutzer
+        $user = auth()->user();
+
+        // Hole die Gebäude-Daten für den aktuell angemeldeten Benutzer
+        $buildings = Building::with('schema')
+            ->where('user_id', $user->id)
+            ->get();
+
+        // Übergibt die Daten an die Inertia-Seite
+        return Inertia::render('Buildings', [
+            'buildings' => $buildings,
+        ]);
     }
 
     /**

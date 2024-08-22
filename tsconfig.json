@@ -1,0 +1,23 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "strict": true, // for beginners false
+    "allowJs": true, // for beginners true
+    "noImplicitAny": false, // for beginners false
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+        "@/*": ["resources/js/*"],
+        // "ziggy-js": ["./vendor/tightenco/ziggy"]
+    },
+  },
+  "typeRoots": ["./node_modules/@types", "resources/js/types"],
+  "include": [
+    "resources/**/*.ts",
+    "resources/**/*.d.ts",
+    "resources/**/*.vue",
+    "resources/js/Types/**/*.d.ts"
+, "resources/js/app.ss", "resources/js/app.ss"  ],
+  "exclude": ["node_modules", "public"]
+
+}

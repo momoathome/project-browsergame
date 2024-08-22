@@ -25,5 +25,54 @@ class DefaultBuildingSchemaSeeder extends Seeder
             'image' => 'hangar.png',
             'effect' => 'increases unit Limit',
         ]);
+
+        BuildingSchema::create([
+            'name' => 'Laboratory',
+            'description' => 'The higher the laboratory level, the better spaceships can be produced.',
+            'image' => 'laboratory.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Warehouse',
+            'description' => 'The higher the Warehouse level, the more resources can be stored.',
+            'image' => 'warehouse.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Marketplace',
+            'description' => 'The higher the marketplace level, the more resources can be traded.',
+            'image' => 'marketplace.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Scanner',
+            'description' => 'The higher the Sector Scanner level, the more sectors will be scanned',
+            'image' => 'scanner.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Supply',
+            'description' => 'The higher the supply level, the more crew can be supplied.',
+            'image' => 'supply.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Shield',
+            'description' => 'The higher the energy shield level, the more attackers are blocked.',
+            'image' => 'shield.png',
+            'effect' => '',
+        ]);
+
+        BuildingSchema::create([
+            'name' => 'Energy',
+            'description' => 'The higher the Energy Modul level, the more energy will be produced',
+            'image' => 'energy.png',
+            'effect' => '',
+        ]);
     }
 }

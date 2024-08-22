@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import BattleCalcTable from '@/Modules/Simulator/BbattleCalcTable.vue';
 import BattleCalcLossesTable from '@/Modules/Simulator/BattleCalcLossesTable.vue';
-import { numberFormat } from '@/Utils/NumberFormat';
+import { numberFormat } from '@/Utils/format';
 
 const battleData = {
   attacker: [
@@ -53,7 +53,6 @@ if (battleData) {
   }
   attacker.value = addShipTotalCombatPower('attacker');
   defender.value = addShipTotalCombatPower('defender');
-  // console.log(attacker.value, defender.value);
 }
 
 function updateShipTotalCombatPower(role: Role) {

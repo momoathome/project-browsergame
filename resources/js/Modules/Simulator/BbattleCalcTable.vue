@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { PropType, ref } from 'vue';
-import { numberFormat } from '@/Utils/NumberFormat';
+import { type PropType, ref } from 'vue';
+import { numberFormat } from '@/Utils/format';
 
 type Role = "attacker" | "defender";
 

@@ -79,12 +79,6 @@ function updateModule(moduleKey: string) {
 
 <template>
   <AppLayout title="buildings">
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Buildings
-      </h2>
-    </template>
-
     <div class="grid gap-4 lg:gap-8 p-16">
       <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" @upgrade="updateModule" />
     </div>

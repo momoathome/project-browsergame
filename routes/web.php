@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\SpacecraftController;
 use App\Http\Controllers\MarketController;
+use App\Http\Controllers\UserResourceController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -35,5 +36,7 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
     
     Route::get('/simulator', function () {return Inertia::render('Simulator');})->name('simulator');
 
+    Route::middleware('auth')->get('/user-resources', [UserResourceController::class, 'index']);
+    
     Route::get('/admin/dashboard', function () {return Inertia::render('Admin/Dashboard');})->name('admin.dashboard');
 });

@@ -6,12 +6,6 @@ import BattleCalcTest from '@/Modules/Simulator/BattleCalcTest.vue';
 
 <template>
   <AppLayout title="simulator">
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        simulator
-      </h2>
-    </template>
-
     <BattleCalcTest />
 
   </AppLayout>

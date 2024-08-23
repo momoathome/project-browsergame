@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MarketSeeder::class);
         $this->call(BuildingSeeder::class);
         $this->call(SpacecraftSeeder::class);
+        $this->call(UserResourceSeeder::class);
 
     }
 }

@@ -35,14 +35,9 @@ function produceSpacecraft() {
 
 <template>
   <AppLayout title="spacecrafts">
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Spacecrafts
-      </h2>
-    </template>
-
     <div class="grid gap-4 lg:gap-8 p-16">
-      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraftData="data" @produce="produceSpacecraft" />
+      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraftData="data"
+        @produce="produceSpacecraft" />
     </div>
   </AppLayout>
 </template>

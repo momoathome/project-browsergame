@@ -29,12 +29,6 @@ function buyResource(params:type) {
 
 <template>
   <AppLayout title="market">
-    <template #header>
-      <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Market
-      </h2>
-    </template>
-
     <div class="grid gap-4 lg:gap-8 p-16">
       <MarketCard v-for="data in formattedResources" :key="data.id" :marketData="data" @buy="buyResource" @sell="sellResource" />
     </div>
@@ -43,6 +37,6 @@ function buyResource(params:type) {
 
 <style scoped>
 .grid {
-  grid-template-columns: repeat(auto-fit, 220px)
+  grid-template-columns: repeat(auto-fit, minmax(230px, 250px)); 
 }
 </style>

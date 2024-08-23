@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Auth;
+use App\Models\UserResource;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -36,7 +38,13 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            //
+            'userResources' => Auth::check()
+                ? UserResource::where('user_id', Auth::user()->id)
+                    ->with('resource')
+                    ->orderByRaw("CASE WHEN name = 'Credits' THEN 0 ELSE 1 END")
+                    ->orderBy('resource_id', 'asc')
+                    ->get()
+                : [],
         ]);
     }
 }

@@ -32,15 +32,18 @@ function updateMarket() {
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-6 py-4 gap-4">
+  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-4 py-4 gap-4">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>
         <p class="font-semibold text-xl">{{ marketData.name }}</p>
       </div>
-      <div class="flex flex-col">
-        <span class="text-xs text-secondary">price</span>
-        <p class="font-medium">{{ formattedCost }}</p>
+      <div class="flex items-center gap-x-1">
+        <img src="/storage/resources/credits-light.svg" class="h-6" />
+        <div class="flex flex-col">
+          <span class="text-xs text-secondary">price</span>
+          <p class="font-medium">{{ formattedCost }}</p>
+        </div>
       </div>
     </div>
 

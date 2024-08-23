@@ -11,17 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('buildings', function (Blueprint $table) {
+        Schema::create('building_resource_costs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                  ->constrained('users')
+            $table->foreignId('building_id')
+                  ->constrained('buildings')
                   ->onDelete('cascade');
-            $table->foreignId('details_id')
-                  ->constrained('building_details')
+            $table->foreignId('resource_id')
+                  ->constrained('resources')
                   ->onDelete('cascade');
-            $table->integer('effect_value')->nullable();
-            $table->integer('level')->default(1);
-            $table->integer('buildTime')->nullable();
+            $table->integer('amount');
             $table->timestamps();
         });
     }
@@ -31,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('buildings');
+        Schema::dropIfExists('building_resource_costs');
     }
 };

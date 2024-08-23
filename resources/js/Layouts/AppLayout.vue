@@ -73,6 +73,9 @@ const logout = () => {
                                 <NavLink :href="route('simulator')" :active="route().current('simulator')">
                                     simulator
                                 </NavLink>
+                                <NavLink class="text-red-500" :href="route('admin.dashboard')" :active="route().current('admin.dashboard')">
+                                    AdminDashboard
+                                </NavLink>
                             </div>
                         </div>
 

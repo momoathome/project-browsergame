@@ -6,13 +6,26 @@ export interface BuildingDetails {
   effect: string;
 }
 
-export interface Building {
+interface Building {
   id: number;
   details: BuildingDetails;
   level: number;
-  effect_value: number;
-  cost: number;
   buildTime: number;
+  resources: Resource[];
+}
+
+export interface Resource {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  pivot: {
+    building_id: number;
+    resource_id: number;
+    amount: number;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export interface SpacecraftDetails {

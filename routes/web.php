@@ -35,4 +35,5 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
     
     Route::get('/simulator', function () {return Inertia::render('Simulator');})->name('simulator');
 
+    Route::get('/admin/dashboard', function () {return Inertia::render('Admin/Dashboard');})->name('admin.dashboard');
 });

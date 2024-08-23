@@ -15,7 +15,6 @@ class Building extends Model
         'effect_value',
         'level',
         'buildTime',
-        'cost',
     ];
 
     public function details()
@@ -26,6 +25,13 @@ class Building extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function resources()
+    {
+        return $this->belongsToMany(Resource::class, 'building_resource_costs')
+                    ->withPivot('amount')
+                    ->withTimestamps();
     }
 }
 

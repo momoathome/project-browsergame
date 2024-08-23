@@ -18,7 +18,7 @@ class BuildingController extends Controller
         $user = auth()->user();
 
         // Hole die Gebäude-Daten für den aktuell angemeldeten Benutzer
-        $buildings = Building::with('details')
+        $buildings = Building::with('details', 'resources')
             ->where('user_id', $user->id)
             ->orderBy('id', 'asc')
             ->get();

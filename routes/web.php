@@ -30,7 +30,8 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified', H
     Route::post('/shipyard/{spacecraft}/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
-    Route::post('/market/{resource}/update', [MarketController::class, 'update'])->name('market.update');
+    Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');
+    Route::post('/market/sell', [MarketController::class, 'sell'])->name('market.sell');
 
     Route::get('/logbook', function () {return Inertia::render('Logbook');})->name('logbook');
     Route::get('/research', function () {return Inertia::render('Research');})->name('research');

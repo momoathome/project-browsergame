@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { type PropType, computed, ref } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -25,8 +26,27 @@ const props = defineProps({
 const formattedCost = computed(() => numberFormat(props.marketData.cost));
 const formattedStock = computed(() => numberFormat(props.marketData.stock));
 
-function updateMarket() {
-  // TODO: Implement
+const form = useForm({
+  resource_id: props.marketData.id,
+  amount: 0
+});
+
+function buyResource() {
+  form.resource_id = props.marketData.id;
+  form.post(`/market/buy`, {
+    onSuccess: () => {
+      //
+    },
+  });
+}
+
+function sellResource() {
+  form.resource_id = props.marketData.id;
+  form.post(`/market/sell`, {
+    onSuccess: () => {
+      //
+    },
+  });
 }
 
 </script>
@@ -59,14 +79,14 @@ function updateMarket() {
         <p class="font-medium">{{ formattedStock }}</p>
       </div>
 
-      <AppInput :maxlength="4" />
+      <AppInput :maxlength="4" v-model.number="form.amount" />
 
     </div>
     <div class="flex justify-between">
-      <SecondaryButton @click="updateMarket">
+      <SecondaryButton @click="sellResource">
         Sell
       </SecondaryButton>
-      <PrimaryButton @click="updateMarket">
+      <PrimaryButton @click="buyResource">
         Buy
       </PrimaryButton>
     </div>

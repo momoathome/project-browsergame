@@ -31,8 +31,6 @@ const props = defineProps({
 const formattedBuildTime = computed(() => timeFormat(props.moduleData.buildTime));
 // const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
 
-const emit = defineEmits(['upgrade']);
-
 const form = useForm({
   buildingId: props.moduleData.id
 });
@@ -40,7 +38,7 @@ const form = useForm({
 function upgradeModule() {
   form.post(`/buildings/${props.moduleData.id}/update`, {
     onSuccess: () => {
-      // Optional: Aktion bei erfolgreichem Upgrade, z.B. eine Benachrichtigung anzeigen
+      // 
     },
   });
 }

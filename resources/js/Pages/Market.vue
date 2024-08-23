@@ -18,19 +18,12 @@ const formattedResources = computed(() => {
     };
   });
 });
-
-function sellResource(params:type) {
-  // TODO: Implement
-}
-function buyResource(params:type) {
-  // TODO: Implement
-}
 </script>
 
 <template>
   <AppLayout title="market">
     <div class="grid gap-4 lg:gap-8 p-16">
-      <MarketCard v-for="data in formattedResources" :key="data.id" :marketData="data" @buy="buyResource" @sell="sellResource" />
+      <MarketCard v-for="data in formattedResources" :key="data.id" :marketData="data" />
     </div>
   </AppLayout>
 </template>

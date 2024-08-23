@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Spacecraft;
 use App\Models\SpacecraftDetails;
+use Illuminate\Support\Facades\DB;
 
 class SpacecraftSeeder extends Seeder
 {
@@ -13,6 +14,8 @@ class SpacecraftSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table('buildings')->truncate();
+
         $merlinDetailsId = SpacecraftDetails::where('name', 'Merlin')->first()->id;
         $cometDetailsId = SpacecraftDetails::where('name', 'Comet')->first()->id;
         $javelinDetailsId = SpacecraftDetails::where('name', 'Javelin')->first()->id;

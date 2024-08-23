@@ -3,8 +3,10 @@ import { type PropType, computed } from 'vue';
 import { numberFormat, timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { useForm } from '@inertiajs/vue3';
 
 interface Props {
+  id: number
   image: string
   name: string
   description: string
@@ -26,8 +28,16 @@ const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
 
 const emit = defineEmits(['upgrade']);
 
+const form = useForm({
+  buildingId: props.moduleData.id
+});
+
 function upgradeModule() {
-  emit('upgrade', props.moduleKey)
+  form.post(`/buildings/${props.moduleData.id}/update`, {
+    onSuccess: () => {
+      // Optional: Aktion bei erfolgreichem Upgrade, z.B. eine Benachrichtigung anzeigen
+    },
+  });
 }
 </script>
 

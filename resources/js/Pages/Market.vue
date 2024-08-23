@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 
+const props = defineProps(['market']);
+
 </script>
 
 <template>

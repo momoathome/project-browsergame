@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Building;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class BuildingController extends Controller
 {
@@ -19,6 +20,7 @@ class BuildingController extends Controller
         // Hole die Gebäude-Daten für den aktuell angemeldeten Benutzer
         $buildings = Building::with('details')
             ->where('user_id', $user->id)
+            ->orderBy('id', 'asc')
             ->get();
 
         // Übergibt die Daten an die Inertia-Seite
@@ -64,7 +66,14 @@ class BuildingController extends Controller
      */
     public function update(Request $request, building $building)
     {
-        //
+        DB::transaction(function () use ($building) {
+        $building->level += 1;
+        $building->buildTime = $this->calculateNewBuildTime($building);
+        $building->cost = $this->calculateNewCost($building);
+        $building->save();
+        });
+
+        return redirect()->back()->with('success', 'Building upgraded successfully');
     }
 
     /**
@@ -73,5 +82,17 @@ class BuildingController extends Controller
     public function destroy(building $building)
     {
         //
+    }
+
+    private function calculateNewBuildTime(Building $building)
+    {
+        // Beispiel für eine Berechnung, kann je nach Logik angepasst werden
+        return round($building->buildTime * 1.5);
+    }
+
+    private function calculateNewCost(Building $building)
+    {
+        // Beispiel für eine Berechnung, kann je nach Logik angepasst werden
+        return round($building->cost * 1.3);
     }
 }

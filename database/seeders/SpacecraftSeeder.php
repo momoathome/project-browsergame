@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Spacecraft;
 use App\Models\SpacecraftDetails;
+use App\Models\SpacecraftResourceCost;
+use App\Models\Resource;
 use Illuminate\Support\Facades\DB;
 
 class SpacecraftSeeder extends Seeder
@@ -14,202 +16,160 @@ class SpacecraftSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('buildings')->truncate();
+        DB::table('spacecrafts')->truncate();
+        DB::table('spacecraft_resource_costs')->truncate();
 
-        $merlinDetailsId = SpacecraftDetails::where('name', 'Merlin')->first()->id;
-        $cometDetailsId = SpacecraftDetails::where('name', 'Comet')->first()->id;
-        $javelinDetailsId = SpacecraftDetails::where('name', 'Javelin')->first()->id;
-        $sentinelDetailsId = SpacecraftDetails::where('name', 'Sentinel')->first()->id;
-        $probeDetailsId = SpacecraftDetails::where('name', 'Probe')->first()->id;
-        $aresDetailsId = SpacecraftDetails::where('name', 'Ares')->first()->id;
-        $novaDetailsId = SpacecraftDetails::where('name', 'Nova')->first()->id;
-        $horusDetailsId = SpacecraftDetails::where('name', 'Horus')->first()->id;
-        $reaperDetailsId = SpacecraftDetails::where('name', 'Reaper')->first()->id;
-        $moleDetailsId = SpacecraftDetails::where('name', 'Mole')->first()->id;
-        $titanDetailsId = SpacecraftDetails::where('name', 'Titan')->first()->id;
-        $nomadDetailsId = SpacecraftDetails::where('name', 'Nomad')->first()->id;
-        $herculesDetailsId = SpacecraftDetails::where('name', 'Hercules')->first()->id;
-        $collectorDetailsId = SpacecraftDetails::where('name', 'Collector')->first()->id;
-        $reclaimerDetailsId = SpacecraftDetails::where('name', 'Reclaimer')->first()->id;
+        $resources = Resource::pluck('id', 'name')->toArray();
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $merlinDetailsId,
-            'combat' => 10,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 900, // In Seconds
-            'cost' => 2_000_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+        $userIds = [1, 2];
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $cometDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 720, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+        foreach ($userIds as $userId) {
+            $spacecraftDetails = [
+                'Merlin' => $this->createSpacecraft($userId, 'Merlin', 10, 1, 10, 1, 900),
+                'Comet' => $this->createSpacecraft($userId, 'Comet', 20, 1, 10, 1, 720),
+                'Javelin' => $this->createSpacecraft($userId, 'Javelin', 20, 1, 10, 1, 1800),
+                'Sentinel' => $this->createSpacecraft($userId, 'Sentinel', 20, 1, 10, 1, 900),
+                'Probe' => $this->createSpacecraft($userId, 'Probe', 20, 1, 10, 1, 600),
+                'Ares' => $this->createSpacecraft($userId, 'Ares', 20, 1, 10, 1, 500),
+                'Nova' => $this->createSpacecraft($userId, 'Nova', 20, 1, 10, 1, 300),
+                'Horus' => $this->createSpacecraft($userId, 'Horus', 20, 1, 10, 1, 1500),
+                'Reaper' => $this->createSpacecraft($userId, 'Reaper', 20, 1, 10, 1, 1200),
+                'Mole' => $this->createSpacecraft($userId, 'Mole', 20, 1, 10, 1, 1200),
+                'Titan' => $this->createSpacecraft($userId, 'Titan', 20, 1, 10, 1, 1200),
+                'Nomad' => $this->createSpacecraft($userId, 'Nomad', 20, 1, 10, 1, 1200),
+                'Hercules' => $this->createSpacecraft($userId, 'Hercules', 20, 1, 10, 1, 1200),
+                'Collector' => $this->createSpacecraft($userId, 'Collector', 20, 1, 10, 1, 1200),
+                'Reclaimer' => $this->createSpacecraft($userId, 'Reclaimer', 20, 1, 10, 1, 1200),
+            ];
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $javelinDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1800, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+            foreach ($spacecraftDetails as $name => $spacecraft) {
+                $resourceCosts = $this->getResourceCostsForSpacecraft($name, $resources);
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $sentinelDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 900, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+                foreach ($resourceCosts as $resourceCost) {
+                    SpacecraftResourceCost::create([
+                        'spacecraft_id' => $spacecraft->id,
+                        'resource_id' => $resourceCost['resource_id'],
+                        'amount' => $resourceCost['amount'],
+                    ]);
+                }
+            }
+        }
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $probeDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 600, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+    }
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $aresDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 500, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
+    private function createSpacecraft($userId, $spacecraftName, $combat, $count, $cargo, $unitLimit, $buildTime)
+    {
+        $detailsId = SpacecraftDetails::where('name', $spacecraftName)->first()->id;
 
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $novaDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 300, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $horusDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1500, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $reaperDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $moleDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $titanDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $nomadDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $herculesDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $collectorDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
-        ]);
-
-        Spacecraft::create([
-            'user_id' => 1,
-            'details_id' => $reclaimerDetailsId,
-            'combat' => 20,
-            'count' => 1,
-            'cargo' => 10,
-            'buildTime' => 1200, // In Seconds
-            'cost' => 1_500_000,
-            'unitLimit' => 8,
-            'unlocked' => false
+        return Spacecraft::create([
+            'user_id' => $userId,
+            'details_id' => $detailsId,
+            'combat' => $combat,
+            'count' => $count,
+            'cargo' => $cargo,
+            'unitLimit' => $unitLimit,
+            'buildTime' => $buildTime,
+            'unlocked' => false,
         ]);
     }
+
+    private function getResourceCostsForSpacecraft($name, $resources)
+    {
+        // Beispiel für die Kostenberechnung. Passen Sie dies an Ihre Logik an.
+        $costMapping = [
+            'Merlin' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Comet' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Javelin' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Sentinel' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Probe' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Ares' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Nova' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Horus' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Reaper' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Mole' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Titan' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Nomad' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Hercules' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Collector' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+            'Reclaimer' => [
+                ['resource_id' => $resources['Carbon'], 'amount' => 100],
+                ['resource_id' => $resources['Titanium'], 'amount' => 100],
+                ['resource_id' => $resources['Hydrogenium'], 'amount' => 100],
+                ['resource_id' => $resources['Kyberkristall'], 'amount' => 100],
+            ],
+        ];
+
+        return $costMapping[$name] ?? [];
+    }
+
 }

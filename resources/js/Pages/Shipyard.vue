@@ -17,8 +17,12 @@ const formattedSpacecrafts = computed(() => {
       combat: spacecraft.combat,
       count: spacecraft.count,
       cargo: spacecraft.cargo,
-      cost: spacecraft.cost,
-      buildTime: spacecraft.buildTime
+      buildTime: spacecraft.buildTime,
+      resources: spacecraft.resources.map((resource) => ({
+        name: resource.name,
+        image: resource.image,
+        amount: resource.pivot.amount
+      }))
     };
   });
 });

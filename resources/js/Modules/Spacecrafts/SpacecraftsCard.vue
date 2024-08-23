@@ -5,7 +5,14 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
 
-interface Props {
+interface Resource {
+  name: string;
+  image: string;
+  amount: number;
+}
+
+interface SpacecraftCardProps {
+  id: number;
   image: string
   name: string
   description: string
@@ -13,18 +20,19 @@ interface Props {
   combat: number
   count: number
   cargo: number
-  cost: number
+  unitLimit: number
   buildTime: number
+  resources: Resource[];
+
 }
 
 const props = defineProps({
   spacecraftData: {
-    type: Object as PropType<Props>,
+    type: Object as PropType<SpacecraftCardProps>,
     required: true
   }
 });
 
-const formattedCredits = computed(() => numberFormat(props.spacecraftData.cost));
 const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
 
 const emit = defineEmits(['produce']);
@@ -55,14 +63,35 @@ function produceSpacecraft() {
         <p class="text-gray text-sm">{{ spacecraftData.description }}</p>
       </div>
 
-      <Divider />
-
       <div class="flex w-full justify-between">
         <div class="flex flex-col items-center">
-          <span class="text-sm text-secondary">Credits</span>
-          <p class="font-medium text-sm">{{ formattedCredits }}</p>
+          <span class="text-sm text-secondary">Combat</span>
+          <p class="font-medium text-sm">{{ spacecraftData.combat }}</p>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-sm text-secondary">Cargo</span>
+          <p class="font-medium text-sm">{{ spacecraftData.cargo }}</p>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-sm text-secondary">Unit Limit</span>
+          <p class="font-medium text-sm">{{ spacecraftData.unitLimit }}</p>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-sm text-secondary">Build Time</span>
+          <p class="font-medium text-sm">{{ formattedBuildTime }}</p>
         </div>
       </div>
+
+      <Divider />
+
+      <div class="grid grid-cols-4 gap-4 items-center">
+        <div class="flex flex-col items-center" v-for="resource in spacecraftData.resources" :key="resource.name">
+          <img :src="resource.image" class="h-8 w-8" />
+          <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
+          <p class="font-medium text-sm">{{ resource.amount }}</p>
+        </div>
+      </div>
+
       <form @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
         <div class="flex justify-between gap-4">
           <div class="flex items-center">
@@ -73,7 +102,7 @@ function produceSpacecraft() {
               </svg>
             </button>
 
-            <AppInput maxlength="4" />
+            <AppInput :maxlength="4" />
 
             <button @click="increment" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">

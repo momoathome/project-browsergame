@@ -17,7 +17,7 @@ class SpacecraftController extends Controller
         $user = auth()->user();
 
         // Hole die spacecraft-Daten für den aktuell angemeldeten Benutzer
-        $spacecrafts = Spacecraft::with('details')
+        $spacecrafts = Spacecraft::with('details', 'resources')
             ->where('user_id', $user->id)
             ->get();
 

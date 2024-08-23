@@ -23,7 +23,6 @@ return new class extends Migration
             $table->integer('count')->default(1);
             $table->integer('cargo')->default(1);
             $table->integer('buildTime')->nullable();
-            $table->integer('cost')->nullable();
             $table->integer('unitLimit')->nullable();
             $table->boolean('unlocked')->default(false);
             $table->timestamps();

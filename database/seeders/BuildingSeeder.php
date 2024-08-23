@@ -16,35 +16,39 @@ class BuildingSeeder extends Seeder
     {
         $resources = Resource::pluck('id', 'name')->toArray();
 
-        $buildingDetails = [
-            'Shipyard' => $this->createBuilding(1, 10, 900),
-            'Hangar' => $this->createBuilding(2, 20, 720),
-            'Laboratory' => $this->createBuilding(3, 20, 1800),
-            'Warehouse' => $this->createBuilding(4, 20, 900),
-            'Marketplace' => $this->createBuilding(5, 20, 600),
-            'Scanner' => $this->createBuilding(6, 20, 500),
-            'Supply' => $this->createBuilding(7, 20, 300),
-            'Shield' => $this->createBuilding(8, 20, 1500),
-            'Energy' => $this->createBuilding(9, 20, 1200),
-        ];
+        $userIds = [1, 2];
 
-        foreach ($buildingDetails as $name => $building) {
-            $resourceCosts = $this->getResourceCostsForBuilding($name, $resources);
-
-            foreach ($resourceCosts as $resourceCost) {
-                BuildingResourceCost::create([
-                    'building_id' => $building->id,
-                    'resource_id' => $resourceCost['resource_id'],
-                    'amount' => $resourceCost['amount'],
-                ]);
+        foreach ($userIds as $userId) {
+            $buildingDetails = [
+                'Shipyard' => $this->createBuilding($userId, 1, 10, 900),
+                'Hangar' => $this->createBuilding($userId, 2, 20, 720),
+                'Laboratory' => $this->createBuilding($userId, 3, 20, 1800),
+                'Warehouse' => $this->createBuilding($userId, 4, 20, 900),
+                'Marketplace' => $this->createBuilding($userId, 5, 20, 600),
+                'Scanner' => $this->createBuilding($userId, 6, 20, 500),
+                'Supply' => $this->createBuilding($userId, 7, 20, 300),
+                'Shield' => $this->createBuilding($userId, 8, 20, 1500),
+                'Energy' => $this->createBuilding($userId, 9, 20, 1200),
+            ];
+    
+            foreach ($buildingDetails as $name => $building) {
+                $resourceCosts = $this->getResourceCostsForBuilding($name, $resources);
+    
+                foreach ($resourceCosts as $resourceCost) {
+                    BuildingResourceCost::create([
+                        'building_id' => $building->id,
+                        'resource_id' => $resourceCost['resource_id'],
+                        'amount' => $resourceCost['amount'],
+                    ]);
+                }
             }
         }
     }
 
-    private function createBuilding($detailsId, $effectValue, $buildTime)
+    private function createBuilding($userId, $detailsId, $effectValue, $buildTime)
     {
         return Building::create([
-            'user_id' => 1,
+            'user_id' => $userId,
             'level' => 1,
             'details_id' => $detailsId,
             'effect_value' => $effectValue,

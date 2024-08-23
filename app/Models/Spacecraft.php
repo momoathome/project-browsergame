@@ -16,7 +16,6 @@ class Spacecraft extends Model
         'count',
         'cargo',
         'buildTime',
-        'cost',
         'unitLimit',
         'unlocked',
     ];
@@ -29,5 +28,12 @@ class Spacecraft extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function resources()
+    {
+        return $this->belongsToMany(Resource::class, 'spacecraft_resource_costs')
+                    ->withPivot('amount')
+                    ->withTimestamps();
     }
 }

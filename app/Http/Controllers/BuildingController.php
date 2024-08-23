@@ -69,7 +69,7 @@ class BuildingController extends Controller
         DB::transaction(function () use ($building) {
         $building->level += 1;
         $building->buildTime = $this->calculateNewBuildTime($building);
-        $building->cost = $this->calculateNewCost($building);
+        $this->updateResourceCosts($building);
         $building->save();
         });
 
@@ -86,13 +86,16 @@ class BuildingController extends Controller
 
     private function calculateNewBuildTime(Building $building)
     {
-        // Beispiel für eine Berechnung, kann je nach Logik angepasst werden
         return round($building->buildTime * 1.5);
     }
 
-    private function calculateNewCost(Building $building)
+    private function updateResourceCosts(Building $building)
     {
-        // Beispiel für eine Berechnung, kann je nach Logik angepasst werden
-        return round($building->cost * 1.3);
+        $costIncreaseFactor = 1.1; // 10% Erhöhung
+    
+        foreach ($building->resources as $resource) {
+            $newAmount = round($resource->pivot->amount * $costIncreaseFactor);
+            $building->resources()->updateExistingPivot($resource->id, ['amount' => $newAmount]);
+        }
     }
 }

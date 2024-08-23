@@ -18,7 +18,7 @@ interface BuildingCardProps {
   description: string;
   level: number;
   buildTime: number;
-  resources: Resource[]; // Ressourcen hinzugefügt
+  resources: Resource[];
 }
 
 const props = defineProps({
@@ -29,7 +29,7 @@ const props = defineProps({
 });
 
 const formattedBuildTime = computed(() => timeFormat(props.moduleData.buildTime));
-const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
+// const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
 
 const emit = defineEmits(['upgrade']);
 

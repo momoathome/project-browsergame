@@ -6,7 +6,7 @@ export interface BuildingDetails {
   effect: string;
 }
 
-interface Building {
+export interface Building {
   id: number;
   details: BuildingDetails;
   level: number;
@@ -14,18 +14,25 @@ interface Building {
   resources: Resource[];
 }
 
+export interface ResourcePivot {
+  resource_id: number;
+  amount: number;
+}
+
+export interface BuildingResourcePivot extends ResourcePivot {
+  building_id: number;
+}
+
+export interface SpacecraftResourcePivot extends ResourcePivot {
+  spacecraft_id: number;
+}
+
 export interface Resource {
   id: number;
   name: string;
   description: string;
   image: string;
-  pivot: {
-    building_id: number;
-    resource_id: number;
-    amount: number;
-    created_at: string;
-    updated_at: string;
-  };
+  pivot: BuildingResourcePivot | SpacecraftResourcePivot;
 }
 
 export interface SpacecraftDetails {
@@ -43,9 +50,9 @@ export interface Spacecraft {
   count: number;
   cargo: number;
   buildTime: number;
-  cost: number;
   unitLimit: number;
   unlocked: boolean;
+  resources: Resource[];
 }
 
 export interface BuildingCardProps {

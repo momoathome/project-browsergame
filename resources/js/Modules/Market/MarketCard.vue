@@ -24,6 +24,11 @@ const props = defineProps({
 
 const formattedCost = computed(() => numberFormat(props.marketData.cost));
 const formattedStock = computed(() => numberFormat(props.marketData.stock));
+
+function updateMarket() {
+  // TODO: Implement
+}
+
 </script>
 
 <template>
@@ -51,14 +56,14 @@ const formattedStock = computed(() => numberFormat(props.marketData.stock));
         <p class="font-medium">{{ formattedStock }}</p>
       </div>
 
-      <AppInput maxlength="4" />
+      <AppInput :maxlength="4" />
 
     </div>
     <div class="flex justify-between">
-      <SecondaryButton @click="sellResource">
+      <SecondaryButton @click="updateMarket">
         Sell
       </SecondaryButton>
-      <PrimaryButton @click="buyResource">
+      <PrimaryButton @click="updateMarket">
         Buy
       </PrimaryButton>
     </div>

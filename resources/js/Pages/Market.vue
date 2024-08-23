@@ -18,6 +18,13 @@ const formattedResources = computed(() => {
     };
   });
 });
+
+function sellResource(params:type) {
+  // TODO: Implement
+}
+function buyResource(params:type) {
+  // TODO: Implement
+}
 </script>
 
 <template>

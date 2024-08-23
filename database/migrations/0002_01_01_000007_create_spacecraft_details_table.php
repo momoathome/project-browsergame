@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('building_schemas', function (Blueprint $table) {
+        Schema::create('spacecraft_details', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
             $table->text('description')->nullable();
             $table->string('image', 255)->nullable();
-            $table->string('effect', 255)->nullable();
+            $table->string('type', 255)->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('building_schemas');
+        Schema::dropIfExists('spacecraft_details');
     }
 };

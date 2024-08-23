@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\BuildingDetails;
 
-class DefaultBuildingDetailsSeeder extends Seeder
+class BuildingDetailsSeeder extends Seeder
 {
     /**
      * Run the database seeds.

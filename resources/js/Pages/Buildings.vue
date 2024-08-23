@@ -11,9 +11,9 @@ const formattedBuildings = computed(() => {
   return props.buildings.map((building: Building) => {
     return {
       id: building.id,
-      image: building.schema.image,
-      name: building.schema.name,
-      description: building.schema.description,
+      image: building.details.image,
+      name: building.details.name,
+      description: building.details.description,
       level: building.level,
       cost: building.cost,
       buildTime: building.buildTime

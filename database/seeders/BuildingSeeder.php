@@ -6,26 +6,26 @@ use Illuminate\Database\Seeder;
 use App\Models\Building;
 use App\Models\BuildingDetails;
 
-class DefaultBuildingSeeder extends Seeder
+class BuildingSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $shipyardSchemaId = BuildingDetails::where('name', 'Shipyard')->first()->id;
-        $hangarSchemaId = BuildingDetails::where('name', 'Hangar')->first()->id;
-        $laboratorySchemaId = BuildingDetails::where('name', 'Laboratory')->first()->id;
-        $warehouseSchemaId = BuildingDetails::where('name', 'Warehouse')->first()->id;
-        $marketplaceSchemaId = BuildingDetails::where('name', 'Marketplace')->first()->id;
-        $scannerSchemaId = BuildingDetails::where('name', 'Scanner')->first()->id;
-        $supplySchemaId = BuildingDetails::where('name', 'Supply')->first()->id;
-        $shieldSchemaId = BuildingDetails::where('name', 'Shield')->first()->id;
-        $energySchemaId = BuildingDetails::where('name', 'Energy')->first()->id;
+        $shipyarddetailsId = BuildingDetails::where('name', 'Shipyard')->first()->id;
+        $hangardetailsId = BuildingDetails::where('name', 'Hangar')->first()->id;
+        $laboratorydetailsId = BuildingDetails::where('name', 'Laboratory')->first()->id;
+        $warehousedetailsId = BuildingDetails::where('name', 'Warehouse')->first()->id;
+        $marketplacedetailsId = BuildingDetails::where('name', 'Marketplace')->first()->id;
+        $scannerdetailsId = BuildingDetails::where('name', 'Scanner')->first()->id;
+        $supplydetailsId = BuildingDetails::where('name', 'Supply')->first()->id;
+        $shielddetailsId = BuildingDetails::where('name', 'Shield')->first()->id;
+        $energydetailsId = BuildingDetails::where('name', 'Energy')->first()->id;
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $shipyardSchemaId,
+            'details_id' => $shipyarddetailsId,
             'effect_value' => 10,
             'level' => 1,
             'buildTime' => 900, // In Seconds
@@ -34,7 +34,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $hangarSchemaId,
+            'details_id' => $hangardetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 720, // In Seconds
@@ -43,7 +43,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $laboratorySchemaId,
+            'details_id' => $laboratorydetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 1800, // In Seconds
@@ -52,7 +52,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $warehouseSchemaId,
+            'details_id' => $warehousedetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 900, // In Seconds
@@ -61,7 +61,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $marketplaceSchemaId,
+            'details_id' => $marketplacedetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 600, // In Seconds
@@ -70,7 +70,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $scannerSchemaId,
+            'details_id' => $scannerdetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 500, // In Seconds
@@ -79,7 +79,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $supplySchemaId,
+            'details_id' => $supplydetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 300, // In Seconds
@@ -88,7 +88,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $shieldSchemaId,
+            'details_id' => $shielddetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 1500, // In Seconds
@@ -97,7 +97,7 @@ class DefaultBuildingSeeder extends Seeder
 
         Building::create([
             'user_id' => 1,
-            'schema_id' => $energySchemaId,
+            'details_id' => $energydetailsId,
             'effect_value' => 20,
             'level' => 1,
             'buildTime' => 1200, // In Seconds

@@ -2,29 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Building;
+use App\Models\SpacecraftDetails;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
-class BuildingController extends Controller
+class SpacecraftDetailsController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // Hole den aktuell angemeldeten Benutzer
-        $user = auth()->user();
-
-        // Hole die Gebäude-Daten für den aktuell angemeldeten Benutzer
-        $buildings = Building::with('details')
-            ->where('user_id', $user->id)
-            ->get();
-
-        // Übergibt die Daten an die Inertia-Seite
-        return Inertia::render('Buildings', [
-            'buildings' => $buildings,
-        ]);
+        //
     }
 
     /**
@@ -46,7 +34,7 @@ class BuildingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(building $building)
+    public function show(SpacecraftDetails $spacecraftDetails)
     {
         //
     }
@@ -54,7 +42,7 @@ class BuildingController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(building $building)
+    public function edit(SpacecraftDetails $spacecraftDetails)
     {
         //
     }
@@ -62,7 +50,7 @@ class BuildingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, building $building)
+    public function update(Request $request, SpacecraftDetails $spacecraftDetails)
     {
         //
     }
@@ -70,7 +58,7 @@ class BuildingController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(building $building)
+    public function destroy(SpacecraftDetails $spacecraftDetails)
     {
         //
     }

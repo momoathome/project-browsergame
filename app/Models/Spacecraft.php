@@ -5,22 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Building extends Model
+class Spacecraft extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'details_id', // Referenz auf BuildingDetails
-        'effect_value',
-        'level',
+        'details_id',
+        'combat',
+        'count',
+        'cargo',
         'buildTime',
         'cost',
+        'unitLimit',
+        'unlocked',
     ];
 
     public function details()
     {
-        return $this->belongsTo(BuildingDetails::class);
+        return $this->belongsTo(SpacecraftDetails::class);
     }
 
     public function user()
@@ -28,4 +31,3 @@ class Building extends Model
         return $this->belongsTo(User::class);
     }
 }
-

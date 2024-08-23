@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\BuildingController;
+use App\Http\Controllers\SpacecraftController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -18,11 +19,10 @@ Route::get('/', function () {
 Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])->group(function () {
     Route::get('/overview', function () {return Inertia::render('Overview');})->name('overview');
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
+    Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
     Route::get('/logbook', function () {return Inertia::render('Logbook');})->name('logbook');
     Route::get('/market', function () {return Inertia::render('Market');})->name('market');
     Route::get('/research', function () {return Inertia::render('Research');})->name('research');
-    Route::get('/shipyard', function () {return Inertia::render('Shipyard');})->name('shipyard');
-    Route::get('/starmap', function () {return Inertia::render('Starmap');})->name('starmap');
     Route::get('/starmap', function () {return Inertia::render('Starmap');})->name('starmap');
     
     Route::get('/simulator', function () {return Inertia::render('Simulator');})->name('simulator');

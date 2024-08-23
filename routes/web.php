@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Middleware\HandleExceptionsForJetstream;
 
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\SpacecraftController;
@@ -18,7 +19,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])->group(function () {
+Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified', HandleExceptionsForJetstream::class,])->group(function () {
     Route::get('/overview', function () {return Inertia::render('Overview');})->name('overview');
     
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
@@ -36,7 +37,7 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified',])
     
     Route::get('/simulator', function () {return Inertia::render('Simulator');})->name('simulator');
 
-    Route::middleware('auth')->get('/user-resources', [UserResourceController::class, 'index']);
+    Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
     
     Route::get('/admin/dashboard', function () {return Inertia::render('Admin/Dashboard');})->name('admin.dashboard');
 });

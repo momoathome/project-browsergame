@@ -1,28 +1,41 @@
 <script lang="ts" setup>
-import { usePage } from '@inertiajs/vue3';
+import { usePage, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
 
+const page = usePage();
+const form = useForm({
+  resource_id: null,
+  amount: 500
+});
+
 const formattedResources = computed(() => {
-  return usePage().props.userResources.map((resource) => {
+  return page.props.userResources.map((resource) => {
     return {
       resource_id: resource.resource_id || null,
-      name: resource.name || (resource.resource ? resource.resource.name : null),
-      description: resource.resource ? resource.resource.description : null,
-      image: resource.image || (resource.resource ? resource.resource.image : null),
+      name: resource.resources ? resource.resources.name : null,
+      description: resource.resources ? resource.resources.description : null,
+      image: resource.resources ? resource.resources.image : null,
       count: computed(() => numberFormat(resource.count)),
     };
   });
 });
 
-
+function addResource(resourceId) {
+  form.resource_id = resourceId;
+  form.post('/resources/add', {
+    onSuccess: () => {
+      //
+    },
+  });
+}
 </script>
 
 <template>
   <div class="grid gap-2 grid-cols-12 max-w-fit">
     <div class="flex flex-col gap-1 items-center" v-for="resource in formattedResources" :key="resource.name">
-      <span>
-        <img :src="resource.image" class="max-h-6" />
+      <span @click="addResource(resource.resource_id)">
+        <img :src="resource.image" class="max-h-6 cursor-pointer" />
       </span>
       <span class="text-sm font-medium">
         {{ resource.count }}

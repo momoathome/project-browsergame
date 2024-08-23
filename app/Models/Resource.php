@@ -19,4 +19,10 @@ class Resource extends Model
     {
         return $this->hasOne(Market::class);
     }
+
+    public function resources()
+    {
+        return $this->belongsToMany(Resource::class, 'user_resources', 'user_id', 'resource_id')
+            ->withPivot('count');
+    }
 }

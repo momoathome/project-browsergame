@@ -12,9 +12,7 @@ class UserResource extends Model
     protected $fillable = [
         'user_id',
         'resource_id',
-        'name',
         'count',
-        'image',
     ];
 
     public function user()
@@ -22,7 +20,7 @@ class UserResource extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function resource()
+    public function resources()
     {
         return $this->belongsTo(Resource::class, 'resource_id');
     }

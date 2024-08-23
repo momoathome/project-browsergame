@@ -40,8 +40,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'userResources' => Auth::check()
                 ? UserResource::where('user_id', Auth::user()->id)
-                    ->with('resource')
-                    ->orderByRaw("CASE WHEN name = 'Credits' THEN 0 ELSE 1 END")
+                    ->with('resources')
                     ->orderBy('resource_id', 'asc')
                     ->get()
                 : [],

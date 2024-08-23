@@ -32,7 +32,7 @@ function updateMarket() {
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-4 py-4 gap-4">
+  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-4 py-6 gap-4">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>

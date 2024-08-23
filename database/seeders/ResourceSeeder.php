@@ -87,5 +87,12 @@ class ResourceSeeder extends Seeder
             'description' => 'A stable isotope of hydrogen',
             'image' => '/storage/resources/deuterium.png'
         ]);
+
+        Resource::create([
+            'id' => 99,
+            'name' => 'Credits',
+            'description' => 'currency',
+            'image' => '/storage/resources/credits.png'
+        ]);
     }
 }

@@ -26,6 +26,28 @@ const switchToTeam = (team) => {
 const logout = () => {
     router.post(route('logout'));
 };
+
+const routes = [
+    'overview',
+    'buildings',
+    'shipyard',
+    'research',
+    'starmap',
+    'market',
+    'logbook',
+    'simulator'
+];
+
+const routeLabels = {
+    overview: 'Overview',
+    buildings: 'Buildings',
+    shipyard: 'Shipyard',
+    research: 'Research',
+    starmap: 'Starmap',
+    market: 'Market',
+    logbook: 'Logbook',
+    simulator: 'Simulator'
+};
 </script>
 
 <template>
@@ -38,7 +60,7 @@ const logout = () => {
         <div class="min-h-screen bg-gray-100">
             <nav class="bg-white border-b border-gray-100">
                 <!-- Primary Navigation Menu -->
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
                         <div class="flex">
                             <!-- Logo -->
@@ -50,31 +72,12 @@ const logout = () => {
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink :href="route('overview')" :active="route().current('overview')">
-                                    overview
+                                <NavLink v-for="(routeName, index) in routes" :key="index" :href="route(routeName)"
+                                    :active="route().current(routeName)">
+                                    {{ routeLabels[routeName] }}
                                 </NavLink>
-                                <NavLink :href="route('buildings')" :active="route().current('buildings')">
-                                    buildings
-                                </NavLink>
-                                <NavLink :href="route('shipyard')" :active="route().current('shipyard')">
-                                    shipyard
-                                </NavLink>
-                                <NavLink :href="route('research')" :active="route().current('research')">
-                                    research
-                                </NavLink>
-                                <NavLink :href="route('starmap')" :active="route().current('starmap')">
-                                    starmap
-                                </NavLink>
-                                <NavLink :href="route('market')" :active="route().current('market')">
-                                    market
-                                </NavLink>
-                                <NavLink :href="route('logbook')" :active="route().current('logbook')">
-                                    logbook
-                                </NavLink>
-                                <NavLink :href="route('simulator')" :active="route().current('simulator')">
-                                    simulator
-                                </NavLink>
-                                <NavLink class="text-red-500" :href="route('admin.dashboard')" :active="route().current('admin.dashboard')">
+                                <NavLink class="text-red-500" :href="route('admin.dashboard')"
+                                    :active="route().current('admin.dashboard')">
                                     AdminDashboard
                                 </NavLink>
                             </div>

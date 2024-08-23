@@ -21,6 +21,7 @@ const formattedBuildings = computed(() => {
         image: resource.image,
         amount: resource.pivot.amount
       }))
+      .sort((a, b) => a.name.localeCompare(b.name))
     };
   });
 });

@@ -15,9 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('resource_id')->nullable()->constrained()->onDelete('cascade');
-            $table->string('name')->nullable(); // Nur für spezielle Ressourcen wie Credits
             $table->integer('count')->default(0); // Anzahl der Ressourcen
-            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

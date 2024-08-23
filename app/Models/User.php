@@ -65,6 +65,7 @@ class User extends Authenticatable
 
     public function resources()
     {
-        return $this->hasMany(UserResource::class);
+        return $this->belongsToMany(User::class, 'user_resources', 'resource_id', 'user_id')
+            ->withPivot('count');
     }
 }

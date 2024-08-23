@@ -6,6 +6,9 @@ use App\Models\Building;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\UserResource;
+use App\Models\BuildingResourceCost;
 
 class BuildingController extends Controller
 {
@@ -66,14 +69,38 @@ class BuildingController extends Controller
      */
     public function update(Request $request, building $building)
     {
-        DB::transaction(function () use ($building) {
-        $building->level += 1;
-        $building->buildTime = $this->calculateNewBuildTime($building);
-        $this->updateResourceCosts($building);
-        $building->save();
-        });
 
-        return redirect()->back()->with('success', 'Building upgraded successfully');
+        $requiredResources = BuildingResourceCost::where('building_id', $building->id)->get();
+
+        foreach ($requiredResources as $requiredResource) {
+            $userResource = UserResource::where('user_id', Auth::id())
+                ->where('resource_id', $requiredResource->resource_id)
+                ->first();
+    
+            if (!$userResource || $userResource->count < $requiredResource->amount) {
+                // Fehler-Banner setzen, bevor die Transaktion beginnt
+                return redirect()->route('buildings')->dangerBanner('Not enough resources');
+            }
+        }
+
+        DB::transaction(function () use ($building, $requiredResources) {
+            foreach ($requiredResources as $requiredResource) {
+                $userResource = UserResource::where('user_id', Auth::id())
+                    ->where('resource_id', $requiredResource->resource_id)
+                    ->first();
+    
+                $userResource->count -= $requiredResource->amount;
+                $userResource->save();
+            }
+    
+            $building->level += 1;
+            $building->buildTime = $this->calculateNewBuildTime($building);
+            $building->save();
+    
+            $this->updateResourceCosts($building);
+        });
+        
+        return redirect()->route('buildings')->banner('Building upgraded successfully');
     }
 
     /**
@@ -86,15 +113,17 @@ class BuildingController extends Controller
 
     private function calculateNewBuildTime(Building $building)
     {
-        return round($building->buildTime * 1.5);
+        return round($building->buildTime * 1.2);
     }
 
     private function updateResourceCosts(Building $building)
     {
         $costIncreaseFactor = 1.1; // 10% Erhöhung
-    
+        $building->load('resources');
+
         foreach ($building->resources as $resource) {
-            $newAmount = round($resource->pivot->amount * $costIncreaseFactor);
+            $currentAmount = $resource->pivot->amount;
+            $newAmount = round($currentAmount * $costIncreaseFactor);
             $building->resources()->updateExistingPivot($resource->id, ['amount' => $newAmount]);
         }
     }

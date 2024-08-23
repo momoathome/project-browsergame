@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Building;
-use App\Models\BuildingSchema;
+use App\Models\BuildingDetails;
 
 class DefaultBuildingSeeder extends Seeder
 {
@@ -13,15 +13,15 @@ class DefaultBuildingSeeder extends Seeder
      */
     public function run(): void
     {
-        $shipyardSchemaId = BuildingSchema::where('name', 'Shipyard')->first()->id;
-        $hangarSchemaId = BuildingSchema::where('name', 'Hangar')->first()->id;
-        $laboratorySchemaId = BuildingSchema::where('name', 'Laboratory')->first()->id;
-        $warehouseSchemaId = BuildingSchema::where('name', 'Warehouse')->first()->id;
-        $marketplaceSchemaId = BuildingSchema::where('name', 'Marketplace')->first()->id;
-        $scannerSchemaId = BuildingSchema::where('name', 'Scanner')->first()->id;
-        $supplySchemaId = BuildingSchema::where('name', 'Supply')->first()->id;
-        $shieldSchemaId = BuildingSchema::where('name', 'Shield')->first()->id;
-        $energySchemaId = BuildingSchema::where('name', 'Energy')->first()->id;
+        $shipyardSchemaId = BuildingDetails::where('name', 'Shipyard')->first()->id;
+        $hangarSchemaId = BuildingDetails::where('name', 'Hangar')->first()->id;
+        $laboratorySchemaId = BuildingDetails::where('name', 'Laboratory')->first()->id;
+        $warehouseSchemaId = BuildingDetails::where('name', 'Warehouse')->first()->id;
+        $marketplaceSchemaId = BuildingDetails::where('name', 'Marketplace')->first()->id;
+        $scannerSchemaId = BuildingDetails::where('name', 'Scanner')->first()->id;
+        $supplySchemaId = BuildingDetails::where('name', 'Supply')->first()->id;
+        $shieldSchemaId = BuildingDetails::where('name', 'Shield')->first()->id;
+        $energySchemaId = BuildingDetails::where('name', 'Energy')->first()->id;
 
         Building::create([
             'user_id' => 1,

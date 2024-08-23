@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BuildingSchema;
+use App\Models\BuildingDetails;
 use Illuminate\Http\Request;
 
-class BuildingSchemaController extends Controller
+class BuildingDetailsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -34,7 +34,7 @@ class BuildingSchemaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BuildingSchema $buildingSchema)
+    public function show(BuildingDetails $buildingDetails)
     {
         //
     }
@@ -42,7 +42,7 @@ class BuildingSchemaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(BuildingSchema $buildingSchema)
+    public function edit(BuildingDetails $buildingDetails)
     {
         //
     }
@@ -50,7 +50,7 @@ class BuildingSchemaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, BuildingSchema $buildingSchema)
+    public function update(Request $request, BuildingDetails $buildingDetails)
     {
         //
     }
@@ -58,7 +58,7 @@ class BuildingSchemaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(BuildingSchema $buildingSchema)
+    public function destroy(BuildingDetails $buildingDetails)
     {
         //
     }

@@ -3,6 +3,7 @@ import { type PropType, computed } from 'vue';
 import { numberFormat, timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import AppInput from '@/Components/AppInput.vue';
 
 interface Props {
   image: string
@@ -72,7 +73,7 @@ function produceSpacecraft() {
               </svg>
             </button>
 
-            <input class="h-8 w-14 text-black" type="text">
+            <AppInput maxlength="4" />
 
             <button @click="increment" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">

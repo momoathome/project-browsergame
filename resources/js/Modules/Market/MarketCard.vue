@@ -4,6 +4,7 @@ import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import AppInput from '@/Components/AppInput.vue';
 
 interface Props {
   id: number
@@ -26,11 +27,11 @@ const formattedStock = computed(() => numberFormat(props.marketData.stock));
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-4 py-4 gap-3">
+  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-6 py-4 gap-4">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>
-        <p class="font-600 text-xl first-letter:uppercase">{{ marketData.name }}</p>
+        <p class="font-semibold text-xl">{{ marketData.name }}</p>
       </div>
       <div class="flex flex-col">
         <span class="text-xs text-secondary">price</span>
@@ -50,7 +51,7 @@ const formattedStock = computed(() => numberFormat(props.marketData.stock));
         <p class="font-medium">{{ formattedStock }}</p>
       </div>
 
-      <input class="h-8 w-14 text-black" type="text">
+      <AppInput maxlength="4" />
 
     </div>
     <div class="flex justify-between">

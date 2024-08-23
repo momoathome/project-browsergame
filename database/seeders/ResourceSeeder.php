@@ -14,25 +14,25 @@ class ResourceSeeder extends Seeder
     public function run(): void
     {
         Resource::create([
-            'name' => 'carbon',
+            'name' => 'Carbon',
             'description' => 'A common resource',
             'image' => 'carbon.png'
         ]);
 
         Resource::create([
-            'name' => 'hydrogenium',
+            'name' => 'Hydrogenium',
             'description' => 'A highly reactive gas',
             'image' => 'hydrogenium.png'
         ]);
 
         Resource::create([
-            'name' => 'kyberkristall',
+            'name' => 'Kyberkristall',
             'description' => 'A rare and energy-rich crystal',
             'image' => 'kyberkristall.png'
         ]);
 
         Resource::create([
-            'name' => 'titanium',
+            'name' => 'Titanium',
             'description' => 'A strong and durable metal',
             'image' => 'titanium.png'
         ]);

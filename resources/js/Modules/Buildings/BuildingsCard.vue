@@ -49,8 +49,7 @@ function upgradeModule() {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5]">
     <div class="image relative">
-      <!-- <img :src="moduleData.image" class="object-cover rounded-t-3xl" /> -->
-      <img src="https://via.placeholder.com/320x180" class="object-cover rounded-t-3xl w-full h-full" />
+      <img :src="moduleData.image" class="rounded-t-3xl object-fit aspect-[2/1]" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
       <div class="flex flex-col gap-4">
@@ -67,9 +66,8 @@ function upgradeModule() {
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
-        <div class="flex flex-col items-center" v-for="resource in moduleData.resources" :key="resource.name">
+        <div class="flex flex-col gap-1 items-center" v-for="resource in moduleData.resources" :key="resource.name">
           <img :src="resource.image" class="h-8 w-8" />
-          <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>
       </div>

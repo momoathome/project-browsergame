@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Building;
 use App\Models\BuildingResourceCost;
 use App\Models\Resource;
+use Illuminate\Support\Facades\DB;
 
 class BuildingSeeder extends Seeder
 {
@@ -14,6 +15,8 @@ class BuildingSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table(table: 'buildings')->truncate();
+
         $resources = Resource::pluck('id', 'name')->toArray();
 
         $userIds = [1, 2];

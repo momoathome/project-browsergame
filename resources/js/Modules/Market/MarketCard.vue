@@ -45,7 +45,7 @@ function updateMarket() {
     </div>
 
     <div class="relative flex justify-center items-center">
-      <img src="https://via.placeholder.com/320x180" class="h-[64px]" />
+      <img :src="marketData.image" class="h-[64px]" />
     </div>
 
     <Divider />

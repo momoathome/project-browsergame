@@ -118,7 +118,7 @@ class BuildingController extends Controller
 
     private function updateResourceCosts(Building $building)
     {
-        $costIncreaseFactor = 1.1; // 10% Erhöhung
+        $costIncreaseFactor = 1.2; // 20% Erhöhung
         $building->load('resources');
 
         foreach ($building->resources as $resource) {

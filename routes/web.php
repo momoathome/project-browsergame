@@ -27,7 +27,7 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified', H
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');
     
     Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
-    Route::post('/shipyard/{spacecraft}/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
+    Route::post('/shipyard/produce', [SpacecraftController::class, 'produce'])->name('shipyard.produce');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
     Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');

@@ -19,6 +19,7 @@ class UserResourceController extends Controller
         //
     }
 
+    /* For Testing Purposes */
     public function addResource(Request $request)
     {
         $request->validate([

@@ -32,19 +32,25 @@ const form = useForm({
 });
 
 function buyResource() {
-  form.resource_id = props.marketData.id;
+  if (form.amount <= 0) {
+    return;
+  }
+
   form.post(`/market/buy`, {
     onSuccess: () => {
-      //
+      form.reset();
     },
   });
 }
 
 function sellResource() {
-  form.resource_id = props.marketData.id;
+  if (form.amount <= 0) {
+    return;
+  }
+
   form.post(`/market/sell`, {
     onSuccess: () => {
-      //
+      form.reset();
     },
   });
 }

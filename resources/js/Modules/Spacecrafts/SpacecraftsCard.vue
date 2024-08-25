@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { type PropType, computed, ref } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import { numberFormat, timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -35,11 +36,66 @@ const props = defineProps({
 
 const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
 
-const emit = defineEmits(['produce']);
+const count = ref(0)
+const form = useForm({
+  spacecraft_id: props.spacecraftData.id,
+  amount: count.value
+});
 
 function produceSpacecraft() {
-  emit('produce');
+  if (count.value <= 0) {
+    return;
+  }
+
+  form.post(`/shipyard/produce`, {
+    onSuccess: () => {
+      form.reset();
+      count.value = 0;
+    },
+    onError: () => {
+      //
+    },
+  });
 }
+
+function maxSpacecraftCount() {
+  /*   let maxSpacecraftCount = 0
+  
+    if (userStore.user) {
+      let maxSpacecraftCountCredits = Math.floor(userStore.user.ressources.credits / props.spacecraft.cost)
+      let maxSpacecraftCountUnitLimit = Math.floor(userStore.freeUnitLimit / props.spacecraft.unitLimit)
+  
+      if (maxSpacecraftCountCredits < maxSpacecraftCountUnitLimit) {
+        maxSpacecraftCount = maxSpacecraftCountCredits
+      } else {
+        maxSpacecraftCount = maxSpacecraftCountUnitLimit
+      }
+    }
+  
+    return Math.floor(maxSpacecraftCount) */
+}
+
+const increment = () => {
+  count.value++
+  form.amount = count.value;
+}
+const incrementBy10 = () => {
+  count.value += 10
+  form.amount = count.value;
+}
+const decrement = () => {
+  if (count.value > 0) {
+    count.value--
+    form.amount = count.value;
+  }
+}
+const decrementBy10 = () => {
+  if (count.value > 10) {
+    count.value -= 10
+    form.amount = count.value;
+  }
+}
+
 </script>
 
 <template>
@@ -94,16 +150,16 @@ function produceSpacecraft() {
       <form @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
         <div class="flex justify-between gap-4">
           <div class="flex items-center">
-            <button @click="decrement" type="button" class="border-none p-0">
+            <button @click="decrement" @click.shift="decrementBy10" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                 <path fill="currentColor"
                   d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
               </svg>
             </button>
 
-            <AppInput :maxlength="4" />
+            <AppInput :maxlength="4" v-model:count="count" />
 
-            <button @click="increment" type="button" class="border-none p-0">
+            <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                 <path fill="currentColor"
                   d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />

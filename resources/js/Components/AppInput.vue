@@ -10,7 +10,9 @@ const props = defineProps({
     required: false
   }
 });
+
 const count = defineModel<number | string>('count', { default: 0 })
+
 function handleFocus(e: any) {
   if (e.target.value === '' || e.target.value == '0') {
     e.target.value = ''

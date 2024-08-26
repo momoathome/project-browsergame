@@ -1,4 +1,5 @@
 import { generateRandomInteger } from '@/Utils/generator';
+import * as config from '@/config';
 
 interface Station {
   id: number;
@@ -11,7 +12,7 @@ interface Asteroid {
   id: number;
   name: string;
   type: string;
-  risk: string;
+  rarity: string;
   faktor: number;
   size: number;
   value: number;
@@ -37,9 +38,9 @@ type AsteroidData = {
 
 // config
 const radius = 100;
-const stationRadius = 1500;
-const minDistance = 500;
-const universeSize = 100000;
+const stationRadius = config.stationRadius;
+const minDistance = config.minDistance;
+const universeSize = config.universeSize;
 
 export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations: Station[] = []): AsteroidWithCoords[] {
   let x: number;
@@ -53,7 +54,7 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
         y = generateRandomInteger(minDistance, universeSize);
       } while (isCollidingWithStation(x, y) || isCollidingWithAsteroid(x, y));
 
-      const asteroidRiskToImgSize = transformAsteroidRiskToImgSize(asteroidsData[asteroidId].risk);
+      const asteroidRiskToImgSize = transformAsteroidRarityToImgSize(asteroidsData[asteroidId].rarity);
 
       asteroidsCoords.push({
         ...asteroidsData[asteroidId],
@@ -79,17 +80,17 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
   return asteroidsCoords;
 }
 
-function transformAsteroidRiskToImgSize(risk: string): number {
+function transformAsteroidRarityToImgSize(risk: string): number {
   switch (risk) {
-    case 'niedrig':
-      return 0.75;
-    case 'mittel':
-      return 1;
-    case 'hoch':
-      return 1.5;
+    case 'common':
+      return config.asteroidSize.common;
+    case 'uncommen':
+      return config.asteroidSize.uncommen;
+    case 'rare':
+      return config.asteroidSize.rare;
     case 'extrem':
-      return 2;
+      return config.asteroidSize.extrem;
     default:
-      return 1;
+      return config.asteroidSize.uncommen;
   }
 }

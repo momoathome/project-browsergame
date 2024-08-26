@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { createAsteroids } from '@/Utils/createAsteroids';
 import { createAsteroidCoordinates } from '@/Utils/createAsteroidCoordinates';
+import * as config from '@/config';
 
 const stationImageSrc = '/storage/space-station.png';
 const asteroidImageSrc = '/storage/asteroid-light.webp';
@@ -10,30 +11,30 @@ const asteroidImageSrc = '/storage/asteroid-light.webp';
 const stationImage = new Image();
 const asteroidImage = new Image();
 
-const asteroidBaseSize = 64;
-const stationBaseSize = 256;
+const asteroidBaseSize = config.asteroidImageBaseSize;
+const stationBaseSize = config.stationImageBaseSize;
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
 // config
-const maxOuterZoomLevel = ref(0.025);
-const maxInnerZoomLevel = ref(0.75);
+const maxOuterZoomLevel = ref(0.02);
+const maxInnerZoomLevel = ref(0.6);
 const zoomLevel = ref(0.1);
-const zoomDelta = ref(0.025);
+const zoomDelta = ref(0.02);
 const pointX = ref(0);
 const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
-const asteroidCount = 2000;
 
+// TODO: auslagern
 const stations = [
   { id: 1, x: 15000, y: 10000, name: 'Station 1' },
   { id: 2, x: 30000, y: 30000, name: 'Station 2' },
   { id: 3, x: 40000, y: 20000, name: 'Station 3' },
 ];
 
-const asteroidsData = createAsteroids(asteroidCount);
+const asteroidsData = createAsteroids(config.asteroidCount);
 const asteroidWithCoords = createAsteroidCoordinates(asteroidsData, stations);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);

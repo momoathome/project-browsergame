@@ -1,4 +1,5 @@
 import { generateRandomInteger, generateRandomString } from '@/Utils/generator';
+import * as config from '@/config';
 
 interface AsteroidTypeMatrix {
   [key: string]: number[];
@@ -8,7 +9,7 @@ interface Asteroid {
   id: number;
   name: string;
   type: string;
-  risk: string;
+  rarity: string;
   faktor: number;
   size: number;
   value: number;
@@ -25,23 +26,9 @@ type AsteroidData = {
 export function createAsteroids(asteroidCount: number): AsteroidData {
   // config
   // Base Faktor für die Anzahl der Rohstoffe des Asteroiden
-  const asteroidFaktor = {
-    min: 200,
-    max: 250
-  }
-  const asteroidSizeFaktorMatrix = {
-    niedrig: { min: 4, max: 8 },
-    mittel: { min: 13, max: 21 },
-    hoch: { min: 34, max: 55 },
-    extrem: { min: 89, max: 144 },
-  }
-  const asteroidTypeMatrix: AsteroidTypeMatrix = {
-    default: [1.3, 1.75, 0.25, 0.7],
-    titanium: [3.0, 0.6, 0.1, 0.3],
-    carbon: [0.5, 3.0, 0.2, 0.3],
-    kyberkristall: [1.3, 2.0, 0.6, 0.1],
-    hydrogenium: [0.8, 1.5, 0.1, 1.6],
-  }
+  const asteroidFaktor = config.asteroidFaktor;
+  const asteroidSizeFaktorMatrix = config.asteroidSizeFaktorMatrix;
+  const asteroidTypeMatrix: AsteroidTypeMatrix = config.asteroidTypeMatrix;
 
   // enthält alle Asteroiden
   const asteroidsList = (): AsteroidData => {
@@ -58,8 +45,8 @@ export function createAsteroids(asteroidCount: number): AsteroidData {
   function generateAsteroid(): Asteroid {
     const asteroidID: number = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()))
     const asteroidBaseFaktor = generateAsteroidBaseFaktorValue(asteroidFaktor.min, asteroidFaktor.max)
-    const asteroidRisk = generateAsteroidRisk()
-    const asteroidSizeFaktor = generateAsteroidSizeFaktor(asteroidRisk)
+    const asteroidRarity = generateAsteroidRarity()
+    const asteroidSizeFaktor = generateAsteroidSizeFaktor(asteroidRarity)
     const asteroidSize = generateAsteroidSize(asteroidSizeFaktor)
     const asteroidBaseValue = generateAsteroidBaseValue(asteroidBaseFaktor, asteroidSize)
     const asteroidType = generateAsteroidType()
@@ -71,10 +58,10 @@ export function createAsteroids(asteroidCount: number): AsteroidData {
 
     function generateAsteroidName() {
       const type = asteroidType.slice(0, 1)
-      const risk = asteroidRisk.slice(0, 1)
+      const rarity = asteroidRarity.slice(0, 1)
       const value = asteroidBaseValue
       const size = Math.floor(asteroidSize)
-      const asteroidName = generateRandomString(2) + type + risk + generateRandomString(2) + value.toString() + '-' + size.toString()
+      const asteroidName = generateRandomString(2) + type + rarity + generateRandomString(2) + value.toString() + '-' + size.toString()
 
       return asteroidName
     }
@@ -83,7 +70,7 @@ export function createAsteroids(asteroidCount: number): AsteroidData {
       id: asteroidID,
       name: asteroidName,
       type: asteroidType,
-      risk: asteroidRisk,
+      rarity: asteroidRarity,
       faktor: asteroidBaseFaktor,
       size: asteroidSize,
       value: asteroidBaseValue,
@@ -96,28 +83,28 @@ export function createAsteroids(asteroidCount: number): AsteroidData {
     return asteroid
   }
 
-  function generateAsteroidRisk(): string {
-    const risk = generateRandomInteger(0, 100);
+  function generateAsteroidRarity(): string {
+    const rarity = generateRandomInteger(0, 100);
 
-    if (risk >= 50) return 'niedrig';
-    if (risk >= 20) return 'mittel';
-    if (risk >= 4) return 'hoch';
+    if (rarity >= 50) return 'common';
+    if (rarity >= 20) return 'uncommen';
+    if (rarity >= 4) return 'rare';
     return 'extrem';
   }
 
   // Bestimmt den Multiplikator für die Größe des Asteroiden anhand der asteroidSizeFaktorMatrix
-  function generateAsteroidSizeFaktor(risk: string) {
+  function generateAsteroidSizeFaktor(rarity: string) {
     let sizeFaktor = { min: 0, max: 0 };
 
-    switch (risk) {
-      case 'niedrig':
-        sizeFaktor = asteroidSizeFaktorMatrix.niedrig
+    switch (rarity) {
+      case 'common':
+        sizeFaktor = asteroidSizeFaktorMatrix.common
         break;
-      case 'mittel':
-        sizeFaktor = asteroidSizeFaktorMatrix.mittel
+      case 'uncommen':
+        sizeFaktor = asteroidSizeFaktorMatrix.uncommen
         break;
-      case 'hoch':
-        sizeFaktor = asteroidSizeFaktorMatrix.hoch
+      case 'rare':
+        sizeFaktor = asteroidSizeFaktorMatrix.rare
         break;
       case 'extrem':
         sizeFaktor = asteroidSizeFaktorMatrix.extrem

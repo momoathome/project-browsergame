@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { createAsteroids } from '@/Utils/createAsteroids';
+import { createAsteroidCoordinates } from '@/Utils/createAsteroidCoordinates';
 
 const stationImageSrc = '/storage/space-station.png';
 const asteroidImageSrc = '/storage/asteroid-light.webp';
@@ -9,29 +11,25 @@ const stationImage = new Image();
 const asteroidImage = new Image();
 
 const asteroidBaseSize = 64;
-const stationBaseSize = 128;
+const stationBaseSize = 256;
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
-const zoomLevel = ref(1);
+const zoomLevel = ref(0.3);
 const pointX = ref(0);
 const pointY = ref(0);
 const isDragging = ref(false);
 const startDrag = { x: 0, y: 0 };
 
 const stations = [
-  { id: 1, x: 100, y: 100, name: 'Station 1' },
-  { id: 2, x: 200, y: 300, name: 'Station 2' },
-  { id: 3, x: -300, y: -200, name: 'Station 3' },
+  { id: 1, x: 7000, y: 5000, name: 'Station 1' },
+  { id: 2, x: 3000, y: 300, name: 'Station 2' },
+  { id: 3, x: 4000, y: 2000, name: 'Station 3' },
 ];
 
-const asteroids = [
-  {id: 1, x: 400, y: 200, size: 1 },
-  {id: 2, x: 600, y: 400, size: 1.5 },
-  {id: 3, x: 400, y: 400, size: 0.75 },
-  {id: 4, x: 600, y: 200, size: 0.5 },
-];
+const asteroidsData = createAsteroids(100);
+const asteroidWithCoords = createAsteroidCoordinates(asteroidsData, stations);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 
@@ -80,8 +78,8 @@ function drawScene() {
       drawStation(station.x, station.y, station.name, station.id);
     });
 
-    asteroids.forEach(asteroid => {
-      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.size);
+    asteroidWithCoords.forEach(asteroid => {
+      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixelSize);
     });
 
     ctx.value.restore();
@@ -102,8 +100,8 @@ function drawStation(x: number, y: number, name: string, id: number) {
     }
 
     ctx.value.fillStyle = 'white';
-    ctx.value.font = '12px Arial';
-    ctx.value.fillText(name, x - 20, y - stationBaseSize / 2 - 10); // Text oberhalb der Station positionieren
+    ctx.value.font = '24px Arial';
+    ctx.value.fillText(name, x - 45, y - stationBaseSize / 2 - 20); // 
   }
 }
 
@@ -149,9 +147,9 @@ function onMouseMove(e: MouseEvent) {
     }
   });
 
-  asteroids.forEach(asteroid => {
-    const scaledWidth = asteroidBaseSize * asteroid.size;
-    const scaledHeight = asteroidBaseSize * asteroid.size;
+  asteroidWithCoords.forEach(asteroid => {
+    const scaledWidth = asteroidBaseSize * asteroid.pixelSize;
+    const scaledHeight = asteroidBaseSize * asteroid.pixelSize;
 
     if (Math.abs(zoomedX - asteroid.x) < scaledWidth / 2 &&
         Math.abs(zoomedY - asteroid.y) < scaledHeight / 2) {
@@ -183,9 +181,9 @@ function onMouseClick(e: MouseEvent) {
       // Show modal or other UI element
     }
   } else if (hoveredObject.value.type === 'asteroid') {
-    const asteroid = asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
+    const asteroid = asteroidWithCoords.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
-      console.log(`Clicked on asteroid with id: ${asteroid.id}`);
+      console.log(`Clicked on asteroid with id: ${asteroid.id}, data: ${JSON.stringify(asteroid, null, 2)}`);
       // Show modal or other UI element
     }
   }
@@ -197,9 +195,9 @@ function onWheel(e: WheelEvent) {
   const xs = (e.clientX - pointX.value) / zoomLevel.value;
   const ys = (e.clientY - pointY.value) / zoomLevel.value;
 
-  const delta = e.deltaY < 0 ? 0.1 : -0.1;
+  const delta = e.deltaY < 0 ? 0.025 : -0.025;
 
-  const newZoomLevel = Math.min(Math.max(zoomLevel.value + delta, 0.1), 2);
+  const newZoomLevel = Math.min(Math.max(zoomLevel.value + delta, 0.05), 1);
 
   pointX.value = e.clientX - xs * newZoomLevel;
   pointY.value = e.clientY - ys * newZoomLevel;

@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import UserResources from '@/Modules/Resources/UserResources.vue';
 import AppNavigation from '@/Components/AppNavigation.vue';
+import Divider from '@/Components/Divider.vue';
 
 defineProps({
     title: String,
@@ -21,8 +22,17 @@ defineProps({
         <div class="min-h-screen bg-gray-100">
 
             <!-- Page Heading -->
-            <header class="shadow py-1">
+            <header class="flex justify-between items-center p-4">
                 <UserResources />
+                <!-- <img src="/storage/userInfluence.png" class="" alt=""> -->
+
+                <div class="flex gap-2 items-center">
+                    <img src="/storage/ressource_light.png" class="h-8 w-8" alt=""> 
+
+                    <Divider class="w-[2px] h-[24px] bg-primary/20" />
+                    <!-- onClick open settings Menu/Modal -->
+                    <img src="/storage/MenuFilled.svg" class="" alt="">
+                </div>
             </header>
 
             <!-- Page Content -->

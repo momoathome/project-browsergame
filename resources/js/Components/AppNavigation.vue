@@ -19,7 +19,7 @@ const logout = () => {
 </script>
 
 <template>
-  <div class="fixed top-40 right-0 z-50 w-fit bg-base rounded-s-lg">
+  <div class="fixed top-[25vh] right-0 z-50 w-fit bg-base rounded-s-lg">
     <nav class="flex flex-col items-center">
       <Link v-for="link in NavigationLinks" :key="link.name" :href="route(link.name)"
         :class="[route().current(link.name) ? 'border-opacity-100 bg-primary-dark' : '']"

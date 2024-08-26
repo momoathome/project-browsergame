@@ -34,10 +34,12 @@ type AsteroidData = {
   [key: string]: Asteroid;
 };
 
+
+// config
 const radius = 100;
-const stationRadius = 500;
-const minDistance = 200;
-const universeSize = 20000;
+const stationRadius = 1500;
+const minDistance = 500;
+const universeSize = 100000;
 
 export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations: Station[] = []): AsteroidWithCoords[] {
   let x: number;

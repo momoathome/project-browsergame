@@ -16,19 +16,24 @@ const stationBaseSize = 256;
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
-const zoomLevel = ref(0.3);
+// config
+const maxOuterZoomLevel = ref(0.025);
+const maxInnerZoomLevel = ref(0.75);
+const zoomLevel = ref(0.1);
+const zoomDelta = ref(0.025);
 const pointX = ref(0);
 const pointY = ref(0);
-const isDragging = ref(false);
 const startDrag = { x: 0, y: 0 };
+const isDragging = ref(false);
+const asteroidCount = 2000;
 
 const stations = [
-  { id: 1, x: 7000, y: 5000, name: 'Station 1' },
-  { id: 2, x: 3000, y: 300, name: 'Station 2' },
-  { id: 3, x: 4000, y: 2000, name: 'Station 3' },
+  { id: 1, x: 15000, y: 10000, name: 'Station 1' },
+  { id: 2, x: 30000, y: 30000, name: 'Station 2' },
+  { id: 3, x: 40000, y: 20000, name: 'Station 3' },
 ];
 
-const asteroidsData = createAsteroids(100);
+const asteroidsData = createAsteroids(asteroidCount);
 const asteroidWithCoords = createAsteroidCoordinates(asteroidsData, stations);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
@@ -100,8 +105,8 @@ function drawStation(x: number, y: number, name: string, id: number) {
     }
 
     ctx.value.fillStyle = 'white';
-    ctx.value.font = '24px Arial';
-    ctx.value.fillText(name, x - 45, y - stationBaseSize / 2 - 20); // 
+    ctx.value.font = '36px Arial';
+    ctx.value.fillText(name, x - 60, y - stationBaseSize / 2 - 30); // 
   }
 }
 
@@ -195,9 +200,9 @@ function onWheel(e: WheelEvent) {
   const xs = (e.clientX - pointX.value) / zoomLevel.value;
   const ys = (e.clientY - pointY.value) / zoomLevel.value;
 
-  const delta = e.deltaY < 0 ? 0.025 : -0.025;
+  const delta = e.deltaY < 0 ? zoomDelta.value : -zoomDelta.value;
 
-  const newZoomLevel = Math.min(Math.max(zoomLevel.value + delta, 0.05), 1);
+  const newZoomLevel = Math.min(Math.max(zoomLevel.value + delta, maxOuterZoomLevel.value), maxInnerZoomLevel.value);
 
   pointX.value = e.clientX - xs * newZoomLevel;
   pointY.value = e.clientY - ys * newZoomLevel;

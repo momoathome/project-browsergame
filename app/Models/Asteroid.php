@@ -15,6 +15,7 @@ class Asteroid extends Model
         'base',
         'multiplier',
         'value',
+        'resource_pool',
         'resources',
         'x',
         'y',

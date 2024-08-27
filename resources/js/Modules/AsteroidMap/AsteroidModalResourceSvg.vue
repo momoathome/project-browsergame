@@ -20,10 +20,10 @@ const ressources = ref<Ressource[]>([
   { name: 'hydrogenium', value: props.asteroid.resources.hydrogenium ?? 0, color: 'cyan' },
   { name: 'uraninite', value: props.asteroid.resources.uraninite ?? 0, color: 'green' },
   { name: 'cobalt', value: props.asteroid.resources.cobalt ?? 0, color: 'dodgerblue' },
-  { name: 'iridium', value: props.asteroid.resources.iridium ?? 0, color: 'gray' },
+  { name: 'iridium', value: props.asteroid.resources.iridium ?? 0, color: 'slategray' },
   { name: 'astatine', value: props.asteroid.resources.astatine ?? 0, color: 'gold' },
   { name: 'thorium', value: props.asteroid.resources.thorium ?? 0, color: 'yellowgreen' },
-  { name: 'hyperdiamond', value: props.asteroid.resources.hyperdiamond ?? 0, color: 'mediumblue' },
+  { name: 'hyperdiamond', value: props.asteroid.resources.hyperdiamond ?? 0, color: 'navy' },
   { name: 'dilithium', value: props.asteroid.resources.dilithium ?? 0, color: 'purple' },
   { name: 'deuterium', value: props.asteroid.resources.deuterium ?? 0, color: 'orangered' },
   // Weitere Ressourcen können hier hinzugefügt werden
@@ -54,8 +54,6 @@ const calcDashArrayAndOffset = () => {
 
 onMounted(() => {
   calcDashArrayAndOffset();
-  console.log(dashArrays.value);
-  console.log(dashOffsets.value);
 });
 </script>
 
@@ -71,7 +69,9 @@ onMounted(() => {
         :stroke="res.color"
         :stroke-dasharray="dashArrays[index] + ', 284'"
         :stroke-dashoffset="dashOffsets[index]"
-      />
+        >
+        <!-- <title>{{ res.name }}</title> -->
+      </circle>
     </svg>
   </div>
 </template>

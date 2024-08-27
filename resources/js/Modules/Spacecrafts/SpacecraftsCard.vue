@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { type PropType, computed, ref } from 'vue';
+import { type PropType, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { numberFormat, timeFormat } from '@/Utils/format';
+import { timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
@@ -36,21 +36,15 @@ const props = defineProps({
 
 const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
 
-const count = ref(0)
 const form = useForm({
   spacecraft_id: props.spacecraftData.id,
-  amount: count.value
+  amount: 0
 });
 
 function produceSpacecraft() {
-  if (count.value <= 0) {
-    return;
-  }
-
   form.post(`/shipyard/produce`, {
-    onSuccess: () => {
+    onFinish: () => {
       form.reset();
-      count.value = 0;
     },
     onError: () => {
       //
@@ -76,23 +70,19 @@ function maxSpacecraftCount() {
 }
 
 const increment = () => {
-  count.value++
-  form.amount = count.value;
+  form.amount++
 }
 const incrementBy10 = () => {
-  count.value += 10
-  form.amount = count.value;
+  form.amount += 10
 }
 const decrement = () => {
-  if (count.value > 0) {
-    count.value--
-    form.amount = count.value;
+  if (form.amount > 0) {
+    form.amount--
   }
 }
 const decrementBy10 = () => {
-  if (count.value > 10) {
-    count.value -= 10
-    form.amount = count.value;
+  if (form.amount > 10) {
+    form.amount -= 10
   }
 }
 
@@ -157,7 +147,7 @@ const decrementBy10 = () => {
               </svg>
             </button>
 
-            <AppInput :maxlength="4" v-model:count="count" />
+            <AppInput :maxlength="4" v-model="form.amount" />
 
             <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
@@ -166,6 +156,7 @@ const decrementBy10 = () => {
               </svg>
             </button>
           </div>
+
           <PrimaryButton @click="produceSpacecraft">
             Produce
           </PrimaryButton>

@@ -37,7 +37,7 @@ function buyResource() {
   }
 
   form.post(`/market/buy`, {
-    onSuccess: () => {
+    onFinish: () => {
       form.reset();
     },
   });
@@ -49,7 +49,7 @@ function sellResource() {
   }
 
   form.post(`/market/sell`, {
-    onSuccess: () => {
+    onFinish: () => {
       form.reset();
     },
   });
@@ -86,7 +86,7 @@ function sellResource() {
           <p class="font-medium">{{ formattedStock }}</p>
         </div>
 
-        <AppInput :maxlength="6" v-model:count="form.amount" class="w-24" />
+        <AppInput :maxlength="6" v-model="form.amount" class="w-24" />
 
       </div>
       <div class="flex justify-between gap-6">

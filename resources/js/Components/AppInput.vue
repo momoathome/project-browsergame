@@ -11,7 +11,7 @@ const props = defineProps({
   }
 });
 
-const count = defineModel<number | string>('count', { default: 0 })
+const count = defineModel<number | string>( { default: 0 })
 
 function handleFocus(e: any) {
   if (e.target.value === '' || e.target.value == '0') {

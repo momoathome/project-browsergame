@@ -49,8 +49,10 @@ class AsteroidGenerator
     $asteroidRarityMultiplier = $this->generateAsteroidRarityMultiplier($asteroidRarity);
     $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidRarityMultiplier);
     $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
-    $resources = $this->generateResourcesFromPools($asteroidValue);
-    $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier);
+    $resourceData = $this->generateResourcesFromPools($asteroidValue);
+    $resources = $resourceData['resources'];
+    $pool = $resourceData['pool'];
+    $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier, $pool);
 
     return [
       'name' => $asteroidName,
@@ -58,6 +60,7 @@ class AsteroidGenerator
       'base' => $asteroidBaseFaktor,
       'multiplier' => $asteroidBaseMultiplier,
       'value' => $asteroidValue,
+      'resource_pool' => $pool,
       'resources' => json_encode($resources),
     ];
   }
@@ -175,16 +178,20 @@ class AsteroidGenerator
       $resources[$resource] = floor($normalizedWeight * $asteroidValue);
     }
 
-    return $resources;
+    return [
+      'resources' => $resources,
+      'pool' => $pool
+  ];
   }
 
-  private function generateAsteroidName(string $rarity, int $value, float $multiplier): string
+  private function generateAsteroidName(string $rarity, int $value, float $multiplier, string $pool): string
   {
     $prefix = substr($rarity, 0, 2);
+    $suffix = substr($pool, 0, 2);
     $randomString = $this->generateRandomString(2);
     $randomString2 = $this->generateRandomString(2);
     
-    return "{$randomString}{$prefix}{$randomString2}{$value}-" . floor($multiplier);
+    return "{$randomString}{$prefix}{$suffix}{$randomString2}{$value}-" . floor($multiplier);
   }
 
   private function generateRandomString(int $length): string

@@ -48,9 +48,24 @@ return [
     'resource_pools' => [
         'legacy' => ['titanium', 'carbon', 'hydrogenium', 'kyberkristall'],
         'metal' => ['titanium', 'cobalt', 'iridium'],
+        'metal2' => ['titanium', 'cobalt', 'iridium'],
+        'metal3' => ['titanium', 'cobalt', 'iridium'],
+        'metal4' => ['titanium', 'cobalt', 'iridium'],
         'crystal' => ['carbon', 'kyberkristall', 'hyperdiamond'],
+        'crystal2' => ['carbon', 'kyberkristall', 'hyperdiamond'],
+        'crystal3' => ['carbon', 'kyberkristall', 'hyperdiamond'],
         'radioactive' => ['uraninite', 'thorium', 'astatine'],
+        'radioactive2' => ['uraninite', 'thorium', 'astatine'],
         'exotic' => ['hydrogenium', 'dilithium', 'deuterium'],
+        'exotic2' => ['hydrogenium', 'dilithium', 'deuterium'],
+        'titanium' => ['titanium'],
+        'carbon' => ['carbon'],
+        'hydrogenium' => ['hydrogenium'],
+        'kyberkristall' => ['kyberkristall'],
+        'cobalt' => ['cobalt'],
+        'iridium' => ['iridium'],
+        'uraninite' => ['uraninite'],
+        'thorium' => ['thorium'],
     ],
 
     'pool_resource_weights' => [
@@ -70,6 +85,16 @@ return [
             'cobalt' => 0.4,
             'iridium' => 0.2,
         ],
+        'metal3' => [
+            'titanium' => 0.3,
+            'cobalt' => 0.6,
+            'iridium' => 0.1,
+        ],
+        'metal4' => [
+            'titanium' => 0.3,
+            'cobalt' => 0.2,
+            'iridium' => 0.5,
+        ],
         'crystal' => [
             'carbon' => 0.75,
             'kyberkristall' => 0.2,
@@ -79,6 +104,11 @@ return [
             'carbon' => 0.55,
             'kyberkristall' => 0.35,
             'hyperdiamond' => 0.1,
+        ],
+        'crystal3' => [
+            'carbon' => 0.4,
+            'kyberkristall' => 0.45,
+            'hyperdiamond' => 0.15,
         ],
         'radioactive' => [
             'hydrogenium' => 0.6,
@@ -96,6 +126,35 @@ return [
             'hydrogenium' => 0.85,
             'dilithium' => 0.1,
             'deuterium' => 0.05,
+        ],
+        'exotic2' => [
+            'hydrogenium' => 0.7,
+            'dilithium' => 0.2,
+            'deuterium' => 0.1,
+        ],
+        'titanium' => [
+            'titanium' => 1,
+        ],
+        'carbon' => [
+            'carbon' => 1,
+        ],
+        'hydrogenium' => [
+            'hydrogenium' => 1,
+        ],
+        'kyberkristall' => [
+            'kyberkristall' => 1,
+        ],
+        'cobalt' => [
+            'cobalt' => 1,
+        ],
+        'iridium' => [
+            'iridium' => 1,
+        ],
+        'uraninite' => [
+            'uraninite' => 1,
+        ],
+        'thorium' => [
+            'thorium' => 1,
         ],
     ],
 ];

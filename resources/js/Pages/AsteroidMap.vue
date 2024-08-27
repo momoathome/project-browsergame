@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { createAsteroids } from '@/Utils/createAsteroids';
-import { createAsteroidCoordinates } from '@/Utils/createAsteroidCoordinates';
 import * as config from '@/config';
 
 interface Asteroid {
@@ -51,31 +49,7 @@ const stations = [
   { id: 3, x: 40000, y: 20000, name: 'Station 3' },
 ];
 
-const asteroidsData = createAsteroids(config.asteroidCount);
-// const asteroids = createAsteroidCoordinates(asteroidsData, stations);
 const asteroids = props.asteroids;
-
-/* // store asteroids in DB
-async function saveAsteroids(asteroids) {
-  try {
-    for (const asteroid of asteroids) {
-      await axios.post('/api/asteroids', {
-        name: asteroid.name,
-        rarity: asteroid.rarity,
-        base: asteroid.base,
-        multiplier: asteroid.multiplier,
-        value: asteroid.value,
-        resources: asteroid.resources,
-        x: asteroid.x,
-        y: asteroid.y,
-        pixel_size: asteroid.pixelSize,
-      });
-    }
-  } catch (error) {
-    console.error('Fehler beim Speichern der Asteroiden:', error);
-  }
-}
-saveAsteroids(asteroids); */
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 
@@ -146,8 +120,8 @@ function drawStation(x: number, y: number, name: string, id: number) {
     }
 
     ctx.value.fillStyle = 'white';
-    ctx.value.font = '36px Arial';
-    ctx.value.fillText(name, x - 60, y - stationBaseSize / 2 - 30); // 
+    ctx.value.font = config.stationNameFontSize + 'px Arial';
+    ctx.value.fillText(name, x - 196, y - stationBaseSize / 2 - 64);
   }
 }
 
@@ -251,6 +225,36 @@ function onWheel(e: WheelEvent) {
   zoomLevel.value = newZoomLevel;
   drawScene();
 }
+
+function resetView() {
+  const animationDuration = 1000; // Dauer der Animation in Millisekunden
+  const startTime = performance.now();
+  
+  const startPointX = pointX.value;
+  const startPointY = pointY.value;
+  const startZoomLevel = zoomLevel.value;
+  
+  const endPointX = 0;
+  const endPointY = 0;
+  const endZoomLevel = config.baseZoomLevel;
+  
+  function animate(time: number) {
+    const elapsedTime = time - startTime;
+    const progress = Math.min(elapsedTime / animationDuration, 1);
+    
+    pointX.value = startPointX + (endPointX - startPointX) * progress;
+    pointY.value = startPointY + (endPointY - startPointY) * progress;
+    zoomLevel.value = startZoomLevel + (endZoomLevel - startZoomLevel) * progress;
+    
+    drawScene();
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+  
+  requestAnimationFrame(animate);
+}
 </script>
 
 <template>
@@ -265,6 +269,7 @@ function onWheel(e: WheelEvent) {
       </canvas>
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>
+      <span @click="resetView" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
   </AppLayout>
 </template>

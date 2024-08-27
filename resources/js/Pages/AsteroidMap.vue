@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/Layouts/AppLayout.vue';
+import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as config from '@/config';
-
-interface Asteroid {
-  id: number;
-  name: string;
-  rarity: string;
-  base: number;
-  multiplier: number;
-  value: number;
-  resources: Record<string, number>;
-  x: number;
-  y: number;
-  pixel_size: number;
-}
+import type { Asteroid, Station } from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -52,6 +41,7 @@ const stations = [
 const asteroids = props.asteroids;
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
+const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
@@ -113,12 +103,6 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
     ctx.value.drawImage(stationImage, 0, 0, stationImage.width, stationImage.height, imageX, imageY, stationBaseSize, stationBaseSize);
 
-    if (hoveredObject.value?.type === 'station' && hoveredObject.value.id === id) {
-      ctx.value.strokeStyle = 'yellow';
-      ctx.value.lineWidth = 2;
-      ctx.value.strokeRect(imageX, imageY, stationBaseSize, stationBaseSize);
-    }
-
     ctx.value.fillStyle = 'white';
     ctx.value.font = config.stationNameFontSize + 'px Arial';
     ctx.value.fillText(name, x - 196, y - stationBaseSize / 2 - 64);
@@ -133,12 +117,6 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
     const imageX = x - scaledWidth / 2;
     const imageY = y - scaledHeight / 2;
     ctx.value.drawImage(asteroidImage, 0, 0, asteroidImage.width, asteroidImage.height, imageX, imageY, scaledWidth, scaledHeight);
-
-    if (hoveredObject.value?.type === 'asteroid' && hoveredObject.value.id === id) {
-      ctx.value.strokeStyle = 'yellow';
-      ctx.value.lineWidth = 2;
-      ctx.value.strokeRect(imageX, imageY, scaledWidth, scaledHeight);
-    }
   }
 }
 
@@ -162,7 +140,7 @@ function onMouseMove(e: MouseEvent) {
 
   stations.forEach(station => {
     if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
-        Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
+      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
       hoveredObject.value = { type: 'station', id: station.id };
     }
   });
@@ -172,7 +150,7 @@ function onMouseMove(e: MouseEvent) {
     const scaledHeight = asteroidBaseSize * asteroid.pixel_size;
 
     if (Math.abs(zoomedX - asteroid.x) < scaledWidth / 2 &&
-        Math.abs(zoomedY - asteroid.y) < scaledHeight / 2) {
+      Math.abs(zoomedY - asteroid.y) < scaledHeight / 2) {
       hoveredObject.value = { type: 'asteroid', id: asteroid.id };
     }
   });
@@ -197,14 +175,14 @@ function onMouseClick(e: MouseEvent) {
   if (hoveredObject.value.type === 'station') {
     const station = stations.find(station => station.id === hoveredObject.value?.id);
     if (station) {
-      console.log(`Clicked on station: ${station.name}, data: ${JSON.stringify(station, null, 2)}`);
-      // Show modal or other UI element
+      selectedObject.value = { type: 'station', data: station };
+      isModalOpen.value = true;
     }
   } else if (hoveredObject.value.type === 'asteroid') {
     const asteroid = asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
-      console.log(`Clicked on asteroid with id: ${asteroid.id}, data: ${JSON.stringify(asteroid, null, 2)}`);
-      // Show modal or other UI element
+      selectedObject.value = { type: 'asteroid', data: asteroid };
+      isModalOpen.value = true;
     }
   }
 }
@@ -229,47 +207,61 @@ function onWheel(e: WheelEvent) {
 function resetView() {
   const animationDuration = 1000; // Dauer der Animation in Millisekunden
   const startTime = performance.now();
-  
+
   const startPointX = pointX.value;
   const startPointY = pointY.value;
   const startZoomLevel = zoomLevel.value;
-  
+
   const endPointX = 0;
   const endPointY = 0;
   const endZoomLevel = config.baseZoomLevel;
-  
+
   function animate(time: number) {
     const elapsedTime = time - startTime;
     const progress = Math.min(elapsedTime / animationDuration, 1);
-    
+
     pointX.value = startPointX + (endPointX - startPointX) * progress;
     pointY.value = startPointY + (endPointY - startPointY) * progress;
     zoomLevel.value = startZoomLevel + (endZoomLevel - startZoomLevel) * progress;
-    
+
     drawScene();
-    
+
     if (progress < 1) {
       requestAnimationFrame(animate);
     }
   }
-  
+
   requestAnimationFrame(animate);
+}
+
+const isModalOpen = ref(false)
+
+function closeModal() {
+  isModalOpen.value = false;
+  selectedObject.value = null;
 }
 </script>
 
 <template>
   <AppLayout title="AsteroidMap">
     <div class="relative">
-      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]"
-      @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
-      @wheel="onWheel"
-      @click="onMouseClick">
+      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
+        @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>
       <span @click="resetView" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
+
+      <Modal 
+        @close="closeModal" 
+        :show="isModalOpen" 
+        :title="selectedObject?.data.name" 
+        :content="{
+          type: selectedObject?.type,
+          imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
+          data: selectedObject?.data
+        }" 
+        />
   </AppLayout>
 </template>

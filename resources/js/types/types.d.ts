@@ -62,3 +62,23 @@ export interface BuildingCardProps {
 export interface SpacecraftCardProps {
   moduleData: Spacecraft[];
 }
+
+export interface Asteroid {
+  id: number;
+  name: string;
+  rarity: string;
+  base: number;
+  multiplier: number;
+  value: number;
+  resources: Record<string, number>;
+  x: number;
+  y: number;
+  pixel_size: number;
+}
+
+export interface Station {
+  id: number;
+  name: string;
+  x: number;
+  y: number;
+}

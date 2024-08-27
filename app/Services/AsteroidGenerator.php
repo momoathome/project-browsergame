@@ -182,13 +182,14 @@ class AsteroidGenerator
   {
     $prefix = substr($rarity, 0, 2);
     $randomString = $this->generateRandomString(2);
-
-    return "{$randomString}{$prefix}{$randomString}{$value}-" . floor($multiplier);
+    $randomString2 = $this->generateRandomString(2);
+    
+    return "{$randomString}{$prefix}{$randomString2}{$value}-" . floor($multiplier);
   }
 
   private function generateRandomString(int $length): string
   {
-    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';
 
     for ($i = 0; $i < $length; $i++) {

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\AsteroidGenerator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,6 +14,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('Debugbar', \Barryvdh\Debugbar\Facades\Debugbar::class);
+
+        $this->app->singleton(AsteroidGenerator::class, function () {
+            return new AsteroidGenerator();
+        });
     }
 
     /**

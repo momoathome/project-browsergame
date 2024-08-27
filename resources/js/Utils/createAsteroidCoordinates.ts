@@ -68,7 +68,7 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
 
   function isCollidingWithStation(x: number, y: number, distanceModifier: number): boolean {
     return stations.some(
-      station => Math.abs(station.x - x) < distanceModifier + stationRadius && Math.abs(station.y - y) < minDistance + stationRadius
+      station => Math.abs(station.x - x) < distanceModifier + stationRadius && Math.abs(station.y - y) < distanceModifier + stationRadius
     );
   }
 

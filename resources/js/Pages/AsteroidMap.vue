@@ -5,6 +5,23 @@ import { createAsteroids } from '@/Utils/createAsteroids';
 import { createAsteroidCoordinates } from '@/Utils/createAsteroidCoordinates';
 import * as config from '@/config';
 
+interface Asteroid {
+  id: number;
+  name: string;
+  rarity: string;
+  base: number;
+  multiplier: number;
+  value: number;
+  resources: Record<string, number>;
+  x: number;
+  y: number;
+  pixel_size: number;
+}
+
+const props = defineProps<{
+  asteroids: Asteroid[];
+}>();
+
 const stationImageSrc = '/storage/space-station.png';
 const asteroidImageSrc = '/storage/asteroid-light.webp';
 
@@ -35,7 +52,30 @@ const stations = [
 ];
 
 const asteroidsData = createAsteroids(config.asteroidCount);
-const asteroidWithCoords = createAsteroidCoordinates(asteroidsData, stations);
+// const asteroids = createAsteroidCoordinates(asteroidsData, stations);
+const asteroids = props.asteroids;
+
+/* // store asteroids in DB
+async function saveAsteroids(asteroids) {
+  try {
+    for (const asteroid of asteroids) {
+      await axios.post('/api/asteroids', {
+        name: asteroid.name,
+        rarity: asteroid.rarity,
+        base: asteroid.base,
+        multiplier: asteroid.multiplier,
+        value: asteroid.value,
+        resources: asteroid.resources,
+        x: asteroid.x,
+        y: asteroid.y,
+        pixel_size: asteroid.pixelSize,
+      });
+    }
+  } catch (error) {
+    console.error('Fehler beim Speichern der Asteroiden:', error);
+  }
+}
+saveAsteroids(asteroids); */
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 
@@ -84,8 +124,8 @@ function drawScene() {
       drawStation(station.x, station.y, station.name, station.id);
     });
 
-    asteroidWithCoords.forEach(asteroid => {
-      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixelSize);
+    asteroids.forEach(asteroid => {
+      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
     });
 
     ctx.value.restore();
@@ -153,9 +193,9 @@ function onMouseMove(e: MouseEvent) {
     }
   });
 
-  asteroidWithCoords.forEach(asteroid => {
-    const scaledWidth = asteroidBaseSize * asteroid.pixelSize;
-    const scaledHeight = asteroidBaseSize * asteroid.pixelSize;
+  asteroids.forEach(asteroid => {
+    const scaledWidth = asteroidBaseSize * asteroid.pixel_size;
+    const scaledHeight = asteroidBaseSize * asteroid.pixel_size;
 
     if (Math.abs(zoomedX - asteroid.x) < scaledWidth / 2 &&
         Math.abs(zoomedY - asteroid.y) < scaledHeight / 2) {
@@ -187,7 +227,7 @@ function onMouseClick(e: MouseEvent) {
       // Show modal or other UI element
     }
   } else if (hoveredObject.value.type === 'asteroid') {
-    const asteroid = asteroidWithCoords.find(asteroid => asteroid.id === hoveredObject.value?.id);
+    const asteroid = asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
       console.log(`Clicked on asteroid with id: ${asteroid.id}, data: ${JSON.stringify(asteroid, null, 2)}`);
       // Show modal or other UI element

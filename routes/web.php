@@ -35,7 +35,7 @@ Route::middleware(['auth:sanctum',config('jetstream.auth_session'),'verified', H
 
     Route::get('/logbook', function () {return Inertia::render('Logbook');})->name('logbook');
     Route::get('/research', function () {return Inertia::render('Research');})->name('research');
-    Route::get('/starmap', function () {return Inertia::render('Starmap');})->name('starmap');
+    Route::get('/asteroidMap', function () {return Inertia::render('AsteroidMap');})->name('asteroidMap');
     
     Route::get('/simulator', function () {return Inertia::render('Simulator');})->name('simulator');
 

@@ -11,15 +11,11 @@ interface Station {
 interface Asteroid {
   id: number;
   name: string;
-  type: string;
   rarity: string;
-  faktor: number;
-  size: number;
+  base: number;
+  multiplier: number;
   value: number;
-  titanium: number;
-  carbon: number;
-  kyberkristall: number;
-  hydrogenium: number;
+  resources: Partial<Record<string, number>>;
 }
 
 // Asteroid-Interface mit Koordinaten
@@ -27,7 +23,6 @@ interface AsteroidWithCoords extends Asteroid {
   x: number;
   y: number;
   pixelSize: number;
-
 }
 
 // AsteroidData-Typdefinition ohne Koordinaten
@@ -46,15 +41,18 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
 
   for (const asteroidId in asteroidsData) {
     if (asteroidsData.hasOwnProperty(asteroidId)) {
+      const asteroid = asteroidsData[asteroidId];
+      const distanceModifier = config.distanceModifiers[asteroid.rarity] || minDistance;
+
       do {
-        x = generateRandomInteger(minDistance, universeSize);
-        y = generateRandomInteger(minDistance, universeSize);
-      } while (isCollidingWithStation(x, y) || isCollidingWithAsteroid(x, y));
+        x = generateRandomInteger(distanceModifier, universeSize);
+        y = generateRandomInteger(distanceModifier, universeSize);
+      } while (isCollidingWithStation(x, y, distanceModifier) || isCollidingWithAsteroid(x, y));
 
       const asteroidRiskToImgSize = transformAsteroidRarityToImgSize(asteroidsData[asteroidId].rarity);
 
       asteroidsCoords.push({
-        ...asteroidsData[asteroidId],
+        ...asteroid,
         x,
         y,
         pixelSize: asteroidRiskToImgSize,
@@ -68,9 +66,9 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
     );
   }
 
-  function isCollidingWithStation(x: number, y: number): boolean {
+  function isCollidingWithStation(x: number, y: number, distanceModifier: number): boolean {
     return stations.some(
-      station => Math.abs(station.x - x) < minDistance + stationRadius && Math.abs(station.y - y) < minDistance + stationRadius
+      station => Math.abs(station.x - x) < distanceModifier + stationRadius && Math.abs(station.y - y) < minDistance + stationRadius
     );
   }
 

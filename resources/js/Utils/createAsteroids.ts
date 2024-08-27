@@ -119,7 +119,6 @@ function generateResourcesFromPools(asteroidValue: number): Partial<Record<strin
   return resources;
 }
 
-
 function generateAsteroidValue(asteroidBaseFaktor: number, asteroidBaseMultiplier: number): number {
   return Math.floor(asteroidBaseFaktor * asteroidBaseMultiplier)
 }
@@ -129,7 +128,6 @@ function generateAsteroidBaseFaktorValue(asteroidFaktorMin: number, asteroidFakt
   const max = Math.floor(asteroidFaktorMax);
   return generateRandomInteger(min, max)
 }
-
 
 function generateAsteroidName(asteroidRarity: string, asteroidValue: number, asteroidBaseMultiplier: number) {
   const rarity = asteroidRarity.slice(0, 1)

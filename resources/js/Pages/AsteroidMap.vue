@@ -18,10 +18,10 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
 // config
-const maxOuterZoomLevel = ref(0.02);
-const maxInnerZoomLevel = ref(0.6);
-const zoomLevel = ref(0.1);
-const zoomDelta = ref(0.02);
+const maxOuterZoomLevel = ref(config.maxOuterZoomLevel);
+const maxInnerZoomLevel = ref(config.maxInnerZoomLevel);
+const zoomLevel = ref(config.baseZoomLevel);
+const zoomDelta = ref(config.zoomDelta);
 const pointX = ref(0);
 const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
@@ -183,7 +183,7 @@ function onMouseClick(e: MouseEvent) {
   if (hoveredObject.value.type === 'station') {
     const station = stations.find(station => station.id === hoveredObject.value?.id);
     if (station) {
-      console.log(`Clicked on station: ${station.name}`);
+      console.log(`Clicked on station: ${station.name}, data: ${JSON.stringify(station, null, 2)}`);
       // Show modal or other UI element
     }
   } else if (hoveredObject.value.type === 'asteroid') {
@@ -214,13 +214,17 @@ function onWheel(e: WheelEvent) {
 </script>
 
 <template>
-  <AppLayout title="Starmap">
-    <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]"
-     @mousedown="onMouseDown"
-     @mousemove="onMouseMove"
-     @mouseup="onMouseUp"
-     @wheel="onWheel"
-     @click="onMouseClick">
-    </canvas>
+  <AppLayout title="AsteroidMap">
+    <div class="relative">
+      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]"
+      @mousedown="onMouseDown"
+      @mousemove="onMouseMove"
+      @mouseup="onMouseUp"
+      @wheel="onWheel"
+      @click="onMouseClick">
+      </canvas>
+
+      <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>
+    </div>
   </AppLayout>
 </template>

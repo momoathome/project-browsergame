@@ -1,17 +1,25 @@
-export const asteroidCount = 5000;
-export const asteroidDensity = 35; // lower asteroid density = more asteroids per square
-export const minDistance = 500;
+// universe Stats
+export const asteroidCount = 2000;
+export const asteroidDensity = 50; // lower asteroid density = more asteroids per square
+export const minDistance = 1000;
 export const stationRadius = 2000;
 export const universeSize = asteroidCount * asteroidDensity;
 
 export const asteroidImageBaseSize = 64;
 export const stationImageBaseSize = 512;
 
+// zoom
+export const maxOuterZoomLevel = 0.01;
+export const maxInnerZoomLevel = 1;
+export const baseZoomLevel = 0.1;
+export const zoomDelta = 0.01;
+
+// asteroid
 export const asteroidSize = {
   common: 1,
   uncommen: 2,
-  rare: 3,
-  extrem: 4,
+  rare: 4,
+  extrem: 8,
 }
 
 export const asteroidFaktor = {
@@ -20,10 +28,10 @@ export const asteroidFaktor = {
 }
 
 export const asteroidRarity = {
-  common: 50,
-  uncommen: 20,
-  rare: 4,
-  extrem: 1,
+  common: 800,
+  uncommen: 250,
+  rare: 50,
+  extrem: 3,
 }
 
 export const asteroidRarityMultiplier = {
@@ -32,6 +40,13 @@ export const asteroidRarityMultiplier = {
   rare: { min: 34, max: 55 },
   extrem: { min: 89, max: 144 },
 }
+
+export const distanceModifiers= {
+  common: minDistance,
+  uncommen: minDistance,
+  rare: 3 * minDistance,
+  extrem: 10 * minDistance,
+};
 
 export const resourcePools = {
   legacy: ['titanium', 'carbon', 'hydrogenium', 'kyberkristall'],
@@ -69,18 +84,20 @@ export const poolResourceWeights = {
     hyperdiamond: 0.1,
   },
   radioactive: {
-    uraninite: 0.7,
+    hydrogenium: 0.6,
+    uraninite: 0.25,
+    thorium: 0.1,
+    astatine: 0.05,
+  },
+  radioactive2: {
+    hydrogenium: 0.4,
+    uraninite: 0.3,
     thorium: 0.2,
     astatine: 0.1,
   },
-  radioactive2: {
-    uraninite: 0.55,
-    thorium: 0.35,
-    astatine: 0.1,
-  },
   exotic: {
-    hydrogenium: 0.8,
+    hydrogenium: 0.85,
     dilithium: 0.1,
-    deuterium: 0.1,
+    deuterium: 0.05,
   },
 };

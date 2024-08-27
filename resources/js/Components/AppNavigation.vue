@@ -6,7 +6,7 @@ const NavigationLinks = [
   { name: 'buildings', label: 'Buildings', image: '/storage/navigation/buildings.png' },
   { name: 'shipyard', label: 'Shipyard', image: '/storage/navigation/shipyard.png' },
   { name: 'research', label: 'Research', image: '/storage/navigation/research.png' },
-  { name: 'starmap', label: 'Starmap', image: '/storage/navigation/starmap.png' },
+  { name: 'asteroidMap', label: 'AsteroidMap', image: '/storage/navigation/asteroidmap.png' },
   { name: 'market', label: 'Market', image: '/storage/navigation/market.png' },
   { name: 'logbook', label: 'Logbook', image: '/storage/navigation/logbook.png' },
   { name: 'simulator', label: 'Simulator', image: '/storage/navigation/simulator.png' },

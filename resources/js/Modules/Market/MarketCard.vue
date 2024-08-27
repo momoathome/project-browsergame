@@ -79,23 +79,25 @@ function sellResource() {
 
     <Divider />
 
-    <div class="flex w-full justify-between">
-      <div class="flex flex-col">
-        <span class="text-xs text-secondary">stock</span>
-        <p class="font-medium">{{ formattedStock }}</p>
+    <form @submit.prevent="sellResource; buyResource" class="flex flex-col gap-4">
+      <div class="flex w-full justify-between">
+        <div class="flex flex-col">
+          <span class="text-xs text-secondary">stock</span>
+          <p class="font-medium">{{ formattedStock }}</p>
+        </div>
+
+        <AppInput :maxlength="6" v-model:count="form.amount" class="w-24" />
+
       </div>
-
-      <AppInput :maxlength="4" v-model.number="form.amount" />
-
-    </div>
-    <div class="flex justify-between">
-      <SecondaryButton @click="sellResource">
-        Sell
-      </SecondaryButton>
-      <PrimaryButton @click="buyResource">
-        Buy
-      </PrimaryButton>
-    </div>
+      <div class="flex justify-between gap-6">
+        <SecondaryButton @click="sellResource" class="w-full">
+          Sell
+        </SecondaryButton>
+        <PrimaryButton @click="buyResource" class="w-full">
+          Buy
+        </PrimaryButton>
+      </div>
+    </form>
   </div>
 </template>
 

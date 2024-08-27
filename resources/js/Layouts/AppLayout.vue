@@ -22,14 +22,14 @@ defineProps({
         <div class="min-h-screen bg-gray-100">
 
             <!-- Page Heading -->
-            <header class="flex justify-between items-center p-4">
+            <header class="flex justify-between items-center p-4 shadow">
                 <UserResources />
                 <!-- <img src="/storage/userInfluence.png" class="" alt=""> -->
 
                 <div class="flex gap-2 items-center">
                     <img src="/storage/ressource_light.png" class="h-8 w-8" alt=""> 
 
-                    <Divider class="w-[2px] h-[24px] bg-primary/20" />
+                    <Divider class="!w-[2px] h-[24px] bg-primary/20" />
                     <!-- onClick open settings Menu/Modal -->
                     <img src="/storage/MenuFilled.svg" class="" alt="">
                 </div>

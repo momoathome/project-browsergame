@@ -1,22 +1,18 @@
 import { generateRandomInteger, generateRandomString } from '@/Utils/generator';
 import * as config from '@/config';
 
-interface AsteroidTypeMatrix {
-  [key: string]: number[];
-}
-
 interface Asteroid {
   id: number;
   name: string;
-  type: string;
   rarity: string;
-  faktor: number;
-  size: number;
+  base: number;
+  multiplier: number;
   value: number;
-  titanium: number;
-  carbon: number;
-  kyberkristall: number;
-  hydrogenium: number;
+  resources: Partial<Record<string, number>>;
+}
+
+interface AsteroidRarity {
+  [key: string]: number;
 }
 
 type AsteroidData = {
@@ -24,12 +20,6 @@ type AsteroidData = {
 };
 
 export function createAsteroids(asteroidCount: number): AsteroidData {
-  // config
-  // Base Faktor für die Anzahl der Rohstoffe des Asteroiden
-  const asteroidFaktor = config.asteroidFaktor;
-  const asteroidSizeFaktorMatrix = config.asteroidSizeFaktorMatrix;
-  const asteroidTypeMatrix: AsteroidTypeMatrix = config.asteroidTypeMatrix;
-
   // enthält alle Asteroiden
   const asteroidsList = (): AsteroidData => {
     const asteroids: AsteroidData = {}
@@ -42,108 +32,110 @@ export function createAsteroids(asteroidCount: number): AsteroidData {
     return asteroids
   }
 
-  function generateAsteroid(): Asteroid {
-    const asteroidID: number = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()))
-    const asteroidBaseFaktor = generateAsteroidBaseFaktorValue(asteroidFaktor.min, asteroidFaktor.max)
-    const asteroidRarity = generateAsteroidRarity()
-    const asteroidSizeFaktor = generateAsteroidSizeFaktor(asteroidRarity)
-    const asteroidSize = generateAsteroidSize(asteroidSizeFaktor)
-    const asteroidBaseValue = generateAsteroidBaseValue(asteroidBaseFaktor, asteroidSize)
-    const asteroidType = generateAsteroidType()
-    const asteroidName = generateAsteroidName()
-    const asteroidTitaniumValue = generateIndividualRessourceValue(asteroidBaseValue, asteroidType, 0)
-    const asteroidCarbonValue = generateIndividualRessourceValue(asteroidBaseValue, asteroidType, 1)
-    const asteroidKristallValue = generateIndividualRessourceValue(asteroidBaseValue, asteroidType, 2)
-    const asteroidHydroValue = generateIndividualRessourceValue(asteroidBaseValue, asteroidType, 3)
-
-    function generateAsteroidName() {
-      const type = asteroidType.slice(0, 1)
-      const rarity = asteroidRarity.slice(0, 1)
-      const value = asteroidBaseValue
-      const size = Math.floor(asteroidSize)
-      const asteroidName = generateRandomString(2) + type + rarity + generateRandomString(2) + value.toString() + '-' + size.toString()
-
-      return asteroidName
-    }
-
-    const asteroid: Asteroid = {
-      id: asteroidID,
-      name: asteroidName,
-      type: asteroidType,
-      rarity: asteroidRarity,
-      faktor: asteroidBaseFaktor,
-      size: asteroidSize,
-      value: asteroidBaseValue,
-      titanium: asteroidTitaniumValue,
-      carbon: asteroidCarbonValue,
-      kyberkristall: asteroidKristallValue,
-      hydrogenium: asteroidHydroValue,
-    };
-
-    return asteroid
-  }
-
-  function generateAsteroidRarity(): string {
-    const rarity = generateRandomInteger(0, 100);
-
-    if (rarity >= 50) return 'common';
-    if (rarity >= 20) return 'uncommen';
-    if (rarity >= 4) return 'rare';
-    return 'extrem';
-  }
-
-  // Bestimmt den Multiplikator für die Größe des Asteroiden anhand der asteroidSizeFaktorMatrix
-  function generateAsteroidSizeFaktor(rarity: string) {
-    let sizeFaktor = { min: 0, max: 0 };
-
-    switch (rarity) {
-      case 'common':
-        sizeFaktor = asteroidSizeFaktorMatrix.common
-        break;
-      case 'uncommen':
-        sizeFaktor = asteroidSizeFaktorMatrix.uncommen
-        break;
-      case 'rare':
-        sizeFaktor = asteroidSizeFaktorMatrix.rare
-        break;
-      case 'extrem':
-        sizeFaktor = asteroidSizeFaktorMatrix.extrem
-        break;
-    }
-
-    return sizeFaktor
-  }
-
-  // Bestimmt welcher Rohstoff häufiger vorkommt anhand der asteroidTypeMatrix
-  function generateAsteroidType(): string {
-    const asteroidType = generateRandomInteger(0, 100);
-
-    if (asteroidType >= 40) return 'default';
-    if (asteroidType >= 25) return 'titanium';
-    if (asteroidType >= 10) return 'carbon';
-    if (asteroidType >= 5) return 'hydrogenium';
-    return 'kyberkristall';
-  }
-
-  function generateIndividualRessourceValue(asteroidBaseValue: number, asteroidType: string, ressourceIndex: number): number {
-    const ressourceValue = asteroidBaseValue / 4 * asteroidTypeMatrix[asteroidType][ressourceIndex]
-    return Math.floor(ressourceValue)
-  }
-
-  function generateAsteroidBaseValue(asteroidBaseFaktor: number, asteroidSize: number): number {
-    return Math.floor(asteroidBaseFaktor * asteroidSize)
-  }
-
-  function generateAsteroidBaseFaktorValue(asteroidFaktorMin: number, asteroidFaktorMax: number): number {
-    const min = Math.ceil(asteroidFaktorMin);
-    const max = Math.floor(asteroidFaktorMax);
-    return generateRandomInteger(min, max)
-  }
-
-  function generateAsteroidSize(asteroidSizeFaktor: { min: number; max: number; }): number {
-    const asteroidSize = Math.random() * (asteroidSizeFaktor.max - asteroidSizeFaktor.min) + asteroidSizeFaktor.min;
-    return parseFloat(asteroidSize.toFixed(4))
-  }
-
   return asteroidsList()
+}
+
+function generateAsteroid(): Asteroid {
+  const asteroidID: number = Math.floor(Math.random() * Math.floor(Math.random() * Date.now()));
+  const asteroidBaseFaktor = generateAsteroidBaseFaktorValue(config.asteroidFaktor.min, config.asteroidFaktor.max);
+  const asteroidRarity = generateAsteroidRarity(config.asteroidRarity);
+  const asteroidRarityMultiplier = generateasteroidRarityMultiplier(asteroidRarity);
+  const asteroidBaseMultiplier = generateAsteroidBaseMultiplier(asteroidRarityMultiplier);
+  const asteroidValue = generateAsteroidValue(asteroidBaseFaktor, asteroidBaseMultiplier);
+  const resources = generateResourcesFromPools(asteroidValue);
+  const asteroidName = generateAsteroidName(asteroidRarity, asteroidValue, asteroidBaseMultiplier);
+
+  const asteroid: Asteroid = {
+    id: asteroidID,
+    name: asteroidName,
+    rarity: asteroidRarity,
+    base: asteroidBaseFaktor,
+    multiplier: asteroidBaseMultiplier,
+    value: asteroidValue,
+    resources,
+  };
+
+  return asteroid;
+}
+
+function generateAsteroidRarity(asteroidRarity: AsteroidRarity): string {
+  const totalWeight: number = Object.values(asteroidRarity).reduce((acc, value): number => acc + value, 0);
+  const randomValue: number = generateRandomInteger(0, totalWeight - 1);
+
+  let cumulativeWeight: number = 0;
+  for (const [rarity, weight] of Object.entries(asteroidRarity)) {
+    cumulativeWeight += weight;
+    if (randomValue < cumulativeWeight) {
+      return rarity;
+    }
+  }
+
+  // Fallback (sollte normalerweise nicht erreicht werden)
+  return 'common';
+}
+
+// Bestimmt den Multiplikator für die Größe des Asteroiden anhand der asteroidRarityMultiplier
+function generateasteroidRarityMultiplier(rarity: string) {
+  let rarityMultiplier = { min: 0, max: 0 };
+
+  switch (rarity) {
+    case 'common':
+      rarityMultiplier = config.asteroidRarityMultiplier.common
+      break;
+    case 'uncommen':
+      rarityMultiplier = config.asteroidRarityMultiplier.uncommen
+      break;
+    case 'rare':
+      rarityMultiplier = config.asteroidRarityMultiplier.rare
+      break;
+    case 'extrem':
+      rarityMultiplier = config.asteroidRarityMultiplier.extrem
+      break;
+  }
+
+  return rarityMultiplier
+}
+
+function generateAsteroidBaseMultiplier(asteroidRarityMultiplier: { min: number; max: number; }): number {
+  const asteroidBaseMultiplier = Math.random() * (asteroidRarityMultiplier.max - asteroidRarityMultiplier.min) + asteroidRarityMultiplier.min;
+  return parseFloat(asteroidBaseMultiplier.toFixed(4))
+}
+
+function generateResourcesFromPools(asteroidValue: number): Partial<Record<string, number>> {
+  const resources: Partial<Record<string, number>> = {};
+
+  const selectedPool = Object.keys(config.resourcePools)[Math.floor(Math.random() * Object.keys(config.resourcePools).length)];
+  const poolResources = config.resourcePools[selectedPool];
+  const resourceWeights = config.poolResourceWeights[selectedPool];
+  const totalWeight = Object.values(resourceWeights).reduce((sum, weight) => sum + weight, 0);
+
+  poolResources.forEach(resource => {
+    const weight = resourceWeights[resource];
+    const normalizedWeight = weight / totalWeight;
+    resources[resource] = Math.floor(normalizedWeight * asteroidValue);
+  });
+  
+
+  return resources;
+}
+
+
+function generateAsteroidValue(asteroidBaseFaktor: number, asteroidBaseMultiplier: number): number {
+  return Math.floor(asteroidBaseFaktor * asteroidBaseMultiplier)
+}
+
+function generateAsteroidBaseFaktorValue(asteroidFaktorMin: number, asteroidFaktorMax: number): number {
+  const min = Math.ceil(asteroidFaktorMin);
+  const max = Math.floor(asteroidFaktorMax);
+  return generateRandomInteger(min, max)
+}
+
+
+function generateAsteroidName(asteroidRarity: string, asteroidValue: number, asteroidBaseMultiplier: number) {
+  const rarity = asteroidRarity.slice(0, 1)
+  const value = asteroidValue
+  const multiplier = Math.floor(asteroidBaseMultiplier)
+  const asteroidName = generateRandomString(2) + rarity + generateRandomString(2) + value.toString() + '-' + multiplier.toString()
+
+  return asteroidName
 }

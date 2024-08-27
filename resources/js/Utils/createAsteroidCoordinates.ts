@@ -35,9 +35,6 @@ type AsteroidData = {
   [key: string]: Asteroid;
 };
 
-
-// config
-const radius = 100;
 const stationRadius = config.stationRadius;
 const minDistance = config.minDistance;
 const universeSize = config.universeSize;
@@ -67,7 +64,7 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
 
   function isCollidingWithAsteroid(x: number, y: number): boolean {
     return asteroidsCoords.some(
-      asteroid => Math.abs(asteroid.x - x) < minDistance + radius && Math.abs(asteroid.y - y) < minDistance + radius
+      asteroid => Math.abs(asteroid.x - x) < minDistance && Math.abs(asteroid.y - y) < minDistance
     );
   }
 

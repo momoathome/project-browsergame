@@ -66,37 +66,34 @@ class SpacecraftController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(Request $request, Spacecraft $spacecraft)
     {
         $validated = $request->validate([
-            'spacecraft_id' => 'required|exists:spacecrafts,id',
             'amount' => 'required|integer|min:1',
         ]);
 
         $quantity = $validated['amount'];
-        $spacecraft = Spacecraft::findOrFail($validated['spacecraft_id']);
-        $user = $request->user();
+        $user = auth()->user();
 
         $totalCosts = $spacecraft->resources->mapWithKeys(function ($resource) use ($quantity) {
             return [$resource->id => $resource->pivot->amount * $quantity];
         });
     
-        foreach ($totalCosts as $resourceId => $requiredAmount) {
+        foreach ($totalCosts as $resourceId => $requiredResource) {
             $userResource = UserResource::where('user_id', $user->id)
                 ->where('resource_id', $resourceId)
                 ->first();
     
-            if (!$userResource || $userResource->count < $requiredAmount) {
+            if (!$userResource || $userResource->count < $requiredResource) {
                 return redirect()->route('shipyard')->dangerBanner('Not enough resources');
             }
         }
 
-
         DB::transaction(function () use ($spacecraft, $quantity, $user, $totalCosts) {
-            foreach ($totalCosts as $resourceId => $requiredAmount) {
+            foreach ($totalCosts as $resourceId => $requiredResource) {
                 UserResource::where('user_id', $user->id)
                     ->where('resource_id', $resourceId)
-                    ->decrement('count', $requiredAmount);
+                    ->decrement('count', $requiredResource);
             }
     
             $spacecraft->count += $quantity;

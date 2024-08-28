@@ -9,10 +9,19 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserResource;
 use App\Models\Resource;
+use App\Services\MarketService;
 
 
 class MarketController extends Controller
 {
+
+    protected $marketService;
+
+    public function __construct(MarketService $marketService)
+    {
+        $this->marketService = $marketService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -30,105 +39,21 @@ class MarketController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(market $market)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(market $market)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, market $market)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(market $market)
+    public function update(Request $request)
     {
         //
     }
 
     public function buy(Request $request)
     {
-
         $validated = $request->validate([
             'resource_id' => 'required|exists:markets,id',
             'amount' => 'required|integer|min:1',
         ]);
 
-        $quantity = $validated['amount'];
-        $user = Auth::user();
-
-        $marketItem = Market::findOrFail($validated['resource_id']);
-
-        $creditResource = Resource::where('name', 'Credits')->firstOrFail();
-        $userCreditResource = UserResource::where('user_id', $user->id)
-            ->where('resource_id', $creditResource->id)
-            ->first();
-
-        $totalCost = $marketItem->cost * $quantity;
-
-        if (!$userCreditResource || $userCreditResource->count < $totalCost) {
-            return redirect()->route('market')->dangerBanner('Not enough Credits');
-        }
-
-        if ($marketItem->stock < $quantity) {
-            return redirect()->route('market')->dangerBanner(['not enough stock']);
-        }
-
-        DB::transaction(function () use ($marketItem, $user, $quantity, $totalCost, $userCreditResource) {
-            $marketItem->stock -= $quantity;
-            $marketItem->save();
-
-            $userCreditResource->count -= $totalCost;
-            $userCreditResource->save();
-
-            $userResource = UserResource::where('user_id', $user->id)
-                ->where('resource_id', $marketItem->resource_id)
-                ->first();
-
-            if ($userResource) {
-                $userResource->count += $quantity;
-                $userResource->save();
-            } else {
-                UserResource::create([
-                    'user_id' => $user->id,
-                    'resource_id' => $marketItem->resource_id,
-                    'count' => $quantity,
-                ]);
-            }
-        });
-
-        return redirect()->route('market')->banner('resource purchased successfully');
+        $this->marketService->buyResource($validated['resource_id'], $validated['amount']);
     }
 
     public function sell(Request $request)
@@ -138,40 +63,6 @@ class MarketController extends Controller
             'amount' => 'required|integer|min:1',
         ]);
 
-        $quantity = $validated['amount'];
-        $user = Auth::user();
-
-        $marketItem = Market::findOrFail($validated['resource_id']);
-
-        $userResource = UserResource::where('user_id', $user->id)
-            ->where('resource_id', $marketItem->resource_id)
-            ->first();
-
-        if (!$userResource || $userResource->count < $quantity) {
-            return redirect()->route('market')->dangerBanner('Not enough resources');
-        }
-
-        $creditResource = Resource::where('name', 'Credits')->firstOrFail();
-        $userCreditResource = UserResource::where('user_id', $user->id)
-            ->where('resource_id', $creditResource->id)
-            ->first();
-
-        $totalCost = $marketItem->cost * $quantity;
-
-        DB::transaction(function () use ($marketItem, $quantity, $userResource, $totalCost, $userCreditResource) {
-            // Reduziere die Menge des Benutzers
-            $userResource->count -= $quantity;
-            $userResource->save();
-
-            // Füge die Menge zum Marktplatz hinzu
-            $marketItem->stock += $quantity;
-            $marketItem->save();
-
-            $userCreditResource->count += $totalCost;
-            $userCreditResource->save();
-
-        });
-
-        return redirect()->route('market')->banner('resource sold successfully');
+        $this->marketService->sellResource($validated['resource_id'], $validated['amount']);
     }
 }

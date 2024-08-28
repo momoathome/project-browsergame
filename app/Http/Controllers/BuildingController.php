@@ -70,10 +70,11 @@ class BuildingController extends Controller
     public function update(Request $request, building $building)
     {
 
+        $user = auth()->user();
         $requiredResources = BuildingResourceCost::where('building_id', $building->id)->get();
 
         foreach ($requiredResources as $requiredResource) {
-            $userResource = UserResource::where('user_id', Auth::id())
+            $userResource = UserResource::where('user_id', $user->id)
                 ->where('resource_id', $requiredResource->resource_id)
                 ->first();
     
@@ -83,9 +84,9 @@ class BuildingController extends Controller
             }
         }
 
-        DB::transaction(function () use ($building, $requiredResources) {
+        DB::transaction(function () use ($user, $building, $requiredResources) {
             foreach ($requiredResources as $requiredResource) {
-                $userResource = UserResource::where('user_id', Auth::id())
+                $userResource = UserResource::where('user_id', $user->id)
                     ->where('resource_id', $requiredResource->resource_id)
                     ->first();
     

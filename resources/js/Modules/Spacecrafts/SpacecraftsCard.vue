@@ -16,13 +16,12 @@ const formattedCargo = computed(() => numberFormat(props.spacecraftData.cargo));
 const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
 
 const form = useForm({
-  spacecraft_id: props.spacecraftData.id,
   amount: 0
 });
 
 function produceSpacecraft() {
-  form.post(`/shipyard/update`, {
-    onFinish: () => {
+  form.post(`/shipyard/${props.spacecraftData.id}/update`, {
+    onSuccess: () => {
       form.reset();
     },
     onError: () => {

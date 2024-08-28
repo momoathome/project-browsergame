@@ -14,11 +14,6 @@ class UserResourceController extends Controller
         //
     }
 
-    public function update(Request $request, UserResource $userResource)
-    {
-        //
-    }
-
     /* For Testing Purposes */
     public function addResource(Request $request)
     {

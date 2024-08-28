@@ -52,13 +52,12 @@ const form = useForm({
 });
 
 function exploreAsteroid() {
-  modalUnits.value.onSubmit(); // get spacecrafts from modal
   form.asteroid_id = props.content.data.id;
+  modalUnits.value.onSubmit(); // get spacecrafts from MapModalUnits component
 
   form.post(`/asteroidMap/update`, {
       onFinish: () => {
         close();
-        console.log('success');
       },
     });
 }

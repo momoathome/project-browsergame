@@ -37,7 +37,7 @@ function buyResource() {
   }
 
   form.post(`/market/buy`, {
-    onFinish: () => {
+    onSuccess: () => {
       form.reset();
     },
   });
@@ -49,7 +49,7 @@ function sellResource() {
   }
 
   form.post(`/market/sell`, {
-    onFinish: () => {
+    onSuccess: () => {
       form.reset();
     },
   });

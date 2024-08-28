@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import type { Spacecraft } from '@/types/types';
@@ -9,7 +9,18 @@ const props = defineProps<{
   spacecrafts: Spacecraft[];
 }>();
 
-const count = ref({
+/* totalCombat power of user's spacecrafts */
+const totalCombat = computed(() => {
+  let combat = 0;
+
+})
+
+/* totalCargo capacity of user's spacecrafts */
+const totalCargo = computed(() => {
+  let cargoCapacity = 0;
+})
+
+const form = useForm({
   Merlin: 0,
   Comet: 0,
   Javelin: 0,
@@ -25,41 +36,23 @@ const count = ref({
   Hercules: 0,
 })
 
-
-/* totalCombat power of user's spacecrafts */
-const totalCombat = computed(() => {
-  let combat = 0;
-
-
-})
-
-/* totalCargo capacity of user's spacecrafts */
-const totalCargo = computed(() => {
-  let cargoCapacity = 0;
-})
-
-const form = useForm({
-  amount: 0,
-})
+const emit =defineEmits(['emitForm'])
 
 const onSubmit = () => {
-  form.post('/asteroid/explore', {
-    onFinish: () => {
-      form.reset();
-    },
-  });
+  emit('emitForm', form)
 }
 
+defineExpose({ onSubmit })
 </script>
 
 <template>
   <div class="flex items-center text-base">
     <div class="py-8 px-12 flex flex-col gap-6">
-      <form @submit.prevent="onSubmit" @keypress.enter="onSubmit" class="flex flex-col gap-6" name="farmAsteroid">
+      <form class="flex flex-col gap-6" name="farmAsteroid">
         <div class="grid grid-cols-3 gap-x-4 gap-y-2">
           <div class="flex items-center relative group" v-for="spacecraft in spacecrafts" :key="spacecraft.details.name">
-            <img :src="spacecraft.details.image" class="h-8" @click="count[spacecraft.details.name] = spacecraft.count" />
-            <AppInput v-model.number="count[spacecraft.details.name]" :maxInputValue="spacecraft.count"
+            <img :src="spacecraft.details.image" class="h-8" @click="form[spacecraft.details.name] = spacecraft.count" />
+            <AppInput v-model.number="form[spacecraft.details.name]" :maxInputValue="spacecraft.count"
               :name="spacecraft.details.name" class="text-lg mx-1" />
             <span
               class="pointer-events-none absolute -top-6 left-4 text-center bg-base text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -53,5 +53,15 @@ class AsteroidController extends Controller
 
         return response()->json($asteroid, 201);
     }
+
+    public function update(Request $request, Asteroid $asteroid)
+    {
+/*         $data = $request->all();
+        $data['resources'] = json_encode($data['resources']);
+
+        $asteroid->update($data); */
+
+        return response()->json($asteroid, 201);
+    }
 }
 

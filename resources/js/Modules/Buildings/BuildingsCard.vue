@@ -1,32 +1,14 @@
 <script lang="ts" setup>
 import { type PropType, computed } from 'vue';
-import { numberFormat, timeFormat } from '@/Utils/format';
+import { timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
+import type { FormattedBuilding } from '@/types/types';
 
-interface Resource {
-  name: string;
-  image: string;
-  amount: number;
-}
-
-interface BuildingCardProps {
-  id: number;
-  image: string;
-  name: string;
-  description: string;
-  level: number;
-  buildTime: number;
-  resources: Resource[];
-}
-
-const props = defineProps({
-  moduleData: {
-    type: Object as PropType<BuildingCardProps>,
-    required: true
-  }
-});
+const props = defineProps<{
+  moduleData: FormattedBuilding
+}>();
 
 const formattedBuildTime = computed(() => timeFormat(props.moduleData.buildTime));
 // const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));

@@ -3,10 +3,11 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as config from '@/config';
-import type { Asteroid, Station } from '@/types/types';
+import type { Asteroid, Station, Spacecraft } from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
+  spacecrafts: Spacecraft[];
 }>();
 
 const stationImageSrc = '/storage/space-station.png';
@@ -253,9 +254,10 @@ function closeModal() {
       <span @click="resetView" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
 
-      <Modal 
-        @close="closeModal" 
-        :show="isModalOpen" 
+      <Modal
+        :spacecrafts="spacecrafts"
+        @close="closeModal"
+        :show="isModalOpen"
         :title="selectedObject?.data.name" 
         :content="{
           type: selectedObject?.type,

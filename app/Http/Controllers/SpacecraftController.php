@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Spacecraft;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\SpacecraftResourceCost;
 use App\Models\UserResource;
 
 
@@ -68,20 +66,7 @@ class SpacecraftController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Spacecraft $spacecraft)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Spacecraft $spacecraft)
-    {
-        //
-    }
-
-    public function produce(Request $request)
+    public function update(Request $request)
     {
         $validated = $request->validate([
             'spacecraft_id' => 'required|exists:spacecrafts,id',
@@ -120,6 +105,14 @@ class SpacecraftController extends Controller
         
 
         return redirect()->route('shipyard')->banner('Spacecraft produced successfully');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Spacecraft $spacecraft)
+    {
+        //
     }
 
 }

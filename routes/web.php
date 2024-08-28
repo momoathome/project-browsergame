@@ -29,7 +29,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');
 
     Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
-    Route::post('/shipyard/produce', [SpacecraftController::class, 'produce'])->name('shipyard.produce');
+    Route::post('/shipyard/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
     Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');
@@ -41,7 +41,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         return Inertia::render('Research'); })->name('research');
 
     Route::get('/asteroidMap', [AsteroidController::class, 'index'])->name('asteroidMap');
-    Route::post('/asteroids', [AsteroidController::class, 'store']);
+    Route::post('/asteroidMap', [AsteroidController::class, 'update'])->name('asteroidMap.update');
 
     Route::get('/simulator', function () {
         return Inertia::render('Simulator'); })->name('simulator');

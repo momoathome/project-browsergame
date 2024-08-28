@@ -55,13 +55,33 @@ export interface Spacecraft {
   resources: Resource[];
 }
 
-export interface BuildingCardProps {
-  moduleData: Building[];
+export interface SimpleResource {
+  name: string;
+  image: string;
+  amount: number;
 }
-
-export interface SpacecraftCardProps {
-  moduleData: Spacecraft[];
-}
+export interface FormattedBuilding {
+  id: number;
+  image: string;
+  name: string;
+  description: string;
+  level: number;
+  buildTime: number;
+  resources: SimpleResource[];
+};
+export interface FormattedSpacecraft {
+  id: number;
+  image: string;
+  name: string;
+  description: string;
+  type: string;
+  combat: number;
+  count: number;
+  cargo: number;
+  buildTime: number;
+  unitLimit: number;
+  resources: SimpleResource[];
+};
 
 export interface Asteroid {
   id: number;

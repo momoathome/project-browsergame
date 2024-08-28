@@ -5,19 +5,29 @@ namespace App\Http\Controllers;
 use App\Models\Asteroid;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Spacecraft;
+
 
 class AsteroidController extends Controller
 {
     public function index()
     {
         $asteroids = Asteroid::all();
+        $user = auth()->user();
+
 
         foreach ($asteroids as $asteroid) {
             $asteroid->resources = json_decode($asteroid->resources, true);
         }
+
+        $spacecrafts = Spacecraft::with('details')
+        ->where('user_id', $user->id)
+        ->orderBy('id', 'asc')
+        ->get();
         
         return Inertia::render('AsteroidMap', [
             'asteroids' => $asteroids,
+            'spacecrafts' => $spacecrafts,
         ]);
     }
 

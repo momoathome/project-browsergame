@@ -25,21 +25,21 @@ class SpacecraftSeeder extends Seeder
 
         foreach ($userIds as $userId) {
             $spacecraftDetails = [
-                'Merlin' => $this->createSpacecraft($userId, 'Merlin', 10, 1, 10, 1, 900),
-                'Comet' => $this->createSpacecraft($userId, 'Comet', 20, 1, 10, 1, 720),
-                'Javelin' => $this->createSpacecraft($userId, 'Javelin', 20, 1, 10, 1, 1800),
-                'Sentinel' => $this->createSpacecraft($userId, 'Sentinel', 20, 1, 10, 1, 900),
-                'Probe' => $this->createSpacecraft($userId, 'Probe', 20, 1, 10, 1, 600),
-                'Ares' => $this->createSpacecraft($userId, 'Ares', 20, 1, 10, 1, 500),
-                'Nova' => $this->createSpacecraft($userId, 'Nova', 20, 1, 10, 1, 300),
-                'Horus' => $this->createSpacecraft($userId, 'Horus', 20, 1, 10, 1, 1500),
-                'Reaper' => $this->createSpacecraft($userId, 'Reaper', 20, 1, 10, 1, 1200),
-                'Mole' => $this->createSpacecraft($userId, 'Mole', 20, 1, 10, 1, 1200),
-                'Titan' => $this->createSpacecraft($userId, 'Titan', 20, 1, 10, 1, 1200),
-                'Nomad' => $this->createSpacecraft($userId, 'Nomad', 20, 1, 10, 1, 1200),
-                'Hercules' => $this->createSpacecraft($userId, 'Hercules', 20, 1, 10, 1, 1200),
-                'Collector' => $this->createSpacecraft($userId, 'Collector', 20, 1, 10, 1, 1200),
-                'Reclaimer' => $this->createSpacecraft($userId, 'Reclaimer', 20, 1, 10, 1, 1200),
+                'Merlin' => $this->createSpacecraft($userId, 'Merlin', 50, 0, 10, 1, 900),
+                'Comet' => $this->createSpacecraft($userId, 'Comet', 150, 0, 20, 1, 720),
+                'Javelin' => $this->createSpacecraft($userId, 'Javelin', 400, 0, 40, 1, 1800),
+                'Sentinel' => $this->createSpacecraft($userId, 'Sentinel', 1_000, 0, 200, 1, 900),
+                'Probe' => $this->createSpacecraft($userId, 'Probe', 2_500, 0, 900, 1, 600),
+                'Ares' => $this->createSpacecraft($userId, 'Ares', 7_000, 0, 2_700, 1, 500),
+                'Nova' => $this->createSpacecraft($userId, 'Nova', 20_000, 0, 6_400, 1, 300),
+                'Horus' => $this->createSpacecraft($userId, 'Horus', 60_000, 0, 9_800, 1, 1500),
+                'Reaper' => $this->createSpacecraft($userId, 'Reaper', 200_000, 0, 15_000, 1, 1200),
+                'Mole' => $this->createSpacecraft($userId, 'Mole', 10, 0, 200, 1, 1200),
+                'Titan' => $this->createSpacecraft($userId, 'Titan', 100, 0, 3_200, 1, 1200),
+                'Nomad' => $this->createSpacecraft($userId, 'Nomad', 25, 0, 500, 1, 1200),
+                'Hercules' => $this->createSpacecraft($userId, 'Hercules', 250, 0, 5_000, 1, 1200),
+                'Collector' => $this->createSpacecraft($userId, 'Collector', 100, 0, 450, 1, 1200),
+                'Reclaimer' => $this->createSpacecraft($userId, 'Reclaimer', 450, 0, 3_600, 1, 1200),
             ];
 
             foreach ($spacecraftDetails as $name => $spacecraft) {

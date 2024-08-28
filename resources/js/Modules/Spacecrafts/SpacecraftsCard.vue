@@ -1,39 +1,18 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { timeFormat } from '@/Utils/format';
+import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
+import type { FormattedSpacecraft } from '@/types/types';
 
-interface Resource {
-  name: string;
-  image: string;
-  amount: number;
-}
+const props = defineProps<{
+  spacecraftData: FormattedSpacecraft
+}>();
 
-interface SpacecraftCardProps {
-  id: number;
-  image: string
-  name: string
-  description: string
-  type: string
-  combat: number
-  count: number
-  cargo: number
-  unitLimit: number
-  buildTime: number
-  resources: Resource[];
-
-}
-
-const props = defineProps({
-  spacecraftData: {
-    type: Object as PropType<SpacecraftCardProps>,
-    required: true
-  }
-});
-
+const formattedCombat = computed(() => numberFormat(props.spacecraftData.combat));
+const formattedCargo = computed(() => numberFormat(props.spacecraftData.cargo));
 const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
 
 const form = useForm({
@@ -42,7 +21,7 @@ const form = useForm({
 });
 
 function produceSpacecraft() {
-  form.post(`/shipyard/produce`, {
+  form.post(`/shipyard/update`, {
     onFinish: () => {
       form.reset();
     },
@@ -111,11 +90,11 @@ const decrementBy10 = () => {
       <div class="flex w-full justify-between">
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Combat</span>
-          <p class="font-medium text-sm">{{ spacecraftData.combat }}</p>
+          <p class="font-medium text-sm">{{ formattedCombat }}</p>
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Cargo</span>
-          <p class="font-medium text-sm">{{ spacecraftData.cargo }}</p>
+          <p class="font-medium text-sm">{{ formattedCargo }}</p>
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Unit Limit</span>

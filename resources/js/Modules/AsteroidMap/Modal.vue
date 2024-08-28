@@ -3,6 +3,8 @@ import { ref } from 'vue';
 import Modal from '@/Components/Modal.vue';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import MapModalUnits from './MapModalUnits.vue';
 
 const emit = defineEmits(['close']);
 
@@ -23,6 +25,10 @@ defineProps({
         type: Object,
         default: null,
     },
+    spacecrafts: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const close = () => {
@@ -38,42 +44,53 @@ const toggleDetails = () => {
 
 <template>
     <Modal :show="show" :closeable="closeable" @close="close">
-        <div class="px-8 pb-8 pt-8 h-full bg-gray-800 text-white">
+        <div class="px-8 pb-8 pt-8 h-full flex flex-col bg-gray-800 text-white">
 
             <button class="absolute top-4 right-4 text-white" @click="close">X</button>
-            <h3 class="text-2xl mb-16 flex justify-center">{{ title }}</h3>
-            <div v-if="content" class="relative">
-                <img v-if="content.type === 'station'" :src="content.imageSrc" alt="Station"
-                    class="w-32 h-32 mx-auto" />
+            <h3 class="text-2xl flex justify-center mb-16">{{ title }}</h3>
 
-                <div v-if="content.type === 'asteroid'" class="relative w-32 h-32 mx-auto">
-                    <AsteroidModalResourceSvg v-if="content.type === 'asteroid'" :asteroid="content.data" />
-                    <img :src="content.imageSrc" alt="Asteroid" class="w-full h-full absolute inset-0" />
+                <!-- if station is selected -->
+                <div v-if="content.type === 'station'">
+                    <img :src="content.imageSrc" alt="Station" class="w-32 h-32 mx-auto" />
+
+                    <p class="text-gray-700 dark:text-gray-300">This is a space station. No further details available.
+                    </p>
                 </div>
 
-                <div v-if="content.type === 'station'" class="text-gray-700 dark:text-gray-300">
-                    <p>This is a space station. No further details available.</p>
-                </div>
+                <!-- if asteroid is selected -->
+                <div v-if="content.type === 'asteroid'" class="flex flex-col relative gap-12">
+                    <div class="relative w-32 h-32 mx-auto">
+                        <AsteroidModalResourceSvg :asteroid="content.data" />
+                        <img :src="content.imageSrc" alt="Asteroid" class="w-full h-full absolute inset-0" />
+                    </div>
 
-                <div class="flex justify-center pt-12">
-                    <PrimaryButton v-if="content.type === 'asteroid'" @click="toggleDetails">
-                        {{ showDetails ? 'Hide Details' : 'Show Details' }}
-                    </PrimaryButton>
-                </div>
+                    <MapModalUnits :spacecrafts="spacecrafts" />
 
-                <div v-if="content.type === 'asteroid' && showDetails" class="text-gray-300 pt-6">
-                    <p><strong>Rarity:</strong> {{ content.data.rarity }}</p>
+                    <div class="flex justify-center gap-6">
+                        <SecondaryButton @click="toggleDetails">
+                            {{ showDetails ? 'Hide resources' : 'Show resources' }}
+                        </SecondaryButton>
+                        <PrimaryButton>Explore</PrimaryButton>
+                    </div>
+
+                    <div v-if="showDetails" class="text-gray-300 absolute top-0 left-6">
+                        <!-- if user is admin -->
+                        <!--                     <p><strong>Rarity:</strong> {{ content.data.rarity }}</p>
                     <p><strong>Base Value:</strong> {{ content.data.base }}</p>
                     <p><strong>Multiplier:</strong> {{ content.data.multiplier }}</p>
                     <p><strong>Value:</strong> {{ content.data.value }}</p>
-                    <p><strong>Pool:</strong> {{ content.data.resource_pool }}</p>
-                    <div class="flex flex-col gap-1"><p><strong>Resources:</strong></p>
-                        <span v-for="(value, key) in content.data.resources" :key="key" class="flex ms-4">
-                            <img :src="`/storage/resources/${key}.png`" class="h-6 mr-2" />
-                            {{ key }}: {{ value }}
-                        </span></div>
+                    <p><strong>Pool:</strong> {{ content.data.resource_pool }}</p> -->
+                        <!-- else -->
+                        <div class="flex flex-col gap-2">
+                            <p><strong>Resources:</strong></p>
+                            <span v-for="(value, key) in content.data.resources" :key="key" class="flex gap-4">
+                                <img :src="`/storage/resources/${key}.png`" class="h-6" />
+                                {{ value }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
     </Modal>
 </template>

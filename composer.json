@@ -7,11 +7,14 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-debugbar": "^3.13",
+        "http-interop/http-factory-guzzle": "^1.2",
         "inertiajs/inertia-laravel": "^1.0",
         "laravel/framework": "^11.9",
         "laravel/jetstream": "^5.1",
         "laravel/sanctum": "^4.0",
+        "laravel/scout": "^10.11",
         "laravel/tinker": "^2.9",
+        "meilisearch/meilisearch-php": "^1.10",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

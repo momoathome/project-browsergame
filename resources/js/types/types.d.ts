@@ -70,6 +70,7 @@ export interface Asteroid {
   base: number;
   multiplier: number;
   value: number;
+  resource_pool: string;
   resources: Record<string, number>;
   x: number;
   y: number;

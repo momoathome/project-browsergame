@@ -92,13 +92,13 @@ class MarketController extends Controller
 
         $creditResource = Resource::where('name', 'Credits')->firstOrFail();
         $userCreditResource = UserResource::where('user_id', $user->id)
-        ->where('resource_id', $creditResource->id)
-        ->first();
-        
+            ->where('resource_id', $creditResource->id)
+            ->first();
+
         $totalCost = $marketItem->cost * $quantity;
 
         if (!$userCreditResource || $userCreditResource->count < $totalCost) {
-            return redirect()->route('market')->dangerBanner('Not enough credits');
+            return redirect()->route('market')->dangerBanner('Not enough Credits');
         }
 
         if ($marketItem->stock < $quantity) {

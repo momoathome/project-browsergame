@@ -19,80 +19,80 @@ class ResourceSeeder extends Seeder
         Resource::create([
             'name' => 'Carbon',
             'description' => 'A common resource',
-            'image' => '/storage/resources/carbon.png'
+            'image' => '/storage/resources/Carbon.png'
         ]);
 
         Resource::create([
             'name' => 'Hydrogenium',
             'description' => 'A highly reactive gas',
-            'image' => '/storage/resources/hydrogenium.png'
+            'image' => '/storage/resources/Hydrogenium.png'
         ]);
 
         Resource::create([
             'name' => 'Kyberkristall',
             'description' => 'A rare and energy-rich crystal',
-            'image' => '/storage/resources/kyberkristall.png'
+            'image' => '/storage/resources/Kyberkristall.png'
         ]);
 
         Resource::create([
             'name' => 'Titanium',
             'description' => 'A strong and durable metal',
-            'image' => '/storage/resources/titanium.png'
+            'image' => '/storage/resources/Titanium.png'
         ]);
 
         Resource::create([
             'name' => 'Uraninite',
             'description' => 'A major ore of uranium, used for nuclear fuel',
-            'image' => '/storage/resources/uraninite.png'
+            'image' => '/storage/resources/Uraninite.png'
         ]);
 
         Resource::create([
             'name' => 'Cobalt',
             'description' => 'A metal used in high-strength alloys',
-            'image' => '/storage/resources/cobalt.png'
+            'image' => '/storage/resources/Cobalt.png'
         ]);
 
         Resource::create([
             'name' => 'Iridium',
             'description' => 'A dense and corrosion-resistant metal',
-            'image' => '/storage/resources/iridium.png'
+            'image' => '/storage/resources/Iridium.png'
         ]);
 
         Resource::create([
             'name' => 'Thorium',
             'description' => 'A radioactive element',
-            'image' => '/storage/resources/thorium.png'
+            'image' => '/storage/resources/Thorium.png'
         ]);
 
         Resource::create([
             'name' => 'Hyperdiamond',
             'description' => 'A synthetic diamond with exceptional hardness',
-            'image' => '/storage/resources/hyperdiamond.png'
+            'image' => '/storage/resources/Hyperdiamond.png'
         ]);
 
         Resource::create([
             'name' => 'Astatine',
             'description' => 'A very rare and highly radioactive element',
-            'image' => '/storage/resources/astatine.png'
+            'image' => '/storage/resources/Astatine.png'
         ]);
 
         Resource::create([
             'name' => 'Dilithium',
             'description' => 'A crystalline element with unique properties',
-            'image' => '/storage/resources/dilithium.png'
+            'image' => '/storage/resources/Dilithium.png'
         ]);
 
         Resource::create([
             'name' => 'Deuterium',
             'description' => 'A stable isotope of hydrogen',
-            'image' => '/storage/resources/deuterium.png'
+            'image' => '/storage/resources/Deuterium.png'
         ]);
 
         Resource::create([
             'id' => 99,
             'name' => 'Credits',
             'description' => 'currency',
-            'image' => '/storage/resources/credits.png'
+            'image' => '/storage/resources/Credits.png'
         ]);
     }
 }

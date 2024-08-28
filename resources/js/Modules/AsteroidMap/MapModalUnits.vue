@@ -39,10 +39,13 @@ const form = useForm({
 const emit =defineEmits(['emitForm'])
 
 const onSubmit = () => {
-  emit('emitForm', form)
+  emit('emitForm', form.data())
+}
+const onExplore = () => {
+  form.reset()
 }
 
-defineExpose({ onSubmit })
+defineExpose({ onSubmit, onExplore })
 </script>
 
 <template>

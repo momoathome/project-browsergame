@@ -41,7 +41,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         return Inertia::render('Research'); })->name('research');
 
     Route::get('/asteroidMap', [AsteroidController::class, 'index'])->name('asteroidMap');
-    Route::post('/asteroidMap', [AsteroidController::class, 'update'])->name('asteroidMap.update');
+    Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
 
     Route::get('/simulator', function () {
         return Inertia::render('Simulator'); })->name('simulator');

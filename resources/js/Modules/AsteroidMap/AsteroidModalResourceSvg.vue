@@ -14,18 +14,18 @@ const props = defineProps<{
 }>();
 
 const ressources = ref<Ressource[]>([
-  { name: 'titanium', value: props.asteroid.resources.titanium ?? 0, color: 'silver' },
-  { name: 'carbon', value: props.asteroid.resources.carbon ?? 0, color: 'darkred' },
-  { name: 'kyberkristall', value: props.asteroid.resources.kyberkristall ?? 0, color: 'deeppink' },
-  { name: 'hydrogenium', value: props.asteroid.resources.hydrogenium ?? 0, color: 'cyan' },
-  { name: 'uraninite', value: props.asteroid.resources.uraninite ?? 0, color: 'green' },
-  { name: 'cobalt', value: props.asteroid.resources.cobalt ?? 0, color: 'dodgerblue' },
-  { name: 'iridium', value: props.asteroid.resources.iridium ?? 0, color: 'slategray' },
-  { name: 'astatine', value: props.asteroid.resources.astatine ?? 0, color: 'gold' },
-  { name: 'thorium', value: props.asteroid.resources.thorium ?? 0, color: 'yellowgreen' },
-  { name: 'hyperdiamond', value: props.asteroid.resources.hyperdiamond ?? 0, color: 'navy' },
-  { name: 'dilithium', value: props.asteroid.resources.dilithium ?? 0, color: 'purple' },
-  { name: 'deuterium', value: props.asteroid.resources.deuterium ?? 0, color: 'orangered' },
+  { name: 'Titanium', value: props.asteroid.resources.Titanium ?? 0, color: 'silver' },
+  { name: 'Carbon', value: props.asteroid.resources.Carbon ?? 0, color: 'darkred' },
+  { name: 'Kyberkristall', value: props.asteroid.resources.Kyberkristall ?? 0, color: 'deeppink' },
+  { name: 'Hydrogenium', value: props.asteroid.resources.Hydrogenium ?? 0, color: 'cyan' },
+  { name: 'Uraninite', value: props.asteroid.resources.Uraninite ?? 0, color: 'green' },
+  { name: 'Cobalt', value: props.asteroid.resources.Cobalt ?? 0, color: 'dodgerblue' },
+  { name: 'Iridium', value: props.asteroid.resources.Iridium ?? 0, color: 'slategray' },
+  { name: 'Astatine', value: props.asteroid.resources.Astatine ?? 0, color: 'gold' },
+  { name: 'Thorium', value: props.asteroid.resources.Thorium ?? 0, color: 'yellowgreen' },
+  { name: 'Hyperdiamond', value: props.asteroid.resources.Hyperdiamond ?? 0, color: 'navy' },
+  { name: 'Dilithium', value: props.asteroid.resources.Dilithium ?? 0, color: 'purple' },
+  { name: 'Deuterium', value: props.asteroid.resources.Deuterium ?? 0, color: 'orangered' },
   // Weitere Ressourcen können hier hinzugefügt werden
 ]);
 

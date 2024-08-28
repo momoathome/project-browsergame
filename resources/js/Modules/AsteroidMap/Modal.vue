@@ -9,7 +9,7 @@ import MapModalUnits from './MapModalUnits.vue';
 
 const emit = defineEmits(['close']);
 
-const props =defineProps({
+const props = defineProps({
   show: {
     type: Boolean,
     default: false,
@@ -35,6 +35,7 @@ const props =defineProps({
 const close = () => {
   emit('close');
   form.reset();
+  modalUnits.value.onExplore();
 };
 
 const showDetails = ref(false);
@@ -47,37 +48,23 @@ const modalUnits = ref(null)
 
 const form = useForm({
   asteroid_id: props.content?.data?.id ?? null,
-  spacecrafts: {
-    Merlin: 0,
-    Comet: 0,
-    Javelin: 0,
-    Sentinel: 0,
-    Probe: 0,
-    Ares: 0,
-    Nova: 0,
-    Horus: 0,
-    Reaper: 0,
-    Mole: 0,
-    Titan: 0,
-    Nomad: 0,
-    Hercules: 0,
-  }
+  spacecrafts: {},
 });
+
+function exploreAsteroid() {
+  modalUnits.value.onSubmit(); // get spacecrafts from modal
+  form.asteroid_id = props.content.data.id;
+
+  form.post(`/asteroidMap/update`, {
+      onFinish: () => {
+        close();
+        console.log('success');
+      },
+    });
+}
 
 function updateSpacecraftsInForm(spacecrafts) {
   form.spacecrafts = spacecrafts;
-}
-
-function exploreAsteroid() {
-  console.log('success');
-  modalUnits.value.onSubmit();
-  form.asteroid_id = props.content.data.id;
-/*
-  form.post(`/asteroidMap/update`, {
-    onSuccess: () => {
-      console.log('success');
-    },
-  }); */
 }
 </script>
 
@@ -129,11 +116,6 @@ function exploreAsteroid() {
           </div>
         </div>
       </div>
-
-      <pre class="text-white">
-        {{ form }}
-      </pre>
     </div>
-
   </Modal>
 </template>

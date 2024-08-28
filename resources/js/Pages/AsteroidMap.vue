@@ -39,8 +39,6 @@ const stations = [
   { id: 3, x: 40000, y: 20000, name: 'Station 3' },
 ];
 
-const asteroids = props.asteroids;
-
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 
@@ -89,7 +87,7 @@ function drawScene() {
       drawStation(station.x, station.y, station.name, station.id);
     });
 
-    asteroids.forEach(asteroid => {
+    props.asteroids.forEach(asteroid => {
       drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
     });
 
@@ -146,7 +144,7 @@ function onMouseMove(e: MouseEvent) {
     }
   });
 
-  asteroids.forEach(asteroid => {
+  props.asteroids.forEach(asteroid => {
     const scaledWidth = asteroidBaseSize * asteroid.pixel_size;
     const scaledHeight = asteroidBaseSize * asteroid.pixel_size;
 
@@ -180,7 +178,7 @@ function onMouseClick(e: MouseEvent) {
       isModalOpen.value = true;
     }
   } else if (hoveredObject.value.type === 'asteroid') {
-    const asteroid = asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
+    const asteroid = props.asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
       selectedObject.value = { type: 'asteroid', data: asteroid };
       isModalOpen.value = true;

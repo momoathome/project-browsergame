@@ -33,6 +33,7 @@ const filteredRessources = computed(() => ressources.value.filter(res => res.val
 
 const circleRadius = 35;
 const circumference = Math.floor(2 * Math.PI * circleRadius / 2);
+const asteroidRessourceStrokeWidth = ref(2);
 
 const totalRessources = computed(() => ressources.value.reduce((total, res) => total + res.value, 0));
 
@@ -52,8 +53,24 @@ const calcDashArrayAndOffset = () => {
   });
 };
 
+const getAsteroidRessourceStrokeWidth = () => {
+  const total = totalRessources.value
+  if (total >= 10000) {
+    return 4;
+  } else if (total >= 5500) {
+    return 3;
+  } else if (total >= 2500) {
+    return 2;
+  } else if (total >= 1000) {
+    return 1.5;
+  } else {
+    return 1; // Standardwert
+  }
+}
+
 onMounted(() => {
   calcDashArrayAndOffset();
+  asteroidRessourceStrokeWidth.value = getAsteroidRessourceStrokeWidth()
 });
 </script>
 
@@ -80,11 +97,11 @@ onMounted(() => {
 svg {
   height: 250px;
   width: 250px;
-  transform: rotate(177deg);
+  transform: rotate(180deg);
 }
 
 circle {
-  stroke-width: 2px;
+  stroke-width: v-bind(asteroidRessourceStrokeWidth + 'px');
   fill: transparent;
 }
 

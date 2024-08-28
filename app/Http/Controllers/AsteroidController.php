@@ -67,26 +67,26 @@ class AsteroidController extends Controller
         ]);
 
         $user = Auth::user();
-
+        $spacecraftInPost = $validated['spacecrafts'];
+        $filteredSpacecraftWithCount = array_filter($spacecraftInPost, function ($count) {
+            return $count > 0;
+        });
         $totalCargoCapacity = 0;
-        $spacecraftIds = array_keys($validated['spacecrafts']);
-
-        Log::info("spacecraftIds: " . json_encode($spacecraftIds)); // names
+        $hasMiner = false;
 
         $spacecrafts = Spacecraft::join('spacecraft_details', 'spacecrafts.details_id', '=', 'spacecraft_details.id')
             ->where('user_id', $user->id)
-            ->whereIn('spacecraft_details.name', $spacecraftIds)
+            ->whereIn('spacecraft_details.name', array_keys($filteredSpacecraftWithCount))
             ->get();
 
         foreach ($spacecrafts as $spacecraft) {
             $spacecraftName = $spacecraft->details->name;
+            $count = $filteredSpacecraftWithCount[$spacecraftName];
+            $totalCargoCapacity += $count * $spacecraft->cargo;
 
-
-            if (isset($validated['spacecrafts'][$spacecraftName])) {
-                $count = $validated['spacecrafts'][$spacecraftName];
-                $totalCargoCapacity += $count * $spacecraft->cargo;
-            } else {
-                Log::warning("Spacecraft Name {$spacecraftName} not found in validated spacecrafts.");
+            if ($spacecraft->details->type === 'Miner') {
+                $hasMiner = true;
+                Log::warning('if Miner: ' . $spacecraft->details->type);
             }
         }
 
@@ -101,7 +101,8 @@ class AsteroidController extends Controller
             $resource = Resource::where('name', $resourceName)->first();
             $resourceId = $resource->id;
 
-            $extractedAmount = min($amount, floor($totalCargoCapacity / $resourceCount));
+            $extractionMultiplier = $hasMiner ? 1 : 0.5;
+            $extractedAmount = min($amount, floor($totalCargoCapacity / $resourceCount * $extractionMultiplier));
             $remainingAmount = max(0, $amount - $extractedAmount);
 
             $resourcesExtracted[$resourceId] = $extractedAmount;
@@ -127,7 +128,7 @@ class AsteroidController extends Controller
             }
         });
 
-        return redirect()->route('asteroidMap')->banner('Asteroid explored successfully');
+        return redirect()->route('asteroidMap')->banner('Asteroid explored successfully' . $hasMiner . ' ' . $totalCargoCapacity . json_encode($resourcesExtracted));
     }
 
 }

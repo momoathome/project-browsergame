@@ -20,8 +20,8 @@ return [
     ],
 
     'asteroid_faktor' => [
-        'min' => 55,
-        'max' => 90,
+        'min' => 75,
+        'max' => 110,
     ],
 
     'asteroid_rarity' => [

@@ -154,8 +154,6 @@ function onMouseMove(e: MouseEvent) {
     }
   });
 
-  drawScene();
-
   if (isDragging.value) {
     pointX.value = e.clientX - startDrag.x;
     pointY.value = e.clientY - startDrag.y;

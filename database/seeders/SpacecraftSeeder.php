@@ -25,9 +25,9 @@ class SpacecraftSeeder extends Seeder
 
         foreach ($userIds as $userId) {
             $spacecraftDetails = [
-                'Merlin' => $this->createSpacecraft($userId, 'Merlin', 50, 0, 10, 1, 900),
-                'Comet' => $this->createSpacecraft($userId, 'Comet', 150, 0, 20, 1, 720),
-                'Javelin' => $this->createSpacecraft($userId, 'Javelin', 400, 0, 40, 1, 1800),
+                'Merlin' => $this->createSpacecraft($userId, 'Merlin', 50, 0, 20, 1, 900),
+                'Comet' => $this->createSpacecraft($userId, 'Comet', 150, 0, 40, 1, 720),
+                'Javelin' => $this->createSpacecraft($userId, 'Javelin', 400, 0, 80, 1, 1800),
                 'Sentinel' => $this->createSpacecraft($userId, 'Sentinel', 1_000, 0, 200, 1, 900),
                 'Probe' => $this->createSpacecraft($userId, 'Probe', 2_500, 0, 900, 1, 600),
                 'Ares' => $this->createSpacecraft($userId, 'Ares', 7_000, 0, 2_700, 1, 500),

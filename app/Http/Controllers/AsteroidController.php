@@ -72,11 +72,7 @@ class AsteroidController extends Controller
         $spaceCrafts = $validated['spacecrafts'];
 
         $user = auth()->user();
-        $result = $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
-
-        if (isset($result['error'])) {
-            return redirect()->route('asteroidMap')->withErrors($result['error']);
-        }
+        $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
     }
 
 }

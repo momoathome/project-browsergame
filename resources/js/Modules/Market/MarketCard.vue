@@ -65,7 +65,7 @@ function sellResource() {
         <p class="font-semibold text-xl">{{ marketData.name }}</p>
       </div>
       <div class="flex items-center gap-x-1">
-        <img src="/storage/resources/credits-light.svg" class="h-6" />
+        <img src="/storage/resources/Credits.png" class="h-6" />
         <div class="flex flex-col">
           <span class="text-xs text-secondary">price</span>
           <p class="font-medium">{{ formattedCost }}</p>

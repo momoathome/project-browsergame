@@ -125,6 +125,10 @@ function onMouseDown(e: MouseEvent) {
   startDrag.y = e.clientY - pointY.value;
 }
 
+function onMouseUp() {
+  isDragging.value = false;
+}
+
 function onMouseMove(e: MouseEvent) {
   const rect = canvasRef.value?.getBoundingClientRect();
   if (!rect || !ctx.value) return;
@@ -159,10 +163,6 @@ function onMouseMove(e: MouseEvent) {
     pointY.value = e.clientY - startDrag.y;
     drawScene();
   }
-}
-
-function onMouseUp() {
-  isDragging.value = false;
 }
 
 function onMouseClick(e: MouseEvent) {
@@ -242,8 +242,12 @@ function closeModal() {
 <template>
   <AppLayout title="AsteroidMap">
     <div class="relative">
-      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
-        @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
+      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove" 
+        @mouseup="onMouseUp" 
+        @wheel="onWheel" 
+        @click="onMouseClick">
       </canvas>
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>

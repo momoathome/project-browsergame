@@ -37,7 +37,7 @@ function addResource(resourceId) {
       <span @click="addResource(resource.resource_id)">
         <img :src="resource.image" class="max-h-6 cursor-pointer" />
       </span>
-      <span class="text-sm font-medium">
+      <span class="text-sm font-medium text-white">
         {{ resource.count }}
       </span>
     </div>

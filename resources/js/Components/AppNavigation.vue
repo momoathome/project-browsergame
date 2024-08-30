@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Link, router } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 
 const NavigationLinks = [
   { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
@@ -12,10 +12,6 @@ const NavigationLinks = [
   { name: 'simulator', label: 'Simulator', image: '/storage/navigation/simulator.png' },
   { name: 'profile.show', label: 'Profile', image: '/storage/navigation/profile.png' },
 ];
-
-const logout = () => {
-    router.post(route('logout'));
-};
 </script>
 
 <template>

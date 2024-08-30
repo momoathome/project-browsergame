@@ -80,7 +80,7 @@ function updateModule(moduleKey: string) {
 
 <template>
   <AppLayout title="buildings">
-    <div class="grid gap-4 lg:gap-8 p-20">
+    <div class="grid gap-4 lg:gap-8 ps-8 py-8 me-20">
       <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" @upgrade="updateModule" />
     </div>
   </AppLayout>

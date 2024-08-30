@@ -19,9 +19,11 @@ class AsteroidExplorer
         $totalCargoCapacity = 0;
         $hasMiner = false;
 
-        $spacecraftsWithDetails = Spacecraft::join('spacecraft_details', 'spacecrafts.details_id', '=', 'spacecraft_details.id')
+        $spacecraftsWithDetails = Spacecraft::with('details')
             ->where('user_id', $user->id)
-            ->whereIn('spacecraft_details.name', array_keys($filteredSpacecrafts))
+            ->whereHas('details', function ($query) use ($filteredSpacecrafts) {
+                $query->whereIn('name', array_keys($filteredSpacecrafts));
+            })
             ->get();
 
         foreach ($spacecraftsWithDetails as $spacecraft) {

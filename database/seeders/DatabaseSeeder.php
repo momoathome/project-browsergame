@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         $this->call(BuildingSeeder::class);
         $this->call(SpacecraftSeeder::class);
         $this->call(UserResourceSeeder::class);
+        $this->call(StationSeeder::class);
         $this->call(AsteroidSeeder::class);
 
     }

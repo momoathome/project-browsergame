@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asteroid;
+use App\Models\Station;
 use App\Services\AsteroidExplorer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -21,6 +22,7 @@ class AsteroidController extends Controller
     public function index()
     {
         $asteroids = Asteroid::all();
+        $stations = Station::all();
         $user = auth()->user();
 
         foreach ($asteroids as $asteroid) {
@@ -35,6 +37,7 @@ class AsteroidController extends Controller
         return Inertia::render('AsteroidMap', [
             'asteroids' => $asteroids,
             'spacecrafts' => $spacecrafts,
+            'stations' => $stations,
         ]);
     }
 

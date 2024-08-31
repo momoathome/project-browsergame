@@ -15,7 +15,7 @@ class SetupInitialUserData
         SetupInitialSpacecrafts $spacecraftService,
         SetupInitialUserResources $userResourceService,
         SetupInitialBuildings $buildingService,
-        UserStationService $userStationService
+        SetupInitialStation $userStationService
     ) {
         $this->spacecraftService = $spacecraftService;
         $this->userResourceService = $userResourceService;
@@ -30,6 +30,6 @@ class SetupInitialUserData
         $this->spacecraftService->create($userId);
         $this->userResourceService->create($userId);
         $this->buildingService->create($userId);
-        $this->userStationService->create($userId);
+        $this->userStationService->create($userId, $user->name);
     }
 }

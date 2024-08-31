@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Asteroid;
+use App\Models\Station;
+
 
 class AsteroidGenerator
 {
@@ -12,14 +14,20 @@ class AsteroidGenerator
   public function __construct()
   {
     $this->config = config('asteroids');
-    // $this->stations = $this->getStations();
-
-    $this->stations = [
-      ['id' => 1, 'x' => 15000, 'y' => 10000, 'name' => 'Station 1'],
-      ['id' => 2, 'x' => 30000, 'y' => 30000, 'name' => 'Station 2'],
-      ['id' => 3, 'x' => 40000, 'y' => 20000, 'name' => 'Station 3'],
-    ];
+    $this->stations = $this->getStations();
   }
+
+  protected function getStations()
+    {
+        return Station::all()->map(function($station) {
+            return [
+                'id' => $station->id,
+                'x' => $station->coordinate_x,
+                'y' => $station->coordinate_y,
+                'name' => $station->name
+            ];
+        })->toArray();
+    }
 
   public function generateAsteroids($count)
   {

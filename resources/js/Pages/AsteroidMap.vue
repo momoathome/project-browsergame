@@ -7,6 +7,7 @@ import type { Asteroid, Station, Spacecraft } from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
+  stations: Station[];
   spacecrafts: Spacecraft[];
 }>();
 
@@ -31,13 +32,6 @@ const pointX = ref(0);
 const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
-
-// TODO: auslagern
-const stations = [
-  { id: 1, x: 15000, y: 10000, name: 'Station 1' },
-  { id: 2, x: 30000, y: 30000, name: 'Station 2' },
-  { id: 3, x: 40000, y: 20000, name: 'Station 3' },
-];
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
@@ -83,8 +77,8 @@ function drawScene() {
     ctx.value.translate(pointX.value, pointY.value);
     ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
-    stations.forEach(station => {
-      drawStation(station.x, station.y, station.name, station.id);
+    props.stations.forEach(station => {
+      drawStation(station.coordinate_x, station.coordinate_y, station.name, station.id);
     });
 
     props.asteroids.forEach(asteroid => {
@@ -141,9 +135,9 @@ function onMouseMove(e: MouseEvent) {
 
   hoveredObject.value = null;
 
-  stations.forEach(station => {
-    if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
-      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
+  props.stations.forEach(station => {
+    if (Math.abs(zoomedX - station.coordinate_x) < stationBaseSize / 2 &&
+      Math.abs(zoomedY - station.coordinate_y) < stationBaseSize / 2) {
       hoveredObject.value = { type: 'station', id: station.id };
     }
   });
@@ -170,7 +164,7 @@ function onMouseClick(e: MouseEvent) {
   if (!rect || !hoveredObject.value) return;
 
   if (hoveredObject.value.type === 'station') {
-    const station = stations.find(station => station.id === hoveredObject.value?.id);
+    const station = props.stations.find(station => station.id === hoveredObject.value?.id);
     if (station) {
       selectedObject.value = { type: 'station', data: station };
       isModalOpen.value = true;

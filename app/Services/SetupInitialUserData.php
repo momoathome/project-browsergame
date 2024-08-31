@@ -12,8 +12,8 @@ class SetupInitialUserData
     protected $userStationService;
 
     public function __construct(
-        SpacecraftService $spacecraftService,
-        UserResourceService $userResourceService,
+        SetupInitialSpacecrafts $spacecraftService,
+        SetupInitialUserResources $userResourceService,
         SetupInitialBuildings $buildingService,
         UserStationService $userStationService
     ) {
@@ -26,11 +26,10 @@ class SetupInitialUserData
     public function setupInitialData(User $user)
     {
         $userId = $user->id;
-        $config = config('user_defaults');
 
-        $this->spacecraftService->create($user, $config['spacecrafts']);
-        $this->userResourceService->create($user, $config['userresources']);
+        $this->spacecraftService->create($userId);
+        $this->userResourceService->create($userId);
         $this->buildingService->create($userId);
-        $this->userStationService->create($user, $config['userstation']);
+        $this->userStationService->create($userId);
     }
 }

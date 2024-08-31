@@ -10,7 +10,7 @@ export interface Building {
   id: number;
   details: BuildingDetails;
   level: number;
-  buildTime: number;
+  build_time: number;
   resources: Resource[];
 }
 
@@ -49,8 +49,8 @@ export interface Spacecraft {
   combat: number;
   count: number;
   cargo: number;
-  buildTime: number;
-  unitLimit: number;
+  build_time: number;
+  unit_limit: number;
   unlocked: boolean;
   resources: Resource[];
 }
@@ -66,7 +66,7 @@ export interface FormattedBuilding {
   name: string;
   description: string;
   level: number;
-  buildTime: number;
+  build_time: number;
   resources: SimpleResource[];
 };
 export interface FormattedSpacecraft {
@@ -78,8 +78,8 @@ export interface FormattedSpacecraft {
   combat: number;
   count: number;
   cargo: number;
-  buildTime: number;
-  unitLimit: number;
+  build_time: number;
+  unit_limit: number;
   resources: SimpleResource[];
 };
 

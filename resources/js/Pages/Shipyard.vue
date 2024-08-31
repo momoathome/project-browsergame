@@ -17,8 +17,8 @@ const formattedSpacecrafts = computed(() => {
       combat: spacecraft.combat,
       count: spacecraft.count,
       cargo: spacecraft.cargo,
-      buildTime: spacecraft.buildTime,
-      unitLimit: spacecraft.unitLimit,
+      build_time: spacecraft.build_time,
+      unit_limit: spacecraft.unit_limit,
       resources: spacecraft.resources.map((resource) => ({
         name: resource.name,
         image: resource.image,

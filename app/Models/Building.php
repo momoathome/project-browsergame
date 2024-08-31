@@ -14,7 +14,7 @@ class Building extends Model
         'details_id', // Referenz auf BuildingDetails
         'effect_value',
         'level',
-        'buildTime',
+        'build_time',
     ];
 
     public function details()

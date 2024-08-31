@@ -15,7 +15,7 @@ const formattedBuildings = computed(() => {
       name: building.details.name,
       description: building.details.description,
       level: building.level,
-      buildTime: building.buildTime,
+      build_time: building.build_time,
       resources: building.resources.map((resource) => ({
         name: resource.name,
         image: resource.image,

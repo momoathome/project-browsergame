@@ -10,7 +10,7 @@ const props = defineProps<{
   moduleData: FormattedBuilding
 }>();
 
-const formattedBuildTime = computed(() => timeFormat(props.moduleData.buildTime));
+const formattedBuildTime = computed(() => timeFormat(props.moduleData.build_time));
 // const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
 
 const form = useForm({

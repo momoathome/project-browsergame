@@ -16,7 +16,7 @@ const formattedResources = computed(() => {
       name: resource.resources ? resource.resources.name : null,
       description: resource.resources ? resource.resources.description : null,
       image: resource.resources ? resource.resources.image : null,
-      count: computed(() => numberFormat(resource.count)),
+      amount: computed(() => numberFormat(resource.amount)),
     };
   });
 });
@@ -38,7 +38,7 @@ function addResource(resourceId) {
         <img :src="resource.image" class="max-h-6 cursor-pointer" />
       </span>
       <span class="text-sm font-medium text-white">
-        {{ resource.count }}
+        {{ resource.amount }}
       </span>
     </div>
   </div>

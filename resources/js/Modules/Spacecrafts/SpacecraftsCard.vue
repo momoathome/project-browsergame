@@ -13,7 +13,7 @@ const props = defineProps<{
 
 const formattedCombat = computed(() => numberFormat(props.spacecraftData.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraftData.cargo));
-const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.buildTime));
+const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.build_time));
 
 const form = useForm({
   amount: 0
@@ -97,7 +97,7 @@ const decrementBy10 = () => {
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Unit Limit</span>
-          <p class="font-medium text-sm">{{ spacecraftData.unitLimit }}</p>
+          <p class="font-medium text-sm">{{ spacecraftData.unit_limit }}</p>
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Build Time</span>

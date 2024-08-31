@@ -23,6 +23,6 @@ class Resource extends Model
     public function resources()
     {
         return $this->belongsToMany(Resource::class, 'user_resources', 'user_id', 'resource_id')
-            ->withPivot('count');
+            ->withPivot('amount');
     }
 }

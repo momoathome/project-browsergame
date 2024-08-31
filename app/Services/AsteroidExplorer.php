@@ -42,7 +42,7 @@ class AsteroidExplorer
 
         $asteroid = Asteroid::findOrFail($asteroidId);
         $asteroidResources = json_decode($asteroid->resources, true);
-        $resourceCount = count($asteroidResources);
+        $resourceAmount = count($asteroidResources);
 
         $resourcesExtracted = [];
         $remainingResources = [];
@@ -52,7 +52,7 @@ class AsteroidExplorer
             $resourceId = $resource->id;
 
             $extractionMultiplier = $hasMiner ? 1 : 0.5;
-            $extractedAmount = min($amount, floor($totalCargoCapacity / $resourceCount * $extractionMultiplier));
+            $extractedAmount = min($amount, floor($totalCargoCapacity / $resourceAmount * $extractionMultiplier));
             $remainingAmount = max(0, $amount - $extractedAmount);
 
             $resourcesExtracted[$resourceId] = $extractedAmount;
@@ -66,7 +66,7 @@ class AsteroidExplorer
                     'resource_id' => $resourceId,
                 ]);
 
-                $userResource->count += $extractedAmount;
+                $userResource->amount += $extractedAmount;
                 $userResource->save();
             }
 

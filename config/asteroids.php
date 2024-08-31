@@ -1,16 +1,18 @@
 <?php
 
-$asteroid_count = 2000;
+$asteroid_count = 500;
 $asteroid_density = 50;
 $min_distance = 1000;
 $station_radius = 2000;
+// $universe_size = $asteroid_count * $asteroid_density;
+$universe_size = 100_000;
 
 return [
     'asteroid_count' => $asteroid_count,
     'asteroid_density' => $asteroid_density,
     'min_distance' => $min_distance,
     'station_radius' => $station_radius,
-    'universe_size' => $asteroid_count * $asteroid_density,
+    'universe_size' => $universe_size,
 
     'asteroid_size' => [
         'common' => 1,

@@ -15,7 +15,7 @@ class Spacecraft extends Model
         'combat',
         'count',
         'cargo',
-        'buildTime',
+        'build_time',
         'unitLimit',
         'unlocked',
     ];

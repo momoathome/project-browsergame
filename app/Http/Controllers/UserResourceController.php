@@ -31,13 +31,13 @@ class UserResourceController extends Controller
             ->first();
 
         if ($userResource) {
-            $userResource->count += $amount;
+            $userResource->amount += $amount;
             $userResource->save();
         } else {
             UserResource::create([
                 'user_id' => $user->id,
                 'resource_id' => $resourceId,
-                'count' => $amount,
+                'amount' => $amount,
             ]);
         }
     }

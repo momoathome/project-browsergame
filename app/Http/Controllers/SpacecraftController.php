@@ -84,7 +84,7 @@ class SpacecraftController extends Controller
                 ->where('resource_id', $resourceId)
                 ->first();
     
-            if (!$userResource || $userResource->count < $requiredResource) {
+            if (!$userResource || $userResource->amount < $requiredResource) {
                 return redirect()->route('shipyard')->dangerBanner('Not enough resources');
             }
         }
@@ -93,7 +93,7 @@ class SpacecraftController extends Controller
             foreach ($totalCosts as $resourceId => $requiredResource) {
                 UserResource::where('user_id', $user->id)
                     ->where('resource_id', $resourceId)
-                    ->decrement('count', $requiredResource);
+                    ->decrement('amount', $requiredResource);
             }
     
             $spacecraft->count += $quantity;

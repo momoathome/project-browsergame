@@ -12,7 +12,7 @@ class UserResource extends Model
     protected $fillable = [
         'user_id',
         'resource_id',
-        'count',
+        'amount',
     ];
 
     public function user()

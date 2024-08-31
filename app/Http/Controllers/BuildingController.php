@@ -78,7 +78,7 @@ class BuildingController extends Controller
                 ->where('resource_id', $requiredResource->resource_id)
                 ->first();
     
-            if (!$userResource || $userResource->count < $requiredResource->amount) {
+            if (!$userResource || $userResource->amount < $requiredResource->amount) {
                 // Fehler-Banner setzen, bevor die Transaktion beginnt
                 return redirect()->route('buildings')->dangerBanner('Not enough resources');
             }
@@ -90,12 +90,12 @@ class BuildingController extends Controller
                     ->where('resource_id', $requiredResource->resource_id)
                     ->first();
     
-                $userResource->count -= $requiredResource->amount;
+                $userResource->amount -= $requiredResource->amount;
                 $userResource->save();
             }
     
             $building->level += 1;
-            $building->buildTime = $this->calculateNewBuildTime($building);
+            $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
     
             $this->updateResourceCosts($building);
@@ -114,7 +114,7 @@ class BuildingController extends Controller
 
     private function calculateNewBuildTime(Building $building)
     {
-        return round($building->buildTime * 1.2);
+        return round($building->build_time * 1.2);
     }
 
     private function updateResourceCosts(Building $building)

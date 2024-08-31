@@ -22,8 +22,8 @@ return new class extends Migration
             $table->integer('combat')->nullable();
             $table->integer('count')->default(1);
             $table->integer('cargo')->default(1);
-            $table->integer('buildTime')->nullable();
-            $table->integer('unitLimit')->nullable();
+            $table->integer('build_time')->nullable();
+            $table->integer('unit_limit')->nullable();
             $table->boolean('unlocked')->default(false);
             $table->timestamps();
         });

@@ -30,10 +30,10 @@ class SetupInitialBuildings
     {
         return Building::create([
             'user_id' => $userId,
-            'level' => $buildingConfig['level'],
             'details_id' => $buildingConfig['details_id'],
+            'level' => $buildingConfig['level'],
             'effect_value' => $buildingConfig['effect_value'],
-            'buildTime' => $buildingConfig['build_time'],
+            'build_time' => $buildingConfig['build_time'],
         ]);
     }
 }

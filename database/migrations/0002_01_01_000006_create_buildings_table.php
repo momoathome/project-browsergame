@@ -21,7 +21,7 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->integer('effect_value')->nullable();
             $table->integer('level')->default(1);
-            $table->integer('buildTime')->nullable();
+            $table->integer('build_time')->nullable();
             $table->timestamps();
         });
     }

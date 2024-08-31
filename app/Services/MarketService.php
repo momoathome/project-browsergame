@@ -22,7 +22,7 @@ class MarketService
 
     $totalCost = $marketItem->cost * $quantity;
 
-    if (!$userCreditResource || $userCreditResource->count < $totalCost) {
+    if (!$userCreditResource || $userCreditResource->amount < $totalCost) {
       throw new \Exception('Not enough Credits');
     }
 
@@ -34,7 +34,7 @@ class MarketService
       $marketItem->stock -= $quantity;
       $marketItem->save();
 
-      $userCreditResource->count -= $totalCost;
+      $userCreditResource->amount -= $totalCost;
       $userCreditResource->save();
 
       $userResource = UserResource::where('user_id', $user->id)
@@ -42,13 +42,13 @@ class MarketService
         ->first();
 
       if ($userResource) {
-        $userResource->count += $quantity;
+        $userResource->amount += $quantity;
         $userResource->save();
       } else {
         UserResource::create([
           'user_id' => $user->id,
           'resource_id' => $marketItem->resource_id,
-          'count' => $quantity,
+          'amount' => $quantity,
         ]);
       }
     });
@@ -72,18 +72,18 @@ class MarketService
       ->where('resource_id', $marketItem->resource_id)
       ->first();
 
-    if (!$userResource || $userResource->count < $quantity) {
+    if (!$userResource || $userResource->amount < $quantity) {
       throw new \Exception('Not enough resources');
     }
 
     DB::transaction(function () use ($marketItem, $quantity, $userResource, $totalCost, $userCreditResource) {
-      $userResource->count -= $quantity;
+      $userResource->amount -= $quantity;
       $userResource->save();
 
       $marketItem->stock += $quantity;
       $marketItem->save();
 
-      $userCreditResource->count += $totalCost;
+      $userCreditResource->amount += $totalCost;
       $userCreditResource->save();
     });
 

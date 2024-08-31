@@ -11,6 +11,7 @@ class Station extends Model
 
     protected $fillable = [
         'user_id',
+        'name',
         'coordinate_x',
         'coordinate_y'
     ];

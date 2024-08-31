@@ -26,10 +26,11 @@ class SetupInitialUserData
     public function setupInitialData(User $user)
     {
         $userId = $user->id;
+        $userName = $user->name;
 
         $this->spacecraftService->create($userId);
         $this->userResourceService->create($userId);
         $this->buildingService->create($userId);
-        $this->userStationService->create($userId, $user->name);
+        $this->userStationService->create($userId, $userName);
     }
 }

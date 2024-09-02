@@ -35,6 +35,13 @@ const decrementBy10 = () => {
     count.value -= 10
   }
 }
+const setCount = () => {
+  if (count.value > 0) {
+    count.value = 0
+  } else {
+    count.value = props.spacecraft.count
+  }
+}
 
 </script>
 
@@ -50,9 +57,9 @@ const decrementBy10 = () => {
             <p class="font-semibold text-lg -mb-2">{{ spacecraft.details.name }}</p>
             <p class="text-[10px] font-medium text-gray">{{ spacecraft.details.type }}</p>
           </div>
-          <div class="flex">
+          <div class="flex h-min">
             <span class="text-sm font-medium mt-2 me-1 text-secondary"></span>
-            <p class="text-lg">{{ spacecraft.count }}</p>
+            <p class="text-lg cursor-pointer" @click="setCount">{{ spacecraft.count }}</p>
           </div>
         </div>
       </div>

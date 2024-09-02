@@ -7,6 +7,7 @@ use App\Models\Resource;
 use App\Models\Spacecraft;
 use App\Models\UserResource;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AsteroidExplorer
 {
@@ -42,7 +43,6 @@ class AsteroidExplorer
 
         $asteroid = Asteroid::findOrFail($asteroidId);
         $asteroidResources = json_decode($asteroid->resources, true);
-        $resourceAmount = count($asteroidResources);
 
         $resourcesExtracted = [];
         $remainingResources = [];
@@ -50,13 +50,18 @@ class AsteroidExplorer
         foreach ($asteroidResources as $resourceName => $amount) {
             $resource = Resource::where('name', $resourceName)->first();
             $resourceId = $resource->id;
-
+        
             $extractionMultiplier = $hasMiner ? 1 : 0.5;
-            $extractedAmount = min($amount, floor($totalCargoCapacity / $resourceAmount * $extractionMultiplier));
-            $remainingAmount = max(0, $amount - $extractedAmount);
-
+            $extractedAmount = min($amount, floor($totalCargoCapacity * $extractionMultiplier));
+            $totalCargoCapacity -= $extractedAmount;
+            $remainingAmount = $amount - $extractedAmount;
+        
             $resourcesExtracted[$resourceId] = $extractedAmount;
-            $remainingResources[$resourceName] = $remainingAmount;
+            $remainingResources[$resourceName] = max(0, $remainingAmount);
+        
+            if ($totalCargoCapacity <= 0) {
+                break;
+            }
         }
 
         DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted) {

@@ -39,7 +39,7 @@ const decrementBy10 = () => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5]">
+  <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5] select-none">
     <div class="image relative">
       <img :src="spacecraft.details.image" class="rounded-t-3xl h-[65px]" alt="" />
     </div>
@@ -72,7 +72,7 @@ const decrementBy10 = () => {
 
       <div class="flex justify-center gap-2">
         <div class="flex items-center">
-          <button @click="decrement" @click.shift="decrementBy10" type="button" class="border-none p-0">
+          <button @click="decrement" @click.shift="decrementBy10" @mousedown.prevent type="button" class="border-none p-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="20" viewBox="0 0 320 512">
               <path fill="currentColor"
                 d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
@@ -81,7 +81,7 @@ const decrementBy10 = () => {
 
           <AppInput class="!py-1 !px-0 !w-14" :maxlength="4" v-model="count" :maxInputValue="spacecraft.count" />
 
-          <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
+          <button @click="increment" @click.shift="incrementBy10" @mousedown.prevent type="button" class="border-none p-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="20" viewBox="0 0 320 512">
               <path fill="currentColor"
                 d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />

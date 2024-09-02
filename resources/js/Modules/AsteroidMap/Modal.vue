@@ -50,6 +50,12 @@ const form = useForm({
 function exploreAsteroid() {
   form.asteroid_id = props.content.data.id;
 
+  // if form spacecrafts are all 0, return
+  const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
+  if (noSpacecraftSelected) {
+    return;
+  }
+
   form.post(`/asteroidMap/update`, {
     onSuccess: () => {
       close();
@@ -237,10 +243,6 @@ onUnmounted(() => {
 
             <MapModalUnits :spacecrafts="spacecrafts" v-model="form.spacecrafts" />
           </div>
-
-          <pre class="text-white">
-              {{ form }}
-          </pre>
         </div>
       </transition>
     </div>

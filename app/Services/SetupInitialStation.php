@@ -24,6 +24,6 @@ class SetupInitialStation
     {
         // You can implement a more complex logic here if needed.
         // For simplicity, returning a fixed value or a random number.
-        return rand(5000, 25000);
+        return rand(5000, 30000);
     }
 }

@@ -1,17 +1,14 @@
 <?php
 
-$asteroid_count = 500;
-$asteroid_density = 50;
+$asteroid_count = 1000;
+$asteroid_density = 75;
 $min_distance = 1000;
-$station_radius = 2000;
-// $universe_size = $asteroid_count * $asteroid_density;
-$universe_size = 100_000;
+$universe_size = $asteroid_count * $asteroid_density;
 
 return [
     'asteroid_count' => $asteroid_count,
     'asteroid_density' => $asteroid_density,
     'min_distance' => $min_distance,
-    'station_radius' => $station_radius,
     'universe_size' => $universe_size,
 
     'asteroid_size' => [
@@ -22,18 +19,18 @@ return [
     ],
 
     'asteroid_faktor' => [
-        'min' => 75,
-        'max' => 110,
+        'min' => 90,
+        'max' => 125,
     ],
 
     'asteroid_rarity' => [
-        'common' => 800,
-        'uncommen' => 250,
-        'rare' => 50,
-        'extrem' => 3,
+        'common' => 700,
+        'uncommen' => 300,
+        'rare' => 25,
+        'extrem' => 5,
     ],
 
-    'asteroid_rarity_multiplier' => [
+    'asteroid_faktor_multiplier' => [
         'common' => ['min' => 5, 'max' => 8],
         'uncommen' => ['min' => 13, 'max' => 21],
         'rare' => ['min' => 34, 'max' => 55],
@@ -41,34 +38,87 @@ return [
     ],
 
     'distance_modifiers' => [
-        'common' => $min_distance,
-        'uncommen' => $min_distance,
-        'rare' => 3 * $min_distance,
+        'common' => 0,
+        'uncommen' => 0,
+        'rare' => 4 * $min_distance,
         'extrem' => 10 * $min_distance,
     ],
 
     'resource_pools' => [
-        'legacy' => ['Titanium', 'Carbon', 'Hydrogenium', 'Kyberkristall'],
-        'metal' => ['Titanium', 'Cobalt', 'Iridium'],
-        'metal2' => ['Titanium', 'Cobalt', 'Iridium'],
-        'metal3' => ['Titanium', 'Cobalt', 'Iridium'],
-        'metal4' => ['Titanium', 'Cobalt', 'Iridium'],
-        'crystal' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
-        'crystal2' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
-        'crystal3' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
-        'radioactive' => ['Uraninite', 'Thorium', 'Astatine'],
-        'radioactive2' => ['Uraninite', 'Thorium', 'Astatine'],
-        'exotic' => ['Hydrogenium', 'Dilithium', 'Deuterium'],
-        'exotic2' => ['Hydrogenium', 'Dilithium', 'Deuterium'],
-        'titanium' => ['Titanium'],
-        'carbon' => ['Carbon'],
-        'hydrogenium' => ['Hydrogenium'],
-        'kyberkristall' => ['Kyberkristall'],
-        'cobalt' => ['Cobalt'],
-        'iridium' => ['Iridium'],
-        'uraninite' => ['Uraninite'],
-        'thorium' => ['Thorium'],
+        'legacy' => [
+            'resources' => ['Titanium', 'Carbon', 'Hydrogenium', 'Kyberkristall'],
+        ],
+        'metal' => [
+            'resources' => ['Titanium', 'Cobalt'],
+        ],
+        'metal2' => [
+            'resources' => ['Titanium', 'Cobalt', 'Astatine'],
+        ],
+        'metal3' => [
+            'resources' => ['Titanium', 'Iridium', 'Astatine'],
+        ],
+        'metal4' => [
+            'resources' => ['Titanium', 'Cobalt', 'Iridium'],
+        ],
+        'metal5' => [
+            'resources' => ['Cobalt', 'Iridium', 'Astatine'],
+        ],
+        'radioactive' => [
+            'resources' => ['Titanium', 'Uraninite', 'Astatine'],
+        ],
+        'radioactive2' => [
+            'resources' => ['Hydrogenium', 'Uraninite', 'Thorium'],
+        ],
+        'radioactive3' => [
+            'resources' => ['Iridium', 'Uraninite', 'Thorium'],
+        ],
+        'crystal' => [
+            'resources' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
+        ],
+        'crystal2' => [
+            'resources' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
+        ],
+        'crystal3' => [
+            'resources' => ['Carbon', 'Kyberkristall', 'Hyperdiamond'],
+        ],
+        'exotic' => [
+            'resources' => ['Hydrogenium', 'Dilithium', 'Deuterium'],
+        ],
+        'exotic2' => [
+            'resources' => ['Hydrogenium', 'Dilithium', 'Deuterium'],
+        ],
+        'exotic3' => [
+            'resources' => ['Kyberkristall', 'Dilithium', 'Deuterium'],
+        ],
+        'titanium' => [
+            'resources' => ['Titanium'],
+        ],
+        'carbon' => [
+            'resources' => ['Carbon'],
+        ],
+        'hydrogenium' => [
+            'resources' => ['Hydrogenium'],
+        ],
+        'kyberkristall' => [
+            'resources' => ['Kyberkristall'],
+        ],
+        'cobalt' => [
+            'resources' => ['Cobalt'],
+        ],
+        'astatine' => [
+            'resources' => ['Astatine'],
+        ],
+        'iridium' => [
+            'resources' => ['Iridium'],
+        ],
+        'uraninite' => [
+            'resources' => ['Uraninite'],
+        ],
+        'thorium' => [
+            'resources' => ['Thorium'],
+        ],
     ],
+
 
     'pool_resource_weights' => [
         'legacy' => [
@@ -79,60 +129,72 @@ return [
         ],
         'metal' => [
             'Titanium' => 0.7,
-            'Cobalt' => 0.2,
-            'Iridium' => 0.1,
+            'Cobalt' => 0.3,
         ],
         'metal2' => [
             'Titanium' => 0.4,
             'Cobalt' => 0.4,
-            'Iridium' => 0.2,
+            'Astatine' => 0.2,
         ],
         'metal3' => [
-            'Titanium' => 0.3,
-            'Cobalt' => 0.6,
-            'Iridium' => 0.1,
+            'Titanium' => 0.4,
+            'Astatine' => 0.4,
+            'Iridium' => 0.2,
         ],
         'metal4' => [
-            'Titanium' => 0.3,
-            'Cobalt' => 0.2,
-            'Iridium' => 0.5,
+            'Titanium' => 0.4,
+            'Cobalt' => 0.3,
+            'Iridium' => 0.3,
         ],
-        'crystal' => [
-            'Carbon' => 0.75,
-            'Kyberkristall' => 0.2,
-            'Hyperdiamond' => 0.05,
-        ],
-        'crystal2' => [
-            'Carbon' => 0.55,
-            'Kyberkristall' => 0.35,
-            'Hyperdiamond' => 0.1,
-        ],
-        'crystal3' => [
-            'Carbon' => 0.4,
-            'Kyberkristall' => 0.45,
-            'Hyperdiamond' => 0.15,
+        'metal5' => [
+            'Cobalt' => 0.4,
+            'Iridium' => 0.3,
+            'Astatine' => 0.3,
         ],
         'radioactive' => [
-            'Hydrogenium' => 0.6,
+            'Titanium' => 0.5,
             'Uraninite' => 0.25,
-            'Thorium' => 0.1,
-            'Astatine' => 0.05,
+            'Astatine' => 0.25,
         ],
         'radioactive2' => [
             'Hydrogenium' => 0.4,
-            'Uraninite' => 0.3,
+            'Uraninite' => 0.4,
             'Thorium' => 0.2,
-            'Astatine' => 0.1,
+        ],
+        'radioactive3' => [
+            'Iridium' => 0.3,
+            'Uraninite' => 0.4,
+            'Thorium' => 0.3,
+        ],
+        'crystal' => [
+            'Carbon' => 0.7,
+            'Kyberkristall' => 0.2,
+            'Hyperdiamond' => 0.1,
+        ],
+        'crystal2' => [
+            'Carbon' => 0.5,
+            'Kyberkristall' => 0.3,
+            'Hyperdiamond' => 0.2,
+        ],
+        'crystal3' => [
+            'Carbon' => 0.4,
+            'Kyberkristall' => 0.4,
+            'Hyperdiamond' => 0.2,
         ],
         'exotic' => [
-            'Hydrogenium' => 0.85,
+            'Hydrogenium' => 0.8,
             'Dilithium' => 0.1,
-            'Deuterium' => 0.05,
+            'Deuterium' => 0.1,
         ],
         'exotic2' => [
-            'Hydrogenium' => 0.7,
-            'Dilithium' => 0.2,
-            'Deuterium' => 0.1,
+            'Hydrogenium' => 0.65,
+            'Dilithium' => 0.25,
+            'Deuterium' => 0.2,
+        ],
+        'exotic3' => [
+            'Kyberkristall' => 0.4,
+            'Dilithium' => 0.3,
+            'Deuterium' => 0.3,
         ],
         'titanium' => [
             'Titanium' => 1,
@@ -148,6 +210,9 @@ return [
         ],
         'cobalt' => [
             'Cobalt' => 1,
+        ],
+        'astatine' => [
+            'Astatine' => 1,
         ],
         'iridium' => [
             'Iridium' => 1,

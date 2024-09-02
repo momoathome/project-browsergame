@@ -4,7 +4,7 @@ return [
     'resources' => [
         [
             'name' => 'Credits',
-            'amount' => 10_000_000,
+            'amount' => 1_000_000,
         ],
         [
             'name' => 'Carbon',

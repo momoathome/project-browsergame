@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Asteroid;
 use App\Models\Station;
+use Illuminate\Support\Facades\Log;
 
 
 class AsteroidGenerator
@@ -18,16 +19,16 @@ class AsteroidGenerator
   }
 
   protected function getStations()
-    {
-        return Station::all()->map(function($station) {
-            return [
-                'id' => $station->id,
-                'x' => $station->coordinate_x,
-                'y' => $station->coordinate_y,
-                'name' => $station->name
-            ];
-        })->toArray();
-    }
+  {
+    return Station::all()->map(function ($station) {
+      return [
+        'id' => $station->id,
+        'x' => $station->coordinate_x,
+        'y' => $station->coordinate_y,
+        'name' => $station->name
+      ];
+    })->toArray();
+  }
 
   public function generateAsteroids($count)
   {
@@ -54,8 +55,8 @@ class AsteroidGenerator
       $this->config['asteroid_faktor']['max']
     );
     $asteroidRarity = $this->generateAsteroidRarity($this->config['asteroid_rarity']);
-    $asteroidRarityMultiplier = $this->generateAsteroidRarityMultiplier($asteroidRarity);
-    $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidRarityMultiplier);
+    $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($asteroidRarity);
+    $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidFaktorMultiplier);
     $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
     $resourceData = $this->generateResourcesFromPools($asteroidValue);
     $resources = $resourceData['resources'];
@@ -77,14 +78,17 @@ class AsteroidGenerator
   {
     $minDistance = $this->config['min_distance'];
     $universeSize = $this->config['universe_size'];
-    $distanceModifier = $this->config['distance_modifiers'][$asteroid['rarity']] ?? $minDistance;
-    $maxAttempts = 1000;
+    $distanceModifier = $this->config['distance_modifiers'][$asteroid['rarity']] ?? 0;
+
+    $distanceModifier = $distanceModifier + $minDistance;
+
+    $maxAttempts = 5000;
     $attempts = 0;
     $x = $y = 0;
 
     do {
-      $x = rand($distanceModifier, $universeSize);
-      $y = rand($distanceModifier, $universeSize);
+      $x = rand($minDistance, $universeSize);
+      $y = rand($minDistance, $universeSize);
 
       $isValid = !$this->isCollidingWithStation($x, $y, $distanceModifier) &&
         !$this->isCollidingWithAsteroid($x, $y);
@@ -101,34 +105,36 @@ class AsteroidGenerator
 
   private function isCollidingWithAsteroid(int $x, int $y): bool
   {
-      $minDistance = $this->config['min_distance'];
-      $asteroids = Asteroid::all();
-  
-      foreach ($asteroids as $asteroid) {
-          if (
-              abs($asteroid->x - $x) < $minDistance &&
-              abs($asteroid->y - $y) < $minDistance
-          ) {
-              return true;
-          }
+    $minDistance = $this->config['min_distance'];
+    $asteroids = Asteroid::all();
+
+    foreach ($asteroids as $asteroid) {
+      if (
+        abs($asteroid->x - $x) < $minDistance &&
+        abs($asteroid->y - $y) < $minDistance
+      ) {
+        return true;
       }
-  
-      return false;
+    }
+
+    return false;
   }
 
   private function isCollidingWithStation($x, $y, $distanceModifier): bool
   {
-      foreach ($this->stations as $station) {
-          $stationDistance = $this->config['station_radius'] + $distanceModifier;
-          if (
-              abs($station['x'] - $x) < $stationDistance &&
-              abs($station['y'] - $y) < $stationDistance
-          ) {
-              return true;
-          }
+    foreach ($this->stations as $station) {
+      if (
+        abs($station['x'] - $x) < $distanceModifier &&
+        abs($station['y'] - $y) < $distanceModifier
+      ) {
+        Log::info("Collision detected with station: {$station['name']} - X: {$station['x']}, Y: {$station['y']} - Distance Modifier: {$distanceModifier} - Asteroid X: {$x}, Y: {$y}");
+        return true;
       }
-  
-      return false;
+      Log::info("no Collission: {$station['name']} - X: {$station['x']}, Y: {$station['y']} - Distance Modifier: {$distanceModifier} - Asteroid X: {$x}, Y: {$y}");
+
+    }
+
+    return false;
   }
 
   private function generateAsteroidBaseFaktor(int $min, int $max): int
@@ -152,16 +158,16 @@ class AsteroidGenerator
     return 'common';  // Fallback
   }
 
-  private function generateAsteroidRarityMultiplier(string $rarity): array
+  private function generateAsteroidFaktorMultiplier(string $rarity): array
   {
-    return $this->config['asteroid_rarity_multiplier'][$rarity] ?? ['min' => 0, 'max' => 0];
+    return $this->config['asteroid_faktor_multiplier'][$rarity] ?? ['min' => 0, 'max' => 0];
   }
 
-  private function generateAsteroidBaseMultiplier(array $asteroidRarityMultiplier): float
+  private function generateAsteroidBaseMultiplier(array $asteroidFaktorMultiplier): float
   {
     $asteroidBaseMultiplier = rand(
-      $asteroidRarityMultiplier['min'] * 100,
-      $asteroidRarityMultiplier['max'] * 100
+      $asteroidFaktorMultiplier['min'] * 100,
+      $asteroidFaktorMultiplier['max'] * 100
     ) / 100;
 
     return round($asteroidBaseMultiplier, 4);
@@ -175,22 +181,25 @@ class AsteroidGenerator
   private function generateResourcesFromPools(int $asteroidValue): array
   {
     $resources = [];
-    $pool = array_rand($this->config['resource_pools']);
-    $poolResources = $this->config['resource_pools'][$pool];
-    $resourceWeights = $this->config['pool_resource_weights'][$pool];
+    $poolKey = array_rand($this->config['resource_pools']);
+    $pool = $this->config['resource_pools'][$poolKey]['resources'];
+    $resourceWeights = $this->config['pool_resource_weights'][$poolKey];
     $totalWeight = array_sum($resourceWeights);
 
-    foreach ($poolResources as $resource) {
-      $weight = $resourceWeights[$resource];
-      $normalizedWeight = $weight / $totalWeight;
-      $resources[$resource] = floor($normalizedWeight * $asteroidValue);
+    foreach ($pool as $resource) {
+      if (isset($resourceWeights[$resource])) {
+        $weight = $resourceWeights[$resource];
+        $normalizedWeight = $weight / $totalWeight;
+        $resources[$resource] = floor($normalizedWeight * $asteroidValue);
+      }
     }
 
     return [
       'resources' => $resources,
-      'pool' => $pool
-  ];
+      'pool' => $poolKey,
+    ];
   }
+
 
   private function generateAsteroidName(string $rarity, int $value, float $multiplier, string $pool): string
   {
@@ -198,7 +207,7 @@ class AsteroidGenerator
     $suffix = substr($pool, 0, 2);
     $randomString = $this->generateRandomString(2);
     $randomString2 = $this->generateRandomString(2);
-    
+
     return "{$randomString}{$prefix}{$suffix}{$randomString2}{$value}-" . floor($multiplier);
   }
 

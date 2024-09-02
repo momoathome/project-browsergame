@@ -4,6 +4,7 @@ import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as config from '@/config';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -39,10 +40,9 @@ const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Stat
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     const devicePixelRatio = window.devicePixelRatio || 1;
-    const rect = canvasRef.value.getBoundingClientRect();
 
-    canvasRef.value.width = rect.width * devicePixelRatio;
-    canvasRef.value.height = rect.height * devicePixelRatio;
+    canvasRef.value.width = window.innerWidth * devicePixelRatio;
+    canvasRef.value.height = window.innerHeight * devicePixelRatio;
 
     ctx.value.scale(devicePixelRatio, devicePixelRatio);
     drawScene();
@@ -59,6 +59,8 @@ onMounted(() => {
 
     stationImage.onload = asteroidImage.onload = () => {
       drawScene();
+      const userId = usePage().props.auth.user.id;
+      resetViewToUserStation(userId);
     };
   }
 
@@ -77,6 +79,7 @@ function drawScene() {
     ctx.value.translate(pointX.value, pointY.value);
     ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
+    // drawDistanceZones();
     props.stations.forEach(station => {
       drawStation(station.coordinate_x, station.coordinate_y, station.name, station.id);
     });
@@ -89,27 +92,73 @@ function drawScene() {
   }
 }
 
+function drawDistanceZones() {
+  if (ctx.value) {
+    ctx.value.strokeStyle = 'rgba(234, 239, 44, 1)'; // Farbe und Transparenz des Radiuskreises
+    ctx.value.lineWidth = 2;
+
+    const initialRadius = 1000;
+    const maxRadius = 50_000;
+    const step = 1000;
+
+    props.stations.forEach(station => {
+      const x = station.coordinate_x;
+      const y = station.coordinate_y;
+
+      for (let radius = initialRadius; radius <= maxRadius; radius += step) {
+        ctx.value.beginPath();
+        ctx.value.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.value.stroke();
+      }
+    });
+  }
+}
+
+
 function drawStation(x: number, y: number, name: string, id: number) {
   if (ctx.value) {
-    const imageX = x - stationBaseSize / 2;
-    const imageY = y - stationBaseSize / 2;
+    const imageX = x - stationBaseSize / 2 * devicePixelRatio;
+    const imageY = y - stationBaseSize / 2 * devicePixelRatio;
 
-    ctx.value.drawImage(stationImage, 0, 0, stationImage.width, stationImage.height, imageX, imageY, stationBaseSize, stationBaseSize);
+    // Zeichne das Station-Icon
+    ctx.value.drawImage(
+      stationImage, 
+      0, 0, 
+      stationImage.width, stationImage.height, 
+      imageX, imageY, 
+      stationBaseSize, stationBaseSize
+    );
 
+    // Setze die Schriftart und -größe
     ctx.value.fillStyle = 'white';
-    ctx.value.font = config.stationNameFontSize + 'px Arial';
-    ctx.value.fillText(name, x - 196, y - stationBaseSize / 2 - 64);
+    ctx.value.font = `${config.stationNameFontSize}px Arial`;
+
+    // Berechne die Breite des Textes
+    const textWidth = ctx.value.measureText(name).width;
+
+    // Zentriere den Text über dem Station-Icon
+    const textX = x - textWidth / 2;
+    const textY = y - stationBaseSize / 2 - 32;
+
+    // Zeichne den Text
+    ctx.value.fillText(name, textX, textY);
   }
 }
 
 function drawAsteroid(x: number, y: number, id: number, size: number) {
   if (ctx.value) {
-    const scaledWidth = asteroidBaseSize * size;
-    const scaledHeight = asteroidBaseSize * size;
+    const scaledWidth = asteroidBaseSize * size * devicePixelRatio;
+    const scaledHeight = asteroidBaseSize * size * devicePixelRatio;
 
     const imageX = x - scaledWidth / 2;
     const imageY = y - scaledHeight / 2;
-    ctx.value.drawImage(asteroidImage, 0, 0, asteroidImage.width, asteroidImage.height, imageX, imageY, scaledWidth, scaledHeight);
+    ctx.value.drawImage(
+      asteroidImage, 
+      0, 0, 
+      asteroidImage.width, 
+      asteroidImage.height, 
+      imageX, imageY, 
+      scaledWidth, scaledHeight);
   }
 }
 
@@ -168,12 +217,15 @@ function onMouseClick(e: MouseEvent) {
     if (station) {
       selectedObject.value = { type: 'station', data: station };
       isModalOpen.value = true;
+      console.log(selectedObject.value.data);
+
     }
   } else if (hoveredObject.value.type === 'asteroid') {
     const asteroid = props.asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
       selectedObject.value = { type: 'asteroid', data: asteroid };
       isModalOpen.value = true;
+      console.log(selectedObject.value.data);
     }
   }
 }
@@ -195,17 +247,29 @@ function onWheel(e: WheelEvent) {
   drawScene();
 }
 
-function resetView() {
-  const animationDuration = 1000; // Dauer der Animation in Millisekunden
-  const startTime = performance.now();
+function resetViewToUserStation(userId: number) {
+  const userStation = props.stations.find(station => station.user_id === userId);
 
   const startPointX = pointX.value;
   const startPointY = pointY.value;
   const startZoomLevel = zoomLevel.value;
 
-  const endPointX = 0;
-  const endPointY = 0;
+  const endPointX = -(userStation!.coordinate_x * config.baseZoomLevel - canvasRef.value!.width / 2);
+  const endPointY = -(userStation!.coordinate_y * config.baseZoomLevel - canvasRef.value!.height / 2);
   const endZoomLevel = config.baseZoomLevel;
+
+  const distance = Math.sqrt(
+    Math.pow(endPointX - startPointX, 2) + Math.pow(endPointY - startPointY, 2)
+  );
+
+  const maxAnimationDuration = 1500;
+  const minAnimationDuration = 300;
+  const animationDuration = Math.round(Math.max(
+    minAnimationDuration, 
+    Math.min(maxAnimationDuration, distance / 8)) // Die Formel kann nach Belieben angepasst werden
+  );
+
+  const startTime = performance.now();
 
   function animate(time: number) {
     const elapsedTime = time - startTime;
@@ -225,6 +289,8 @@ function resetView() {
   requestAnimationFrame(animate);
 }
 
+
+
 const isModalOpen = ref(false)
 
 function closeModal() {
@@ -237,13 +303,13 @@ function closeModal() {
 
 <template>
   <AppLayout title="AsteroidMap">
-    <div class="relative">
+    <div class="relative" @click.prevent="">
       <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
-      <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>
-      <span @click="resetView" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
+      <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
+      <span @click="resetViewToUserStation(usePage().props.auth.user.id)" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
 
     <Modal :spacecrafts="spacecrafts" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data.name"

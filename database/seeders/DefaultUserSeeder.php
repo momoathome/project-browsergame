@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+
 
 class DefaultUserSeeder extends Seeder
 {
@@ -13,6 +15,8 @@ class DefaultUserSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table(table: 'users')->truncate();
+
         User::create([
             'name' => 'admin',
             'email' => 'admin@browsergame.de',
@@ -23,6 +27,24 @@ class DefaultUserSeeder extends Seeder
         User::create([
             'name' => 'tester',
             'email' => 'tester@browsergame.de',
+            'password' => Hash::make('password')
+        ]);
+
+        User::create([
+            'name' => 'user1',
+            'email' => 'user1@browsergame.de',
+            'password' => Hash::make('password')
+        ]);
+
+        User::create([
+            'name' => 'user2',
+            'email' => 'user2@browsergame.de',
+            'password' => Hash::make('password')
+        ]);
+
+        User::create([
+            'name' => 'user3',
+            'email' => 'user3@browsergame.de',
             'password' => Hash::make('password')
         ]);
     }

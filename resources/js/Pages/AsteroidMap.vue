@@ -229,35 +229,28 @@ const isModalOpen = ref(false)
 
 function closeModal() {
   isModalOpen.value = false;
-  selectedObject.value = null;
+  setTimeout(() => {
+    selectedObject.value = null;
+  }, 300);
 }
 </script>
 
 <template>
   <AppLayout title="AsteroidMap">
     <div class="relative">
-      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]"
-        @mousedown="onMouseDown"
-        @mousemove="onMouseMove" 
-        @mouseup="onMouseUp" 
-        @wheel="onWheel" 
-        @click="onMouseClick">
+      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
+        @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000) }}%</span>
       <span @click="resetView" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
 
-      <Modal
-        :spacecrafts="spacecrafts"
-        @close="closeModal"
-        :show="isModalOpen"
-        :title="selectedObject?.data.name" 
-        :content="{
-          type: selectedObject?.type,
-          imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
-          data: selectedObject?.data
-        }" 
-        />
+    <Modal :spacecrafts="spacecrafts" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data.name"
+      :content="{
+        type: selectedObject?.type,
+        imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
+        data: selectedObject?.data
+      }" />
   </AppLayout>
 </template>

@@ -79,8 +79,8 @@ const decrementBy10 = () => {
             <p class="text-[12px] font-medium text-gray">{{ spacecraftData.type }}</p>
           </div>
           <div class="flex">
-            <span class="text-sm font-medium mt-2 text-secondary">stk.</span>
-            <p class="text-xl line-height-loose">{{ spacecraftData.count }}</p>
+            <span class="text-sm font-medium mt-2 me-1 text-secondary">count</span>
+            <p class="text-xl">{{ spacecraftData.count }}</p>
           </div>
         </div>
         <p class="text-gray text-sm">{{ spacecraftData.description }}</p>

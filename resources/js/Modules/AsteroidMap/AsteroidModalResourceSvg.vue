@@ -31,7 +31,7 @@ const ressources = ref<Ressource[]>([
 
 const filteredRessources = computed(() => ressources.value.filter(res => res.value > 0));
 
-const circleRadius = 35;
+const circleRadius = 30;
 const circumference = Math.floor(2 * Math.PI * circleRadius / 2);
 const asteroidRessourceStrokeWidth = ref(2);
 
@@ -75,19 +75,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="absolute -bottom-[60px] -left-[60px]"> 
+  <div class="absolute -top-[130px] -left-[120px]"> 
     <svg viewBox="0 0 100 100">
       <circle
         v-for="(res, index) in filteredRessources"
         :key="res.name"
         cx="50"
         cy="50"
-        r="35"
+        :r="circleRadius"
         :stroke="res.color"
         :stroke-dasharray="dashArrays[index] + ', 284'"
         :stroke-dashoffset="dashOffsets[index]"
         >
-        <!-- <title>{{ res.name }}</title> -->
       </circle>
     </svg>
   </div>
@@ -95,8 +94,8 @@ onMounted(() => {
 
 <style scoped>
 svg {
-  height: 250px;
-  width: 250px;
+  width: 500px;
+  height: 500px;
   transform: rotate(180deg);
 }
 

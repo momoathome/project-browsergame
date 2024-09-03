@@ -58,10 +58,9 @@ class AsteroidGenerator
     $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($asteroidRarity);
     $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidFaktorMultiplier);
     $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
-    $resourceData = $this->generateResourcesFromPools($asteroidValue);
-    $resources = $resourceData['resources'];
-    $pool = $resourceData['pool'];
-    $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier, $pool);
+
+    $resources = $this->generateResourcesFromPools($asteroidValue);
+    $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier);
 
     return [
       'name' => $asteroidName,
@@ -69,7 +68,6 @@ class AsteroidGenerator
       'base' => $asteroidBaseFaktor,
       'multiplier' => $asteroidBaseMultiplier,
       'value' => $asteroidValue,
-      'resource_pool' => $pool,
       'resources' => json_encode($resources),
     ];
   }
@@ -80,7 +78,9 @@ class AsteroidGenerator
     $universeSize = $this->config['universe_size'];
     $distanceModifier = $this->config['distance_modifiers'][$asteroid['rarity']] ?? 0;
 
-    $distanceModifier = $distanceModifier + $minDistance;
+    $resources = json_decode($asteroid['resources'], true);
+    $resourceDistanceModifier = $this->calculateResourceDistanceModifier($resources);
+    $distanceModifier += $resourceDistanceModifier;
 
     $maxAttempts = 5000;
     $attempts = 0;
@@ -91,7 +91,7 @@ class AsteroidGenerator
       $y = rand($minDistance, $universeSize);
 
       $isValid = !$this->isCollidingWithStation($x, $y, $distanceModifier) &&
-        !$this->isCollidingWithAsteroid($x, $y);
+        !$this->isCollidingWithAsteroid($x, $y, $minDistance);
 
       $attempts++;
     } while (!$isValid && $attempts < $maxAttempts);
@@ -103,9 +103,8 @@ class AsteroidGenerator
     return ['x' => $x, 'y' => $y];
   }
 
-  private function isCollidingWithAsteroid(int $x, int $y): bool
+  private function isCollidingWithAsteroid(int $x, int $y, int $minDistance): bool
   {
-    $minDistance = $this->config['min_distance'];
     $asteroids = Asteroid::all();
 
     foreach ($asteroids as $asteroid) {
@@ -178,37 +177,84 @@ class AsteroidGenerator
     return floor($asteroidBaseFaktor * $asteroidBaseMultiplier);
   }
 
-  private function generateResourcesFromPools(int $asteroidValue): array
+  private function getRandomPool($pool_weights)
   {
-    $resources = [];
-    $poolKey = array_rand($this->config['resource_pools']);
-    $pool = $this->config['resource_pools'][$poolKey]['resources'];
-    $resourceWeights = $this->config['pool_resource_weights'][$poolKey];
-    $totalWeight = array_sum($resourceWeights);
+    $rand = mt_rand() / mt_getrandmax();
+    $cumulative = 0;
+    foreach ($pool_weights as $pool => $weight) {
+      $cumulative += $weight;
+      if ($rand <= $cumulative) {
+        return $pool;
+      }
+    }
+    return array_key_first($pool_weights);
+  }
 
-    foreach ($pool as $resource) {
-      if (isset($resourceWeights[$resource])) {
-        $weight = $resourceWeights[$resource];
-        $normalizedWeight = $weight / $totalWeight;
-        $resources[$resource] = floor($normalizedWeight * $asteroidValue);
+  private function generateResourcesFromPools($asteroidValue)
+  {
+    // Konfiguration auslesen
+    $pool_weights = $this->config['pool_weights'];
+    $num_resource_range = $this->config['num_resource_range'];
+    $resource_ratio_range = $this->config['resource_ratio_range'];
+    $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
+
+    $resource_ratios = [];
+
+    // Ressourcen auswählen und die Pools speichern
+    for ($i = 0; $i < $num_resources; $i++) {
+      $selected_pool_name = $this->getRandomPool($pool_weights);
+      $selected_pool = $this->config['resource_pools'][$selected_pool_name];
+      $resource = $selected_pool['resources'][array_rand($selected_pool['resources'])];
+
+      // Initialisiere das Ressourcen-Verhältnis, falls noch nicht vorhanden
+      if (!isset($resource_ratios[$resource])) {
+        $resource_ratios[$resource] = 0;
+      }
+
+      // Ressourcen-Verhältnis zufällig erhöhen
+      $resource_ratios[$resource] += mt_rand($resource_ratio_range[0], $resource_ratio_range[1]);
+    }
+
+    // Gesamtverhältnis berechnen
+    $total_ratio = array_sum($resource_ratios);
+
+    // Wenn die Summe der Verhältnisse mehr als 100% ist, normalisieren
+    $normalization_factor = $total_ratio > 0 ? $total_ratio : 1;
+
+    // Tatsächliche Ressourcenmengen berechnen
+    $resources_with_values = [];
+    foreach ($resource_ratios as $resource => $ratio) {
+      // Ressourcenwert basierend auf dem Verhältnis und dem Gesamtwert des Asteroiden berechnen
+      $resources_with_values[$resource] = intval(($ratio / $normalization_factor) * $asteroidValue);
+    }
+
+    return $resources_with_values;
+  }
+
+  private function calculateResourceDistanceModifier(array $resources): int
+  {
+    $maxModifier = 0;
+
+    foreach ($resources as $resource => $amount) {
+      foreach ($this->config['resource_pools'] as $pool) {
+        if (in_array($resource, $pool['resources'])) {
+          $maxModifier = max($maxModifier, $pool['resource_distance_modifier']);
+          break;
+        }
       }
     }
 
-    return [
-      'resources' => $resources,
-      'pool' => $poolKey,
-    ];
+    return $maxModifier;
   }
 
 
-  private function generateAsteroidName(string $rarity, int $value, float $multiplier, string $pool): string
+  private function generateAsteroidName(string $rarity, int $value, float $multiplier): string
   {
     $prefix = substr($rarity, 0, 2);
-    $suffix = substr($pool, 0, 2);
     $randomString = $this->generateRandomString(2);
     $randomString2 = $this->generateRandomString(2);
 
-    return "{$randomString}{$prefix}{$suffix}{$randomString2}{$value}-" . floor($multiplier);
+    return "{$randomString}{$prefix}{$randomString2}{$value}-" . floor($multiplier);
   }
 
   private function generateRandomString(int $length): string

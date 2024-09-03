@@ -17,7 +17,6 @@ class Asteroid extends Model
         'base',
         'multiplier',
         'value',
-        'resource_pool',
         'resources',
         'x',
         'y',
@@ -28,17 +27,18 @@ class Asteroid extends Model
         'resources' => 'array',
     ];
 
-/*     public function resources()
-    {
-        return $this->belongsToMany(Resource::class, 'asteroid_resources', 'asteroid_id', 'resource_id');
-    } */
-
     public function toSearchableArray(): array
     {
         return [
             'id' => $this->id,
             'name' => $this->name,
             'resources' => $this->jsonSerialize()['resources'],
+            'x' => $this->x,
+            'y' => $this->y,
+            'rarity' => $this->rarity,
+            'base' => $this->base,
+            'multiplier' => $this->multiplier,
+            'value' => $this->value,
         ];
     }
 }

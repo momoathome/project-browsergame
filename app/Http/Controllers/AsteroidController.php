@@ -8,6 +8,7 @@ use App\Services\AsteroidExplorer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Spacecraft;
+use Illuminate\Support\Facades\Log;
 
 
 class AsteroidController extends Controller
@@ -52,14 +53,32 @@ class AsteroidController extends Controller
 
     public function search(Request $request)
     {
+        $request->validate([
+            'query' => 'required|string',
+        ]);
+
         $query = $request->input('query');
-    
-        $asteroids = Asteroid::search($query)->take(500)->get();
+        
+        $searched_asteroids = Asteroid::search($query)->take(1000)->get();
+
+        Log::info('Search query: '. $searched_asteroids);
+        
+        $asteroids = Asteroid::with('resources')->get();
+        $stations = Station::all();
+        $user = auth()->user();
+        $spacecrafts = Spacecraft::with('details')
+            ->where('user_id', $user->id)
+            ->orderBy('id', 'asc')
+            ->get();
     
         return Inertia::render('AsteroidMap', [
-            'searched_asteroids' => $asteroids,
+            'asteroids' => $asteroids,
+            'searched_asteroids' => $searched_asteroids,
+            'spacecrafts' => $spacecrafts,
+            'stations' => $stations,
         ]);
     }
+    
 
 }
 

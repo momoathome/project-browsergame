@@ -12,6 +12,7 @@ const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
   spacecrafts: Spacecraft[];
+  searched_asteroids: Asteroid[];
 }>();
 
 const stationImageSrc = '/storage/space-station.png';
@@ -51,7 +52,13 @@ function adjustCanvasSize() {
   }
 }
 
+const highlightedAsteroids = ref<number[]>([]);
+
 onMounted(() => {
+  if (props.searched_asteroids && props.searched_asteroids.length) {
+    highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
+  }
+
   if (canvasRef.value) {
     ctx.value = canvasRef.value.getContext('2d');
     adjustCanvasSize();
@@ -62,7 +69,8 @@ onMounted(() => {
     stationImage.onload = asteroidImage.onload = () => {
       drawScene();
       const userId = usePage().props.auth.user.id;
-      resetViewToUserStation(userId);
+      // resetViewToUserStation(userId);
+      focusUserStationOnInitialLoad(userId);
     };
   }
 
@@ -96,7 +104,7 @@ function drawScene() {
 
 function drawDistanceZones() {
   if (ctx.value) {
-    ctx.value.strokeStyle = 'rgba(234, 239, 44, 1)'; // Farbe und Transparenz des Radiuskreises
+    ctx.value.strokeStyle = 'yellow';
     ctx.value.lineWidth = 2;
 
     const initialRadius = 1000;
@@ -324,7 +332,16 @@ function focusOnAsteroid(asteroidId: number) {
   animateView(targetX, targetY, targetZoomLevel);
 }
 
-const highlightedAsteroids = ref<number[]>([]);
+function focusUserStationOnInitialLoad(userId: number) {
+  const userStation = props.stations.find(station => station.user_id === userId);
+  if (!userStation || !canvasRef.value) return;
+
+  pointX.value = -(userStation.coordinate_x * config.initialZoom - canvasRef.value.width / 2);
+  pointY.value = -(userStation.coordinate_y * config.initialZoom - canvasRef.value.height / 2);
+  zoomLevel.value = config.initialZoom;
+
+  drawScene();
+}
 
 const form = useForm({
   query: '',
@@ -334,8 +351,12 @@ function performSearch() {
   form.get('/asteroidMap/search', {
     preserveState: true,
     only: ['searched_asteroids'],
-    onSuccess: (page) => {
-      highlightedAsteroids.value = page.props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
+    onSuccess: () => {
+      if (props.searched_asteroids && props.searched_asteroids.length) {
+        highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
+      } else {
+        highlightedAsteroids.value = [];
+      }
       drawScene();
 
       if (highlightedAsteroids.value.length === 1) {
@@ -353,7 +374,7 @@ function clearSearch() {
   const url = new URL(window.location.href);
   url.searchParams.delete('query');
   window.history.pushState({}, '', url);
-  
+
   form.query = '';
   highlightedAsteroids.value = [];
   drawScene();
@@ -388,11 +409,7 @@ function closeModal() {
         class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
 
-    <Modal 
-      :spacecrafts="spacecrafts" 
-      @close="closeModal" 
-      :show="isModalOpen" 
-      :title="selectedObject?.data?.name"
+    <Modal :spacecrafts="spacecrafts" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data?.name"
       :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,

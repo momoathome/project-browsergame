@@ -83,19 +83,26 @@ export interface FormattedSpacecraft {
   resources: SimpleResource[];
 };
 
-export interface Asteroid {
+type AsteroidResource = {
+  id: number;
+  asteroid_id: number;
+  resource_type: string;
+  amount: number;
+};
+
+type Asteroid = {
   id: number;
   name: string;
   rarity: string;
-  base: number;
-  multiplier: number;
+  base: string;
+  multiplier: string;
   value: number;
-  resource_pool: string;
-  resources: Record<string, number>;
+  resources: AsteroidResource[];
   x: number;
   y: number;
   pixel_size: number;
-}
+};
+
 
 export interface Station {
   id: number;

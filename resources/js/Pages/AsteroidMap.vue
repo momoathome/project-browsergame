@@ -4,7 +4,9 @@ import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as config from '@/config';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, useForm } from '@inertiajs/vue3';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -35,7 +37,7 @@ const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
-const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
+const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station | undefined } | null>(null);
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
@@ -122,10 +124,10 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
     // Zeichne das Station-Icon
     ctx.value.drawImage(
-      stationImage, 
-      0, 0, 
-      stationImage.width, stationImage.height, 
-      imageX, imageY, 
+      stationImage,
+      0, 0,
+      stationImage.width, stationImage.height,
+      imageX, imageY,
       stationBaseSize, stationBaseSize
     );
 
@@ -152,12 +154,24 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
 
     const imageX = x - scaledWidth / 2;
     const imageY = y - scaledHeight / 2;
+
+    // draw highlighted asteroids
+    if (highlightedAsteroids.value.includes(id)) {
+      const padding = 15;
+      const adjustedRadius = scaledWidth + padding;
+      ctx.value.strokeStyle = 'yellow';
+      ctx.value.lineWidth = 5;
+      ctx.value.beginPath();
+      ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
+      ctx.value.stroke();
+    }
+
     ctx.value.drawImage(
-      asteroidImage, 
-      0, 0, 
-      asteroidImage.width, 
-      asteroidImage.height, 
-      imageX, imageY, 
+      asteroidImage,
+      0, 0,
+      asteroidImage.width,
+      asteroidImage.height,
+      imageX, imageY,
       scaledWidth, scaledHeight);
   }
 }
@@ -217,15 +231,12 @@ function onMouseClick(e: MouseEvent) {
     if (station) {
       selectedObject.value = { type: 'station', data: station };
       isModalOpen.value = true;
-      console.log(selectedObject.value.data);
-
     }
   } else if (hoveredObject.value.type === 'asteroid') {
     const asteroid = props.asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
     if (asteroid) {
       selectedObject.value = { type: 'asteroid', data: asteroid };
       isModalOpen.value = true;
-      console.log(selectedObject.value.data);
     }
   }
 }
@@ -247,16 +258,18 @@ function onWheel(e: WheelEvent) {
   drawScene();
 }
 
-function resetViewToUserStation(userId: number) {
-  const userStation = props.stations.find(station => station.user_id === userId);
-
+function animateView(
+  targetX: number,
+  targetY: number,
+  targetZoomLevel: number
+) {
   const startPointX = pointX.value;
   const startPointY = pointY.value;
   const startZoomLevel = zoomLevel.value;
 
-  const endPointX = -(userStation!.coordinate_x * config.baseZoomLevel - canvasRef.value!.width / 2);
-  const endPointY = -(userStation!.coordinate_y * config.baseZoomLevel - canvasRef.value!.height / 2);
-  const endZoomLevel = config.baseZoomLevel;
+  const endPointX = targetX;
+  const endPointY = targetY;
+  const endZoomLevel = targetZoomLevel;
 
   const distance = Math.sqrt(
     Math.pow(endPointX - startPointX, 2) + Math.pow(endPointY - startPointY, 2)
@@ -265,9 +278,9 @@ function resetViewToUserStation(userId: number) {
   const maxAnimationDuration = 1500;
   const minAnimationDuration = 300;
   const animationDuration = Math.round(Math.max(
-    minAnimationDuration, 
-    Math.min(maxAnimationDuration, distance / 8)) // Die Formel kann nach Belieben angepasst werden
-  );
+    minAnimationDuration,
+    Math.min(maxAnimationDuration, distance / 8)
+  ));
 
   const startTime = performance.now();
 
@@ -289,7 +302,62 @@ function resetViewToUserStation(userId: number) {
   requestAnimationFrame(animate);
 }
 
+function resetViewToUserStation(userId: number) {
+  const userStation = props.stations.find(station => station.user_id === userId);
+  if (!userStation || !canvasRef.value) return;
 
+  const targetX = -(userStation.coordinate_x * config.baseZoomLevel - canvasRef.value.width / 2);
+  const targetY = -(userStation.coordinate_y * config.baseZoomLevel - canvasRef.value.height / 2);
+  const targetZoomLevel = config.baseZoomLevel;
+
+  animateView(targetX, targetY, targetZoomLevel);
+}
+
+function focusOnAsteroid(asteroidId: number) {
+  const asteroid = props.asteroids.find(asteroid => asteroid.id === asteroidId);
+  if (!asteroid || !canvasRef.value) return;
+
+  const targetX = -(asteroid.x * config.baseZoomLevel - canvasRef.value.width / 2);
+  const targetY = -(asteroid.y * config.baseZoomLevel - canvasRef.value.height / 2);
+  const targetZoomLevel = config.baseZoomLevel;
+
+  animateView(targetX, targetY, targetZoomLevel);
+}
+
+const highlightedAsteroids = ref<number[]>([]);
+
+const form = useForm({
+  query: '',
+});
+
+function performSearch() {
+  form.get('/asteroidMap/search', {
+    preserveState: true,
+    only: ['searched_asteroids'],
+    onSuccess: (page) => {
+      highlightedAsteroids.value = page.props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
+      drawScene();
+
+      if (highlightedAsteroids.value.length === 1) {
+        const asteroidId = highlightedAsteroids.value[0];
+        focusOnAsteroid(asteroidId);
+      }
+    },
+    onError: (errors) => {
+      console.error('Error during search:', errors);
+    }
+  });
+}
+
+function clearSearch() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('query');
+  window.history.pushState({}, '', url);
+  
+  form.query = '';
+  highlightedAsteroids.value = [];
+  drawScene();
+}
 
 const isModalOpen = ref(false)
 
@@ -308,11 +376,23 @@ function closeModal() {
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
+      <form @submit.prevent class="absolute top-0 left-0 z-100 flex gap-2 ms-4">
+        <input v-model="form.query" class="text-white bg-inherit rounded-lg" type="text"
+          placeholder="Search by name or resource" />
+        <PrimaryButton @click="performSearch" type="submit">Search</PrimaryButton>
+        <SecondaryButton @click="clearSearch" type="button">Clear</SecondaryButton>
+      </form>
+
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
-      <span @click="resetViewToUserStation(usePage().props.auth.user.id)" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
+      <span @click="resetViewToUserStation(usePage().props.auth.user.id)"
+        class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">reset</span>
     </div>
 
-    <Modal :spacecrafts="spacecrafts" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data.name"
+    <Modal 
+      :spacecrafts="spacecrafts" 
+      @close="closeModal" 
+      :show="isModalOpen" 
+      :title="selectedObject?.data?.name"
       :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,

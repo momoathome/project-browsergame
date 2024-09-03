@@ -17,28 +17,26 @@ class Asteroid extends Model
         'base',
         'multiplier',
         'value',
-        'resources',
         'x',
         'y',
         'pixel_size',
     ];
-    
-    protected $casts = [
-        'resources' => 'array',
-    ];
+
+    public function resources()
+    {
+        return $this->hasMany(AsteroidResource::class);
+    }
 
     public function toSearchableArray(): array
     {
+        $resources = $this->resources()->pluck('resource_type')->toArray();
+        $resources = implode(', ', $resources);
+
         return [
-            'id' => $this->id,
             'name' => $this->name,
-            'resources' => $this->jsonSerialize()['resources'],
-            'x' => $this->x,
-            'y' => $this->y,
             'rarity' => $this->rarity,
-            'base' => $this->base,
-            'multiplier' => $this->multiplier,
-            'value' => $this->value,
+            'resources' => $resources,
         ];
     }
+
 }

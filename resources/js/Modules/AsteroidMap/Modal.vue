@@ -1,32 +1,29 @@
-<script setup>
+<script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import MapModalUnits from './MapModalUnits.vue';
+import type { Station, Spacecraft, Asteroid } from '@/types/types';
+
+interface Content {
+  data: Asteroid;
+  imageSrc: string;
+  type: 'asteroid' | 'station' | undefined;
+}
 
 const emit = defineEmits(['close']);
 
-const props = defineProps({
-  show: {
-    type: Boolean,
-    default: false,
-  },
-  title: {
-    type: String,
-    default: '',
-  },
-  content: {
-    type: Object,
-    default: '',
-  },
-  spacecrafts: {
-    type: Array,
-    default: '',
-  },
-});
+const props = defineProps<{
+  show: boolean,
+  title: string | undefined,
+  content: Content | undefined,
+  spacecrafts: Spacecraft[],
+}>();
+
+const asteroid = computed<Asteroid>(() => props.content!.data);
 
 const form = useForm({
   asteroid_id: props.content?.data?.id ?? null,
@@ -48,7 +45,7 @@ const form = useForm({
 });
 
 function exploreAsteroid() {
-  form.asteroid_id = props.content.data.id;
+  form.asteroid_id = asteroid.value.id;
 
   // if form spacecrafts are all 0, return
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
@@ -61,6 +58,10 @@ function exploreAsteroid() {
       close();
     },
   });
+}
+
+function attackUser() {
+  // implement attack logic here
 }
 
 const close = () => {
@@ -96,7 +97,7 @@ const totalCombatPower = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    total += props.spacecrafts.find((s) => s.details.name === spacecraft)?.combat * form.spacecrafts[spacecraft];
+    total += props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.combat * form.spacecrafts[spacecraft];
   }
 
   return total;
@@ -106,7 +107,7 @@ const totalCargoCapacity = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    total += props.spacecrafts.find((s) => s.details.name === spacecraft)?.cargo * form.spacecrafts[spacecraft];
+    total += props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.cargo * form.spacecrafts[spacecraft];
   }
 
   return total;
@@ -115,7 +116,7 @@ const totalCargoCapacity = computed(() => {
 const setMaxAvailableUnits = () => {
   const MaxAvailableUnits = {};
 
-  props.spacecrafts.forEach((spacecraft) => {
+  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
     MaxAvailableUnits[spacecraft.details.name] = spacecraft.count;
   });
 
@@ -124,12 +125,12 @@ const setMaxAvailableUnits = () => {
 
 const setMinNeededUnits = () => {
   const MinNeededUnits = {};
-  const totalAsteroidResources = Object.values(props.content.data.resources).reduce((a, b) => a + b);
+  const totalAsteroidResources = props.content!.data.resources.reduce((total, resource) => total + resource.amount, 0);
 
   let remainingResources = totalAsteroidResources;
 
   // Zuerst alle "mining"-Raumschiffe auswählen
-  props.spacecrafts.forEach((spacecraft) => {
+  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
     const spacecraftName = spacecraft.details.name;
     const spacecraftCargo = spacecraft.cargo;
     const spacecraftType = spacecraft.details.type;
@@ -149,7 +150,7 @@ const setMinNeededUnits = () => {
   });
 
   // Falls noch Ressourcen übrig sind, andere Raumschiffe verwenden
-  props.spacecrafts.forEach((spacecraft) => {
+  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
     const spacecraftName = spacecraft.details.name;
     const spacecraftCargo = spacecraft.cargo;
     const spacecraftType = spacecraft.details.type;
@@ -172,7 +173,6 @@ const setMinNeededUnits = () => {
 
   form.spacecrafts = MinNeededUnits;
 };
-
 
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
 
@@ -199,29 +199,33 @@ onUnmounted(() => {
         leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-80">
         <div v-show="show" class="flex h-full items-center justify-between gap-24">
 
-          <div v-if="content.type === 'asteroid'" class="flex flex-col justify-center relative">
+          <div v-if="content?.type === 'asteroid'" class="flex flex-col justify-center relative">
             <div class="flex flex-col items-center">
-              <h1 class="text-2xl flex justify-center mb-20 text-white">{{ title }}</h1>
+              <h1 class="text-2xl flex justify-center mb-20 text-white relative z-10">{{ title }}</h1>
               <div class="relative">
                 <img :src="content.imageSrc" alt="Asteroid" width="256px" class="" />
                 <AsteroidModalResourceSvg :asteroid="content.data" />
               </div>
               <div class="text-gray-300 flex items-center justify-center mt-8">
                 <div class="flex gap-6">
-                  <span v-for="(value, key) in content.data.resources" :key="key" class="flex gap-2">
-                    <img :src="`/storage/resources/${key}.png`" class="h-6" alt="" />
-                    {{ value }}
+                  <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
+                    <img :src="`/storage/resources/${resource_type}.png`" class="h-6" alt="" />
+                    {{ amount }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div v-if="content.type === 'station'" class="flex flex-col justify-center relative">
-            <img :src="content.imageSrc" alt="Station" width="256px" />
+          <div v-if="content?.type === 'station'" class="flex flex-col justify-center relative">
+            <div class="flex flex-col items-center gap-12">
 
-            <p class="text-gray-300">This is a space station. No further details available.
-            </p>
+              <h1 class="text-2xl flex justify-center text-white relative z-10">{{ title }}</h1>
+
+              <img :src="content.imageSrc" alt="Station" width="256px" />
+
+              <p class="text-gray-300">This is the space station of {{ title }}. No further details available.</p>
+            </div>
           </div>
 
           <div class="px-12 py-12 flex flex-col gap-4 bg-gray-800 rounded-3xl text-white relative">
@@ -235,9 +239,10 @@ onUnmounted(() => {
                 <p class="text-secondary">Tavel Time: <span class="text-white">00:00</span></p>
               </div>
               <div class="flex gap-2">
-                <SecondaryButton v-if="content.type === 'asteroid'" @click="setMinNeededUnits">Min</SecondaryButton>
+                <SecondaryButton v-if="content?.type === 'asteroid'" @click="setMinNeededUnits">Min</SecondaryButton>
                 <SecondaryButton @click="setMaxAvailableUnits">Max</SecondaryButton>
-                <PrimaryButton @click="exploreAsteroid">Explore</PrimaryButton>
+                <PrimaryButton v-if="content?.type === 'asteroid'" @click="exploreAsteroid">Explore</PrimaryButton>
+                <PrimaryButton v-else @click="attackUser">Attack</PrimaryButton>
               </div>
             </div>
 

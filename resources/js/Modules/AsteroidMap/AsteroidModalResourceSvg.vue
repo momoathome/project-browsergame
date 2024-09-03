@@ -3,9 +3,9 @@ import { ref, computed, onMounted } from 'vue';
 import type { Asteroid } from '@/types/types';
 
 // Datenstruktur anpassen
-interface Ressource {
+interface Resource {
   name: string;
-  value: number;
+  amount: number;
   color: string;
 }
 
@@ -13,48 +13,56 @@ const props = defineProps<{
   asteroid: Asteroid;
 }>();
 
-const ressources = ref<Ressource[]>([
-  { name: 'Titanium', value: props.asteroid.resources.Titanium ?? 0, color: 'silver' },
-  { name: 'Carbon', value: props.asteroid.resources.Carbon ?? 0, color: 'darkred' },
-  { name: 'Kyberkristall', value: props.asteroid.resources.Kyberkristall ?? 0, color: 'deeppink' },
-  { name: 'Hydrogenium', value: props.asteroid.resources.Hydrogenium ?? 0, color: 'cyan' },
-  { name: 'Uraninite', value: props.asteroid.resources.Uraninite ?? 0, color: 'green' },
-  { name: 'Cobalt', value: props.asteroid.resources.Cobalt ?? 0, color: 'dodgerblue' },
-  { name: 'Iridium', value: props.asteroid.resources.Iridium ?? 0, color: 'slategray' },
-  { name: 'Astatine', value: props.asteroid.resources.Astatine ?? 0, color: 'gold' },
-  { name: 'Thorium', value: props.asteroid.resources.Thorium ?? 0, color: 'yellowgreen' },
-  { name: 'Hyperdiamond', value: props.asteroid.resources.Hyperdiamond ?? 0, color: 'navy' },
-  { name: 'Dilithium', value: props.asteroid.resources.Dilithium ?? 0, color: 'purple' },
-  { name: 'Deuterium', value: props.asteroid.resources.Deuterium ?? 0, color: 'orangered' },
-  // Weitere Ressourcen können hier hinzugefügt werden
-]);
+const resourceColors: Record<string, string> = {
+  Titanium: 'silver',
+  Carbon: 'darkred',
+  Kyberkristall: 'deeppink',
+  Hydrogenium: 'cyan',
+  Uraninite: 'green',
+  Cobalt: 'dodgerblue',
+  Iridium: 'slategray',
+  Astatine: 'gold',
+  Thorium: 'yellowgreen',
+  Hyperdiamond: 'navy',
+  Dilithium: 'purple',
+  Deuterium: 'orangered',
+  // Weitere Ressourcenfarben hier hinzufügen
+};
 
-const filteredRessources = computed(() => ressources.value.filter(res => res.value > 0));
+const formattedResources = computed<Resource[]>(() => {
+  return props.asteroid.resources.map(resource => {
+    return {
+      name: resource.resource_type,
+      amount: resource.amount,
+      color: resourceColors[resource.resource_type] || 'grey',
+    };
+  });
+});
+
+const filteredResources = computed(() => formattedResources.value.filter(res => res.amount > 0));
+const totalResources = computed(() => filteredResources.value.reduce((total, res) => total + res.amount, 0));
+
+const dashArrays = ref<number[]>([]);
+const dashOffsets = ref<number[]>([]);
 
 const circleRadius = 30;
 const circumference = Math.floor(2 * Math.PI * circleRadius / 2);
 const asteroidRessourceStrokeWidth = ref(2);
 
-const totalRessources = computed(() => ressources.value.reduce((total, res) => total + res.value, 0));
-
-const dashArrays = ref<number[]>([]);
-const dashOffsets = ref<number[]>([]);
-
 const calcDashArrayAndOffset = () => {
   let currentOffset = 0;
   const gap = 2;
 
-  dashArrays.value = filteredRessources.value
-  .map((res) => {
-    const dashArray = Math.round((res.value / totalRessources.value) * circumference);
+  dashArrays.value = filteredResources.value.map(res => {
+    const dashArray = Math.round((res.amount / totalResources.value) * circumference);
     dashOffsets.value.push(currentOffset);
     currentOffset -= dashArray + gap;
     return dashArray;
   });
 };
 
-const getAsteroidRessourceStrokeWidth = () => {
-  const total = totalRessources.value
+const getAsteroidResourceStrokeWidth = () => {
+  const total = totalResources.value;
   if (total >= 10000) {
     return 4;
   } else if (total >= 5500) {
@@ -66,27 +74,25 @@ const getAsteroidRessourceStrokeWidth = () => {
   } else {
     return 1; // Standardwert
   }
-}
+};
 
 onMounted(() => {
   calcDashArrayAndOffset();
-  asteroidRessourceStrokeWidth.value = getAsteroidRessourceStrokeWidth()
+  asteroidRessourceStrokeWidth.value = getAsteroidResourceStrokeWidth()
 });
 </script>
 
 <template>
-  <div class="absolute -top-[130px] -left-[120px]"> 
+  <div class="absolute -top-[130px] -left-[120px]">
     <svg viewBox="0 0 100 100">
-      <circle
-        v-for="(res, index) in filteredRessources"
-        :key="res.name"
-        cx="50"
-        cy="50"
+      <circle v-for="(res, index) in filteredResources"
+        :key="res.name" 
+        cx="50" 
+        cy="50" 
         :r="circleRadius"
-        :stroke="res.color"
-        :stroke-dasharray="dashArrays[index] + ', 284'"
-        :stroke-dashoffset="dashOffsets[index]"
-        >
+        :stroke="res.color" 
+        :stroke-dasharray="dashArrays[index] + ', 284'" 
+        :stroke-dashoffset="dashOffsets[index]">
       </circle>
     </svg>
   </div>
@@ -124,5 +130,4 @@ circle {
     opacity: 1;
   }
 }
-
 </style>

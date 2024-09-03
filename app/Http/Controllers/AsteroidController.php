@@ -21,13 +21,9 @@ class AsteroidController extends Controller
 
     public function index()
     {
-        $asteroids = Asteroid::all();
+        $asteroids = Asteroid::with('resources')->get();
         $stations = Station::all();
         $user = auth()->user();
-
-        foreach ($asteroids as $asteroid) {
-            $asteroid->resources = json_decode($asteroid->resources, true);
-        }
 
         $spacecrafts = Spacecraft::with('details')
             ->where('user_id', $user->id)
@@ -41,30 +37,6 @@ class AsteroidController extends Controller
         ]);
     }
 
-    public function store(Request $request)
-    {
-        /* // Validierung der Eingabedaten
-        $request->validate([
-            'name' => 'required|string',
-            'rarity' => 'required|string',
-            'base' => 'required|numeric',
-            'multiplier' => 'required|numeric',
-            'value' => 'required|integer',
-            'pool' => 'required|string',
-            'resources' => 'required|array',
-            'x' => 'required|integer',
-            'y' => 'required|integer',
-            'pixel_size' => 'required|numeric',
-        ]);
-
-        $data = $request->all();
-        $data['resources'] = json_encode($data['resources']);
-
-        $asteroid = Asteroid::create($data);
-
-        return response()->json($asteroid, 201); */
-    }
-
     public function update(Request $request)
     {
         $validated = $request->validate([
@@ -76,6 +48,17 @@ class AsteroidController extends Controller
 
         $user = auth()->user();
         $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+    
+        $asteroids = Asteroid::search($query)->take(500)->get();
+    
+        return Inertia::render('AsteroidMap', [
+            'searched_asteroids' => $asteroids,
+        ]);
     }
 
 }

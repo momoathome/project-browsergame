@@ -25,29 +25,19 @@ class AsteroidGenerator
 
     for ($i = 0; $i < $count; $i++) {
       $asteroidData = $this->generateAsteroid();
-      $coordinate = $this->generateAsteroidCoordinate($asteroidData);
+      $resources = $this->generateResourcesFromPools($asteroidData['value']);
+      $coordinate = $this->generateAsteroidCoordinate($asteroidData, $resources);
       $asteroidData['x'] = $coordinate['x'];
       $asteroidData['y'] = $coordinate['y'];
       $asteroidData['pixel_size'] = $this->transformAsteroidRarityToImgSize($asteroidData['rarity']);
 
       $asteroid = Asteroid::create($asteroidData);
-      $this->saveAsteroidResources($asteroid, $asteroidData['resources']);
+      $this->saveAsteroidResources($asteroid, $resources);
 
       $asteroids[] = $asteroid;
     }
 
     return $asteroids;
-  }
-
-  private function saveAsteroidResources(Asteroid $asteroid, array $resources)
-  {
-    foreach ($resources as $resourceType => $amount) {
-      AsteroidResource::create([
-        'asteroid_id' => $asteroid->id,
-        'resource_type' => $resourceType,
-        'amount' => $amount,
-      ]);
-    }
   }
 
   private function generateAsteroid(): array
@@ -60,8 +50,6 @@ class AsteroidGenerator
     $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($asteroidRarity);
     $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidFaktorMultiplier);
     $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
-
-    $resources = $this->generateResourcesFromPools($asteroidValue);
     $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier);
 
     return [
@@ -70,8 +58,18 @@ class AsteroidGenerator
       'base' => $asteroidBaseFaktor,
       'multiplier' => $asteroidBaseMultiplier,
       'value' => $asteroidValue,
-      'resources' => $resources,
     ];
+  }
+
+  private function saveAsteroidResources(Asteroid $asteroid, array $resources)
+  {
+    foreach ($resources as $resourceType => $amount) {
+      AsteroidResource::create([
+        'asteroid_id' => $asteroid->id,
+        'resource_type' => $resourceType,
+        'amount' => $amount,
+      ]);
+    }
   }
 
   protected function getStations()
@@ -86,13 +84,12 @@ class AsteroidGenerator
     })->toArray();
   }
 
-  private function generateAsteroidCoordinate(array $asteroid): array
+  private function generateAsteroidCoordinate(array $asteroid, array $resources): array
   {
     $minDistance = $this->config['min_distance'];
     $universeSize = $this->config['universe_size'];
     $distanceModifier = $this->config['distance_modifiers'][$asteroid['rarity']] ?? 0;
 
-    $resources = $asteroid['resources'];
     $resourceDistanceModifier = $this->calculateResourceDistanceModifier($resources);
     $distanceModifier += $resourceDistanceModifier;
 

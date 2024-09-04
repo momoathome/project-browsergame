@@ -373,6 +373,7 @@ function clearSearch() {
   const url = new URL(window.location.href);
   url.searchParams.delete('query');
   window.history.pushState({}, '', url);
+  usePage().props.searched_asteroids = null;
 
   form.query = '';
   highlightedAsteroids.value = [];

@@ -138,6 +138,13 @@ return [
         'index-settings' => [
             Asteroid::class => [
                 'filterableAttributes'=> ['name', 'rarity', 'resources'],
+                "typoTolerance" => [
+                    "enabled" => true,
+                    "minWordSizeForTypos" => [
+                      "oneTypo" => 3,
+                      "twoTypos" => 5
+                    ],
+                ],
                 'synonyms' => [
                     'car' => ['carbon'],
                     'carb' => ['carbon'],
@@ -149,6 +156,8 @@ return [
                     'tita' => ['titanium'],
                     'ti' => ['titanium'],
                     'tia' => ['titanium'],
+                    'tti' => ['titanium'],
+                    'tta' => ['titanium'],
                     
                     'hydro' => ['hydrogenium'],
                     'hyd' => ['hydrogenium'],

@@ -13,9 +13,9 @@ return [
 
     'asteroid_size' => [
         'common' => 1,
-        'uncommen' => 2,
+        'uncommon' => 2,
         'rare' => 4,
-        'extrem' => 8,
+        'extreme' => 8,
     ],
 
     'asteroid_faktor' => [
@@ -25,23 +25,23 @@ return [
 
     'asteroid_rarity' => [
         'common' => 700,
-        'uncommen' => 300,
+        'uncommon' => 300,
         'rare' => 25,
-        'extrem' => 5,
+        'extreme' => 5,
     ],
 
     'asteroid_faktor_multiplier' => [
         'common' => ['min' => 5, 'max' => 8],
-        'uncommen' => ['min' => 13, 'max' => 21],
+        'uncommon' => ['min' => 13, 'max' => 21],
         'rare' => ['min' => 34, 'max' => 55],
-        'extrem' => ['min' => 89, 'max' => 144],
+        'extreme' => ['min' => 89, 'max' => 144],
     ],
 
     'distance_modifiers' => [
         'common' => 0,
-        'uncommen' => 0,
+        'uncommon' => 0,
         'rare' => 4 * $min_distance,
-        'extrem' => 10 * $min_distance,
+        'extreme' => 10 * $min_distance,
     ],
 
     'resource_pools' => [

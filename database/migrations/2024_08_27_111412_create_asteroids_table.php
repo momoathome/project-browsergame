@@ -15,7 +15,6 @@ class CreateAsteroidsTable extends Migration
             $table->float('base');
             $table->float('multiplier');
             $table->integer('value');
-            $table->json('resources'); // Speichern von Ressourcen als JSON
             $table->integer('x');
             $table->integer('y');
             $table->float('pixel_size');

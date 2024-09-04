@@ -5,8 +5,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import * as config from '@/config';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import { usePage, useForm } from '@inertiajs/vue3';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
+import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -397,11 +396,8 @@ function closeModal() {
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
-      <form @submit.prevent class="absolute top-0 left-0 z-100 flex gap-2 ms-4">
-        <input v-model="form.query" class="text-white bg-inherit rounded-lg" type="text"
-          placeholder="Search by name or resource" />
-        <PrimaryButton @click="performSearch" type="submit">Search</PrimaryButton>
-        <SecondaryButton @click="clearSearch" type="button">Clear</SecondaryButton>
+      <form class="absolute top-0 left-0 z-100 flex gap-2 ms-4">
+        <Search v-model="form.query" @clear="clearSearch" @search="performSearch" />
       </form>
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>

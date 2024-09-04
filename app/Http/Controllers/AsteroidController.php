@@ -85,12 +85,12 @@ class AsteroidController extends Controller
         ]);
 
         $query = $request->input('query');
-        $queryParts = explode(' ', $query);
+        $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
 
         $searchedAsteroids = Asteroid::query();
 
         // single word query with Meilisearch
-        if (count($queryParts) === 1) {
+        if (count($queryParts) === 1 && strpos($queryParts[0], '-') === false) {
             $searchedAsteroids = Asteroid::search($query)->take(1000)->get();
         } else {
             // Filter by rarity
@@ -106,39 +106,35 @@ class AsteroidController extends Controller
             $resourceFilter = array_diff($queryParts, ['common', 'uncommen', 'rare', 'extreme']);
 
             if (!empty($resourceFilter)) {
-                $searchedAsteroids->whereHas('resources', function ($query) use ($resourceFilter) {
-                    $query->whereIn('resource_type', $resourceFilter);
-                }, '=', count($resourceFilter));
+                // Check if any of the resource filters contain a hyphen
+                $combinedResources = array_filter($resourceFilter, function ($item) {
+                    return strpos($item, '-') !== false;
+                });
+
+                if (!empty($combinedResources)) {
+                    // Handle combined resources (with hyphen)
+                    foreach ($combinedResources as $combinedResource) {
+                        $resources = explode('-', $combinedResource);
+                        $searchedAsteroids->whereHas('resources', function ($query) use ($resources) {
+                            $query->whereIn('resource_type', $resources);
+                        }, '=', count($resources));
+                    }
+
+                    // Remove the combined resources from the resourceFilter
+                    $resourceFilter = array_diff($resourceFilter, $combinedResources);
+                }
+
+                // Handle remaining individual resources
+                if (!empty($resourceFilter)) {
+                    $searchedAsteroids->whereHas('resources', function ($query) use ($resourceFilter) {
+                        $query->whereIn('resource_type', $resourceFilter);
+                    });
+                    Log::info('Individual resources: '. implode(', ', $resourceFilter));
+                }
             }
 
             $searchedAsteroids = $searchedAsteroids->take(1000)->get();
         }
-
-        // Filter by resources
-/*         $resourceFilter = [];
-        foreach ($queryParts as $part) {
-            if (!in_array($part, ['common', 'uncommen', 'rare', 'extreme'])) {
-                $resourceFilter[] = $part;
-                Log::info('Filtering by resource: ' . $part);
-            }
-        }
-
-        if (!empty($resourceFilter)) {
-            if (count($resourceFilter) === 1) {
-                $searchedAsteroids = $searchedAsteroids->filter(function ($asteroid) use ($resourceFilter) {
-                    $resources = $asteroid->resources->pluck('resource_type')->toArray();
-                    Log::info('Filtering by resource if resourcefilter is 1: ' . $resourceFilter[0]);
-                    return in_array($resourceFilter[0], $resources);
-                });
-            } else {
-                $searchedAsteroids = $searchedAsteroids->filter(function ($asteroid) use ($resourceFilter) {
-                    $resources = $asteroid->resources->pluck('resource_type')->toArray();
-                    Log::info('Filtering by resource if resourcefilter is > 1: ' . implode(', ', $resourceFilter));
-                    return count(array_intersect($resourceFilter, $resources)) === count($resourceFilter);
-                });
-            }
-            Log::info('Filtering by resources: ' . implode(', ', $resourceFilter));
-        } */
 
         $asteroids = Asteroid::with('resources')->get();
         $stations = Station::all();

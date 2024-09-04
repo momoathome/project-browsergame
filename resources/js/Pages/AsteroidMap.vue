@@ -355,6 +355,7 @@ function performSearch() {
         highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
       } else {
         highlightedAsteroids.value = [];
+        console.log('nothing found matching the search query.');
       }
       drawScene();
 

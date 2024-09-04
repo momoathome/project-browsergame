@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Asteroid;
+use App\Models\AsteroidResource;
 use App\Models\Resource;
 use App\Models\Spacecraft;
 use App\Models\UserResource;
@@ -42,23 +43,25 @@ class AsteroidExplorer
         }
 
         $asteroid = Asteroid::findOrFail($asteroidId);
-        $asteroidResources = json_decode($asteroid->resources, true);
+        $asteroidResources = $asteroid->resources()->get();
+
+        Log::info($asteroidResources);
 
         $resourcesExtracted = [];
         $remainingResources = [];
 
-        foreach ($asteroidResources as $resourceName => $amount) {
-            $resource = Resource::where('name', $resourceName)->first();
+        foreach ($asteroidResources as $asteroidResource) {
+            $resource = Resource::where('name', $asteroidResource->resource_type)->first();
             $resourceId = $resource->id;
-        
+
             $extractionMultiplier = $hasMiner ? 1 : 0.5;
-            $extractedAmount = min($amount, floor($totalCargoCapacity * $extractionMultiplier));
+            $extractedAmount = min($asteroidResource->amount, floor($totalCargoCapacity * $extractionMultiplier));
             $totalCargoCapacity -= $extractedAmount;
-            $remainingAmount = $amount - $extractedAmount;
-        
+            $remainingAmount = $asteroidResource->amount - $extractedAmount;
+
             $resourcesExtracted[$resourceId] = $extractedAmount;
-            $remainingResources[$resourceName] = max(0, $remainingAmount);
-        
+            $remainingResources[$asteroidResource->resource_type] = max(0, $remainingAmount);
+
             if ($totalCargoCapacity <= 0) {
                 break;
             }
@@ -75,11 +78,22 @@ class AsteroidExplorer
                 $userResource->save();
             }
 
-            if (empty(array_filter($remainingResources))) {
+
+            foreach ($remainingResources as $resourceType => $amount) {
+                $asteroidResource = AsteroidResource::where('asteroid_id', $asteroid->id)
+                    ->where('resource_type', $resourceType)
+                    ->first();
+
+                if ($amount > 0) {
+                    $asteroidResource->amount = $amount;
+                    $asteroidResource->save();
+                } else {
+                    $asteroidResource->delete();
+                }
+            }
+
+            if ($asteroid->resources()->count() == 0) {
                 $asteroid->delete();
-            } else {
-                $asteroid->resources = json_encode($remainingResources);
-                $asteroid->save();
             }
         });
 

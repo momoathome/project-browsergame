@@ -37,6 +37,8 @@ function buyResource() {
   }
 
   form.post(`/market/buy`, {
+    preserveState: true,
+
     onSuccess: () => {
       form.reset();
     },

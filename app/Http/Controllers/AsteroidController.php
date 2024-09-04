@@ -58,11 +58,11 @@ class AsteroidController extends Controller
         ]);
 
         $query = $request->input('query');
-        
-        $searched_asteroids = Asteroid::search($query)->take(1000)->get();
+        $searched_asteroids = Asteroid::search($query)
+        ->take(1000)
+        ->get();
 
-        Log::info('Search query: '. $searched_asteroids);
-        
+
         $asteroids = Asteroid::with('resources')->get();
         $stations = Station::all();
         $user = auth()->user();

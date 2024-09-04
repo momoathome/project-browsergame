@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Asteroid;
+
 return [
 
     /*
@@ -134,9 +136,88 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            Asteroid::class => [
+                'filterableAttributes'=> ['name', 'rarity', 'resources'],
+                'synonyms' => [
+                    'car' => ['carbon'],
+                    'carb' => ['carbon'],
+                    'crab' => ['carbon'],
+                    'ca' => ['carbon'],
+                    'bon' => ['carbon'],
+                    
+                    'tit' => ['titanium'],
+                    'tita' => ['titanium'],
+                    'ti' => ['titanium'],
+                    'tia' => ['titanium'],
+                    
+                    'hydro' => ['hydrogenium'],
+                    'hyd' => ['hydrogenium'],
+                    'hdy' => ['hydrogenium'],
+                    'hy' => ['hydrogenium'],
+                    'hydo' => ['hydrogenium'],
+                    'oge' => ['hydrogenium'],
+                    'ogen' => ['hydrogenium'],
+                    
+                    'kyber' => ['kyberkristall'],
+                    'kyb' => ['kyberkristall'],
+                    'ky' => ['kyberkristall'],
+                    'ber' => ['kyberkristall'],
+                    'kby' => ['kyberkristall'],
+                    'kris' => ['kyberkristall'],
+                    'kri' => ['kyberkristall'],
+                    'kristal' => ['kyberkristall'],
+                    'kristall' => ['kyberkristall'],
+                    
+                    'cob' => ['cobalt'],
+                    'co' => ['cobalt'],
+                    'balt' => ['cobalt'],
+                    'clt' => ['cobalt'],
+                    
+                    'irid' => ['iridium'],
+                    'iri' => ['iridium'],
+                    'id' => ['iridium'],
+                    'dium' => ['iridium'],
+                    
+                    'ast' => ['astatine'],
+                    'astat' => ['astatine'],
+                    'as' => ['astatine'],
+                    'tin' => ['astatine'],
+                    
+                    'thor' => ['thorium'],
+                    'th' => ['thorium'],
+                    'tho' => ['thorium'],
+                    'thori' => ['thorium'],
+                    'hto' => ['thorium'],
+                    'htor' => ['thorium'],
+                    
+                    'hyp' => ['hyperdiamond'],
+                    'hype' => ['hyperdiamond'],
+                    'hyper' => ['hyperdiamond'],
+                    'hyperd' => ['hyperdiamond'],
+                    'dia' => ['hyperdiamond'],
+                    'diamond' => ['hyperdiamond'],
+                    'amon' => ['hyperdiamond'],
+                    'amo' => ['hyperdiamond'],
+                    
+                    'dili' => ['dilithium'],
+                    'dilli' => ['dilithium'],
+                    'thium' => ['dilithium'],
+                    'thi' => ['dilithium'],
+                    'dl' => ['dilithium'],
+                    'tili' => ['dilithium'],
+                    
+                    'deut' => ['deuterium'],
+                    'riu' => ['deuterium'],
+                    'deu' => ['deuterium'],
+                    'rui' => ['deuterium'],
+                    'dt' => ['deuterium'],
+                    'dui' => ['deuterium'],
+                    'ter' => ['deuterium'],
+                    'eud' => ['deuterium'],
+                    'edu' => ['deuterium'],
+                ],
+            ],
+
         ],
     ],
 

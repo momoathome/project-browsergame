@@ -19,6 +19,7 @@ const form = useForm({
 
 function upgradeModule() {
   form.post(`/buildings/${props.moduleData.id}/update`, {
+    preserveState: true,
     onSuccess: () => {
       // 
     },

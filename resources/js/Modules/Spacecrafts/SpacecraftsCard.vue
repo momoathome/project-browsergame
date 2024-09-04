@@ -21,6 +21,8 @@ const form = useForm({
 
 function produceSpacecraft() {
   form.post(`/shipyard/${props.spacecraftData.id}/update`, {
+    preserveState: true,
+
     onSuccess: () => {
       form.reset();
     },

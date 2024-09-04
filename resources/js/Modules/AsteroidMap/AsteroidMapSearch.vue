@@ -78,6 +78,8 @@ const scrollToHighlighted = () => {
 const selectCurrent = () => {
   if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredSuggestions.value.length) {
     selectSuggestion(filteredSuggestions.value[highlightedIndex.value]);
+  } else {
+    selectSuggestion(query.value);
   }
 };
 

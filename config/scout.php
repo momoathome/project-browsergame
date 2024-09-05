@@ -141,8 +141,8 @@ return [
                 "typoTolerance" => [
                     "enabled" => true,
                     "minWordSizeForTypos" => [
-                      "oneTypo" => 3,
-                      "twoTypos" => 5
+                      "oneTypo" => 5,
+                      "twoTypos" => 8
                     ],
                 ],
                 'synonyms' => [

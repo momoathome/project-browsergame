@@ -13,10 +13,10 @@ class Kernel extends ConsoleKernel
   protected function schedule(Schedule $schedule): void
   {
     // Beispiel: Einmal täglich um Mitternacht Asteroiden generieren
-    $schedule->call(function () {
+/*     $schedule->call(function () {
       $generator = new \App\Services\AsteroidGenerator();
-      $generator->generateAsteroids(100); // Anzahl der zu generierenden Asteroiden
-    })->dailyAt('00:00');
+      $generator->generateAsteroids(100);
+    })->dailyAt('00:00'); */
   }
 
   /**

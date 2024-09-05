@@ -77,9 +77,9 @@ class AsteroidGenerator
     return Station::all()->map(function ($station) {
       return [
         'id' => $station->id,
+        'name' => $station->name,
         'x' => $station->coordinate_x,
         'y' => $station->coordinate_y,
-        'name' => $station->name
       ];
     })->toArray();
   }

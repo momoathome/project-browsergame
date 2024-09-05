@@ -12,6 +12,7 @@ const props = defineProps<{
   stations: Station[];
   spacecrafts: Spacecraft[];
   searched_asteroids: Asteroid[];
+  searched_stations: Station[];
 }>();
 
 const stationImageSrc = '/storage/space-station.png';
@@ -52,10 +53,14 @@ function adjustCanvasSize() {
 }
 
 const highlightedAsteroids = ref<number[]>([]);
+const highlightedStations = ref<number[]>([]);
 
 onMounted(() => {
   if (props.searched_asteroids && props.searched_asteroids.length) {
     highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
+  }
+  if (props.searched_stations && props.searched_stations.length) {
+    highlightedStations.value = props.searched_stations.map((station: Station) => station.id);
   }
 
   if (canvasRef.value) {
@@ -129,6 +134,17 @@ function drawStation(x: number, y: number, name: string, id: number) {
     const imageX = x - stationBaseSize / 2 * devicePixelRatio;
     const imageY = y - stationBaseSize / 2 * devicePixelRatio;
 
+
+    if (highlightedStations.value.includes(id)) {
+      const padding = 20;
+      const adjustedRadius = stationBaseSize + padding;
+      ctx.value.strokeStyle = 'orange';
+      ctx.value.lineWidth = 5;
+      ctx.value.beginPath();
+      ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
+      ctx.value.stroke();
+    }
+
     // Zeichne das Station-Icon
     ctx.value.drawImage(
       stationImage,
@@ -147,7 +163,7 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
     // Zentriere den Text über dem Station-Icon
     const textX = x - textWidth / 2;
-    const textY = y - stationBaseSize / 2 - 32;
+    const textY = y - stationBaseSize / 2 - 24;
 
     // Zeichne den Text
     ctx.value.fillText(name, textX, textY);
@@ -349,18 +365,27 @@ const form = useForm({
 function performSearch() {
   form.get('/asteroidMap/search', {
     preserveState: true,
-    only: ['searched_asteroids'],
+    only: ['searched_asteroids', 'searched_stations'],
     onSuccess: () => {
       if (props.searched_asteroids && props.searched_asteroids.length) {
         highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
       } else {
         highlightedAsteroids.value = [];
       }
+
+      if (props.searched_stations && props.searched_stations.length) {
+        highlightedStations.value = props.searched_stations.map((station: Station) => station.id);
+      } else {
+        highlightedStations.value = [];
+      }
       drawScene();
 
       if (highlightedAsteroids.value.length === 1) {
         const asteroidId = highlightedAsteroids.value[0];
         focusOnAsteroid(asteroidId);
+      } else if (highlightedStations.value.length === 1) {
+        const stationId = highlightedStations.value[0];
+        resetViewToUserStation(stationId);
       }
     },
     onError: (errors) => {

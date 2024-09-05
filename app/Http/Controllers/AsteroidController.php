@@ -84,20 +84,31 @@ class AsteroidController extends Controller
     {
         $query = $request->input('query');
         if (empty($query)) {
-            return $this->renderAsteroidMap([]);
+            return $this->renderAsteroidMap([], []);
         }
 
         $request->validate(['query' => 'nullable|string']);
 
         $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
 
-        if ($this->isSingleWordQuery($queryParts)) {
-            $searchedAsteroids = $this->performMeilisearchQuery($query);
-        } else {
-            $searchedAsteroids = $this->performComplexQuery($queryParts);
-        }
+        $searchedAsteroids = $this->searchAsteroids($query, $queryParts);
+        $searchedStations = $this->searchStations($query);
 
-        return $this->renderAsteroidMap($searchedAsteroids);
+        return $this->renderAsteroidMap($searchedAsteroids, $searchedStations);
+    }
+
+    private function searchAsteroids($query, $queryParts)
+    {
+        if ($this->isSingleWordQuery($queryParts)) {
+            return $this->performMeilisearchQuery($query);
+        } else {
+            return $this->performComplexQuery($queryParts);
+        }
+    }
+
+    private function searchStations($query)
+    {
+        return Station::search($query)->take(100)->get();
     }
 
     private function isSingleWordQuery($queryParts)
@@ -284,7 +295,7 @@ class AsteroidController extends Controller
         ];
     }
 
-    private function renderAsteroidMap($searchedAsteroids)
+    private function renderAsteroidMap($searchedAsteroids, $searchedStations)
     {
         $asteroids = Asteroid::with('resources')->get();
         $stations = Station::all();
@@ -297,6 +308,7 @@ class AsteroidController extends Controller
         return Inertia::render('AsteroidMap', [
             'asteroids' => $asteroids,
             'searched_asteroids' => $searchedAsteroids,
+            'searched_stations' => $searchedStations,
             'spacecrafts' => $spacecrafts,
             'stations' => $stations,
         ]);

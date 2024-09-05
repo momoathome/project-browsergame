@@ -86,10 +86,8 @@ const selectCurrent = () => {
 const selectSuggestion = (suggestion) => {
   query.value = suggestion;
   emit('search');
-  query.value = '';
   highlightedIndex.value = -1;
   suggestionRefs.value = [0];
-  // Weiterverarbeitung der Auswahl, z.B. Suche ausführen
 };
 
 const hideSuggestions = () => {

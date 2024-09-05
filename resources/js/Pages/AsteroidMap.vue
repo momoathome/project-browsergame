@@ -355,7 +355,6 @@ function performSearch() {
         highlightedAsteroids.value = props.searched_asteroids.map((asteroid: Asteroid) => asteroid.id);
       } else {
         highlightedAsteroids.value = [];
-        console.log('nothing found matching the search query.');
       }
       drawScene();
 
@@ -374,7 +373,7 @@ function clearSearch() {
   const url = new URL(window.location.href);
   url.searchParams.delete('query');
   window.history.pushState({}, '', url);
-  usePage().props.searched_asteroids = null;
+  usePage().props.searched_asteroids = [];
 
   form.query = '';
   highlightedAsteroids.value = [];

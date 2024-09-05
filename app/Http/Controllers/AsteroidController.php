@@ -82,8 +82,13 @@ class AsteroidController extends Controller
 
     public function search(Request $request)
     {
-        $request->validate(['query' => 'required|string']);
         $query = $request->input('query');
+        if (empty($query)) {
+            return $this->renderAsteroidMap([]);
+        }
+
+        $request->validate(['query' => 'nullable|string']);
+
         $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
 
         if ($this->isSingleWordQuery($queryParts)) {
@@ -115,7 +120,7 @@ class AsteroidController extends Controller
 
     private function applyRarityFilter($query, $queryParts)
     {
-        $rarities = ['common', 'uncommen', 'rare', 'extreme'];
+        $rarities = ['common', 'uncommon', 'rare', 'extreme'];
         foreach ($queryParts as $part) {
             if (in_array($part, $rarities)) {
                 $query->where('rarity', $part);
@@ -126,7 +131,7 @@ class AsteroidController extends Controller
 
     private function applyResourceFilter($query, $queryParts)
     {
-        $resourceFilter = array_diff($queryParts, ['common', 'uncommen', 'rare', 'extreme']);
+        $resourceFilter = array_diff($queryParts, ['common', 'uncommon', 'rare', 'extreme']);
         if (empty($resourceFilter)) {
             return;
         }

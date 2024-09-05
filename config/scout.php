@@ -198,6 +198,18 @@ return [
                     'thori' => ['thorium'],
                     'hto' => ['thorium'],
                     'htor' => ['thorium'],
+
+                    'ur' => ['uraninite'],
+                    'uran' => ['uraninite'],
+                    'urin' => ['uraninite'],
+                    'rni' => ['uraninite'],
+                    'ninite' => ['uraninite'],
+                    'nite' => ['uraninite'],
+                    'uranium' => ['uraninite'],
+                    'uranite' => ['uraninite'],
+                    'uarn' => ['uraninite'],
+                    'ran' => ['uraninite'],
+                    'arn' => ['uraninite'],
                     
                     'hyp' => ['hyperdiamond'],
                     'hype' => ['hyperdiamond'],

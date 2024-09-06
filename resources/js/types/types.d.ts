@@ -108,6 +108,6 @@ export interface Station {
   id: number;
   user_id: number;
   name: string;
-  coordinate_x: number;
-  coordinate_y: number;
+  x: number;
+  y: number;
 }

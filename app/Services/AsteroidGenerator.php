@@ -78,8 +78,8 @@ class AsteroidGenerator
       return [
         'id' => $station->id,
         'name' => $station->name,
-        'x' => $station->coordinate_x,
-        'y' => $station->coordinate_y,
+        'x' => $station->x,
+        'y' => $station->y,
       ];
     })->toArray();
   }

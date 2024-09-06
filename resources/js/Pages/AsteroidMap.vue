@@ -95,7 +95,7 @@ function drawScene() {
 
     // drawDistanceZones();
     props.stations.forEach(station => {
-      drawStation(station.coordinate_x, station.coordinate_y, station.name, station.id);
+      drawStation(station.x, station.y, station.name, station.id);
     });
 
     props.asteroids.forEach(asteroid => {
@@ -116,8 +116,8 @@ function drawDistanceZones() {
     const step = 1000;
 
     props.stations.forEach(station => {
-      const x = station.coordinate_x;
-      const y = station.coordinate_y;
+      const x = station.x;
+      const y = station.y;
 
       for (let radius = initialRadius; radius <= maxRadius; radius += step) {
         ctx.value.beginPath();
@@ -222,8 +222,8 @@ function onMouseMove(e: MouseEvent) {
   hoveredObject.value = null;
 
   props.stations.forEach(station => {
-    if (Math.abs(zoomedX - station.coordinate_x) < stationBaseSize / 2 &&
-      Math.abs(zoomedY - station.coordinate_y) < stationBaseSize / 2) {
+    if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
+      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
       hoveredObject.value = { type: 'station', id: station.id };
     }
   });
@@ -329,8 +329,8 @@ function resetViewToUserStation(userId: number) {
   const userStation = props.stations.find(station => station.user_id === userId);
   if (!userStation || !canvasRef.value) return;
 
-  const targetX = -(userStation.coordinate_x * config.baseZoomLevel - canvasRef.value.width / 2);
-  const targetY = -(userStation.coordinate_y * config.baseZoomLevel - canvasRef.value.height / 2);
+  const targetX = -(userStation.x * config.baseZoomLevel - canvasRef.value.width / 2);
+  const targetY = -(userStation.y * config.baseZoomLevel - canvasRef.value.height / 2);
   const targetZoomLevel = config.baseZoomLevel;
 
   animateView(targetX, targetY, targetZoomLevel);
@@ -351,8 +351,8 @@ function focusUserStationOnInitialLoad(userId: number) {
   const userStation = props.stations.find(station => station.user_id === userId);
   if (!userStation || !canvasRef.value) return;
 
-  pointX.value = -(userStation.coordinate_x * config.initialZoom - canvasRef.value.width / 2);
-  pointY.value = -(userStation.coordinate_y * config.initialZoom - canvasRef.value.height / 2);
+  pointX.value = -(userStation.x * config.initialZoom - canvasRef.value.width / 2);
+  pointY.value = -(userStation.y * config.initialZoom - canvasRef.value.height / 2);
   zoomLevel.value = config.initialZoom;
 
   drawScene();
@@ -402,6 +402,7 @@ function clearSearch() {
 
   form.query = '';
   highlightedAsteroids.value = [];
+  highlightedStations.value = [];
   drawScene();
 }
 

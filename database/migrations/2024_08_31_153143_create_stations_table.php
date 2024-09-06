@@ -16,8 +16,8 @@ return new class extends Migration {
                 ->constrained('users')
                 ->onDelete('cascade');
             $table->string('name');
-            $table->integer('coordinate_x');
-            $table->integer('coordinate_y');
+            $table->integer('x');
+            $table->integer('y');
             $table->timestamps();
         });
     }

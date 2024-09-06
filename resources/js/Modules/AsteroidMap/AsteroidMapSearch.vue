@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, defineEmits, nextTick } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 
 const suggestions = [
   'Common',

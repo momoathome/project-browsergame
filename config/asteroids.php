@@ -3,6 +3,7 @@
 $asteroid_count = 1000;
 $asteroid_density = 60;
 $min_distance = 1000;
+$station_to_station_distance = 3000;
 $universe_size = $asteroid_count * $asteroid_density;
 
 return [

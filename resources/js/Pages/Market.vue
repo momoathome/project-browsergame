@@ -22,7 +22,7 @@ const formattedResources = computed(() => {
 
 <template>
   <AppLayout title="market">
-    <div class="grid gap-4 lg:gap-8 ps-8 py-8 me-20">
+    <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
       <MarketCard v-for="data in formattedResources" :key="data.id" :marketData="data" />
     </div>
   </AppLayout>

@@ -35,7 +35,7 @@ function produceSpacecraft() {
 
 <template>
   <AppLayout title="spacecrafts">
-    <div class="grid gap-4 lg:gap-8 ps-8 py-8 me-20">
+    <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
       <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraftData="data"
         @produce="produceSpacecraft" />
     </div>
@@ -45,5 +45,14 @@ function produceSpacecraft() {
 <style scoped>
 .grid {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (min-width: 2600px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    max-width: 2600px; 
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 </style>

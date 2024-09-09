@@ -21,66 +21,66 @@ const formattedBuildings = computed(() => {
         image: resource.image,
         amount: resource.pivot.amount
       }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => a.name.localeCompare(b.name))
     };
   });
 });
 
 function updateModule(moduleKey: string) {
-/*   const module = userStore.user?.modules[moduleKey]
-
-  const hasEnoughCredits = () => {
-    const cost = module!.cost
-    if (!cost || (userStore.user?.ressources.credits || 0) < cost) {
-      return false
+  /*   const module = userStore.user?.modules[moduleKey]
+  
+    const hasEnoughCredits = () => {
+      const cost = module!.cost
+      if (!cost || (userStore.user?.ressources.credits || 0) < cost) {
+        return false
+      }
+      return true
     }
-    return true
-  }
-
-  if (!hasEnoughCredits()) {
-    return toast.error('You do not have enough credits')
-  }
-
-  function updateModuleLevel() {
-    if (module) {
-      module.level++;
-      module.cost = Math.round(module.cost * 1.35);
-
-      if (module.title === 'Hangar') {
-        const newUnitLimit = Math.round(module.effectValue * 1.323);
-
+  
+    if (!hasEnoughCredits()) {
+      return toast.error('You do not have enough credits')
+    }
+  
+    function updateModuleLevel() {
+      if (module) {
+        module.level++;
+        module.cost = Math.round(module.cost * 1.35);
+  
+        if (module.title === 'Hangar') {
+          const newUnitLimit = Math.round(module.effectValue * 1.323);
+  
+          const ressources = {
+            unitLimit: newUnitLimit
+          };
+  
+          userStore.updateUserRessources(ressources);
+          module.effectValue = newUnitLimit;
+        }
+  
+        userStore.updateUserModule(moduleKey, module);
+      }
+    }
+  
+  
+    function updateUserRessources() {
+      if (module) {
+        const cost = module.cost || 0
+        const userCredits = userStore.user?.ressources.credits || 0
         const ressources = {
-          unitLimit: newUnitLimit
-        };
-
-        userStore.updateUserRessources(ressources);
-        module.effectValue = newUnitLimit;
+          credits: userCredits - cost,
+        }
+        userStore.updateUserRessources(ressources)
       }
-
-      userStore.updateUserModule(moduleKey, module);
     }
-  }
-
-
-  function updateUserRessources() {
-    if (module) {
-      const cost = module.cost || 0
-      const userCredits = userStore.user?.ressources.credits || 0
-      const ressources = {
-        credits: userCredits - cost,
-      }
-      userStore.updateUserRessources(ressources)
-    }
-  }
-
-  updateUserRessources()
-  updateModuleLevel() */
+  
+    updateUserRessources()
+    updateModuleLevel() */
 } 
 </script>
 
 <template>
   <AppLayout title="buildings">
-    <div class="grid gap-4 lg:gap-8 ps-8 py-8 me-20">
+    <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
       <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" @upgrade="updateModule" />
     </div>
   </AppLayout>
@@ -89,5 +89,14 @@ function updateModule(moduleKey: string) {
 <style scoped>
 .grid {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (min-width: 2600px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    max-width: 2600px; 
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 </style>

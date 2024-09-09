@@ -7,6 +7,7 @@ return [
             'details_id' => 1,
             'effect_value' => 10,
             'build_time' => 900,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -20,6 +21,7 @@ return [
             'details_id' => 2,
             'effect_value' => 20,
             'build_time' => 720,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -33,6 +35,7 @@ return [
             'details_id' => 3,
             'effect_value' => 20,
             'build_time' => 1800,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -46,6 +49,7 @@ return [
             'details_id' => 4,
             'effect_value' => 20,
             'build_time' => 900,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -55,10 +59,11 @@ return [
             ],
         ],
         [
-            'name' => 'Marketplace',
+            'name' => 'Market',
             'details_id' => 5,
             'effect_value' => 20,
             'build_time' => 600,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -67,11 +72,12 @@ return [
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
-        [
+/*         [
             'name' => 'Scanner',
             'details_id' => 6,
             'effect_value' => 20,
             'build_time' => 500,
+            'is_active' => false,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -85,6 +91,7 @@ return [
             'details_id' => 7,
             'effect_value' => 20,
             'build_time' => 300,
+            'is_active' => false,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -92,12 +99,13 @@ return [
                 ['resource_name' => 'Hydrogenium', 'amount' => 100],
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
-        ],
+        ], */
         [
             'name' => 'Shield',
             'details_id' => 8,
             'effect_value' => 20,
             'build_time' => 1500,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -106,11 +114,12 @@ return [
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
-        [
+/*         [
             'name' => 'Energy',
             'details_id' => 9,
             'effect_value' => 20,
             'build_time' => 1200,
+            'is_active' => false,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -118,6 +127,6 @@ return [
                 ['resource_name' => 'Hydrogenium', 'amount' => 100],
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
-        ],
+        ], */
     ],
 ];

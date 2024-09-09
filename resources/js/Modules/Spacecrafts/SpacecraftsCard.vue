@@ -112,7 +112,7 @@ const decrementBy10 = () => {
 
       <div class="grid grid-cols-4 gap-4 items-center">
         <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraftData.resources" :key="resource.name">
-          <img :src="resource.image" class="h-8 w-8" />
+          <img :src="resource.image" class="h-7 w-7" alt="resource" />
           <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>

@@ -75,8 +75,8 @@ function sellResource() {
       </div>
     </div>
 
-    <div class="relative flex justify-center items-center">
-      <img :src="marketData.image" class="h-[64px]" />
+    <div class="relative flex justify-center items-center py-2">
+      <img :src="marketData.image" class="h-[56px]" alt="resource" />
     </div>
 
     <Divider />

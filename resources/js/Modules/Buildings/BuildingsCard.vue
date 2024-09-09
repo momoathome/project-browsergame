@@ -49,7 +49,7 @@ function upgradeModule() {
 
       <div class="grid grid-cols-4 gap-4 items-center">
         <div class="flex flex-col gap-1 items-center" v-for="resource in moduleData.resources" :key="resource.name">
-          <img :src="resource.image" class="h-8 w-8" />
+          <img :src="resource.image" class="h-7 w-7" alt="resource" />
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>
       </div>

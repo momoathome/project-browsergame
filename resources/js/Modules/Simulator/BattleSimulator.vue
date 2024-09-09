@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import BattleCalcTable from '@/Modules/Simulator/BattleCalcTable.vue';
+import BattleSimulatorTable from '@/Modules/Simulator/BattleSimulatorTable.vue';
 import BattleSimulatorLosses from '@/Modules/Simulator/BattleSimulatorLosses.vue';
 import { numberFormat } from '@/Utils/format';
 import { useForm } from '@inertiajs/vue3'
@@ -88,10 +88,10 @@ function simulateBattle() {
       <h1 class="text-3xl mb-4">Battle Simulator</h1>
       <div class="flex flex-col gap-4">
         <h3 class="text-xl">Attacker</h3>
-        <BattleCalcTable :role="'attacker'" :dataObj="attacker"
+        <BattleSimulatorTable :role="'attacker'" :dataObj="attacker"
           @update:quantity="(index, newQuantity) => updateShipQuantity('attacker', index, newQuantity)" />
         <h3 class="text-xl">Defender</h3>
-        <BattleCalcTable :role="'defender'" :dataObj="defender"
+        <BattleSimulatorTable :role="'defender'" :dataObj="defender"
           @update:quantity="(index, newQuantity) => updateShipQuantity('defender', index, newQuantity)" />
       </div>
 

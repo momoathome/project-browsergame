@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { Link } from '@inertiajs/vue3';
+import AppTooltip from '@/Components/AppTooltip.vue';
 
 const NavigationLinks = [
   { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
@@ -22,10 +23,7 @@ const NavigationLinks = [
         class="relative group inline-flex items-center p-3 hover:bg-primary-dark transition border-r-2 border-opacity-0 border-r-[#bfbfbf] first-of-type:rounded-tl-lg last-of-type:rounded-bl-lg">
         <img :src="link.image" class="w-8 h-8" alt="" />
 
-        <span
-          class="pointer-events-none absolute right-full mr-2 text-center bg-gray-800 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {{ link.label }}
-        </span>
+        <AppTooltip :label="link.label" position="left" />
       </Link>
 
       <!-- Admin Dashboard -->

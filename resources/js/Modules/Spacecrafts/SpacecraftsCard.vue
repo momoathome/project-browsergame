@@ -6,6 +6,7 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
 import type { FormattedSpacecraft } from '@/types/types';
+import AppCardTimer from '@/Components/AppCardTimer.vue';
 
 const props = defineProps<{
   spacecraftData: FormattedSpacecraft
@@ -143,6 +144,7 @@ const decrementBy10 = () => {
         </div>
       </form>
 
+      <AppCardTimer :time="spacecraftData.build_time" description="produce 2 Spacecrafts" />
     </div>
   </div>
 </template>

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { computed } from 'vue';
 import { timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { useForm } from '@inertiajs/vue3';
+import AppCardTimer from '@/Components/AppCardTimer.vue';
 import type { FormattedBuilding } from '@/types/types';
+import { useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
   moduleData: FormattedBuilding
@@ -57,6 +58,7 @@ function upgradeModule() {
           Upgrade
         </PrimaryButton>
       </div>
+      <AppCardTimer :time="moduleData.build_time" description="upgrade to lv. 2" />
     </div>
   </div>
 </template>

@@ -11,6 +11,7 @@ use App\Http\Controllers\MarketController;
 use App\Http\Controllers\UserResourceController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\AsteroidController;
+use App\Http\Controllers\BattleController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -44,8 +45,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
     Route::get('/asteroidMap/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
 
-    Route::get('/simulator', function () {
-        return Inertia::render('Simulator'); })->name('simulator');
+    Route::get('/simulator', [BattleController::class, 'index'])->name('simulator');
+    Route::post('/battle/simulate', [BattleController::class, 'simulate'])->name('battle.simulate');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 

@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import BattleCalcTable from '@/Modules/Simulator/BbattleCalcTable.vue';
+import BattleCalcTable from '@/Modules/Simulator/BattleCalcTable.vue';
 import BattleCalcLossesTable from '@/Modules/Simulator/BattleCalcLossesTable.vue';
 import { numberFormat } from '@/Utils/format';
+import { useForm } from '@inertiajs/vue3'
 
 const battleData = {
   attacker: [
@@ -29,6 +30,11 @@ const battleData = {
   ],
 }
 
+const props = defineProps({
+  result: {
+    type: Object,
+  }
+});
 
 interface Ship {
   name: string;
@@ -37,6 +43,11 @@ interface Ship {
 }
 
 type Role = "attacker" | "defender";
+
+const form = useForm({
+  attacker: 0,
+  defender: 0,
+});
 
 const attacker = ref()
 const defender = ref()
@@ -74,8 +85,18 @@ function calculateShipTotalCombatPower(ship: Ship) {
   return numberFormat(totalCombatPower);
 }
 
-const simulateBattleOnlossesTable = () => lossesTable.value.simulateBattle(attacker.value, defender.value)
 const resetCountersOnlossesTable = () => lossesTable.value.resetCounters()
+
+function simulateBattle() {
+  form.attacker = attacker.value
+  form.defender = defender.value
+
+  form.post('/battle/simulate', {
+    onSuccess: () => {
+      alert('Battle Successful');
+    },
+  })
+}
 </script>
 
 <template>
@@ -85,12 +106,16 @@ const resetCountersOnlossesTable = () => lossesTable.value.resetCounters()
         <h1 class="text-3xl mb-4">Battle Simulator</h1>
         <div class="flex flex-col gap-4">
           <h3 class="text-xl">Attacker</h3>
-          <BattleCalcTable role="attacker" :dataObj="attacker" @updateShipTotalCombatPower="updateShipTotalCombatPower" />
+          <BattleCalcTable role="attacker" :dataObj="attacker"
+            @updateShipTotalCombatPower="updateShipTotalCombatPower" />
           <h3 class="text-xl">Defender</h3>
-          <BattleCalcTable role="defender" :dataObj="defender" @updateShipTotalCombatPower="updateShipTotalCombatPower" />
+          <BattleCalcTable role="defender" :dataObj="defender"
+            @updateShipTotalCombatPower="updateShipTotalCombatPower" />
         </div>
-          
-        <button class="mt-4 flex px-4 py-2 rounded-lg text-white bg-[#325166] border-[#3E6580] border-solid outline-none transition hover:bg-[#253D4D] disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none" @click="simulateBattleOnlossesTable(); resetCountersOnlossesTable()">
+
+        <button
+          class="mt-4 flex px-4 py-2 rounded-lg text-white bg-[#325166] border-[#3E6580] border-solid outline-none transition hover:bg-[#253D4D] disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none"
+          @click="simulateBattle(); resetCountersOnlossesTable()">
           Simulate Battle
         </button>
       </div>

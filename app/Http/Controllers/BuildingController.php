@@ -6,7 +6,6 @@ use App\Models\Building;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\UserResource;
 use App\Models\BuildingResourceCost;
 

@@ -34,14 +34,15 @@ class SetupInitialStation
     {
         $minDistance = $this->config['min_distance'];
         $asteroidMinDistance = $this->config['asteroid_min_distance'];
+        $universeBorderDistance = $this->config['universe_border_distance'];
         $universeSize = $this->config['universe_size'];
         $maxAttempts = 5000;
         $attempts = 0;
         $x = $y = 0;
 
         do {
-            $x = rand($minDistance, $universeSize);
-            $y = rand($minDistance, $universeSize);
+            $x = rand($universeBorderDistance, $universeSize - $universeBorderDistance);
+            $y = rand($universeBorderDistance, $universeSize - $universeBorderDistance);
 
             $isValid = !$this->isCollidingWithOtherStation($x, $y, $minDistance) &&
                 !$this->isCollidingWithAsteroid($x, $y, $asteroidMinDistance);

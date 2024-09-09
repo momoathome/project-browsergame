@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Market;
 use App\Models\Resource;
 use App\Models\UserResource;
+use App\Models\UserAttribute;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -13,16 +14,15 @@ class MarketService
   public function buyResource($resourceId, $quantity)
   {
     $user = Auth::user();
-
     $marketItem = Market::findOrFail($resourceId);
-    $creditResource = Resource::where('name', 'Credits')->firstOrFail();
-    $userCreditResource = UserResource::where('user_id', $user->id)
-      ->where('resource_id', $creditResource->id)
+
+    $userCreditsAttribute = UserAttribute::where('user_id', $user->id)
+      ->where('attribute_name', 'credits')
       ->first();
 
     $totalCost = $marketItem->cost * $quantity;
 
-    if (!$userCreditResource || $userCreditResource->amount < $totalCost) {
+    if (!$userCreditsAttribute || $userCreditsAttribute->attribute_value < $totalCost) {
       throw new \Exception('Not enough Credits');
     }
 
@@ -30,12 +30,12 @@ class MarketService
       throw new \Exception('Not enough stock');
     }
 
-    DB::transaction(function () use ($marketItem, $user, $quantity, $totalCost, $userCreditResource) {
+    DB::transaction(function () use ($marketItem, $user, $quantity, $totalCost, $userCreditsAttribute) {
       $marketItem->stock -= $quantity;
       $marketItem->save();
 
-      $userCreditResource->amount -= $totalCost;
-      $userCreditResource->save();
+      $userCreditsAttribute->attribute_value -= $totalCost;
+      $userCreditsAttribute->save();
 
       $userResource = UserResource::where('user_id', $user->id)
         ->where('resource_id', $marketItem->resource_id)
@@ -59,11 +59,10 @@ class MarketService
   public function sellResource($resourceId, $quantity)
   {
     $user = Auth::user();
-
     $marketItem = Market::findOrFail($resourceId);
-    $creditResource = Resource::where('name', 'Credits')->firstOrFail();
-    $userCreditResource = UserResource::where('user_id', $user->id)
-      ->where('resource_id', $creditResource->id)
+
+    $userCreditsAttribute = UserAttribute::where('user_id', $user->id)
+      ->where('attribute_name', 'credits')
       ->first();
 
     $totalCost = $marketItem->cost * $quantity;
@@ -76,15 +75,15 @@ class MarketService
       throw new \Exception('Not enough resources');
     }
 
-    DB::transaction(function () use ($marketItem, $quantity, $userResource, $totalCost, $userCreditResource) {
+    DB::transaction(function () use ($marketItem, $quantity, $userResource, $totalCost, $userCreditsAttribute) {
       $userResource->amount -= $quantity;
       $userResource->save();
 
       $marketItem->stock += $quantity;
       $marketItem->save();
 
-      $userCreditResource->amount += $totalCost;
-      $userCreditResource->save();
+      $userCreditsAttribute->attribute_value += $totalCost;
+      $userCreditsAttribute->save();
     });
 
     return redirect()->route('market')->banner('Resource sold successfully');

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { type PropType, computed, ref } from 'vue';
+import { type PropType, computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
@@ -67,7 +67,7 @@ function sellResource() {
         <p class="font-semibold text-xl">{{ marketData.name }}</p>
       </div>
       <div class="flex items-center gap-x-1">
-        <img src="/storage/resources/Credits.png" class="h-6" />
+        <img src="/storage/attributes/credits.png" class="h-6" alt="credits" />
         <div class="flex flex-col">
           <span class="text-xs text-secondary">price</span>
           <p class="font-medium">{{ formattedCost }}</p>

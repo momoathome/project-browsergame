@@ -251,7 +251,7 @@ function onMouseClick(e: MouseEvent) {
 
   if (hoveredObject.value.type === 'station') {
     const station = props.stations.find(station => station.id === hoveredObject.value?.id);
-    if (station) {
+    if (station && station.user_id !== usePage().props.auth.user.id) {
       selectedObject.value = { type: 'station', data: station };
       isModalOpen.value = true;
     }

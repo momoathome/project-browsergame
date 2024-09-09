@@ -26,62 +26,12 @@ const formattedBuildings = computed(() => {
   });
 });
 
-function updateModule(moduleKey: string) {
-  /*   const module = userStore.user?.modules[moduleKey]
-  
-    const hasEnoughCredits = () => {
-      const cost = module!.cost
-      if (!cost || (userStore.user?.ressources.credits || 0) < cost) {
-        return false
-      }
-      return true
-    }
-  
-    if (!hasEnoughCredits()) {
-      return toast.error('You do not have enough credits')
-    }
-  
-    function updateModuleLevel() {
-      if (module) {
-        module.level++;
-        module.cost = Math.round(module.cost * 1.35);
-  
-        if (module.title === 'Hangar') {
-          const newUnitLimit = Math.round(module.effectValue * 1.323);
-  
-          const ressources = {
-            unitLimit: newUnitLimit
-          };
-  
-          userStore.updateUserRessources(ressources);
-          module.effectValue = newUnitLimit;
-        }
-  
-        userStore.updateUserModule(moduleKey, module);
-      }
-    }
-  
-  
-    function updateUserRessources() {
-      if (module) {
-        const cost = module.cost || 0
-        const userCredits = userStore.user?.ressources.credits || 0
-        const ressources = {
-          credits: userCredits - cost,
-        }
-        userStore.updateUserRessources(ressources)
-      }
-    }
-  
-    updateUserRessources()
-    updateModuleLevel() */
-} 
 </script>
 
 <template>
   <AppLayout title="buildings">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" @upgrade="updateModule" />
+      <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" />
     </div>
   </AppLayout>
 </template>

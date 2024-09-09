@@ -33,7 +33,7 @@ function addResource(resourceId) {
 </script>
 
 <template>
-  <div class="grid gap-2 grid-cols-12 w-max">
+  <div class="grid gap-4 grid-cols-12 w-max">
     <div class="relative group flex flex-col gap-1 items-center" v-for="resource in formattedResources" :key="resource.name">
       <span @click="addResource(resource.resource_id)">
         <img :src="resource.image" class="max-h-6 cursor-pointer" />

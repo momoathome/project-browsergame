@@ -3,10 +3,6 @@
 return [
     'resources' => [
         [
-            'name' => 'Credits',
-            'amount' => 1_000_000,
-        ],
-        [
             'name' => 'Carbon',
             'amount' => 500,
         ],

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserResource;
+use App\Models\UserAttribute;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -43,6 +44,11 @@ class HandleInertiaRequests extends Middleware
                     ->with('resources')
                     ->orderBy('resource_id', 'asc')
                     ->get()
+                : [],
+            'userAttributes' => Auth::check()
+                ? UserAttribute::where('user_id', Auth::user()->id)
+                ->orderBy('id', 'asc')
+                ->get()
                 : [],
         ]);
     }

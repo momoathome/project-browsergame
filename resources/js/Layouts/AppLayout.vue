@@ -68,7 +68,7 @@ const unitsRatio = computed(() => {
     <div class="min-h-screen bg-gray-200">
 
       <!-- Page Heading -->
-      <header class="bg-[hsl(263,45%,7%)] flex flex-col gap-2 p-2">
+      <header class="bg-[hsl(263,45%,7%)] flex flex-col gap-2 py-2 px-4">
         <div class="flex justify-between items-center">
 
           <UserResources />
@@ -102,7 +102,7 @@ const unitsRatio = computed(() => {
 
         <Divider class="bg-primary/50" />
         <!-- userQueue container -->
-        <div class="flex gap-2 px-2">
+        <div class="flex gap-2">
           <UserQueue />
         </div>
       </header>

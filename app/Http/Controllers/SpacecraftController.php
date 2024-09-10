@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserResource;
-
+use App\Models\UserAttribute;
+use Illuminate\Support\Facades\Log;
 
 class SpacecraftController extends Controller
 {
@@ -75,15 +76,25 @@ class SpacecraftController extends Controller
         $quantity = $validated['amount'];
         $user = auth()->user();
 
+        Log::info('spacecraft amount: ' . $quantity);
+
         $totalCosts = $spacecraft->resources->mapWithKeys(function ($resource) use ($quantity) {
             return [$resource->id => $resource->pivot->amount * $quantity];
         });
-    
+
+        $unitLimit = UserAttribute::where('user_id', $user->id)
+            ->where('attribute_name', 'unit_limit')
+            ->first();
+
+        if ($unitLimit && $unitLimit->attribute_value < $spacecraft->count + $quantity) {
+            return redirect()->route('shipyard')->dangerBanner('Unit limit reached');
+        }
+
         foreach ($totalCosts as $resourceId => $requiredResource) {
             $userResource = UserResource::where('user_id', $user->id)
                 ->where('resource_id', $resourceId)
                 ->first();
-    
+
             if (!$userResource || $userResource->amount < $requiredResource) {
                 return redirect()->route('shipyard')->dangerBanner('Not enough resources');
             }
@@ -95,11 +106,16 @@ class SpacecraftController extends Controller
                     ->where('resource_id', $resourceId)
                     ->decrement('amount', $requiredResource);
             }
-    
+
             $spacecraft->count += $quantity;
             $spacecraft->save();
+
+
+            UserAttribute::where('user_id', $user->id)
+                ->where('attribute_name', 'total_units')
+                ->increment('attribute_value', $quantity);
         });
-        
+
 
         return redirect()->route('shipyard')->banner('Spacecraft produced successfully');
     }

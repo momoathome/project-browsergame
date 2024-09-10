@@ -20,6 +20,7 @@ const formattedSpacecrafts = computed(() => {
       build_time: spacecraft.build_time,
       unit_limit: spacecraft.unit_limit,
       resources: spacecraft.resources.map((resource) => ({
+        id: resource.id,
         name: resource.name,
         image: resource.image,
         amount: resource.pivot.amount
@@ -27,17 +28,12 @@ const formattedSpacecrafts = computed(() => {
     };
   });
 });
-
-function produceSpacecraft() {
-  // TODO: implement
-}
 </script>
 
 <template>
   <AppLayout title="spacecrafts">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraft="data"
-        @produce="produceSpacecraft" />
+      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraft="data" />
     </div>
   </AppLayout>
 </template>

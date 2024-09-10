@@ -81,7 +81,7 @@ function sellResource() {
 
     <Divider />
 
-    <form @submit.prevent="sellResource; buyResource" class="flex flex-col gap-4">
+    <form @submit.prevent class="flex flex-col gap-4">
       <div class="flex w-full justify-between">
         <div class="flex flex-col">
           <span class="text-xs text-secondary">stock</span>

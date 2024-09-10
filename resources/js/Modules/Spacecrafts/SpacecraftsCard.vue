@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -22,7 +22,7 @@ const form = useForm({
 
 function produceSpacecraft() {
   form.post(`/shipyard/${props.spacecraft.id}/update`, {
-    preserveState: true,
+    preserveState: false,
 
     onSuccess: () => {
       form.reset();
@@ -33,18 +33,33 @@ function produceSpacecraft() {
   });
 }
 
-// calculate the maximum spacecraft count based on user's resources, spacecrfats resource cost and users unit limit on spacecraft unit limit
 const maxSpacecraftCount = computed(() => {
+  const userResources = usePage().props.userResources;
+  const spacecraftResources = props.spacecraft.resources;
+  const userAttributes = usePage().props.userAttributes;
+  const userUnitLimit = userAttributes.find(attr => attr.attribute_name === 'unit_limit')?.attribute_value || 0;
+  const userTotalUnits = userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
+  const availableUnitSlots = userUnitLimit - userTotalUnits;
 
-/*   const totalSpacecraftCost = form.amount * props.spacecraft.cost;
-  return Math.floor(props.spacecraft.user_resources / totalSpacecraftCost); */
+  return Math.min(
+    ...spacecraftResources.map(resource => {
+      const userResource = userResources.find(ur => ur.resource_id === resource.id);
+      if (!userResource) return 0;
+      return Math.floor(userResource.amount / resource.amount);
+    }),
+    Math.floor(availableUnitSlots / props.spacecraft.unit_limit)
+  );
 });
 
 const increment = () => {
-  form.amount++
+  if (form.amount < maxSpacecraftCount.value) {
+    form.amount++
+  }
 }
 const incrementBy10 = () => {
-  form.amount += 10
+  if (form.amount < maxSpacecraftCount.value - 10) {
+    form.amount += 10
+  }
 }
 const decrement = () => {
   if (form.amount > 0) {
@@ -118,7 +133,7 @@ const decrementBy10 = () => {
               </svg>
             </button>
 
-            <AppInput :maxlength="4" v-model="form.amount" class="h-10" />
+            <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" class="h-10" />
 
             <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
@@ -128,7 +143,7 @@ const decrementBy10 = () => {
             </button>
           </div>
 
-          <PrimaryButton @click="produceSpacecraft">
+          <PrimaryButton>
             Produce
           </PrimaryButton>
         </div>

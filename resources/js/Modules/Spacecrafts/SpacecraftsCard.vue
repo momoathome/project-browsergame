@@ -9,19 +9,19 @@ import type { FormattedSpacecraft } from '@/types/types';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
 
 const props = defineProps<{
-  spacecraftData: FormattedSpacecraft
+  spacecraft: FormattedSpacecraft
 }>();
 
-const formattedCombat = computed(() => numberFormat(props.spacecraftData.combat));
-const formattedCargo = computed(() => numberFormat(props.spacecraftData.cargo));
-const formattedBuildTime = computed(() => timeFormat(props.spacecraftData.build_time));
+const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
+const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
+const formattedBuildTime = computed(() => timeFormat(props.spacecraft.build_time));
 
 const form = useForm({
   amount: 0
 });
 
 function produceSpacecraft() {
-  form.post(`/shipyard/${props.spacecraftData.id}/update`, {
+  form.post(`/shipyard/${props.spacecraft.id}/update`, {
     preserveState: true,
 
     onSuccess: () => {
@@ -33,22 +33,12 @@ function produceSpacecraft() {
   });
 }
 
-function maxSpacecraftCount() {
-  /*   let maxSpacecraftCount = 0
-  
-    if (userStore.user) {
-      let maxSpacecraftCountCredits = Math.floor(userStore.user.ressources.credits / props.spacecraft.cost)
-      let maxSpacecraftCountUnitLimit = Math.floor(userStore.freeUnitLimit / props.spacecraft.unitLimit)
-  
-      if (maxSpacecraftCountCredits < maxSpacecraftCountUnitLimit) {
-        maxSpacecraftCount = maxSpacecraftCountCredits
-      } else {
-        maxSpacecraftCount = maxSpacecraftCountUnitLimit
-      }
-    }
-  
-    return Math.floor(maxSpacecraftCount) */
-}
+// calculate the maximum spacecraft count based on user's resources, spacecrfats resource cost and users unit limit on spacecraft unit limit
+const maxSpacecraftCount = computed(() => {
+
+/*   const totalSpacecraftCost = form.amount * props.spacecraft.cost;
+  return Math.floor(props.spacecraft.user_resources / totalSpacecraftCost); */
+});
 
 const increment = () => {
   form.amount++
@@ -72,21 +62,21 @@ const decrementBy10 = () => {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
-      <img :src="spacecraftData.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
+      <img :src="spacecraft.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
       <div class="flex flex-col gap-4">
         <div class="flex justify-between">
           <div class="flex flex-col">
-            <p class="font-semibold text-2xl -mb-1">{{ spacecraftData.name }}</p>
-            <p class="text-[12px] font-medium text-gray">{{ spacecraftData.type }}</p>
+            <p class="font-semibold text-2xl -mb-1">{{ spacecraft.name }}</p>
+            <p class="text-[12px] font-medium text-gray">{{ spacecraft.type }}</p>
           </div>
           <div class="flex">
             <span class="text-sm font-medium mt-2 me-1 text-secondary">count</span>
-            <p class="text-xl">{{ spacecraftData.count }}</p>
+            <p class="text-xl">{{ spacecraft.count }}</p>
           </div>
         </div>
-        <p class="text-gray text-sm">{{ spacecraftData.description }}</p>
+        <p class="text-gray text-sm">{{ spacecraft.description }}</p>
       </div>
 
       <div class="flex w-full justify-between">
@@ -100,7 +90,7 @@ const decrementBy10 = () => {
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Unit Limit</span>
-          <p class="font-medium text-sm">{{ spacecraftData.unit_limit }}</p>
+          <p class="font-medium text-sm">{{ spacecraft.unit_limit }}</p>
         </div>
         <div class="flex flex-col items-center">
           <span class="text-sm text-secondary">Build Time</span>
@@ -111,7 +101,7 @@ const decrementBy10 = () => {
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
-        <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraftData.resources" :key="resource.name">
+        <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
           <img :src="resource.image" class="h-7 w-7" alt="resource" />
           <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
           <p class="font-medium text-sm">{{ resource.amount }}</p>
@@ -144,7 +134,7 @@ const decrementBy10 = () => {
         </div>
       </form>
 
-      <AppCardTimer :time="spacecraftData.build_time" description="produce 2 Spacecrafts" />
+      <AppCardTimer :time="spacecraft.build_time * form.amount" :description="`produce ${form.amount} Spacecrafts`" />
     </div>
   </div>
 </template>

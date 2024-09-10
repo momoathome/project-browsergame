@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 const items = ref([
-  { id: 1, name: 'Shipyard', image: '/storage/navigation/buildings.png', level: 5, showInfos: false, isNew: false },
+  { id: 1, name: 'Shipyard', image: '/storage/navigation/buildings.png', level: 5, showInfos: true, isNew: false },
   { id: 2, name: 'Merlin', image: '/storage/navigation/shipyard.png', level: 7, showInfos: false, isNew: false },
   { id: 3, name: 'Mining', image: '/storage/navigation/asteroidmap.png', level: 3, showInfos: false, isNew: false },
   //...
@@ -35,7 +35,7 @@ function addItem() {
       :class="{ 'fade-in': item.isNew }">
       <img :src="item.image" alt="buildings">
       <transition name="expand">
-        <div v-if="item.showInfos" class="flex flex-col justify-center overflow-hidden">
+        <div v-if="item.showInfos" class="flex flex-col justify-center">
           <h3 class="text-xs font-medium text-white whitespace-nowrap">{{ item.name }}</h3>
           <p class="text-xs text-gray-400 whitespace-nowrap">upgrade to lv. {{ item.level }}</p>
         </div>

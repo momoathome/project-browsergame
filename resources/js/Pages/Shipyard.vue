@@ -36,7 +36,7 @@ function produceSpacecraft() {
 <template>
   <AppLayout title="spacecrafts">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraftData="data"
+      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraft="data"
         @produce="produceSpacecraft" />
     </div>
   </AppLayout>

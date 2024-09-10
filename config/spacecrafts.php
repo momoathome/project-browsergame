@@ -9,7 +9,7 @@ return [
             'count' => 0,
             'cargo' => 10,
             'unitLimit' => 1,
-            'buildTime' => 900,
+            'buildTime' => 5,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -25,7 +25,7 @@ return [
             'count' => 0,
             'cargo' => 15,
             'unitLimit' => 1,
-            'buildTime' => 720,
+            'buildTime' => 15,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -41,7 +41,7 @@ return [
             'count' => 0,
             'cargo' => 25,
             'unitLimit' => 1,
-            'buildTime' => 1800,
+            'buildTime' => 30,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -57,7 +57,7 @@ return [
             'count' => 0,
             'cargo' => 40,
             'unitLimit' => 1,
-            'buildTime' => 900,
+            'buildTime' => 45,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -73,7 +73,7 @@ return [
             'count' => 0,
             'cargo' => 80,
             'unitLimit' => 1,
-            'buildTime' => 600,
+            'buildTime' => 60,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -89,7 +89,7 @@ return [
             'count' => 0,
             'cargo' => 250,
             'unitLimit' => 1,
-            'buildTime' => 500,
+            'buildTime' => 90,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -105,7 +105,7 @@ return [
             'count' => 0,
             'cargo' => 1000,
             'unitLimit' => 1,
-            'buildTime' => 300,
+            'buildTime' => 120,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -121,7 +121,7 @@ return [
             'count' => 0,
             'cargo' => 2500,
             'unitLimit' => 1,
-            'buildTime' => 1500,
+            'buildTime' => 180,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -137,7 +137,7 @@ return [
             'count' => 0,
             'cargo' => 5000,
             'unitLimit' => 1,
-            'buildTime' => 1200,
+            'buildTime' => 360,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -153,7 +153,7 @@ return [
             'count' => 0,
             'cargo' => 100,
             'unitLimit' => 1,
-            'buildTime' => 1200,
+            'buildTime' => 10,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -169,7 +169,7 @@ return [
             'count' => 0,
             'cargo' => 1200,
             'unitLimit' => 6,
-            'buildTime' => 1200,
+            'buildTime' => 120,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -185,7 +185,7 @@ return [
             'count' => 0,
             'cargo' => 200,
             'unitLimit' => 1,
-            'buildTime' => 1200,
+            'buildTime' => 10,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -201,7 +201,7 @@ return [
             'count' => 0,
             'cargo' => 2500,
             'unitLimit' => 10,
-            'buildTime' => 1200,
+            'buildTime' => 90,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -217,7 +217,7 @@ return [
             'count' => 0,
             'cargo' => 150,
             'unitLimit' => 2,
-            'buildTime' => 1200,
+            'buildTime' => 20,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -233,7 +233,7 @@ return [
             'count' => 0,
             'cargo' => 1500,
             'unitLimit' => 8,
-            'buildTime' => 1200,
+            'buildTime' => 180,
             'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],

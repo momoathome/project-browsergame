@@ -37,9 +37,9 @@ function upgradeModule() {
       <div class="flex flex-col gap-4">
         <div class="flex justify-between">
           <p class="font-semibold text-2xl">{{ moduleData.name }}</p>
-          <div class="flex flex-col items-center">
-            <span class="text-sm font-medium text-secondary">Build Time</span>
-            <p class="font-medium text-sm">{{ formattedBuildTime }}</p>
+          <div class="flex">
+            <span class="text-sm font-medium mt-2 me-1 text-secondary">lv.</span>
+            <p class="text-xl">{{ moduleData.level }}</p>
           </div>
         </div>
         <p class="text-gray text-sm">{{ moduleData.description }}</p>
@@ -53,12 +53,12 @@ function upgradeModule() {
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>
       </div>
-      <div class="flex justify-center">
+      <div class="flex justify-center my-2">
         <PrimaryButton @click="upgradeModule">
           Upgrade
         </PrimaryButton>
       </div>
-      <AppCardTimer :time="moduleData.build_time" description="upgrade to lv. 2" />
+      <AppCardTimer :time="moduleData.build_time" :description="`upgrade to lv. ${moduleData.level + 1}`" />
     </div>
   </div>
 </template>

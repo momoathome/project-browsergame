@@ -26,5 +26,9 @@ return [
             'attribute_name' => 'credits',
             'attribute_value' => 1_000_000,
         ],
+        [
+            'attribute_name' => 'total_units',
+            'attribute_value' => 0,
+        ],
     ],
 ];

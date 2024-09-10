@@ -10,85 +10,110 @@ import AppTooltip from '@/Components/AppTooltip.vue';
 import { numberFormat } from '@/Utils/format';
 
 defineProps({
-    title: String,
+  title: String,
 });
 
 const logout = () => {
-    router.post(route('logout'));
+  router.post(route('logout'));
 };
 
-// formatAttributesNames to human readable names
+const attributeLabels = {
+  storage: 'Resource storage',
+  research_points: 'Research Points',
+  energy: 'Energy',
+  influence: 'Influence',
+  credits: 'Credits',
+  unit_limit: 'Unit Limit',
+  total_units: 'Total Units',
+};
+
 const formattedAttributesNames = computed(() => {
-    return usePage().props.userAttributes.map((attribute) => {
-        return {
-            name: attribute ? attribute.attribute_name : null,
-            // label with first letter capitalized
-            label: attribute ? attribute.attribute_name.replace(/_/g,'') : null,
-        };
-    });
+  return usePage().props.userAttributes.map((attribute) => {
+    const attributeName = attribute ? attribute.attribute_name : null;
+    return {
+      name: attributeName,
+      label: attributeName ? (attributeLabels[attributeName] || attributeName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())) : null,
+    };
+  });
 });
 
 const formattedAttributes = computed(() => {
-    return usePage().props.userAttributes.map((attribute) => {
-        return {
-            // attribute name from formattedAttributesNames
-            name: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.name : null,
-            label: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.label : null,
-            amount: computed(() => numberFormat(attribute.attribute_value)),
-            image: attribute ? attribute.image : null,
-        };
-    });
+  return usePage().props.userAttributes.map((attribute) => {
+    return {
+      // attribute name from formattedAttributesNames
+      name: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.name : null,
+      label: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.label : null,
+      amount: computed(() => numberFormat(attribute.attribute_value)),
+      image: attribute ? attribute.image : null,
+    };
+  });
+});
+
+const unitsRatio = computed(() => {
+  const totalUnits = usePage().props.userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
+  const unitLimit = usePage().props.userAttributes.find(attr => attr.attribute_name === 'unit_limit')?.attribute_value || 0;
+  return `${numberFormat(totalUnits)} / ${numberFormat(unitLimit)}`;
 });
 </script>
 
 <template>
-    <div>
+  <div>
 
-        <Head :title="title" />
+    <Head :title="title" />
 
-        <Banner />
+    <Banner />
 
-        <AppNavigation />
+    <AppNavigation />
 
-        <div class="min-h-screen bg-gray-200">
+    <div class="min-h-screen bg-gray-200">
 
-            <!-- Page Heading -->
-            <header class="bg-[hsl(263,45%,7%)] flex flex-col gap-2 p-2">
-                <div class="flex justify-between items-center">
+      <!-- Page Heading -->
+      <header class="bg-[hsl(263,45%,7%)] flex flex-col gap-2 p-2">
+        <div class="flex justify-between items-center">
 
-                    <UserResources />
+          <UserResources />
 
-                    <div class="flex gap-4 items-center">
-                        <!-- total resources -->
-                        <div class="relative group flex flex-col gap-1 items-center" v-for="attribute in formattedAttributes" :key="attribute.name">
-                            <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
-                            <span class="text-sm font-medium text-white">
-                                {{ attribute.amount }}
-                            </span>
+          <div class="flex gap-4 items-center">
+            <!-- units Ratio -->
+            <div class="relative group flex flex-col gap-1 items-center">
+              <img src="/storage/attributes/unit_limit.png" class="h-7" alt="Units">
+              <span class="text-sm font-medium text-white">
+                {{ unitsRatio }}
+              </span>
+              <AppTooltip label="units" position="bottom" class="!mt-3" />
+            </div>
 
-                            <AppTooltip :label="attribute.label" position="bottom" class="!mt-3" />
-                        </div>
+            <!-- total resources -->
+            <div class="relative group flex flex-col gap-1 items-center"
+              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'unit_limit'].includes(attr.name))"
+              :key="attribute.name">
+              <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
+              <span class="text-sm font-medium text-white">
+                {{ attribute.amount }}
+              </span>
+              <AppTooltip :label="attribute.label" position="bottom" class="!mt-3" />
+            </div>
 
-                        <Divider class="!w-[2px] h-[24px] bg-primary/50" />
-                        <!-- onClick open settings Menu/Modal -->
-                        <img src="/storage/MenuFilled.svg" alt="Menu" @click="logout" />
-                    </div>
-                </div>
-
-                <Divider class="bg-primary/50" />
-                <!-- userQueue container -->
-                <div class="flex gap-2 px-2">
-                    <UserQueue />
-                </div>
-            </header>
-
-            <!-- Page Content -->
-            <main>
-                <slot />
-            </main>
-
-            <pre>{{ $page.props }}</pre>
-
+            <Divider class="!w-[2px] h-[24px] bg-primary/50" />
+            <!-- onClick open settings Menu/Modal -->
+            <img src="/storage/MenuFilled.svg" alt="Menu" @click="logout" />
+          </div>
         </div>
+
+        <Divider class="bg-primary/50" />
+        <!-- userQueue container -->
+        <div class="flex gap-2 px-2">
+          <UserQueue />
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main>
+        <slot />
+      </main>
+
+      <pre>{{ $page.props }}</pre>
+
     </div>
+  </div>
 </template>

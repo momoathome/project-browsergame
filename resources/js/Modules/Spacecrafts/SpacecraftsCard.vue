@@ -70,9 +70,9 @@ const decrementBy10 = () => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5]">
+  <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
-      <img :src="spacecraftData.image" class="rounded-t-3xl h-[144px]" />
+      <img :src="spacecraftData.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
       <div class="flex flex-col gap-4">
@@ -128,7 +128,7 @@ const decrementBy10 = () => {
               </svg>
             </button>
 
-            <AppInput :maxlength="4" v-model="form.amount" />
+            <AppInput :maxlength="4" v-model="form.amount" class="h-10" />
 
             <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">

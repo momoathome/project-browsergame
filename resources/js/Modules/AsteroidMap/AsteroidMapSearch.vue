@@ -114,7 +114,7 @@ const getSuggestionRef = (index) => {
       @keydown.enter.prevent="selectCurrent"
       @focusin="showSuggestions = true" 
       @focusout="hideSuggestions"
-      class="peer text-white bg-inherit rounded-lg w-60 ring-[#bfbfbf] focus:border-[#bfbfbf] focus:ring-[#bfbfbf]"
+      class="peer text-light bg-inherit rounded-lg w-60 ring-[#bfbfbf] focus:border-[#bfbfbf] focus:ring-[#bfbfbf]"
       placeholder="Search by name or resource"
       :class="{ 'rounded-b-none': filteredSuggestions.length > 0 && showSuggestions }"
     />
@@ -124,8 +124,8 @@ const getSuggestionRef = (index) => {
         <li v-for="(suggestion, index) in filteredSuggestions" 
           :key="index" 
           @click="selectSuggestion(suggestion)" 
-          class="py-1 px-3 cursor-pointer text-white text-sm hover:bg-[#17092c]"
-          :class="{'bg-[#17092c]': index === highlightedIndex}"
+          class="py-1 px-3 cursor-pointer text-white text-sm hover:bg-slate-900"
+          :class="{'bg-slate-900': index === highlightedIndex}"
           :ref="getSuggestionRef(index)"
         >
           {{ suggestion }}

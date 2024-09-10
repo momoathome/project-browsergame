@@ -60,7 +60,7 @@ function sellResource() {
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-[#DADCE5] content_card px-4 py-6 gap-4">
+  <div class="rounded-3xl flex flex-col bg-base text-light content_card px-4 py-6 gap-4">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>
@@ -88,7 +88,7 @@ function sellResource() {
           <p class="font-medium">{{ formattedStock }}</p>
         </div>
 
-        <AppInput :maxlength="6" v-model="form.amount" class="w-24" />
+        <AppInput :maxlength="6" v-model="form.amount" class="w-20 me-2" />
 
       </div>
       <div class="flex justify-between gap-6">

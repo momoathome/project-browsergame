@@ -12,34 +12,38 @@ const tableLossesProperties = ["name", "count", "losses"];
 
 <template>
   <div>
-    <h2 class="mt-0 text-2xl mb-4">Outcome: <span class="font-bold">{{ result.winner }} won</span></h2>
+    <h2 class="text-2xl mb-4">Outcome: <span class="font-bold ">{{ result.winner }} won</span></h2>
 
-    <div class="animated animated-fade-in animated-slow flex flex-col gap-4">
-      <h3 class="text-xl">Attacker Losses</h3>
-      <table class="text-center border border-solid border-neutral-500">
-        <tbody>
-          <tr class="border border-solid border-neutral-500" v-for="property in tableLossesProperties" :key="property">
-            <th class="text-start border border-solid border-neutral-500 px-2 py-2">{{ property }}</th>
-            <td v-for="ship in result.attackerLosses" :key="ship.name"
-              class="whitespace-nowrap border border-solid border-neutral-500 px-4 py-2">
-              <span>{{ ship[property] }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="flex flex-col gap-4">
+      <div>
+        <h3 class="text-2xl font-bold">Attacker Losses</h3>
+        <table class="w-full bg-base text-light rounded-lg overflow-hidden shadow-xl text-center">
+          <tbody>
+            <tr  v-for="property in tableLossesProperties"
+              :key="property">
+              <th class="text-left px-4 py-3 bg-primary-dark font-semibold uppercase text-sm">{{ property }}</th>
+              <td v-for="ship in result.attackerLosses" :key="ship.name" class="px-4 py-3 border-t border-primary/50">
+                <span>{{ ship[property] }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <h3 class="text-xl">Defender Losses</h3>
-      <table class="text-center border border-solid border-neutral-500">
-        <tbody>
-          <tr class="border border-solid border-neutral-500" v-for="property in tableLossesProperties" :key="property">
-            <th class="text-start border border-solid border-neutral-500 px-2 py-2">{{ property }}</th>
-            <td v-for="ship in result.defenderLosses" :key="ship.name"
-              class="whitespace-nowrap border border-solid border-neutral-500 px-4 py-2">
-              <span>{{ ship[property] }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div>
+        <h3 class="text-2xl font-bold">Defender Losses</h3>
+        <table class="w-full bg-base text-light rounded-lg overflow-hidden shadow-xl text-center">
+          <tbody>
+            <tr  v-for="property in tableLossesProperties"
+              :key="property">
+              <th class="text-left px-4 py-3 bg-primary-dark font-semibold uppercase text-sm">{{ property }}</th>
+              <td v-for="ship in result.defenderLosses" :key="ship.name" class="px-4 py-3 border-t border-primary/50">
+                <span>{{ ship[property] }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { type PropType, computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
+import AppInput from '@/Components/AppInput.vue';
 
 type Role = "attacker" | "defender";
 
@@ -16,7 +17,7 @@ const props = defineProps({
     type: String as PropType<Role>,
     required: true,
   },
-  dataObj: {
+  ships: {
     type: Array as PropType<Ship[]>,
     required: true,
   },
@@ -25,7 +26,7 @@ const props = defineProps({
 const emit = defineEmits(['update:quantity'])
 
 const tableProperties = computed(() => {
-  const exampleUnit = props.dataObj?.[0];
+  const exampleUnit = props.ships?.[0];
   if (!exampleUnit) {
     return [];
   }
@@ -40,28 +41,23 @@ function updateQuantity(index: number, event: Event) {
 </script>
 
 <template>
-  <table class="text-center border border-solid border-neutral-500">
+  <table class="w-full bg-base text-light rounded-lg overflow-hidden shadow-xl text-center">
     <tbody>
-      <tr class="border border-solid border-neutral-500" v-for="property in tableProperties" :key="property">
-        <th scope="col" class="text-start border border-solid border-neutral-500 px-2 py-2">
+      <tr v-for="property in tableProperties" :key="property">
+        <th scope="col" class="text-left px-4 py-3 bg-primary-dark font-semibold uppercase text-sm">
           {{ property }}
         </th>
-        <template v-for="(ship, shipIndex) in dataObj" :key="shipIndex">
-          <td class="whitespace-nowrap border border-solid border-neutral-500 px-4 py-2">
-            <span v-if="property === 'name'">{{ ship.name }}</span>
-            <span v-else-if="property === 'combatPower'">{{ numberFormat(ship.combatPower) }}</span>
-            <input v-else-if="property === 'count'"
-              class="inline-flex h-full w-16 text-center items-center justify-center px-1"
-              type="text"
+        <template v-for="(ship, shipIndex) in ships" :key="shipIndex">
+          <td class="px-4 py-3 border-t border-primary/50">
+            <span v-if="property === 'name'" class="font-medium">{{ ship.name }}</span>
+            <span v-else-if="property === 'combatPower'" class="">{{ numberFormat(ship.combatPower) }}</span>
+            <AppInput v-else-if="property === 'count'"
+              class="h-10"
               v-model="ship.count"
-              min="0"
-              inputmode="numeric"
-              pattern="[0-9]*"
-              maxlength="4"
-              onkeypress="return (event.charCode !=8 && event.charCode ==0 || (event.charCode >= 48 && event.charCode <= 57))"
+              :maxlength="4"
               @input="updateQuantity(shipIndex, $event)"
-            >
-            <span v-else>{{ ship[property] }}</span>
+            />
+            <span v-else class="">{{ ship[property] }}</span>
           </td>
         </template>
       </tr>

@@ -29,7 +29,7 @@ function upgradeModule() {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5]">
+  <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
       <img :src="moduleData.image" class="rounded-t-3xl object-fit aspect-[5/3]" />
     </div>

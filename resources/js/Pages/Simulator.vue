@@ -77,24 +77,28 @@ const isResultEmpty = computed(() => {
 
 <template>
   <AppLayout title="simulator">
-    <div class="flex flex-col">
-      <div class="p-4 me-20">
-        <h1 class="text-3xl mb-4">Battle Simulator</h1>
+    <div class="flex flex-col gap-12 p-4 me-20">
+      <div class="">
+        <h1 class="text-4xl font-black mb-4">Battle Simulator</h1>
         <div class="flex flex-col gap-4">
-          <h3 class="text-xl">Attacker</h3>
-          <BattleSimulatorTable :role="'attacker'" :dataObj="attacker"
-            @update:quantity="(index, newCount) => updateShipQuantity('attacker', index, newCount)" />
-          <h3 class="text-xl">Defender</h3>
-          <BattleSimulatorTable :role="'defender'" :dataObj="defender"
-            @update:quantity="(index, newCount) => updateShipQuantity('defender', index, newCount)" />
+          <div>
+            <h2 class="text-2xl font-bold">Attacker</h2>
+            <BattleSimulatorTable :role="'attacker'" :ships="attacker"
+              @update:quantity="(index, newCount) => updateShipQuantity('attacker', index, newCount)" />
+          </div>
+          <div>
+            <h2 class="text-2xl font-bold">Defender</h2>
+            <BattleSimulatorTable :role="'defender'" :ships="defender"
+              @update:quantity="(index, newCount) => updateShipQuantity('defender', index, newCount)" />
+          </div>
         </div>
 
-        <PrimaryButton @click="simulateBattle" class="mt-4">
+        <PrimaryButton @click="simulateBattle" class="mt-6">
           Simulate Battle
         </PrimaryButton>
       </div>
 
-      <div v-if="!isResultEmpty" class="bg-slate-200 p-6 rounded-lg mt-4">
+      <div v-if="!isResultEmpty" class="bg-slate-200 rounded-lg">
         <BattleSimulatorLosses :result="result" />
       </div>
     </div>

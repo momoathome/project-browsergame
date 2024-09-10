@@ -36,6 +36,9 @@ export default {
                 },
                 gray: {
                     DEFAULT: '#878A8E'
+                },
+                light: {
+                    DEFAULT: '#DADCE5'
                 }
             },
         },

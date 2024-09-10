@@ -118,6 +118,27 @@ class SpacecraftController extends Controller
         return redirect()->route('shipyard')->banner('Spacecraft produced successfully');
     }
 
+    public function unlock(Spacecraft $spacecraft)
+    {
+        $user = auth()->user();
+        $researchPointsAttribute = UserAttribute::where('user_id', $user->id)
+            ->where('attribute_name', 'research_points')
+            ->first();
+
+        if (!$researchPointsAttribute || $researchPointsAttribute->attribute_value < $spacecraft->research_cost) {
+            return redirect()->route('shipyard')->dangerBanner('Not enough research points');
+        }
+
+        UserAttribute::where('user_id', $user->id)
+            ->where('attribute_name', 'research_points')
+            ->decrement('attribute_value', $spacecraft->research_cost);
+
+        $spacecraft->unlocked = true;
+        $spacecraft->save();
+
+        return redirect()->route('shipyard')->banner('Spacecraft unlocked successfully');
+    }
+
     /**
      * Remove the specified resource from storage.
      */

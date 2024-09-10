@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
     Route::post('/shipyard/{spacecraft}/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
+    Route::post('/shipyard/{spacecraft}/unlock', [SpacecraftController::class, 'unlock'])->name('shipyard.unlock');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
     Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');

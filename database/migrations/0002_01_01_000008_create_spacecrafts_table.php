@@ -19,11 +19,12 @@ return new class extends Migration
             $table->foreignId('details_id')
                   ->constrained('spacecraft_details')
                   ->onDelete('cascade');
-            $table->integer('combat')->nullable();
+            $table->integer('combat')->default(1);
             $table->integer('count')->default(1);
             $table->integer('cargo')->default(1);
             $table->integer('build_time')->nullable();
-            $table->integer('unit_limit')->nullable();
+            $table->integer('unit_limit')->default(1);
+            $table->integer('research_cost')->default(1);
             $table->boolean('unlocked')->default(false);
             $table->timestamps();
         });

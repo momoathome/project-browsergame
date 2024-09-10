@@ -52,6 +52,7 @@ export interface Spacecraft {
   build_time: number;
   unit_limit: number;
   unlocked: boolean;
+  research_cost: number;
   resources: Resource[];
 }
 
@@ -80,6 +81,8 @@ export interface FormattedSpacecraft {
   cargo: number;
   build_time: number;
   unit_limit: number;
+  unlocked: boolean;
+  research_cost: number;
   resources: SimpleResource[];
 };
 

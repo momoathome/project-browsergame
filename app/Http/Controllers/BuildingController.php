@@ -112,7 +112,17 @@ class BuildingController extends Controller
                     ->where('attribute_name','storage')
                     ->first();
 
-                $userAttribute->attribute_value += 500;
+                $userAttribute->attribute_value += 1000;
+                $userAttribute->save();
+            }
+
+            // if building name is "Laboratory" increase research_points
+            if ($building->details->name == 'Laboratory') {
+                $userAttribute = UserAttribute::where('user_id', $user->id)
+                    ->where('attribute_name','research_points')
+                    ->first();
+
+                $userAttribute->attribute_value += 2;
                 $userAttribute->save();
             }
 

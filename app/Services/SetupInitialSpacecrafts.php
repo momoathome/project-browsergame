@@ -36,6 +36,7 @@ class SetupInitialSpacecrafts
             'cargo' => $spacecraftConfig['cargo'],
             'unit_limit' => $spacecraftConfig['unitLimit'],
             'build_time' => $spacecraftConfig['buildTime'],
+            'research_cost' => $spacecraftConfig['researchCost'],
             'unlocked' => $spacecraftConfig['unlocked'],
         ]);
     }

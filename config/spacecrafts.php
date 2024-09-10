@@ -24,7 +24,7 @@ return [
             'combat' => 150,
             'count' => 0,
             'cargo' => 15,
-            'unitLimit' => 1,
+            'unitLimit' => 2,
             'buildTime' => 15,
             'unlocked' => false,
             'costs' => [
@@ -40,7 +40,7 @@ return [
             'combat' => 400,
             'count' => 0,
             'cargo' => 25,
-            'unitLimit' => 1,
+            'unitLimit' => 4,
             'buildTime' => 30,
             'unlocked' => false,
             'costs' => [
@@ -56,7 +56,7 @@ return [
             'combat' => 1000,
             'count' => 0,
             'cargo' => 40,
-            'unitLimit' => 1,
+            'unitLimit' => 8,
             'buildTime' => 45,
             'unlocked' => false,
             'costs' => [
@@ -72,7 +72,7 @@ return [
             'combat' => 2500,
             'count' => 0,
             'cargo' => 80,
-            'unitLimit' => 1,
+            'unitLimit' => 15,
             'buildTime' => 60,
             'unlocked' => false,
             'costs' => [
@@ -88,7 +88,7 @@ return [
             'combat' => 7000,
             'count' => 0,
             'cargo' => 250,
-            'unitLimit' => 1,
+            'unitLimit' => 35,
             'buildTime' => 90,
             'unlocked' => false,
             'costs' => [
@@ -104,7 +104,7 @@ return [
             'combat' => 20000,
             'count' => 0,
             'cargo' => 1000,
-            'unitLimit' => 1,
+            'unitLimit' => 90,
             'buildTime' => 120,
             'unlocked' => false,
             'costs' => [
@@ -120,7 +120,7 @@ return [
             'combat' => 60000,
             'count' => 0,
             'cargo' => 2500,
-            'unitLimit' => 1,
+            'unitLimit' => 300,
             'buildTime' => 180,
             'unlocked' => false,
             'costs' => [
@@ -136,7 +136,7 @@ return [
             'combat' => 200000,
             'count' => 0,
             'cargo' => 5000,
-            'unitLimit' => 1,
+            'unitLimit' => 900,
             'buildTime' => 360,
             'unlocked' => false,
             'costs' => [

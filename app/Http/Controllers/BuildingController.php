@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserResource;
+use App\Models\UserAttribute;
 use App\Models\BuildingResourceCost;
 
 class BuildingController extends Controller
@@ -76,7 +77,7 @@ class BuildingController extends Controller
             $userResource = UserResource::where('user_id', $user->id)
                 ->where('resource_id', $requiredResource->resource_id)
                 ->first();
-    
+
             if (!$userResource || $userResource->amount < $requiredResource->amount) {
                 // Fehler-Banner setzen, bevor die Transaktion beginnt
                 return redirect()->route('buildings')->dangerBanner('Not enough resources');
@@ -88,18 +89,25 @@ class BuildingController extends Controller
                 $userResource = UserResource::where('user_id', $user->id)
                     ->where('resource_id', $requiredResource->resource_id)
                     ->first();
-    
+
                 $userResource->amount -= $requiredResource->amount;
                 $userResource->save();
             }
-    
+
             $building->level += 1;
             $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
-    
+
+            $userAttribute = UserAttribute::where('user_id', $user->id)
+                ->where('attribute_name', 'unit_limit')
+                ->first();
+
+            $userAttribute->attribute_value += 10;
+            $userAttribute->save();
+
             $this->updateResourceCosts($building);
         });
-        
+
         return redirect()->route('buildings')->banner('Building upgraded successfully');
     }
 

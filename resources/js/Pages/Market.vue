@@ -2,11 +2,14 @@
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import MarketCard from '@/Modules/Market/MarketCard.vue';
+import type { Market, formattedMarketResource } from '@/types/types';
 
-const props = defineProps(['market']);
+const props = defineProps<{
+  market: Market[]
+}>()
 
 const formattedResources = computed(() => {
-  return props.market.map((market: market) => {
+  return props.market.map((market: Market): formattedMarketResource => {
     return {
       id: market.id,
       resource_id: market.resource_id,
@@ -23,7 +26,7 @@ const formattedResources = computed(() => {
 <template>
   <AppLayout title="market">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <MarketCard v-for="data in formattedResources" :key="data.id" :marketData="data" />
+      <MarketCard v-for="resource in formattedResources" :key="resource.id" :marketData="resource" />
     </div>
   </AppLayout>
 </template>

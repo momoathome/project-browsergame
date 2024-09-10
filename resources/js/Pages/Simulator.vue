@@ -6,23 +6,21 @@ import BattleSimulatorLosses from '@/Modules/Simulator/BattleSimulatorLosses.vue
 import { numberFormat } from '@/Utils/format';
 import { useForm } from '@inertiajs/vue3'
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import type { BattleResult } from '@/types/types';
 
-const props = defineProps({
-  result: {
-    type: Object,
-  },
-  spacecrafts: {
-    type: Array,
-  }
-});
+type Role = "attacker" | "defender";
 
-interface Ship {
+interface SimpleSpacecraft {
   name: string;
   combatPower: number;
   count: number;
+  totalCombatPower: string;
 }
 
-type Role = "attacker" | "defender";
+const props = defineProps<{
+  result: BattleResult
+  spacecrafts?: Array<{ details: { name: string; combat: number } }>
+}>()
 
 const form = useForm({
   attacker: [],
@@ -40,7 +38,7 @@ function transformSpacecrafts(spacecrafts) {
 const attacker = ref(transformSpacecrafts(props.spacecrafts).map(addTotalCombatPower));
 const defender = ref(transformSpacecrafts(props.spacecrafts).map(addTotalCombatPower));
 
-function addTotalCombatPower(ship: Ship) {
+function addTotalCombatPower(ship: SimpleSpacecraft) {
   return {
     ...ship,
     totalCombatPower: numberFormat(ship.combatPower * ship.count)

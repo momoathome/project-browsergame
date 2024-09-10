@@ -1,11 +1,10 @@
 <!-- BattleSimulatorLosses.vue -->
 <script lang="ts" setup>
-const props = defineProps({
-  result: {
-    type: Object,
-    required: true,
-  },
-});
+import type { BattleResult } from "@/types/types";
+
+const props = defineProps<{
+  result: BattleResult
+}>()
 
 const tableLossesProperties = ["name", "count", "losses"];
 </script>

@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue';
 import type { Asteroid } from '@/types/types';
 
-// Datenstruktur anpassen
 interface Resource {
   name: string;
   amount: number;

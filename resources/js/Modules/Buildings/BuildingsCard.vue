@@ -8,18 +8,18 @@ import type { FormattedBuilding } from '@/types/types';
 import { useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
-  moduleData: FormattedBuilding
+  building: FormattedBuilding
 }>();
 
-const formattedBuildTime = computed(() => timeFormat(props.moduleData.build_time));
-// const formattedEnergy = computed(() => numberFormat(props.moduleData.energy!));
+const formattedBuildTime = computed(() => timeFormat(props.building.build_time));
+// const formattedEnergy = computed(() => numberFormat(props.building.energy!));
 
 const form = useForm({
-  buildingId: props.moduleData.id
+  buildingId: props.building.id
 });
 
 function upgradeModule() {
-  form.post(`/buildings/${props.moduleData.id}/update`, {
+  form.post(`/buildings/${props.building.id}/update`, {
     preserveState: true,
     onSuccess: () => {
       // 
@@ -31,24 +31,24 @@ function upgradeModule() {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
-      <img :src="moduleData.image" class="rounded-t-3xl object-fit aspect-[5/3]" />
+      <img :src="building.image" class="rounded-t-3xl object-fit aspect-[5/3]" alt="" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
       <div class="flex flex-col gap-4">
         <div class="flex justify-between">
-          <p class="font-semibold text-2xl">{{ moduleData.name }}</p>
+          <p class="font-semibold text-2xl">{{ building.name }}</p>
           <div class="flex">
             <span class="text-sm font-medium mt-2 me-1 text-secondary">lv.</span>
-            <p class="text-xl">{{ moduleData.level }}</p>
+            <p class="text-xl">{{ building.level }}</p>
           </div>
         </div>
-        <p class="text-gray text-sm">{{ moduleData.description }}</p>
+        <p class="text-gray text-sm">{{ building.description }}</p>
       </div>
 
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
-        <div class="flex flex-col gap-1 items-center" v-for="resource in moduleData.resources" :key="resource.name">
+        <div class="flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
           <img :src="resource.image" class="h-7 w-7" alt="resource" />
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>
@@ -58,7 +58,7 @@ function upgradeModule() {
           Upgrade
         </PrimaryButton>
       </div>
-      <AppCardTimer :time="moduleData.build_time" :description="`upgrade to lv. ${moduleData.level + 1}`" />
+      <AppCardTimer :time="building.build_time" :description="`upgrade to lv. ${building.level + 1}`" />
     </div>
   </div>
 </template>

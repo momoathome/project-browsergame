@@ -1,15 +1,12 @@
 <script lang="ts" setup>
-const props = defineProps({
-  maxInputValue: {
-    type: Number,
-    required: false
-  },
-  maxlength: {
-    type: Number,
-    default: 4,
-    required: false
-  }
-});
+interface Props {
+  maxInputValue?: number;
+  maxlength?: number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  maxlength: 4,
+})
 
 const count = defineModel<number | string>( { default: 0 })
 

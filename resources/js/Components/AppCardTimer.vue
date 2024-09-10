@@ -2,20 +2,12 @@
 import { timeFormat } from '@/Utils/format';
 import { ref} from 'vue';
 
-const props = defineProps({
-  time: {
-    type: Number,
-    required: true
-  },
-  progress: {
-    type: Number,
-    required: false
-  },
-  description: {
-    type: String,
-    required: false
-  }
-});
+const props = defineProps<{
+  time: number
+  progress?: number
+  description: string
+}>()
+
 const progress = ref(85)
 
 </script>

@@ -35,6 +35,25 @@ export interface Resource {
   pivot: BuildingResourcePivot | SpacecraftResourcePivot;
 }
 
+export interface UserResources {
+  id: number;
+  user_id: number;
+  resource_id: number;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+  resources: Resource;
+}
+
+export interface UserAttributes {
+  id: number;
+  user_id: number;
+  attribute_name: string;
+  attribute_value: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SpacecraftDetails {
   id: number;
   name: string;
@@ -57,10 +76,12 @@ export interface Spacecraft {
 }
 
 export interface SimpleResource {
+  id: number;
   name: string;
   image: string;
   amount: number;
 }
+
 export interface FormattedBuilding {
   id: number;
   image: string;
@@ -70,6 +91,7 @@ export interface FormattedBuilding {
   build_time: number;
   resources: SimpleResource[];
 };
+
 export interface FormattedSpacecraft {
   id: number;
   image: string;
@@ -106,7 +128,6 @@ type Asteroid = {
   pixel_size: number;
 };
 
-
 export interface Station {
   id: number;
   user_id: number;
@@ -114,3 +135,35 @@ export interface Station {
   x: number;
   y: number;
 }
+
+export interface Market {
+  id: number
+  resource_id: number
+  cost: number
+  stock: number
+  resource: Resource;
+}
+
+export interface formattedMarketResource {
+  id: number
+  resource_id: number
+  name: string
+  description: string
+  image: string
+  cost: number
+  stock: number;
+}
+
+export type BattleResult = {
+  winner: string;
+  attackerLosses: {
+    name: string;
+    count: number;
+    losses: number;
+  }[];
+  defenderLosses: {
+    name: string;
+    count: number;
+    losses: number;
+  }[];
+};

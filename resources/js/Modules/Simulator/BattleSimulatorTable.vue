@@ -1,27 +1,21 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
 import AppInput from '@/Components/AppInput.vue';
 
 type Role = "attacker" | "defender";
 
-interface Ship {
+interface SimpleSpacecraft {
   name: string;
   combatPower: number;
   count: number;
   totalCombatPower: string;
 }
 
-const props = defineProps({
-  role: {
-    type: String as PropType<Role>,
-    required: true,
-  },
-  ships: {
-    type: Array as PropType<Ship[]>,
-    required: true,
-  },
-});
+const props = defineProps<{
+  role: Role
+  ships: SimpleSpacecraft[]
+}>()
 
 const emit = defineEmits(['update:quantity'])
 

@@ -1,4 +1,4 @@
-<script setup>
+<script lang="ts" setup>
 import { computed } from 'vue'
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
@@ -9,9 +9,9 @@ import Divider from '@/Components/Divider.vue';
 import AppTooltip from '@/Components/AppTooltip.vue';
 import { numberFormat } from '@/Utils/format';
 
-defineProps({
-  title: String,
-});
+const props = defineProps<{
+  title: string
+}>()
 
 const logout = () => {
   router.post(route('logout'));

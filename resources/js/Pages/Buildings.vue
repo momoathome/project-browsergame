@@ -3,12 +3,14 @@
 import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
-import type { Building } from '@/types/types';
+import type { Building, FormattedBuilding, Resource } from '@/types/types';
 
-const props = defineProps(['buildings']);
+const props = defineProps<{
+  buildings: Building[]
+}>()
 
 const formattedBuildings = computed(() => {
-  return props.buildings.map((building: Building) => {
+  return props.buildings.map((building: Building): FormattedBuilding => {
     return {
       id: building.id,
       image: building.details.image,
@@ -16,7 +18,8 @@ const formattedBuildings = computed(() => {
       description: building.details.description,
       level: building.level,
       build_time: building.build_time,
-      resources: building.resources.map((resource) => ({
+      resources: building.resources.map((resource: Resource) => ({
+        id: resource.id,
         name: resource.name,
         image: resource.image,
         amount: resource.pivot.amount
@@ -31,7 +34,7 @@ const formattedBuildings = computed(() => {
 <template>
   <AppLayout title="buildings">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <BuildingsCard v-for="data in formattedBuildings" :key="data.id" :moduleData="data" />
+      <BuildingsCard v-for="building in formattedBuildings" :key="building.id" :building="building" />
     </div>
   </AppLayout>
 </template>

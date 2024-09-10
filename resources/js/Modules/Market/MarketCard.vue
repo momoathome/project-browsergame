@@ -1,27 +1,16 @@
 <script lang="ts" setup>
-import { type PropType, computed } from 'vue';
+import { computed } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
+import type { formattedMarketResource } from '@/types/types';
 
-interface Props {
-  id: number
-  name: string
-  description: string
-  image: string
-  cost: number
-  stock: number
-}
-
-const props = defineProps({
-  marketData: {
-    type: Object as PropType<Props>,
-    required: true
-  }
-});
+const props = defineProps<{
+  marketData: formattedMarketResource
+}>()
 
 const formattedCost = computed(() => numberFormat(props.marketData.cost));
 const formattedStock = computed(() => numberFormat(props.marketData.stock));

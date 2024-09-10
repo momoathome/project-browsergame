@@ -4,7 +4,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import type { Spacecraft } from '@/types/types';
 
-const props = defineProps(['spacecrafts']);
+const props = defineProps<{
+  spacecrafts: Spacecraft[]
+}>()
 
 const formattedSpacecrafts = computed(() => {
   return props.spacecrafts.map((spacecraft: Spacecraft) => {
@@ -35,7 +37,7 @@ const formattedSpacecrafts = computed(() => {
 <template>
   <AppLayout title="spacecrafts">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <SpacecraftsCard v-for="data in formattedSpacecrafts" :key="data.id" :spacecraft="data" />
+      <SpacecraftsCard v-for="spacecraft in formattedSpacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
     </div>
   </AppLayout>
 </template>

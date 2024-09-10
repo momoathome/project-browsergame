@@ -98,12 +98,23 @@ class BuildingController extends Controller
             $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
 
-            $userAttribute = UserAttribute::where('user_id', $user->id)
-                ->where('attribute_name', 'unit_limit')
-                ->first();
+            if ($building->details->name == 'Hangar') {
+                $userAttribute = UserAttribute::where('user_id', $user->id)
+                    ->where('attribute_name', 'unit_limit')
+                    ->first();
 
-            $userAttribute->attribute_value += 10;
-            $userAttribute->save();
+                $userAttribute->attribute_value += 10;
+                $userAttribute->save();
+            }
+
+            if ($building->details->name == 'Warehouse') {
+                $userAttribute = UserAttribute::where('user_id', $user->id)
+                    ->where('attribute_name','storage')
+                    ->first();
+
+                $userAttribute->attribute_value += 500;
+                $userAttribute->save();
+            }
 
             $this->updateResourceCosts($building);
         });

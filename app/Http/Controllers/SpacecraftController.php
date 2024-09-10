@@ -76,8 +76,6 @@ class SpacecraftController extends Controller
         $quantity = $validated['amount'];
         $user = auth()->user();
 
-        Log::info('spacecraft amount: ' . $quantity);
-
         $totalCosts = $spacecraft->resources->mapWithKeys(function ($resource) use ($quantity) {
             return [$resource->id => $resource->pivot->amount * $quantity];
         });

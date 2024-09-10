@@ -7,7 +7,7 @@ const props = defineProps({
   },
 });
 
-const tableLossesProperties = ["name", "quantity", "losses"];
+const tableLossesProperties = ["name", "count", "losses"];
 </script>
 
 <template>

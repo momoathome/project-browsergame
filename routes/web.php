@@ -46,7 +46,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/asteroidMap/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
 
     Route::get('/simulator', [BattleController::class, 'index'])->name('simulator');
-    Route::post('/battle/simulate', [BattleController::class, 'simulate'])->name('battle.simulate');
+    Route::post('/simulator', [BattleController::class, 'simulate'])->name('simulator.simulate');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 

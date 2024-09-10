@@ -16,12 +16,12 @@ class BattleResult
             'winner' => $this->winner,
             'attackerLosses' => array_map(fn($loss) => [
                 'name' => $loss->name,
-                'quantity' => $loss->quantity,
+                'count' => $loss->count,
                 'losses' => $loss->losses
             ], $this->attackerLosses),
             'defenderLosses' => array_map(fn($loss) => [
                 'name' => $loss->name,
-                'quantity' => $loss->quantity,
+                'count' => $loss->count,
                 'losses' => $loss->losses
             ], $this->defenderLosses)
         ];

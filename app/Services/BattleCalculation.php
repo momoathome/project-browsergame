@@ -24,13 +24,13 @@ class BattleCalculation
   private function convertToShipCollection(array $ships): Collection
   {
     return collect($ships)->map(function ($ship) {
-      return new Ship($ship['name'], $ship['combatPower'], $ship['Quantity']);
+      return new Ship($ship['name'], $ship['combatPower'], $ship['count']);
     });
   }
 
   private function calculateTotalCombatPower(Collection $attacker, Collection $defender): array
   {
-    $calculatePower = fn($ships) => $ships->sum(fn($ship) => $ship->combatPower * $ship->quantity);
+    $calculatePower = fn($ships) => $ships->sum(fn($ship) => $ship->combatPower * $ship->count);
 
     return [
       'attacker' => $calculatePower($attacker),
@@ -89,8 +89,8 @@ class BattleCalculation
 
     $calculateLosses = function (Collection $ships, bool $isWinner) use ($lossRatio) {
       return $ships->map(function (Ship $ship) use ($lossRatio, $isWinner) {
-        $losses = $ship->quantity === 0 ? 0 : round($ship->quantity * $lossRatio);
-        return new Losses($ship->name, $ship->quantity, $isWinner ? $losses : $ship->quantity);
+        $losses = $ship->count === 0 ? 0 : round($ship->count * $lossRatio);
+        return new Losses($ship->name, $ship->count, $isWinner ? $losses : $ship->count);
       });
     };
 

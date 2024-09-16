@@ -12,7 +12,7 @@ type Role = "attacker" | "defender";
 
 interface SimpleSpacecraft {
   name: string;
-  combatPower: number;
+  combat: number;
   count: number;
   totalCombatPower: string;
 }
@@ -30,7 +30,7 @@ const form = useForm({
 function transformSpacecrafts(spacecrafts) {
   return spacecrafts.map(spacecraft => ({
     name: spacecraft.details.name,
-    combatPower: spacecraft.combat,
+    combat: spacecraft.combat,
     count: 0
   }));
 }
@@ -41,14 +41,14 @@ const defender = ref(transformSpacecrafts(props.spacecrafts).map(addTotalCombatP
 function addTotalCombatPower(ship: SimpleSpacecraft) {
   return {
     ...ship,
-    totalCombatPower: numberFormat(ship.combatPower * ship.count)
+    totalCombatPower: numberFormat(ship.combat * ship.count)
   };
 }
 
 function updateShipQuantity(role: Role, index: number, newCount: number) {
   const target = role === 'attacker' ? attacker : defender;
   target.value[index].count = newCount;
-  target.value[index].totalCombatPower = numberFormat(target.value[index].combatPower * newCount);
+  target.value[index].totalCombatPower = numberFormat(target.value[index].combat * newCount);
 }
 
 function simulateBattle() {

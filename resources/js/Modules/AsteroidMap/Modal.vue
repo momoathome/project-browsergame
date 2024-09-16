@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -9,7 +9,7 @@ import MapModalUnits from './MapModalUnits.vue';
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
 
 interface Content {
-  data: Asteroid;
+  data: Asteroid | Station;
   imageSrc: string;
   type: 'asteroid' | 'station' | undefined;
 }
@@ -24,9 +24,11 @@ const props = defineProps<{
 }>();
 
 const asteroid = computed<Asteroid>(() => props.content!.data);
+const station = computed<Station>(() => props.content!.data);
 
 const form = useForm({
-  asteroid_id: props.content?.data?.id ?? null,
+  asteroid_id: null,
+  station_user_id: null,
   spacecrafts: {
     Merlin: 0,
     Comet: 0,
@@ -61,7 +63,19 @@ function exploreAsteroid() {
 }
 
 function attackUser() {
-  // implement attack logic here
+  form.station_user_id = station.value.user_id;
+
+  // if form spacecrafts are all 0, return
+  const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
+  if (noSpacecraftSelected) {
+    return;
+  }
+
+  form.post(`/asteroidMap/combat`, {
+    onSuccess: () => {
+      close();
+    },
+  }); 
 }
 
 const close = () => {
@@ -117,7 +131,9 @@ const setMaxAvailableUnits = () => {
   const MaxAvailableUnits = {};
 
   props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    MaxAvailableUnits[spacecraft.details.name] = spacecraft.count;
+    if (spacecraft.details.type !== "Miner") {
+      MaxAvailableUnits[spacecraft.details.name] = spacecraft.count;
+    }
   });
 
   form.spacecrafts = MaxAvailableUnits;
@@ -126,48 +142,43 @@ const setMaxAvailableUnits = () => {
 const setMinNeededUnits = () => {
   const MinNeededUnits = {};
   const totalAsteroidResources = props.content!.data.resources.reduce((total, resource) => total + resource.amount, 0);
-
   let remainingResources = totalAsteroidResources;
 
-  // Zuerst alle "mining"-Raumschiffe auswählen
-  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    const spacecraftName = spacecraft.details.name;
-    const spacecraftCargo = spacecraft.cargo;
-    const spacecraftType = spacecraft.details.type;
-
-    if (remainingResources <= 0) {
-      MinNeededUnits[spacecraftName] = 0;
-      return;
-    }
-
-    if (spacecraftType === "Miner") {
-      const neededUnits = Math.ceil(remainingResources / spacecraftCargo);
-      const usedUnits = Math.min(neededUnits, spacecraft.count);
-
-      MinNeededUnits[spacecraftName] = usedUnits;
-      remainingResources -= usedUnits * spacecraftCargo;
-    }
-  });
-
-  // Falls noch Ressourcen übrig sind, andere Raumschiffe verwenden
-  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    const spacecraftName = spacecraft.details.name;
-    const spacecraftCargo = spacecraft.cargo;
-    const spacecraftType = spacecraft.details.type;
-
-    if (remainingResources <= 0) {
-      if (!(spacecraftName in MinNeededUnits)) {
-        MinNeededUnits[spacecraftName] = 0;
+  // Funktion zum Verarbeiten von Raumschiffen eines bestimmten Typs
+  const processSpacecraftType = (type: string) => {
+    props.spacecrafts.forEach((spacecraft: Spacecraft) => {
+      if (remainingResources <= 0) {
+        MinNeededUnits[spacecraft.details.name] = MinNeededUnits[spacecraft.details.name] || 0;
+        return;
       }
+
+      if (spacecraft.details.type === type) {
+        const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
+        const usedUnits = Math.min(neededUnits, spacecraft.count);
+
+        MinNeededUnits[spacecraft.details.name] = usedUnits;
+        remainingResources -= usedUnits * spacecraft.cargo;
+      }
+    });
+  };
+
+  // Verarbeite zuerst Miner und transporter
+  processSpacecraftType("Miner");
+  processSpacecraftType("Transporter");
+
+  // Schließlich alle anderen Raumschifftypen
+  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
+    if (remainingResources <= 0) {
+      MinNeededUnits[spacecraft.details.name] = MinNeededUnits[spacecraft.details.name] || 0;
       return;
     }
 
-    if (spacecraftType !== "Miner") {
-      const neededUnits = Math.ceil(remainingResources / spacecraftCargo);
+    if (spacecraft.details.type !== "Miner" && spacecraft.details.type !== "Transporter") {
+      const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
       const usedUnits = Math.min(neededUnits, spacecraft.count);
 
-      MinNeededUnits[spacecraftName] = usedUnits;
-      remainingResources -= usedUnits * spacecraftCargo;
+      MinNeededUnits[spacecraft.details.name] = usedUnits;
+      remainingResources -= usedUnits * spacecraft.cargo;
     }
   });
 

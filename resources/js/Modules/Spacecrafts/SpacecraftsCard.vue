@@ -22,8 +22,12 @@ const form = useForm({
 });
 
 function produceSpacecraft() {
+  if (form.amount <= 0) {
+    return
+  } 
+
   form.post(`/shipyard/${props.spacecraft.id}/update`, {
-    preserveState: false,
+    preserveState: true,
 
     onSuccess: () => {
       form.reset();
@@ -79,7 +83,7 @@ const unlock = useForm({
 });
 function unlockSpacecraft() {
   unlock.post(`/shipyard/${props.spacecraft.id}/unlock`, {
-    preserveState: false,
+    preserveState: true,
 
     onSuccess: () => {
       //
@@ -169,7 +173,8 @@ function unlockSpacecraft() {
       </div>
     </div>
 
-    <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft" class="mt-4 gap-4 w-36 absolute left-1/2 -translate-x-1/2 bottom-12">
+    <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft"
+      class="mt-4 gap-4 w-36 absolute left-1/2 -translate-x-1/2 bottom-12">
       Unlock
       <div class="flex gap-1">
         <img src="/storage/attributes/research_points.png" class="h-5" alt="research icon">

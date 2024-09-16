@@ -34,7 +34,7 @@ class UserAttributeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(UserAttributes $userAttributes)
+    public function show(UserAttribute $userAttributes)
     {
         //
     }
@@ -42,7 +42,7 @@ class UserAttributeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(UserAttributes $userAttributes)
+    public function edit(UserAttribute $userAttributes)
     {
         //
     }
@@ -50,7 +50,7 @@ class UserAttributeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, UserAttributes $userAttributes)
+    public function update(Request $request, UserAttribute $userAttributes)
     {
         //
     }
@@ -58,7 +58,7 @@ class UserAttributeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(UserAttributes $userAttributes)
+    public function destroy(UserAttribute $userAttributes)
     {
         //
     }

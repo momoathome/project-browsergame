@@ -24,17 +24,17 @@ class BattleCalculation
   private function convertToShipCollection(array $ships): Collection
   {
     return collect($ships)->map(function ($ship) {
-      return new Ship($ship['name'], $ship['combatPower'], $ship['count']);
+      return new Ship($ship['name'], $ship['combat'], $ship['count']);
     });
   }
 
   private function calculateTotalCombatPower(Collection $attacker, Collection $defender): array
   {
-    $calculatePower = fn($ships) => $ships->sum(fn($ship) => $ship->combatPower * $ship->count);
+    $calculateCombatPower = fn($ships) => $ships->sum(fn($ship) => $ship->combat * $ship->count);
 
     return [
-      'attacker' => $calculatePower($attacker),
-      'defender' => $calculatePower($defender),
+      'attacker' => $calculateCombatPower($attacker),
+      'defender' => $calculateCombatPower($defender),
     ];
   }
 

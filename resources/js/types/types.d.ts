@@ -66,8 +66,9 @@ export interface Spacecraft {
   id: number;
   details: SpacecraftDetails;
   combat: number;
-  count: number;
   cargo: number;
+  speed: number;
+  count: number;
   build_time: number;
   unit_limit: number;
   unlocked: boolean;
@@ -99,8 +100,9 @@ export interface FormattedSpacecraft {
   description: string;
   type: string;
   combat: number;
-  count: number;
   cargo: number;
+  speed: number;
+  count: number;
   build_time: number;
   unit_limit: number;
   unlocked: boolean;
@@ -108,14 +110,14 @@ export interface FormattedSpacecraft {
   resources: SimpleResource[];
 };
 
-type AsteroidResource = {
+export interface AsteroidResource {
   id: number;
   asteroid_id: number;
   resource_type: string;
   amount: number;
 };
 
-type Asteroid = {
+export interface Asteroid {
   id: number;
   name: string;
   rarity: string;

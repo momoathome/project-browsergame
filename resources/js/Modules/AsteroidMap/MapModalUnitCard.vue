@@ -73,6 +73,10 @@ const setCount = () => {
           <span class="text-sm text-secondary">Cargo</span>
           <p class="font-medium text-sm">{{ formattedCargo }}</p>
         </div>
+        <div class="flex flex-col items-center">
+          <span class="text-sm text-secondary">speed</span>
+          <p class="font-medium text-sm">{{ spacecraft.speed }}</p>
+        </div>
       </div>
 
       <Divider />

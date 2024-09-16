@@ -20,8 +20,9 @@ return new class extends Migration
                   ->constrained('spacecraft_details')
                   ->onDelete('cascade');
             $table->integer('combat')->default(1);
-            $table->integer('count')->default(1);
             $table->integer('cargo')->default(1);
+            $table->integer('speed')->default(1);
+            $table->integer('count')->default(1);
             $table->integer('build_time')->nullable();
             $table->integer('unit_limit')->default(1);
             $table->integer('research_cost')->default(1);

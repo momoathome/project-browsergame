@@ -2,9 +2,9 @@
 import { ref, computed, nextTick } from 'vue';
 
 const suggestions = [
-  'Common',
-  'Uncommon',
-  'Rare',
+  'Small',
+  'Medium',
+  'Large',
   'Extrem',
   'Carbon',
   'Hydrogenium',

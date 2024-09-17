@@ -11,7 +11,7 @@ class CreateAsteroidsTable extends Migration
         Schema::create('asteroids', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('name');
-            $table->string('rarity');
+            $table->string('size');
             $table->float('base');
             $table->float('multiplier');
             $table->integer('value');

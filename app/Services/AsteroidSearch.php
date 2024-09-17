@@ -50,17 +50,17 @@ class AsteroidSearch
   private function performComplexQuery($queryParts): Collection
   {
     $searchedAsteroids = Asteroid::query();
-    $this->applyRarityFilter($searchedAsteroids, $queryParts);
+    $this->applySizeFilter($searchedAsteroids, $queryParts);
     $this->applyResourceFilter($searchedAsteroids, $queryParts);
     return $searchedAsteroids->take(1000)->get();
   }
 
-  private function applyRarityFilter($query, $queryParts): void
+  private function applySizeFilter($query, $queryParts): void
   {
-    $rarities = ['common', 'uncommon', 'rare', 'extreme'];
+    $rarities = ['small', 'medium', 'large', 'extreme'];
     foreach ($queryParts as $part) {
       if (in_array($part, $rarities)) {
-        $query->where('rarity', $part);
+        $query->where('size', $part);
         break;
       }
     }
@@ -68,7 +68,7 @@ class AsteroidSearch
 
   private function applyResourceFilter($query, $queryParts): void
   {
-    $resourceFilter = array_diff($queryParts, ['common', 'uncommon', 'rare', 'extreme']);
+    $resourceFilter = array_diff($queryParts, ['small', 'medium', 'large', 'extreme']);
     if (empty($resourceFilter)) {
       return;
     }

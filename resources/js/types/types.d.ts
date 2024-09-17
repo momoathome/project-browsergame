@@ -120,7 +120,7 @@ export interface AsteroidResource {
 export interface Asteroid {
   id: number;
   name: string;
-  rarity: string;
+  size: string;
   base: string;
   multiplier: string;
   value: number;

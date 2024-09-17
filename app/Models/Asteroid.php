@@ -13,7 +13,7 @@ class Asteroid extends Model
 
     protected $fillable = [
         'name',
-        'rarity',
+        'size',
         'base',
         'multiplier',
         'value',
@@ -34,7 +34,7 @@ class Asteroid extends Model
 
         return [
             'name' => $this->name,
-            'rarity' => $this->rarity,
+            'size' => $this->size,
             'resources' => $resources,
         ];
     }

@@ -29,7 +29,7 @@ class AsteroidGenerator
       $coordinate = $this->generateAsteroidCoordinate($asteroidData, $resources);
       $asteroidData['x'] = $coordinate['x'];
       $asteroidData['y'] = $coordinate['y'];
-      $asteroidData['pixel_size'] = $this->transformAsteroidRarityToImgSize($asteroidData['rarity']);
+      $asteroidData['pixel_size'] = $this->transformAsteroidImgSize($asteroidData['size']);
 
       $asteroid = Asteroid::create($asteroidData);
       $this->saveAsteroidResources($asteroid, $resources);
@@ -46,15 +46,15 @@ class AsteroidGenerator
       $this->config['asteroid_faktor']['min'],
       $this->config['asteroid_faktor']['max']
     );
-    $asteroidRarity = $this->generateAsteroidRarity($this->config['asteroid_rarity']);
-    $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($asteroidRarity);
+    $asteroidSize = $this->generateAsteroidSize($this->config['asteroid_size']);
+    $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($asteroidSize);
     $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidFaktorMultiplier);
     $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
-    $asteroidName = $this->generateAsteroidName($asteroidRarity, $asteroidValue, $asteroidBaseMultiplier);
+    $asteroidName = $this->generateAsteroidName($asteroidSize, $asteroidValue, $asteroidBaseMultiplier);
 
     return [
       'name' => $asteroidName,
-      'rarity' => $asteroidRarity,
+      'size' => $asteroidSize,
       'base' => $asteroidBaseFaktor,
       'multiplier' => $asteroidBaseMultiplier,
       'value' => $asteroidValue,
@@ -88,7 +88,7 @@ class AsteroidGenerator
   {
     $minDistance = $this->config['min_distance'];
     $universeSize = $this->config['universe_size'];
-    $distanceModifier = $this->config['distance_modifiers'][$asteroid['rarity']] ?? 0;
+    $distanceModifier = $this->config['distance_modifiers'][$asteroid['size']] ?? 0;
 
     $resourceDistanceModifier = $this->calculateResourceDistanceModifier($resources);
     $distanceModifier += $resourceDistanceModifier;
@@ -98,8 +98,8 @@ class AsteroidGenerator
     $x = $y = 0;
 
     do {
-      $x = rand($minDistance, $universeSize);
-      $y = rand($minDistance, $universeSize);
+      $x = rand($minDistance, $universeSize + $distanceModifier);
+      $y = rand($minDistance, $universeSize + $distanceModifier);
 
       $isValid = !$this->isCollidingWithStation($x, $y, $distanceModifier) &&
         !$this->isCollidingWithAsteroid($x, $y, $minDistance);
@@ -149,25 +149,25 @@ class AsteroidGenerator
     return rand($min, $max);
   }
 
-  private function generateAsteroidRarity(array $asteroidRarity): string
+  private function generateAsteroidSize(array $asteroidSize): string
   {
-    $totalWeight = array_sum($asteroidRarity);
+    $totalWeight = array_sum($asteroidSize);
     $randomValue = rand(0, $totalWeight - 1);
     $cumulativeWeight = 0;
 
-    foreach ($asteroidRarity as $rarity => $weight) {
+    foreach ($asteroidSize as $size => $weight) {
       $cumulativeWeight += $weight;
       if ($randomValue < $cumulativeWeight) {
-        return $rarity;
+        return $size;
       }
     }
 
-    return 'common';
+    return 'small';
   }
 
-  private function generateAsteroidFaktorMultiplier(string $rarity): array
+  private function generateAsteroidFaktorMultiplier(string $size): array
   {
-    return $this->config['asteroid_faktor_multiplier'][$rarity] ?? ['min' => 0, 'max' => 0];
+    return $this->config['asteroid_faktor_multiplier'][$size] ?? ['min' => 0, 'max' => 0];
   }
 
   private function generateAsteroidBaseMultiplier(array $asteroidFaktorMultiplier): float
@@ -255,9 +255,9 @@ class AsteroidGenerator
     return $maxModifier;
   }
 
-  private function generateAsteroidName(string $rarity, int $value, float $multiplier): string
+  private function generateAsteroidName(string $size, int $value, float $multiplier): string
   {
-    $prefix = substr($rarity, 0, 2);
+    $prefix = substr($size, 0, 2);
     $randomString = $this->generateRandomString(2);
     $randomString2 = $this->generateRandomString(2);
 
@@ -276,8 +276,8 @@ class AsteroidGenerator
     return $randomString;
   }
 
-  private function transformAsteroidRarityToImgSize(string $rarity): int
+  private function transformAsteroidImgSize(string $size): int
   {
-    return $this->config['asteroid_size'][$rarity] ?? $this->config['asteroid_size']['uncommen'];
+    return $this->config['asteroid_img_size'][$size] ?? $this->config['asteroid_img_size']['small'];
   }
 }

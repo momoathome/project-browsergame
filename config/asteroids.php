@@ -12,10 +12,10 @@ return [
     'min_distance' => $min_distance,
     'universe_size' => $universe_size,
 
-    'asteroid_size' => [
-        'common' => 1,
-        'uncommon' => 2,
-        'rare' => 4,
+    'asteroid_img_size' => [
+        'small' => 1,
+        'medium' => 2,
+        'large' => 4,
         'extreme' => 8,
     ],
 
@@ -24,24 +24,24 @@ return [
         'max' => 125,
     ],
 
-    'asteroid_rarity' => [
-        'common' => 700,
-        'uncommon' => 300,
-        'rare' => 25,
+    'asteroid_size' => [
+        'small' => 700,
+        'medium' => 300,
+        'large' => 25,
         'extreme' => 5,
     ],
 
     'asteroid_faktor_multiplier' => [
-        'common' => ['min' => 5, 'max' => 8],
-        'uncommon' => ['min' => 13, 'max' => 21],
-        'rare' => ['min' => 34, 'max' => 55],
+        'small' => ['min' => 5, 'max' => 8],
+        'medium' => ['min' => 13, 'max' => 21],
+        'large' => ['min' => 34, 'max' => 55],
         'extreme' => ['min' => 89, 'max' => 144],
     ],
 
     'distance_modifiers' => [
-        'common' => 0,
-        'uncommon' => 0,
-        'rare' => 4 * $min_distance,
+        'small' => 0,
+        'medium' => 0,
+        'large' => 4 * $min_distance,
         'extreme' => 10 * $min_distance,
     ],
 
@@ -51,21 +51,26 @@ return [
             'resource_distance_modifier' => 0,
         ],
         'medium_value' => [
-            'resources' => ['Cobalt', 'Iridium', 'Astatine', 'Uraninite', 'Thorium'],
+            'resources' => ['Cobalt', 'Iridium', 'Uraninite', 'Thorium'],
             'resource_distance_modifier' => 5 * $min_distance,
         ],
         'high_value' => [
-            'resources' => ['Hyperdiamond', 'Dilithium', 'Deuterium'],
+            'resources' => ['Astatine', 'Hyperdiamond'],
             'resource_distance_modifier' => 12 * $min_distance,
+        ],
+        'extreme_value' => [
+            'resources' => ['Dilithium', 'Deuterium'],
+            'resource_distance_modifier' => 16 * $min_distance,
         ],
     ],
 
     'pool_weights' => [
-        'low_value' => 0.55,
-        'medium_value' => 0.45,
-        'high_value' => 0.1,
+        'low_value' => 0.60, //60%
+        'medium_value' => 0.34, //34%
+        'high_value' => 0.05, //5%
+        'extreme_value' => 0.01, //1%
     ],
 
     'num_resource_range' => [1, 4],
-    'resource_ratio_range' => [10, 100],
+    'resource_ratio_range' => [5, 100],
 ];

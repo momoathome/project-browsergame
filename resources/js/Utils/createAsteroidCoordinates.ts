@@ -11,7 +11,7 @@ interface Station {
 interface Asteroid {
   id: number;
   name: string;
-  rarity: string;
+  size: string;
   base: number;
   multiplier: number;
   value: number;
@@ -42,14 +42,14 @@ export function createAsteroidCoordinates(asteroidsData: AsteroidData, stations:
   for (const asteroidId in asteroidsData) {
     if (asteroidsData.hasOwnProperty(asteroidId)) {
       const asteroid = asteroidsData[asteroidId];
-      const distanceModifier = config.distanceModifiers[asteroid.rarity] || minDistance;
+      const distanceModifier = config.distanceModifiers[asteroid.size] || minDistance;
 
       do {
         x = generateRandomInteger(distanceModifier, universeSize);
         y = generateRandomInteger(distanceModifier, universeSize);
       } while (isCollidingWithStation(x, y, distanceModifier) || isCollidingWithAsteroid(x, y));
 
-      const asteroidRiskToImgSize = transformAsteroidRarityToImgSize(asteroidsData[asteroidId].rarity);
+      const asteroidRiskToImgSize = transformAsteroidRarityToImgSize(asteroidsData[asteroidId].size);
 
       asteroidsCoords.push({
         ...asteroid,

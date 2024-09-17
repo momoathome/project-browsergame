@@ -137,7 +137,7 @@ return [
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
             Asteroid::class => [
-                'filterableAttributes'=> ['name', 'rarity', 'resources'],
+                'filterableAttributes'=> ['name', 'size', 'resources'],
                 "typoTolerance" => [
                     "enabled" => true,
                     "minWordSizeForTypos" => [

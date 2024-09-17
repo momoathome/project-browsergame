@@ -13,15 +13,15 @@ const props = defineProps<{
 }>();
 
 const resourceColors: Record<string, string> = {
-  Titanium: 'silver',
   Carbon: 'darkred',
-  Kyberkristall: 'deeppink',
+  Titanium: 'silver',
   Hydrogenium: 'cyan',
-  Uraninite: 'green',
+  Kyberkristall: 'deeppink',
   Cobalt: 'dodgerblue',
   Iridium: 'slategray',
-  Astatine: 'gold',
+  Uraninite: 'green',
   Thorium: 'yellowgreen',
+  Astatine: 'gold',
   Hyperdiamond: 'navy',
   Dilithium: 'purple',
   Deuterium: 'orangered',

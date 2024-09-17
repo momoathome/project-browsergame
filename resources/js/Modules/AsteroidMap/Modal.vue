@@ -5,6 +5,7 @@ import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import AppTooltip from '@/Components/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
 
@@ -62,6 +63,11 @@ function exploreAsteroid() {
   });
 }
 
+function fastExploreAsteroid() {
+  setMinNeededUnits()
+  exploreAsteroid();
+}
+
 function attackUser() {
   form.station_user_id = station.value.user_id;
 
@@ -75,7 +81,7 @@ function attackUser() {
     onSuccess: () => {
       close();
     },
-  }); 
+  });
 }
 
 const close = () => {
@@ -241,22 +247,44 @@ onUnmounted(() => {
 
           <div class="px-12 py-12 flex flex-col gap-4 bg-gray-800 rounded-3xl text-white relative">
             <button class="absolute top-3 right-3 p-2" @click="close">X</button>
-            <div class="bg-base rounded-lg px-4 pt-4 pb-2 flex justify-between gap-2">
-              <div class="flex gap-4 items-center">
-                <p class="text-secondary">Combat: <span class="text-white">{{ numberFormat(totalCombatPower) }}</span>
-                </p>
-                <p class="text-secondary">Cargo: <span class="text-white">{{ numberFormat(totalCargoCapacity) }}</span>
-                </p>
-                <p class="text-secondary">Tavel Time: <span class="text-white">00:00</span></p>
-              </div>
-              <div class="flex gap-2">
-                <SecondaryButton v-if="content?.type === 'asteroid'" @click="setMinNeededUnits">Min</SecondaryButton>
-                <SecondaryButton @click="setMaxAvailableUnits">Max</SecondaryButton>
-                <PrimaryButton v-if="content?.type === 'asteroid'" @click="exploreAsteroid">Explore</PrimaryButton>
-                <PrimaryButton v-else @click="attackUser">Attack</PrimaryButton>
-              </div>
-            </div>
+            <div class="bg-base rounded-lg px-4 pt-4 pb-2 flex flex-col gap-2">
+              <div class="flex justify-between gap-2">
+                <div class="flex gap-4 items-center">
+                  <p class="text-secondary">Combat: <span class="text-white">{{ numberFormat(totalCombatPower) }}</span>
+                  </p>
+                  <p class="text-secondary">Cargo: <span class="text-white">{{ numberFormat(totalCargoCapacity)
+                      }}</span>
+                  </p>
+                  <p class="text-secondary">Tavel Time: <span class="text-white">00:00</span></p>
+                </div>
+                <div class="flex gap-2">
+                  <div class="relative group z-10" v-if="content?.type === 'asteroid'">
+                    <SecondaryButton @click="setMinNeededUnits">Min</SecondaryButton>
+                    <AppTooltip label="set the minimum needed Spacecrafts to mine all resources" position="bottom"
+                      class="!mt-3 text-pretty w-40" />
+                  </div>
+                  <div class="relative group z-10" v-if="content?.type === 'station'">
+                    <SecondaryButton @click="setMaxAvailableUnits">Max</SecondaryButton>
+                    <AppTooltip label="set all available Spacecrafts" position="bottom" class="!mt-3" />
+                  </div>
+                  <div class="relative group z-10" v-if="content?.type === 'asteroid'">
+                    <PrimaryButton v-if="content?.type === 'asteroid'" @click="exploreAsteroid"
+                      @click.shift="fastExploreAsteroid">Explore</PrimaryButton>
+                    <!-- <AppTooltip label="shift + left click for quick send" position="bottom" class="!mt-3" /> -->
+                  </div>
 
+                  <PrimaryButton v-else @click="attackUser">Attack</PrimaryButton>
+                </div>
+              </div>
+<!--               <div class="flex flex-col text-sm">
+                <span>
+                  i: a miner should be selected
+                </span>
+                <span>
+                  i: only large miners can mine extremely large asteroids
+                </span>
+              </div> -->
+            </div>
             <MapModalUnits :spacecrafts="spacecrafts" v-model="form.spacecrafts" />
           </div>
         </div>

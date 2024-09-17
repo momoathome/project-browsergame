@@ -46,7 +46,6 @@ const filteredSuggestions = computed(() => {
 
 const onInput = () => {
   highlightedIndex.value = -1;
-  // Logik oder API-Aufruf hier falls nötig
 };
 
 const moveDown = async () => {
@@ -119,7 +118,7 @@ const getSuggestionRef = (index) => {
       :class="{ 'rounded-b-none': filteredSuggestions.length > 0 && showSuggestions }"
     />
     <ul v-if="filteredSuggestions.length > 0" 
-      class="w-60 max-h-44 py-1 -my-[1px] list-none overflow-y-auto peer-focus:ring-1 ring-[#bfbfbf] border border-[#6b7280] peer-focus-within:border-[#bfbfbf] rounded-b-lg no-scrollbar" 
+      class="w-60 relative z-100 max-h-44 py-1 -my-[1px] list-none overflow-y-auto peer-focus:ring-1 bg-[hsl(263,45%,7%)] ring-[#bfbfbf] border border-[#6b7280] peer-focus-within:border-[#bfbfbf] rounded-b-lg no-scrollbar" 
       :class="{ 'hidden': !showSuggestions }">
         <li v-for="(suggestion, index) in filteredSuggestions" 
           :key="index" 

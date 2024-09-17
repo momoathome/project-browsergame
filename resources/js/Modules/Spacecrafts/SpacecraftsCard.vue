@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -28,6 +28,7 @@ function produceSpacecraft() {
 
   form.post(`/shipyard/${props.spacecraft.id}/update`, {
     preserveState: true,
+    preserveScroll: true,
 
     onSuccess: () => {
       form.reset();
@@ -77,17 +78,10 @@ const decrementBy10 = () => {
   }
 }
 
-
-const unlock = useForm({
-  isUnlocked: true
-});
 function unlockSpacecraft() {
-  unlock.post(`/shipyard/${props.spacecraft.id}/unlock`, {
+  router.post(`/shipyard/${props.spacecraft.id}/unlock`, {
     preserveState: true,
-
-    onSuccess: () => {
-      //
-    },
+    preserveSCroll: true,
   });
 }
 </script>
@@ -123,7 +117,7 @@ function unlockSpacecraft() {
             <p class="font-medium text-sm">{{ formattedCargo }}</p>
           </div>
           <div class="flex flex-col items-center">
-            <span class="text-sm text-secondary">Unit Limit</span>
+            <span class="text-sm text-secondary">Crew</span>
             <p class="font-medium text-sm">{{ spacecraft.unit_limit }}</p>
           </div>
           <div class="flex flex-col items-center">
@@ -139,6 +133,7 @@ function unlockSpacecraft() {
             <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm">{{ resource.amount }}</p>
+            <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount}})</span>
           </div>
         </div>
 
@@ -146,7 +141,7 @@ function unlockSpacecraft() {
           <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
             <div class="flex justify-between gap-4">
               <div class="flex items-center">
-                <button @click="decrement" @click.shift="decrementBy10" type="button" class="border-none p-0">
+                <button @click="decrement" @click.shift="decrementBy10" type="button" :disabled="maxSpacecraftCount == 0" class="border-none p-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
@@ -155,7 +150,7 @@ function unlockSpacecraft() {
 
                 <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" class="h-10" />
 
-                <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
+                <button @click="increment" @click.shift="incrementBy10" type="button" :disabled="maxSpacecraftCount == 0" class="border-none p-0">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
@@ -209,5 +204,10 @@ function unlockSpacecraft() {
 .locked {
   filter: brightness(0.7) grayscale(1);
   pointer-events: none;
+}
+
+:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 </style>

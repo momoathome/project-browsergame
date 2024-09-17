@@ -49,11 +49,7 @@ function handleInputValue(e: Event): void {
 
 <style scoped>
 :disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
-}
-
-:disabled:hover {
-  background-color: rgb(50 81 102);
 }
 </style>

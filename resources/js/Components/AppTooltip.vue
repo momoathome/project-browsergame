@@ -11,7 +11,7 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <span
-    class="pointer-events-none absolute whitespace-nowrap text-center bg-gray-800 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+    class="pointer-events-none absolute z-100 whitespace-nowrap text-center bg-gray-800 text-white text-sm py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     :class="position"
     >
     {{ label }}

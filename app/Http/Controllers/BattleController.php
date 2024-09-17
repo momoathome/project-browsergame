@@ -6,6 +6,7 @@ use App\Services\BattleCalculation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Spacecraft;
+use App\Models\User;
 
 class BattleController extends Controller
 {
@@ -86,8 +87,16 @@ class BattleController extends Controller
     })->toArray();
 
     $result = $this->battleService->simulateBattle($attacker_formatted, $defender_formatted);
+    $result->attackerName = auth()->user()->name;
+    $result->defenderName = User::find($defender_id)->name;
 
-    return response()->json($result);
+    return redirect()->route('asteroidMap')->banner('Winner is '. $result->attackerName . '!');
+
+    // return response()->json($result);
+    
+    /* return Inertia::render('AsteroidMap', [
+      'result' => $result,
+    ]); */
   }
 
 }

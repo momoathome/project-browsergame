@@ -23,7 +23,7 @@ const attributeLabels = {
   energy: 'Energy',
   influence: 'Influence',
   credits: 'Credits',
-  unit_limit: 'Unit Limit',
+  unit_limit: 'Crew Limit',
   total_units: 'Total Units',
 };
 
@@ -80,7 +80,7 @@ const unitsRatio = computed(() => {
               <span class="text-sm font-medium text-white">
                 {{ unitsRatio }}
               </span>
-              <AppTooltip label="units" position="bottom" class="!mt-3" />
+              <AppTooltip label="Crew limit" position="bottom" class="!mt-3" />
             </div>
 
             <!-- total resources -->

@@ -85,7 +85,7 @@ class SpacecraftController extends Controller
             ->first();
 
         if ($unitLimit && $unitLimit->attribute_value < $spacecraft->count + $quantity) {
-            return redirect()->route('shipyard')->dangerBanner('Unit limit reached');
+            return redirect()->route('shipyard')->dangerBanner('maximum Crew Limit reached');
         }
 
         foreach ($totalCosts as $resourceId => $requiredResource) {

@@ -5,7 +5,7 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
 import type { FormattedBuilding } from '@/types/types';
-import { useForm } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps<{
   building: FormattedBuilding
@@ -14,18 +14,13 @@ const props = defineProps<{
 const formattedBuildTime = computed(() => timeFormat(props.building.build_time));
 // const formattedEnergy = computed(() => numberFormat(props.building.energy!));
 
-const form = useForm({
-  buildingId: props.building.id
-});
-
-function upgradeModule() {
-  form.post(`/buildings/${props.building.id}/update`, {
+function upgradeBuilding() {
+  router.post(`/buildings/${props.building.id}/update`, {
     preserveState: true,
-    onSuccess: () => {
-      // 
-    },
   });
 }
+
+
 </script>
 
 <template>
@@ -54,7 +49,7 @@ function upgradeModule() {
         </div>
       </div>
       <div class="flex justify-center my-2">
-        <PrimaryButton @click="upgradeModule">
+        <PrimaryButton @click="upgradeBuilding">
           Upgrade
         </PrimaryButton>
       </div>

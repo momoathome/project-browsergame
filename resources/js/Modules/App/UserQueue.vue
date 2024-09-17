@@ -31,9 +31,9 @@ function addItem() {
 <template>
   <div v-for="item in items" :key="item.id">
     <div @click="toggleInfo(item)"
-      class="h-10 flex gap-2 p-2 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition"
+      class="flex h-10 gap-2 p-2 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition"
       :class="{ 'fade-in': item.isNew }">
-      <img :src="item.image" alt="buildings">
+      <img :src="item.image" width="24px" height="24px" alt="buildings">
       <transition name="expand">
         <div v-if="item.showInfos" class="flex flex-col justify-center">
           <h3 class="text-xs font-medium text-white whitespace-nowrap">{{ item.name }}</h3>

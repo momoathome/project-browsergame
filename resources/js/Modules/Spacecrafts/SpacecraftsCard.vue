@@ -24,7 +24,7 @@ const form = useForm({
 function produceSpacecraft() {
   if (form.amount <= 0) {
     return
-  } 
+  }
 
   form.post(`/shipyard/${props.spacecraft.id}/update`, {
     preserveState: true,
@@ -98,7 +98,7 @@ function unlockSpacecraft() {
       <div class="image relative">
         <img :src="spacecraft.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
       </div>
-      <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
+      <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
         <div class="flex flex-col gap-4">
           <div class="flex justify-between">
             <div class="flex flex-col">
@@ -136,40 +136,43 @@ function unlockSpacecraft() {
 
         <div class="grid grid-cols-4 gap-4 items-center">
           <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
-            <img :src="resource.image" class="h-7 w-7" alt="resource" />
+            <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm">{{ resource.amount }}</p>
           </div>
         </div>
 
-        <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
-          <div class="flex justify-between gap-4">
-            <div class="flex items-center">
-              <button @click="decrement" @click.shift="decrementBy10" type="button" class="border-none p-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
-                  <path fill="currentColor"
-                    d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
-                </svg>
-              </button>
+        <div class="flex flex-col gap-4 mt-auto">
+          <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
+            <div class="flex justify-between gap-4">
+              <div class="flex items-center">
+                <button @click="decrement" @click.shift="decrementBy10" type="button" class="border-none p-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
+                    <path fill="currentColor"
+                      d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
+                  </svg>
+                </button>
 
-              <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" class="h-10" />
+                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" class="h-10" />
 
-              <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
-                  <path fill="currentColor"
-                    d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
-                </svg>
-              </button>
+                <button @click="increment" @click.shift="incrementBy10" type="button" class="border-none p-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
+                    <path fill="currentColor"
+                      d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
+                  </svg>
+                </button>
+              </div>
+
+              <PrimaryButton>
+                Produce
+              </PrimaryButton>
             </div>
+          </form>
 
-            <PrimaryButton>
-              Produce
-            </PrimaryButton>
-          </div>
-        </form>
+          <AppCardTimer v-if="spacecraft.unlocked" :time="spacecraft.build_time * form.amount"
+            :description="`produce ${form.amount} Spacecrafts`" />
+        </div>
 
-        <AppCardTimer v-if="spacecraft.unlocked" :time="spacecraft.build_time * form.amount"
-          :description="`produce ${form.amount} Spacecrafts`" />
       </div>
     </div>
 

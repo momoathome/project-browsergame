@@ -31,7 +31,7 @@ function upgradeModule() {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
-      <img :src="building.image" class="rounded-t-3xl object-fit aspect-[5/3]" alt="" />
+      <img :src="building.image" class="rounded-t-3xl object-fit aspect-[5/3] min-h-[195px]" alt="" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
       <div class="flex flex-col gap-4">

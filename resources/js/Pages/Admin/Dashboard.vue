@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue';
+import { numberFormat } from '@/Utils/format';
 
 interface Resource {
   name: string;
@@ -29,15 +30,19 @@ const props = defineProps<{
 }>()
 
 const formattedResources = computed(() => {
-  return Object.entries(props.universeResources)
+  const resources = Object.entries(props.universeResources);
+  const totalResourceAmount = resources.reduce((acc, [_, amounts]) => 
+    acc + amounts.reduce((sum, amount) => sum + amount, 0), 0);
+
+  const formattedData = resources
     .map(([name, amounts]) => {
-      const totalAmount = amounts.reduce((acc, amount) => acc + amount, 0);
-      const percentage = Math.round((totalAmount / 1000000) * 100);
+      const amount = amounts.reduce((acc, amount) => acc + amount, 0);
+      const percentage = ((amount / totalResourceAmount) * 100).toFixed(2);
       const color = resourceColors[name] || 'grey';
 
       return {
         name,
-        amount: totalAmount,
+        amount,
         percentage,
         color,
       };
@@ -46,6 +51,11 @@ const formattedResources = computed(() => {
       const colorKeysOrder = Object.keys(resourceColors);
       return colorKeysOrder.indexOf(a.name) - colorKeysOrder.indexOf(b.name);
     });
+
+  return {
+    resources: formattedData,
+    totalResourceAmount
+  };
 });
 
 </script>
@@ -57,15 +67,19 @@ const formattedResources = computed(() => {
       Dashboard
     </h1>
 
-    <div class="flex flex-col gap-6 py-4 ms-12">
-      <div v-for="res in formattedResources" :key="res.name">
-        <div class="flex gap-2">
+    <div class="flex flex-col gap-2 py-4 ms-12">
+      <div class="flex gap-2">
+        <span>Total Resources</span>
+        <span>{{ numberFormat(formattedResources.totalResourceAmount) }}</span>
+      </div>
+      <div v-for="res in formattedResources.resources" :key="res.name">
+        <div class="flex gap-2 text-sm">
           <span>{{ res.name }}</span>
-          <span>{{ res.amount }}</span>
+          <span>{{ numberFormat(res.amount) }}</span>
           <span>{{ res.percentage }}%</span>
         </div>
         <div :style="`background-color: ${res.color}; width: ${res.percentage + '%'}`"
-          class="progress-bar h-2 rounded-lg transition transition-duration-300"></div>
+          class="h-2 rounded-lg"></div>
       </div>
     </div>
   </AppLayout>

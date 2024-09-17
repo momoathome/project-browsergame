@@ -25,7 +25,7 @@ class AsteroidGenerator
 
     for ($i = 0; $i < $count; $i++) {
       $asteroidData = $this->generateAsteroid();
-      $resources = $this->generateResourcesFromPools($asteroidData['value']);
+      $resources = $this->generateResourcesFromPools($asteroidData['value'], $asteroidData['size']);
       $coordinate = $this->generateAsteroidCoordinate($asteroidData, $resources);
       $asteroidData['x'] = $coordinate['x'];
       $asteroidData['y'] = $coordinate['y'];
@@ -198,19 +198,27 @@ class AsteroidGenerator
     return array_key_first($pool_weights);
   }
 
-  private function generateResourcesFromPools($asteroidValue)
+  private function generateResourcesFromPools($asteroidValue, string $size): array
   {
     // Konfiguration auslesen
-    $pool_weights = $this->config['pool_weights'];
+    $poolWeights = $this->config['pool_weights'];
     $num_resource_range = $this->config['num_resource_range'];
     $resource_ratio_range = $this->config['resource_ratio_range'];
     $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
+
+    // wenn die Größe extrem ist, extreme und high Value Pools entfernen
+    if ($size === 'extreme') {
+      unset($poolWeights['extreme_value'], $poolWeights['high_value']);
+      $poolWeights = array_map(function ($weight) use ($poolWeights) {
+        return $weight / array_sum($poolWeights);
+      }, $poolWeights);
+    }
 
     $resource_ratios = [];
 
     // Ressourcen auswählen und die Pools speichern
     for ($i = 0; $i < $num_resources; $i++) {
-      $selected_pool_name = $this->getRandomPool($pool_weights);
+      $selected_pool_name = $this->getRandomPool($poolWeights);
       $selected_pool = $this->config['resource_pools'][$selected_pool_name];
       $resource = $selected_pool['resources'][array_rand($selected_pool['resources'])];
 

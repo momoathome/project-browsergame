@@ -15,17 +15,22 @@ class AsteroidSeeder extends Seeder
   {
     $this->config = config('asteroids');
   }
-    public function run()
-    {
-        DB::table(table: 'asteroids')->truncate();
+  public function run()
+  {
+    DB::table(table: 'asteroids')->truncate();
 
-        $asteroidGenerator = app(AsteroidGenerator::class);
+    $asteroidGenerator = app(AsteroidGenerator::class);
 
-        $count = $this->config['asteroid_count'];
+    $count = $this->config['asteroid_count'];
 
-        $asteroidGenerator->generateAsteroids($count);
+    $asteroidGenerator->generateAsteroids($count);
 
-        $this->command->info("{$count} Asteroiden wurden erstellt.");
-    }
+    $this->command->info("{$count} Asteroids created.");
+    $this->command->call('scout:flush', ['model' => "App\Models\Asteroid"]);
+    $this->command->call('scout:import', ['model' => "App\Models\Asteroid"]);
+    $this->command->call('scout:index', ['model' => "App\Models\Asteroid"]);
+    $this->command->info("Asteroids importet and indexed.");
+
+  }
 }
 

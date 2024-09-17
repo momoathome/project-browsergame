@@ -25,10 +25,10 @@ return [
     ],
 
     'asteroid_size' => [
-        'small' => 700,
+        'small' => 660, // chance of $asteroid_count
         'medium' => 300,
-        'large' => 25,
-        'extreme' => 5,
+        'large' => 30,
+        'extreme' => 10,
     ],
 
     'asteroid_faktor_multiplier' => [
@@ -42,7 +42,7 @@ return [
         'small' => 0,
         'medium' => 0,
         'large' => 4 * $min_distance,
-        'extreme' => 10 * $min_distance,
+        'extreme' => 8 * $min_distance,
     ],
 
     'resource_pools' => [
@@ -52,25 +52,25 @@ return [
         ],
         'medium_value' => [
             'resources' => ['Cobalt', 'Iridium', 'Uraninite', 'Thorium'],
-            'resource_distance_modifier' => 5 * $min_distance,
+            'resource_distance_modifier' => 8 * $min_distance,
         ],
         'high_value' => [
             'resources' => ['Astatine', 'Hyperdiamond'],
-            'resource_distance_modifier' => 12 * $min_distance,
+            'resource_distance_modifier' => 15 * $min_distance,
         ],
         'extreme_value' => [
             'resources' => ['Dilithium', 'Deuterium'],
-            'resource_distance_modifier' => 16 * $min_distance,
+            'resource_distance_modifier' => 20 * $min_distance,
         ],
     ],
 
     'pool_weights' => [
         'low_value' => 0.60, //60%
-        'medium_value' => 0.34, //34%
-        'high_value' => 0.05, //5%
+        'medium_value' => 0.35, //35%
+        'high_value' => 0.04, //4%
         'extreme_value' => 0.01, //1%
     ],
 
     'num_resource_range' => [1, 4],
-    'resource_ratio_range' => [5, 100],
+    'resource_ratio_range' => [10, 100],
 ];

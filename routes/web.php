@@ -52,8 +52,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
-    Route::get('/admin/dashboard', function () {
-        return Inertia::render('Admin/Dashboard'); })->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AsteroidController::class, 'universeResources'])->name('admin.dashboard');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
 

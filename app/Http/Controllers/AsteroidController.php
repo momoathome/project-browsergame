@@ -86,32 +86,22 @@ class AsteroidController extends Controller
         ]);
     }
 
-    /*     public function search(Request $request)
-        {
-            $request->validate([
-                'query' => 'required|string',
-            ]);
+    // universeResources function 
+    // get all resources from all asteroids, calculate the total of each and return them in a structured array
+    public function universeResources()
+    {
+        $resources = Asteroid::with('resources')
+            ->get()
+            ->pluck('resources')
+            ->flatten()
+            ->groupBy('resource_type')
+            ->map(function ($resources, $type) {
+                return [$resources->sum('amount')];
+            });
 
-            $query = $request->input('query');
-            $searched_asteroids = Asteroid::search($query)
-            ->take(1000)
-            ->get();
-
-            $asteroids = Asteroid::with('resources')->get();
-            $stations = Station::all();
-            $user = auth()->user();
-            $spacecrafts = Spacecraft::with('details')
-                ->where('user_id', $user->id)
-                ->orderBy('id', 'asc')
-                ->get();
-        
-            return Inertia::render('AsteroidMap', [
-                'asteroids' => $asteroids,
-                'searched_asteroids' => $searched_asteroids,
-                'spacecrafts' => $spacecrafts,
-                'stations' => $stations,
-            ]);
-        } */
-
+        return Inertia::render('Admin/Dashboard', [
+            'universeResources' => $resources,
+        ]);
+    }
 }
 

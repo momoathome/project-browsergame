@@ -112,7 +112,7 @@ class BuildingController extends Controller
                     ->where('attribute_name','storage')
                     ->first();
 
-                $userAttribute->attribute_value = round($userAttribute->attribute_value * 1.6);
+                $userAttribute->attribute_value = round($userAttribute->attribute_value * 1.3);
                 $userAttribute->save();
             }
 
@@ -147,7 +147,7 @@ class BuildingController extends Controller
 
     private function updateResourceCosts(Building $building)
     {
-        $costIncreaseFactor = 1.6; // 60% Erhöhung
+        $costIncreaseFactor = 1.35; // 35% Erhöhung
         $building->load('resources');
 
         foreach ($building->resources as $resource) {

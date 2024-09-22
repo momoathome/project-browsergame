@@ -4,7 +4,7 @@ return [
     'attributes' => [
         [
             'attribute_name' => 'storage',
-            'attribute_value' => 1_000,
+            'attribute_value' => 1_500,
         ],
         [
             'attribute_name' => 'unit_limit',

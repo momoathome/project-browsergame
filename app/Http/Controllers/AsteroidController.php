@@ -20,7 +20,7 @@ class AsteroidController extends Controller
     public function __construct(AsteroidExplorer $asteroidExplorer, AsteroidSearch $asteroidSearch)
     {
         $this->asteroidExplorer = $asteroidExplorer;
-        $this->asteroidSearch = new AsteroidSearch();
+        $this->asteroidSearch = $asteroidSearch;
     }
 
     public function index()
@@ -86,8 +86,6 @@ class AsteroidController extends Controller
         ]);
     }
 
-    // universeResources function 
-    // get all resources from all asteroids, calculate the total of each and return them in a structured array
     public function universeResources()
     {
         $resources = Asteroid::with('resources')
@@ -95,7 +93,7 @@ class AsteroidController extends Controller
             ->pluck('resources')
             ->flatten()
             ->groupBy('resource_type')
-            ->map(function ($resources, $type) {
+            ->map(function ($resources) {
                 return [$resources->sum('amount')];
             });
 

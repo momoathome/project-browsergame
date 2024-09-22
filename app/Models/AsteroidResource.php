@@ -15,6 +15,8 @@ class AsteroidResource extends Model
         'amount',
     ];
 
+    protected $indexes = ['asteroid_id', 'resource_type', 'amount'];
+
     public function asteroid()
     {
         return $this->belongsTo(Asteroid::class);

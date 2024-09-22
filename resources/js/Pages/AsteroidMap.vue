@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
@@ -426,7 +426,7 @@ function selectAsteroid(asteroid: Asteroid) {
         class="absolute top-0 left-64 ms-2 w-44" />
 
       <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
-      <span @click="focusOnObject(usePage().props.auth.user.id)" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">
+      <span @click="focusOnObject(undefined, usePage().props.auth.user.id)" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">
         reset
       </span>
     </div>

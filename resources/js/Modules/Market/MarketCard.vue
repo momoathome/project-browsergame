@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -14,6 +14,7 @@ const props = defineProps<{
 
 const formattedCost = computed(() => numberFormat(props.marketData.cost));
 const formattedStock = computed(() => numberFormat(props.marketData.stock));
+const formattedTotalCost = computed(() => numberFormat(props.marketData.cost * form.amount));
 
 const form = useForm({
   resource_id: props.marketData.id,
@@ -46,6 +47,16 @@ function sellResource() {
   });
 }
 
+function setUserResourcesInput() {
+  const userResource = usePage().props.userResources.find((resource) => resource.resource_id === props.marketData.resource_id);
+
+  if (userResource) {
+    form.amount = userResource.amount;
+  } else {
+    form.amount = 0;
+  }
+
+}
 </script>
 
 <template>
@@ -65,26 +76,31 @@ function sellResource() {
     </div>
 
     <div class="relative flex justify-center items-center py-2">
-      <img :src="marketData.image" class="h-[56px]" alt="resource" />
+      <img :src="marketData.image" class="h-[56px] cursor-pointer" @click="setUserResourcesInput" alt="resource" />
     </div>
 
     <Divider />
 
     <form @submit.prevent class="flex flex-col gap-4">
       <div class="flex w-full justify-between">
-        <div class="flex flex-col">
+        <div class="flex flex-col ms-2">
           <span class="text-xs text-secondary">stock</span>
           <p class="font-medium">{{ formattedStock }}</p>
         </div>
-
-        <AppInput :maxlength="6" v-model="form.amount" class="w-20 me-2" />
-
+        <div class="flex items-center gap-x-1">
+          <img src="/storage/attributes/credits.png" class="h-6" alt="credits" />
+          <div class="flex flex-col me-1">
+            <span class="text-xs text-secondary">total</span>
+            <p class="font-medium text-sm">{{ formattedTotalCost }}</p>
+          </div>
+        </div>
       </div>
-      <div class="flex justify-between gap-6">
-        <SecondaryButton @click="sellResource" class="w-full">
+      <div class="flex justify-between gap-2">
+        <SecondaryButton @click="sellResource">
           Sell
         </SecondaryButton>
-        <PrimaryButton @click="buyResource" class="w-full">
+        <AppInput :maxlength="5" v-model="form.amount" class="px-1" />
+        <PrimaryButton @click="buyResource">
           Buy
         </PrimaryButton>
       </div>

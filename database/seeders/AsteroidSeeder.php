@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Services\AsteroidGenerator;
 use Illuminate\Support\Facades\DB;
-
+use App\Services\AsteroidGenerator;
+use Illuminate\Support\Facades\Artisan;
 
 class AsteroidSeeder extends Seeder
 {
@@ -26,10 +26,12 @@ class AsteroidSeeder extends Seeder
     $asteroidGenerator->generateAsteroids($count);
 
     $this->command->info("{$count} Asteroids created.");
-    $this->command->call('scout:flush', ['model' => "App\Models\Asteroid"]);
-    $this->command->call('scout:import', ['model' => "App\Models\Asteroid"]);
-    $this->command->call('scout:index', ['model' => "App\Models\Asteroid"]);
-    $this->command->info("Asteroids importet and indexed.");
+    $asteroidModel = "App\\Models\\Asteroid";
+    Artisan::call('scout:flush', ['model' => $asteroidModel]);
+    Artisan::call('scout:import', ['model' => $asteroidModel]);
+    Artisan::call('scout:index', ['name' => 'asteroids']);
+    $this->command->info("Asteroids imported and indexed.");
+
 
   }
 }

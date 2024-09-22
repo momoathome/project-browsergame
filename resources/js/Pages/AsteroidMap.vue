@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
@@ -7,6 +7,7 @@ import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import { usePage, useForm } from '@inertiajs/vue3';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import * as config from '@/config';
+import { Quadtree } from '@/quadTree.js'
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -38,6 +39,7 @@ const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 
+const quadtree = ref<Quadtree | null>(null);
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
@@ -61,6 +63,7 @@ onMounted(() => {
   }
 
   if (canvasRef.value) {
+    initializeQuadtree();
     ctx.value = canvasRef.value.getContext('2d');
     adjustCanvasSize();
 
@@ -81,8 +84,38 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
 });
 
+function initializeQuadtree() {
+  const universeSize = 300_000;
+  quadtree.value = new Quadtree(0, 0, universeSize, universeSize);
+
+  props.asteroids.forEach(asteroid => {
+    quadtree.value?.insert({
+      x: asteroid.x,
+      y: asteroid.y,
+      data: { type: 'asteroid', ...asteroid }
+    });
+  });
+
+  props.stations.forEach(station => {
+    quadtree.value?.insert({
+      x: station.x,
+      y: station.y,
+      data: { type: 'station', ...station }
+    });
+  });
+}
+
+watch(() => props.asteroids, () => {
+  initializeQuadtree();
+});
+
+watch(() => props.stations, () => {
+  initializeQuadtree();
+});
+
 function drawScene() {
   if (!ctx.value || !canvasRef.value) return;
+  console.log('drawScene');
 
   const { width, height } = canvasRef.value;
   ctx.value.clearRect(0, 0, width, height);
@@ -92,10 +125,14 @@ function drawScene() {
   ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
   const visibleArea = calculateVisibleArea();
+  if (!visibleArea) return;
+
+  // Query the quadtree for objects in the visible area
+  const objectsInView = quadtree.value?.query(visibleArea);
 
   // Draw user's view range
   const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
-  if (userStation && isInVisibleArea(userStation, visibleArea)) {
+  if (userStation) {
     ctx.value.beginPath();
     ctx.value.arc(userStation.x, userStation.y, userScanRange.value, 0, 2 * Math.PI);
     ctx.value.fillStyle = 'rgba(36, 36, 36, 0.2)';
@@ -103,16 +140,12 @@ function drawScene() {
     ctx.value.stroke();
   }
 
-  // drawDistanceZones();
-  props.stations.forEach(station => {
-    if (isInVisibleArea(station, visibleArea)) {
-      drawStation(station.x, station.y, station.name, station.id);
-    }
-  });
-
-  props.asteroids.forEach(asteroid => {
-    if (isInVisibleArea(asteroid, visibleArea)) {
-      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
+  // Draw only the objects in view
+  objectsInView.forEach(object => {
+    if (object.data.type === 'station') {
+      drawStation(object.x, object.y, object.data.name, object.data.id);
+    } else if (object.data.type === 'asteroid') {
+      drawAsteroid(object.x, object.y, object.data.id, object.data.pixel_size);
     }
   });
 
@@ -125,20 +158,11 @@ function calculateVisibleArea() {
   const { width, height } = canvasRef.value;
   const scale = 1 / zoomLevel.value;
   return {
-    left: -pointX.value * scale,
-    top: -pointY.value * scale,
-    right: (-pointX.value + width) * scale,
-    bottom: (-pointY.value + height) * scale,
+    x: -pointX.value * scale,
+    y: -pointY.value * scale,
+    width: (-pointX.value + width) * scale,
+    height: (-pointY.value + height) * scale,
   };
-}
-
-function isInVisibleArea(object, visibleArea) {
-  return (
-    object.x >= visibleArea.left &&
-    object.x <= visibleArea.right &&
-    object.y >= visibleArea.top &&
-    object.y <= visibleArea.bottom
-  );
 }
 
 /* function drawDistanceZones() {
@@ -499,5 +523,4 @@ ul::-webkit-scrollbar-thumb {
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #bfbfbf;
 }
-
 </style>

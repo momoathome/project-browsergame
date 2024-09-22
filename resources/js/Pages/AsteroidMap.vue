@@ -81,35 +81,64 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
 });
 
-function drawScene(withReset: boolean = false) {
-  if (ctx.value && canvasRef.value) {
-    ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
+function drawScene() {
+  if (!ctx.value || !canvasRef.value) return;
 
-    ctx.value.save();
-    ctx.value.translate(pointX.value, pointY.value);
-    ctx.value.scale(zoomLevel.value, zoomLevel.value);
+  const { width, height } = canvasRef.value;
+  ctx.value.clearRect(0, 0, width, height);
 
-    // Draw user's view range
-    const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
-    if (userStation) {
-      ctx.value.beginPath();
-      ctx.value.arc(userStation.x, userStation.y, userScanRange.value, 0, 2 * Math.PI);
-      ctx.value.fillStyle = 'rgba(36, 36, 36, 0.2)';
-      ctx.value.fill();
-      ctx.value.stroke();
-    }
+  ctx.value.save();
+  ctx.value.translate(pointX.value, pointY.value);
+  ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
-    // drawDistanceZones();
-    props.stations.forEach(station => {
-      drawStation(station.x, station.y, station.name, station.id);
-    });
+  const visibleArea = calculateVisibleArea();
 
-    props.asteroids.forEach(asteroid => {
-      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
-    });
-
-    ctx.value.restore();
+  // Draw user's view range
+  const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
+  if (userStation && isInVisibleArea(userStation, visibleArea)) {
+    ctx.value.beginPath();
+    ctx.value.arc(userStation.x, userStation.y, userScanRange.value, 0, 2 * Math.PI);
+    ctx.value.fillStyle = 'rgba(36, 36, 36, 0.2)';
+    ctx.value.fill();
+    ctx.value.stroke();
   }
+
+  // drawDistanceZones();
+  props.stations.forEach(station => {
+    if (isInVisibleArea(station, visibleArea)) {
+      drawStation(station.x, station.y, station.name, station.id);
+    }
+  });
+
+  props.asteroids.forEach(asteroid => {
+    if (isInVisibleArea(asteroid, visibleArea)) {
+      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
+    }
+  });
+
+  ctx.value.restore();
+}
+
+function calculateVisibleArea() {
+  if (!ctx.value || !canvasRef.value) return;
+
+  const { width, height } = canvasRef.value;
+  const scale = 1 / zoomLevel.value;
+  return {
+    left: -pointX.value * scale,
+    top: -pointY.value * scale,
+    right: (-pointX.value + width) * scale,
+    bottom: (-pointY.value + height) * scale,
+  };
+}
+
+function isInVisibleArea(object, visibleArea) {
+  return (
+    object.x >= visibleArea.left &&
+    object.x <= visibleArea.right &&
+    object.y >= visibleArea.top &&
+    object.y <= visibleArea.bottom
+  );
 }
 
 /* function drawDistanceZones() {
@@ -263,18 +292,23 @@ function onMouseClick(e: MouseEvent) {
 function onWheel(e: WheelEvent) {
   e.preventDefault();
 
-  const xs = (e.clientX - pointX.value) / zoomLevel.value;
-  const ys = (e.clientY - pointY.value) / zoomLevel.value;
-
   const delta = e.deltaY < 0 ? zoomDelta.value : -zoomDelta.value;
-
   const newZoomLevel = Math.min(Math.max(zoomLevel.value + delta, maxOuterZoomLevel.value), maxInnerZoomLevel.value);
 
-  pointX.value = e.clientX - xs * newZoomLevel;
-  pointY.value = e.clientY - ys * newZoomLevel;
+  if (newZoomLevel !== zoomLevel.value) {
+    const rect = canvasRef.value?.getBoundingClientRect();
+    if (rect) {
+      const scaleChange = newZoomLevel / zoomLevel.value;
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-  zoomLevel.value = newZoomLevel;
-  drawScene();
+      pointX.value += (mouseX - pointX.value) * (1 - scaleChange);
+      pointY.value += (mouseY - pointY.value) * (1 - scaleChange);
+      zoomLevel.value = newZoomLevel;
+
+      requestAnimationFrame(drawScene);
+    }
+  }
 }
 
 function animateView(

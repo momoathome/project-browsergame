@@ -25,6 +25,7 @@ const attributeLabels = {
   credits: 'Credits',
   unit_limit: 'Crew Limit',
   total_units: 'Total Units',
+  scan_range: 'Scan Range',
 };
 
 const formattedAttributesNames = computed(() => {
@@ -85,7 +86,7 @@ const unitsRatio = computed(() => {
 
             <!-- total resources -->
             <div class="relative group flex flex-col gap-1 items-center"
-              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'unit_limit'].includes(attr.name))"
+              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'unit_limit', 'scan_range'].includes(attr.name))"
               :key="attribute.name">
               <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
               <span class="text-sm font-medium text-white">

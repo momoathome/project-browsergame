@@ -98,32 +98,17 @@ class BuildingController extends Controller
             $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
 
-            if ($building->details->name == 'Hangar') {
-                $userAttribute = UserAttribute::where('user_id', $user->id)
-                    ->where('attribute_name', 'unit_limit')
-                    ->first();
+            $buildingEffects = [
+                'Hangar' => ['unit_limit' => 10],
+                'Warehouse' => ['storage' => 1.3, 'multiply' => true],
+                'Laboratory' => ['research_points' => 2],
+                'Scanner' => ['scan_range' => 5000],
+            ];
 
-                $userAttribute->attribute_value += 10;
-                $userAttribute->save();
-            }
-
-            if ($building->details->name == 'Warehouse') {
-                $userAttribute = UserAttribute::where('user_id', $user->id)
-                    ->where('attribute_name','storage')
-                    ->first();
-
-                $userAttribute->attribute_value = round($userAttribute->attribute_value * 1.3);
-                $userAttribute->save();
-            }
-
-            // if building name is "Laboratory" increase research_points
-            if ($building->details->name == 'Laboratory') {
-                $userAttribute = UserAttribute::where('user_id', $user->id)
-                    ->where('attribute_name','research_points')
-                    ->first();
-
-                $userAttribute->attribute_value += 2;
-                $userAttribute->save();
+            if (isset($buildingEffects[$building->details->name])) {
+                foreach ($buildingEffects[$building->details->name] as $attributeName => $value) {
+                    $this->updateUserAttribute($user->id, $attributeName, $value, $buildingEffects[$building->details->name]['multiply'] ?? false);
+                }
             }
 
             $this->updateResourceCosts($building);
@@ -138,6 +123,22 @@ class BuildingController extends Controller
     public function destroy(building $building)
     {
         //
+    }
+
+    private function updateUserAttribute($userId, $attributeName, $value, $multiply = false)
+    {
+        $userAttribute = UserAttribute::where('user_id', $userId)
+            ->where('attribute_name', $attributeName)
+            ->first();
+
+        if ($userAttribute) {
+            if ($multiply) {
+                $userAttribute->attribute_value = round($userAttribute->attribute_value * $value);
+            } else {
+                $userAttribute->attribute_value += $value;
+            }
+            $userAttribute->save();
+        }
     }
 
     private function calculateNewBuildTime(Building $building)

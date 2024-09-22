@@ -39,16 +39,12 @@ const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
-const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station | undefined } | null>(null);
+const selectedObject = ref<{ type: 'station' | 'asteroid' | null ; data: Asteroid | Station | undefined | null } | null>(null);
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
-    const devicePixelRatio = window.devicePixelRatio || 1;
-
-    canvasRef.value.width = window.innerWidth * devicePixelRatio;
-    canvasRef.value.height = window.innerHeight * devicePixelRatio;
-
-    ctx.value.scale(devicePixelRatio, devicePixelRatio);
+    canvasRef.value.width = window.innerWidth;
+    canvasRef.value.height = window.innerHeight - 125;
     drawScene();
   }
 }
@@ -107,7 +103,7 @@ function drawScene() {
   }
 }
 
-function drawDistanceZones() {
+/* function drawDistanceZones() {
   if (ctx.value) {
     ctx.value.strokeStyle = 'yellow';
     ctx.value.lineWidth = 2;
@@ -127,13 +123,12 @@ function drawDistanceZones() {
       }
     });
   }
-}
-
+} */
 
 function drawStation(x: number, y: number, name: string, id: number) {
   if (ctx.value) {
-    const imageX = x - stationBaseSize / 2 * devicePixelRatio;
-    const imageY = y - stationBaseSize / 2 * devicePixelRatio;
+    const imageX = x - (stationBaseSize / 2);
+    const imageY = y - (stationBaseSize / 2);
 
     if (highlightedStations.value.includes(id)) {
       const padding = 20;
@@ -165,15 +160,14 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
 function drawAsteroid(x: number, y: number, id: number, size: number) {
   if (ctx.value) {
-    const scaledWidth = asteroidBaseSize * size * devicePixelRatio;
-    const scaledHeight = asteroidBaseSize * size * devicePixelRatio;
+    const scaledSize = asteroidBaseSize * size;
 
-    const imageX = x - scaledWidth / 2;
-    const imageY = y - scaledHeight / 2;
+    const imageX = x - (scaledSize / 2);
+    const imageY = y - (scaledSize / 2);
 
     if (highlightedAsteroids.value.includes(id)) {
       const padding = 15;
-      const adjustedRadius = scaledWidth + padding;
+      const adjustedRadius = scaledSize + padding;
       ctx.value.strokeStyle = 'yellow';
       ctx.value.lineWidth = 5;
       ctx.value.beginPath();
@@ -187,7 +181,7 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
       asteroidImage.width,
       asteroidImage.height,
       imageX, imageY,
-      scaledWidth, scaledHeight);
+      scaledSize, scaledSize);
   }
 }
 
@@ -203,32 +197,7 @@ function onMouseUp() {
 
 function onMouseMove(e: MouseEvent) {
   const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect || !ctx.value) return;
-
-  const x = (e.clientX - rect.left) * (canvasRef.value!.width / rect.width);
-  const y = (e.clientY - rect.top) * (canvasRef.value!.height / rect.height);
-
-  const zoomedX = (x - pointX.value) / zoomLevel.value;
-  const zoomedY = (y - pointY.value) / zoomLevel.value;
-
-  hoveredObject.value = null;
-
-  props.stations.forEach(station => {
-    if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
-      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
-      hoveredObject.value = { type: 'station', id: station.id };
-    }
-  });
-
-  props.asteroids.forEach(asteroid => {
-    const scaledWidth = asteroidBaseSize * asteroid.pixel_size;
-    const scaledHeight = asteroidBaseSize * asteroid.pixel_size;
-
-    if (Math.abs(zoomedX - asteroid.x) < scaledWidth / 2 &&
-      Math.abs(zoomedY - asteroid.y) < scaledHeight / 2) {
-      hoveredObject.value = { type: 'asteroid', id: asteroid.id };
-    }
-  });
+  if (!rect || !ctx.value || !canvasRef.value) return;
 
   if (isDragging.value) {
     pointX.value = e.clientX - startDrag.x;
@@ -239,18 +208,44 @@ function onMouseMove(e: MouseEvent) {
 
 function onMouseClick(e: MouseEvent) {
   const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect || !hoveredObject.value) return;
+  if (!rect || !ctx.value || !canvasRef.value) return;
 
-  if (hoveredObject.value.type === 'station') {
-    const station = props.stations.find(station => station.id === hoveredObject.value?.id);
-    if (station && station.user_id !== usePage().props.auth.user.id) {
-      selectedObject.value = { type: 'station', data: station };
-      isModalOpen.value = true;
+  const scaleX = canvasRef.value.width / rect.width;
+  const scaleY = canvasRef.value.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  const zoomedX = (x - pointX.value) / zoomLevel.value;
+  const zoomedY = (y - pointY.value) / zoomLevel.value;
+
+  let clickedObject: { type: 'station' | 'asteroid' | null ; data: Asteroid | Station | undefined | null } = { type: null, data: null };
+
+  for (const station of props.stations) {
+    if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
+      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
+      clickedObject = { type: 'station', data: station };
+      break;
     }
-  } else if (hoveredObject.value.type === 'asteroid') {
-    const asteroid = props.asteroids.find(asteroid => asteroid.id === hoveredObject.value?.id);
-    if (asteroid) {
-      selectedObject.value = { type: 'asteroid', data: asteroid };
+  }
+
+  for (const asteroid of props.asteroids) {
+    const scaledSize = asteroidBaseSize * asteroid.pixel_size;
+
+    if (Math.abs(zoomedX - asteroid.x) < scaledSize / 2 &&
+      Math.abs(zoomedY - asteroid.y) < scaledSize / 2) {
+      clickedObject = { type: 'asteroid', data: asteroid };
+      break;
+    }
+  }
+
+  if (clickedObject.data) {
+    const isOtherUserStation = clickedObject.type === 'station' &&
+      'user_id' in clickedObject.data &&
+      clickedObject.data.user_id !== usePage().props.auth.user.id;
+
+    if (isOtherUserStation || clickedObject.type === 'asteroid') {
+      selectedObject.value = clickedObject;
       isModalOpen.value = true;
     }
   }
@@ -338,8 +333,6 @@ function focusUserStationOnInitialLoad(userId: number) {
   pointX.value = -(userStation.x * config.initialZoom - canvasRef.value.width / 2);
   pointY.value = -(userStation.y * config.initialZoom - canvasRef.value.height / 2);
   zoomLevel.value = config.initialZoom;
-
-  drawScene();
 }
 
 const form = useForm({
@@ -425,8 +418,9 @@ function selectAsteroid(asteroid: Asteroid) {
         :searched-asteroids="searched_asteroids" :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid"
         class="absolute top-0 left-64 ms-2 w-44" />
 
-      <span class="absolute top-0 right-0 z-100 text-white p-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
-      <span @click="focusOnObject(undefined, usePage().props.auth.user.id)" class="cursor-pointer absolute top-6 right-0 z-100 text-white p-2">
+      <span class="absolute top-0 right-0 z-100 text-white me-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
+      <span @click="focusOnObject(undefined, usePage().props.auth.user.id)"
+        class="cursor-pointer absolute top-6 right-0 z-100 text-white me-2">
         reset
       </span>
     </div>

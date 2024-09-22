@@ -72,12 +72,12 @@ return [
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
-/*         [
+         [
             'name' => 'Scanner',
             'details_id' => 6,
             'effect_value' => 20,
             'build_time' => 500,
-            'is_active' => false,
+            'is_active' => true,
             'level' => 1,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 100],
@@ -86,7 +86,7 @@ return [
                 ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
-        [
+/*        [
             'name' => 'Supply',
             'details_id' => 7,
             'effect_value' => 20,

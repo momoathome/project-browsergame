@@ -10,6 +10,7 @@ interface Resource {
 
 const props = defineProps<{
   asteroid: Asteroid;
+  showResources: boolean | undefined;
 }>();
 
 const resourceColors: Record<string, string> = {
@@ -33,7 +34,9 @@ const formattedResources = computed<Resource[]>(() => {
     return {
       name: resource.resource_type,
       amount: resource.amount,
-      color: resourceColors[resource.resource_type] || 'grey',
+      color: props.showResources
+        ? resourceColors[resource.resource_type] || 'grey'
+        : 'grey',
     };
   });
 });

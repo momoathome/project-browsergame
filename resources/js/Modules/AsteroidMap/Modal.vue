@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -12,7 +12,7 @@ import type { Station, Spacecraft, Asteroid } from '@/types/types';
 interface Content {
   data: Asteroid | Station;
   imageSrc: string;
-  type: 'asteroid' | 'station' | undefined;
+  type: 'asteroid' | 'station' | undefined | null;
 }
 
 const emit = defineEmits(['close']);
@@ -24,8 +24,8 @@ const props = defineProps<{
   spacecrafts: Spacecraft[],
 }>();
 
-const asteroid = computed<Asteroid>(() => props.content!.data);
-const station = computed<Station>(() => props.content!.data);
+const asteroid = computed<Asteroid>(() => props.content?.data);
+const station = computed<Station>(() => props.content?.data);
 
 const form = useForm({
   asteroid_id: null,
@@ -197,11 +197,37 @@ onUnmounted(() => {
   document.removeEventListener('keydown', closeOnEscape);
   document.body.style.overflow = null;
 });
+
+const userScanRange = computed(() => {
+  const scanRangeAttribute = usePage().props.userAttributes.find(
+    (attr) => attr.attribute_name === 'scan_range'
+  );
+  return scanRangeAttribute ? scanRangeAttribute.attribute_value : 5000;
+});
+const userStation = usePage().props.stations.find(station => station.user_id === usePage().props.auth.user.id);
+
+// calculate the distance between the userstation x,y and the asteroid x,y if asteroid is not undefined
+const distance = computed(() => {
+  if (asteroid.value) {
+    const userX = userStation.x;
+    const userY = userStation.y;
+    const asteroidX = asteroid.value.x;
+    const asteroidY = asteroid.value.y;
+    return Math.round(Math.sqrt(Math.pow(userX - asteroidX, 2) + Math.pow(userY - asteroidY, 2)));
+  }
+});
+
+const canScanAsteroid = computed(() => {
+  if (asteroid.value && distance.value) {
+    return distance.value <= userScanRange.value;
+  }
+});
+const canAttackUser = computed(() => userStation && distance <= userScanRange.value);
 </script>
 
 <template>
   <dialog class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-transparent" ref="dialog">
-    <div class="fixed inset-0 overflow-y-auto px-24 py-16 z-50" scroll-region>
+    <div class="fixed inset-0 overflow-y-auto px-12 2xl:px-24 py-16 z-50" scroll-region>
       <transition enter-active-class="ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100"
         leave-active-class="ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
         <div v-show="show" class="fixed inset-0 transform transition-all" @click="close">
@@ -221,9 +247,11 @@ onUnmounted(() => {
               <h1 class="text-2xl flex justify-center mb-20 text-white relative z-10">{{ title }}</h1>
               <div class="relative">
                 <img :src="content.imageSrc" alt="Asteroid" width="256px" class="" />
-                <AsteroidModalResourceSvg :asteroid="content.data" />
+                <AsteroidModalResourceSvg :asteroid="content.data" :showResources="canScanAsteroid" />
               </div>
-              <div class="text-gray-300 flex items-center justify-center mt-8">
+              <div class="text-gray-300">
+              </div>
+              <div v-if="canScanAsteroid" class="text-gray-300 flex items-center justify-center mt-8">
                 <div class="flex gap-6">
                   <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
                     <img :src="`/storage/resources/${resource_type}.png`" class="h-6" alt="" />
@@ -276,7 +304,7 @@ onUnmounted(() => {
                   <PrimaryButton v-else @click="attackUser">Attack</PrimaryButton>
                 </div>
               </div>
-<!--               <div class="flex flex-col text-sm">
+              <!--               <div class="flex flex-col text-sm">
                 <span>
                   i: a miner should be selected
                 </span>

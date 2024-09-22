@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
@@ -39,7 +39,7 @@ const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
-const selectedObject = ref<{ type: 'station' | 'asteroid' | null ; data: Asteroid | Station | undefined | null } | null>(null);
+const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
@@ -70,7 +70,6 @@ onMounted(() => {
     stationImage.onload = asteroidImage.onload = () => {
       drawScene();
       const userId = usePage().props.auth.user.id;
-      // focusOnStation(userId);
       focusUserStationOnInitialLoad(userId);
     };
   }
@@ -82,13 +81,23 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
 });
 
-function drawScene() {
+function drawScene(withReset: boolean = false) {
   if (ctx.value && canvasRef.value) {
     ctx.value.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height);
 
     ctx.value.save();
     ctx.value.translate(pointX.value, pointY.value);
     ctx.value.scale(zoomLevel.value, zoomLevel.value);
+
+    // Draw user's view range
+    const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
+    if (userStation) {
+      ctx.value.beginPath();
+      ctx.value.arc(userStation.x, userStation.y, userScanRange.value, 0, 2 * Math.PI);
+      ctx.value.fillStyle = 'rgba(36, 36, 36, 0.2)';
+      ctx.value.fill();
+      ctx.value.stroke();
+    }
 
     // drawDistanceZones();
     props.stations.forEach(station => {
@@ -219,7 +228,7 @@ function onMouseClick(e: MouseEvent) {
   const zoomedX = (x - pointX.value) / zoomLevel.value;
   const zoomedY = (y - pointY.value) / zoomLevel.value;
 
-  let clickedObject: { type: 'station' | 'asteroid' | null ; data: Asteroid | Station | undefined | null } = { type: null, data: null };
+  let clickedObject: { type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } = { type: null, data: null };
 
   for (const station of props.stations) {
     if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
@@ -395,12 +404,18 @@ function closeModal() {
   }, 300);
 }
 
-const selectedAsteroid = ref<Asteroid>(null);
+const selectedAsteroid = ref<Asteroid>();
 function selectAsteroid(asteroid: Asteroid) {
   focusOnObject(asteroid);
   selectedAsteroid.value = asteroid;
 }
 
+const userScanRange = computed(() => {
+  const scanRangeAttribute = usePage().props.userAttributes.find(
+    (attr) => attr.attribute_name === 'scan_range'
+  );
+  return scanRangeAttribute ? scanRangeAttribute.attribute_value : 5000;
+});
 </script>
 
 <template>
@@ -450,4 +465,5 @@ ul::-webkit-scrollbar-thumb {
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #bfbfbf;
 }
+
 </style>

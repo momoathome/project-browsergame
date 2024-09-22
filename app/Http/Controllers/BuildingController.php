@@ -98,6 +98,7 @@ class BuildingController extends Controller
             $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
 
+            /* name and effect of each building if multiply = the effect is a multiplier instead of additive */
             $buildingEffects = [
                 'Hangar' => ['unit_limit' => 10],
                 'Warehouse' => ['storage' => 1.3, 'multiply' => true],

@@ -1,24 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue';
-
-const suggestions = [
-  'Small',
-  'Medium',
-  'Large',
-  'Extreme',
-  'Carbon',
-  'Titanium',
-  'Hydrogenium',
-  'Kyberkristall',
-  'Cobalt',
-  'Iridium',
-  'Uraninite',
-  'Thorium',
-  'Astatine',
-  'Hyerdiamond',
-  'Dilithium',
-  'Deuterium'
-];
+import { suggestions } from '@/suggestions.js';
 
 const query = defineModel()
 const showSuggestions = ref(false)

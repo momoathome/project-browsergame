@@ -1,6 +1,6 @@
 <?php
 
-$asteroid_count = 2000;
+$asteroid_count = 5000;
 $asteroid_density = 55;
 $min_distance = 1000;
 $station_to_station_distance = 3000;

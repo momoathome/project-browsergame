@@ -40,7 +40,7 @@ class AsteroidController extends Controller
             'stations' => $stations,
         ]); */
 
-        return $this->renderAsteroidMap([], []);
+        return $this->renderAsteroidMap();
 
     }
 
@@ -62,17 +62,18 @@ class AsteroidController extends Controller
         $request->validate(['query' => 'nullable|string']);
         $query = $request->input('query');
         if (empty($query)) {
-            return $this->renderAsteroidMap([], []);
+            return $this->renderAsteroidMap();
         }
 
         [$searchedAsteroids, $searchedStations] = $this->asteroidSearch->search($query);
 
-        return $this->renderAsteroidMap($searchedAsteroids, $searchedStations);
+        return $this->renderAsteroidMap($searchedAsteroids, $searchedStations, null);
     }
 
-    private function renderAsteroidMap($searchedAsteroids, $searchedStations)
+    private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
     {
-        $asteroids = Asteroid::with('resources')->get();
+        // $asteroids = Asteroid::with('resources')->get();
+        $asteroids = Asteroid::all();
         $stations = Station::all();
         $user = auth()->user();
         $spacecrafts = Spacecraft::with('details')
@@ -86,7 +87,16 @@ class AsteroidController extends Controller
             'searched_stations' => $searchedStations,
             'spacecrafts' => $spacecrafts,
             'stations' => $stations,
+            'selected_asteroid' => $selectedAsteroid ?? null,
         ]);
+    }
+
+    public function getAsteroidResources(Request $request)
+    {
+        $asteroidId = $request->input('asteroid_id');
+        $asteroid = Asteroid::with('resources')->findOrFail($asteroidId);
+
+        return $this->renderAsteroidMap([], [], $asteroid);
     }
 
     public function universeResources()

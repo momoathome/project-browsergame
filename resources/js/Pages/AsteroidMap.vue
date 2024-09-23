@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
-import { usePage, useForm } from '@inertiajs/vue3';
+import { usePage, useForm, router } from '@inertiajs/vue3';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import * as config from '@/config';
 
@@ -14,6 +14,7 @@ const props = defineProps<{
   spacecrafts: Spacecraft[];
   searched_asteroids: Asteroid[];
   searched_stations: Station[];
+  selected_asteroid: Asteroid | null;
 }>();
 
 const stationImageSrc = '/storage/space-station.png';
@@ -91,6 +92,13 @@ function drawScene() {
   ctx.value.translate(pointX.value, pointY.value);
   ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
+  const visibleArea = {
+    left: -pointX.value / zoomLevel.value,
+    top: -pointY.value / zoomLevel.value,
+    right: (width - pointX.value) / zoomLevel.value,
+    bottom: (height - pointY.value) / zoomLevel.value,
+  };
+
   // Draw user's view range
   const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
   if (userStation) {
@@ -102,15 +110,27 @@ function drawScene() {
   }
 
   props.stations.forEach(station => {
-    drawStation(station.x, station.y, station.name, station.id);
+    if (isObjectVisible(station, visibleArea)) {
+      drawStation(station.x, station.y, station.name, station.id);
+    }
   });
 
   props.asteroids.forEach(asteroid => {
-    drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
+    if (isObjectVisible(asteroid, visibleArea)) {
+      drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
+    }
   });
 
   ctx.value.restore();
 }
+
+function isObjectVisible(object: { x: number; y: number }, visibleArea: { left: number; top: number; right: number; bottom: number }) {
+  return object.x >= visibleArea.left &&
+         object.x <= visibleArea.right &&
+         object.y >= visibleArea.top &&
+         object.y <= visibleArea.bottom;
+}
+
 
 /* function drawDistanceZones() {
   if (ctx.value) {
@@ -138,7 +158,7 @@ const scale = computed(() => {
   const minZoom = config.maxOuterZoomLevel;
   const maxZoom = config.maxInnerZoomLevel;
   const normalizedZoom = (zoomLevel.value - minZoom) / (maxZoom - minZoom);
-  return 1 + Math.pow(1 - normalizedZoom, 2) * 2;
+  return 1 + Math.pow(1 - normalizedZoom, 2) * 1.5;
 });
 
 function drawStation(x: number, y: number, name: string, id: number) {
@@ -219,7 +239,7 @@ function onMouseMove(e: MouseEvent) {
   if (isDragging.value) {
     pointX.value = e.clientX - startDrag.x;
     pointY.value = e.clientY - startDrag.y;
-    drawScene();
+    requestAnimationFrame(drawScene);
   }
 }
 
@@ -261,9 +281,11 @@ function onMouseClick(e: MouseEvent) {
       'user_id' in clickedObject.data &&
       clickedObject.data.user_id !== usePage().props.auth.user.id;
 
-    if (isOtherUserStation || clickedObject.type === 'asteroid') {
+    if (isOtherUserStation) {
       selectedObject.value = clickedObject;
       isModalOpen.value = true;
+    } else if (clickedObject.type === 'asteroid') {
+      getAsteroidResources(clickedObject.data);
     }
   }
 }
@@ -358,12 +380,32 @@ function focusUserStationOnInitialLoad(userId: number) {
   zoomLevel.value = config.initialZoom;
 }
 
-const form = useForm({
+const asteroidId = useForm({
+  asteroid_id: 0,
+})
+
+function getAsteroidResources(asteroid: Asteroid) {
+  asteroidId.asteroid_id = asteroid.id;
+
+  asteroidId.get(`/asteroidMap/${asteroid.name}`, {
+    preserveState: true,
+    only: ['selected_asteroid'],
+    onSuccess: () => {
+      selectedObject.value = {
+        data: props.selected_asteroid,
+        type: 'asteroid',
+      }
+      isModalOpen.value = true;
+    },
+  });
+}
+
+const searchForm = useForm({
   query: '',
 });
 
 function performSearch() {
-  form.get('/asteroidMap/search', {
+  searchForm.get('/asteroidMap/search', {
     preserveState: true,
     only: ['searched_asteroids', 'searched_stations'],
     onSuccess: () => {
@@ -404,7 +446,7 @@ function clearSearch() {
   window.history.pushState({}, '', url);
   usePage().props.searched_asteroids = [];
 
-  form.query = '';
+  searchForm.query = '';
   highlightedAsteroids.value = [];
   highlightedStations.value = [];
   drawScene();
@@ -412,6 +454,10 @@ function clearSearch() {
 
 const isModalOpen = ref(false)
 function closeModal() {
+  router.visit('/asteroidMap', {
+    preserveState: true,
+  });
+  
   isModalOpen.value = false;
   setTimeout(() => {
     selectedObject.value = null;
@@ -440,7 +486,7 @@ const userScanRange = computed(() => {
       </canvas>
 
       <form class="absolute top-0 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
-        <Search v-model="form.query" @clear="clearSearch" @search="performSearch" />
+        <Search v-model="searchForm.query" @clear="clearSearch" @search="performSearch" />
       </form>
 
       <AsteroidMapDropdown v-if="searched_asteroids && searched_asteroids.length > 0"

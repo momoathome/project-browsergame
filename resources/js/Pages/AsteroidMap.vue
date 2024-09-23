@@ -443,6 +443,7 @@ function performSearch() {
 function clearSearch() {
   const url = new URL(window.location.href);
   url.searchParams.delete('query');
+  url.pathname = '/asteroidMap';
   window.history.pushState({}, '', url);
   usePage().props.searched_asteroids = [];
 
@@ -454,10 +455,11 @@ function clearSearch() {
 
 const isModalOpen = ref(false)
 function closeModal() {
-  router.visit('/asteroidMap', {
-    preserveState: true,
-  });
-  
+  const url = new URL(window.location.href);
+  url.searchParams.delete('asteroid_id');
+  url.pathname = '/asteroidMap';
+  window.history.pushState({}, '', url);
+
   isModalOpen.value = false;
   setTimeout(() => {
     selectedObject.value = null;

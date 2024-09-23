@@ -17,6 +17,8 @@ class AsteroidSeeder extends Seeder
   }
   public function run()
   {
+    $startTime = microtime(true);
+
     DB::table(table: 'asteroids')->truncate();
 
     $asteroidGenerator = app(AsteroidGenerator::class);
@@ -30,9 +32,9 @@ class AsteroidSeeder extends Seeder
     Artisan::call('scout:flush', ['model' => $asteroidModel]);
     Artisan::call('scout:import', ['model' => $asteroidModel]);
     Artisan::call('scout:index', ['name' => 'asteroids']);
-    $this->command->info("Asteroids imported and indexed.");
-
-
+    $endTime = microtime(true);
+    $executionTime = $endTime - $startTime;
+    $this->command->info("Asteroids imported and indexed. In " . number_format($executionTime, 2) . " seconds.");
   }
 }
 

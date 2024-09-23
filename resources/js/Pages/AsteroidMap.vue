@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
 });
 
 function initializeQuadtree() {
-  const universeSize = 300_000;
+  const universeSize = 150_000;
   quadtree.value = new Quadtree(0, 0, universeSize, universeSize);
 
   props.asteroids.forEach(asteroid => {
@@ -115,7 +115,6 @@ watch(() => props.stations, () => {
 
 function drawScene() {
   if (!ctx.value || !canvasRef.value) return;
-  console.log('drawScene');
 
   const { width, height } = canvasRef.value;
   ctx.value.clearRect(0, 0, width, height);
@@ -386,9 +385,10 @@ function focusOnObject(object: Station | Asteroid, userId?: number) {
 
   if (!targetObject || !canvasRef.value) return;
 
-  const targetX = -(targetObject.x * config.baseZoomLevel - canvasRef.value.width / 2);
-  const targetY = -(targetObject.y * config.baseZoomLevel - canvasRef.value.height / 2);
-  const targetZoomLevel = config.baseZoomLevel;
+  const targetX = -(targetObject.x * zoomLevel.value - canvasRef.value.width / 2);
+  const targetY = -(targetObject.y * zoomLevel.value - canvasRef.value.height / 2);
+  // const targetZoomLevel = config.baseZoomLevel;
+  const targetZoomLevel = zoomLevel.value;
 
   animateView(targetX, targetY, targetZoomLevel);
 }

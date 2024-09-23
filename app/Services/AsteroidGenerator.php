@@ -24,14 +24,13 @@ class AsteroidGenerator
     $asteroids = [];
 
     for ($i = 0; $i < $count; $i++) {
-      $asteroidData = $this->generateAsteroid();
-      $resources = $this->generateResourcesFromPools($asteroidData['value'], $asteroidData['size']);
-      $coordinate = $this->generateAsteroidCoordinate($asteroidData, $resources);
-      $asteroidData['x'] = $coordinate['x'];
-      $asteroidData['y'] = $coordinate['y'];
-      $asteroidData['pixel_size'] = $this->transformAsteroidImgSize($asteroidData['size']);
+      $asteroid = $this->generateAsteroid();
+      $resources = $this->generateResourcesFromPools($asteroid['value'], $asteroid['size']);
+      $coordinate = $this->generateAsteroidCoordinate($asteroid, $resources);
+      $asteroid['x'] = $coordinate['x'];
+      $asteroid['y'] = $coordinate['y'];
 
-      $asteroid = Asteroid::create($asteroidData);
+      $asteroid = Asteroid::create($asteroid);
       $this->saveAsteroidResources($asteroid, $resources);
 
       $asteroids[] = $asteroid;
@@ -58,6 +57,7 @@ class AsteroidGenerator
       'base' => $asteroidBaseFaktor,
       'multiplier' => $asteroidBaseMultiplier,
       'value' => $asteroidValue,
+      'pixel_size' => $this->transformAsteroidImgSize($asteroidSize),
     ];
   }
 

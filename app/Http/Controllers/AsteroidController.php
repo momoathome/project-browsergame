@@ -25,7 +25,7 @@ class AsteroidController extends Controller
 
     public function index()
     {
-        $asteroids = Asteroid::with('resources')->get();
+/*         $asteroids = Asteroid::with('resources')->get();
         $stations = Station::all();
         $user = auth()->user();
 
@@ -38,7 +38,10 @@ class AsteroidController extends Controller
             'asteroids' => $asteroids,
             'spacecrafts' => $spacecrafts,
             'stations' => $stations,
-        ]);
+        ]); */
+
+        return $this->renderAsteroidMap([], []);
+
     }
 
     public function update(Request $request)

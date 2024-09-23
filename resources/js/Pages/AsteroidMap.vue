@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
@@ -7,7 +7,6 @@ import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import { usePage, useForm } from '@inertiajs/vue3';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import * as config from '@/config';
-import { Quadtree } from '@/quadTree.js'
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -39,7 +38,6 @@ const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 
-const quadtree = ref<Quadtree | null>(null);
 const hoveredObject = ref<{ type: 'station' | 'asteroid'; id: number } | null>(null);
 const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
@@ -63,7 +61,6 @@ onMounted(() => {
   }
 
   if (canvasRef.value) {
-    initializeQuadtree();
     ctx.value = canvasRef.value.getContext('2d');
     adjustCanvasSize();
 
@@ -84,35 +81,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
 });
 
-function initializeQuadtree() {
-  const universeSize = 150_000;
-  quadtree.value = new Quadtree(0, 0, universeSize, universeSize);
-
-  props.asteroids.forEach(asteroid => {
-    quadtree.value?.insert({
-      x: asteroid.x,
-      y: asteroid.y,
-      data: { type: 'asteroid', ...asteroid }
-    });
-  });
-
-  props.stations.forEach(station => {
-    quadtree.value?.insert({
-      x: station.x,
-      y: station.y,
-      data: { type: 'station', ...station }
-    });
-  });
-}
-
-watch(() => props.asteroids, () => {
-  initializeQuadtree();
-});
-
-watch(() => props.stations, () => {
-  initializeQuadtree();
-});
-
 function drawScene() {
   if (!ctx.value || !canvasRef.value) return;
 
@@ -122,12 +90,6 @@ function drawScene() {
   ctx.value.save();
   ctx.value.translate(pointX.value, pointY.value);
   ctx.value.scale(zoomLevel.value, zoomLevel.value);
-
-  const visibleArea = calculateVisibleArea();
-  if (!visibleArea) return;
-
-  // Query the quadtree for objects in the visible area
-  const objectsInView = quadtree.value?.query(visibleArea);
 
   // Draw user's view range
   const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
@@ -139,29 +101,15 @@ function drawScene() {
     ctx.value.stroke();
   }
 
-  // Draw only the objects in view
-  objectsInView.forEach(object => {
-    if (object.data.type === 'station') {
-      drawStation(object.x, object.y, object.data.name, object.data.id);
-    } else if (object.data.type === 'asteroid') {
-      drawAsteroid(object.x, object.y, object.data.id, object.data.pixel_size);
-    }
+  props.stations.forEach(station => {
+    drawStation(station.x, station.y, station.name, station.id);
+  });
+
+  props.asteroids.forEach(asteroid => {
+    drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
   });
 
   ctx.value.restore();
-}
-
-function calculateVisibleArea() {
-  if (!ctx.value || !canvasRef.value) return;
-
-  const { width, height } = canvasRef.value;
-  const scale = 1 / zoomLevel.value;
-  return {
-    x: -pointX.value * scale,
-    y: -pointY.value * scale,
-    width: (-pointX.value + width) * scale,
-    height: (-pointY.value + height) * scale,
-  };
 }
 
 /* function drawDistanceZones() {
@@ -186,16 +134,24 @@ function calculateVisibleArea() {
   }
 } */
 
+const scale = computed(() => {
+  const minZoom = config.maxOuterZoomLevel;
+  const maxZoom = config.maxInnerZoomLevel;
+  const normalizedZoom = (zoomLevel.value - minZoom) / (maxZoom - minZoom);
+  return 1 + Math.pow(1 - normalizedZoom, 2) * 2;
+});
+
 function drawStation(x: number, y: number, name: string, id: number) {
   if (ctx.value) {
-    const imageX = x - (stationBaseSize / 2);
-    const imageY = y - (stationBaseSize / 2);
+    const scaledSize = stationBaseSize * scale.value;
+    const imageX = x - (scaledSize / 2);
+    const imageY = y - (scaledSize / 2);
 
     if (highlightedStations.value.includes(id)) {
-      const padding = 20;
-      const adjustedRadius = stationBaseSize + padding;
+      const padding = 20 * scale.value;
+      const adjustedRadius = scaledSize + padding;
       ctx.value.strokeStyle = 'orange';
-      ctx.value.lineWidth = 5;
+      ctx.value.lineWidth = 5 * scale.value;
       ctx.value.beginPath();
       ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
       ctx.value.stroke();
@@ -206,31 +162,31 @@ function drawStation(x: number, y: number, name: string, id: number) {
       0, 0,
       stationImage.width, stationImage.height,
       imageX, imageY,
-      stationBaseSize, stationBaseSize
+      scaledSize, scaledSize
     );
 
     ctx.value.fillStyle = 'white';
-    ctx.value.font = `${config.stationNameFontSize}px Arial`;
+    ctx.value.font = `${config.stationNameFontSize * scale.value}px Arial`;
 
     const textWidth = ctx.value.measureText(name).width;
     const textX = x - textWidth / 2;
-    const textY = y - stationBaseSize / 2 - 24;
+    const textY = y - scaledSize / 2 - 24 * scale.value;
     ctx.value.fillText(name, textX, textY);
   }
 }
 
 function drawAsteroid(x: number, y: number, id: number, size: number) {
   if (ctx.value) {
-    const scaledSize = asteroidBaseSize * size;
+    const scaledSize = (asteroidBaseSize * size) * scale.value;
 
     const imageX = x - (scaledSize / 2);
     const imageY = y - (scaledSize / 2);
 
     if (highlightedAsteroids.value.includes(id)) {
-      const padding = 15;
+      const padding = 15 * scale.value;
       const adjustedRadius = scaledSize + padding;
       ctx.value.strokeStyle = 'yellow';
-      ctx.value.lineWidth = 5;
+      ctx.value.lineWidth = 5 * scale.value;
       ctx.value.beginPath();
       ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
       ctx.value.stroke();
@@ -283,15 +239,15 @@ function onMouseClick(e: MouseEvent) {
   let clickedObject: { type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } = { type: null, data: null };
 
   for (const station of props.stations) {
-    if (Math.abs(zoomedX - station.x) < stationBaseSize / 2 &&
-      Math.abs(zoomedY - station.y) < stationBaseSize / 2) {
+    if (Math.abs(zoomedX - station.x) < stationBaseSize * scale.value / 2 &&
+      Math.abs(zoomedY - station.y) < stationBaseSize * scale.value / 2) {
       clickedObject = { type: 'station', data: station };
       break;
     }
   }
 
   for (const asteroid of props.asteroids) {
-    const scaledSize = asteroidBaseSize * asteroid.pixel_size;
+    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
 
     if (Math.abs(zoomedX - asteroid.x) < scaledSize / 2 &&
       Math.abs(zoomedY - asteroid.y) < scaledSize / 2) {

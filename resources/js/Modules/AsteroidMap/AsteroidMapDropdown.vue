@@ -4,7 +4,7 @@ import type { Asteroid } from '@/types/types';
 
 const props = defineProps<{
   searchedAsteroids: Asteroid[]
-  selectedAsteroid: Asteroid | null 
+  selectedAsteroid?: Asteroid 
 }>()
 
 const emit = defineEmits(['selectAsteroid']);

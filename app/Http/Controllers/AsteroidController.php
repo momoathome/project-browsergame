@@ -73,7 +73,8 @@ class AsteroidController extends Controller
     private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
     {
         // $asteroids = Asteroid::with('resources')->get();
-        $asteroids = Asteroid::all();
+         
+        $asteroids = Asteroid::select('id', 'x', 'y', 'pixel_size')->get();
         $stations = Station::all();
         $user = auth()->user();
         $spacecrafts = Spacecraft::with('details')

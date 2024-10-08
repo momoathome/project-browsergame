@@ -12,6 +12,8 @@ class BuildingDetailsSeeder extends Seeder
      */
     public function run(): void
     {
+        BuildingDetails::truncate();
+
         BuildingDetails::create([
             'name' => 'Shipyard',
             'description' => 'The higher the shipyard level, the faster spaceships are made.',
@@ -50,7 +52,7 @@ class BuildingDetailsSeeder extends Seeder
         BuildingDetails::create([
             'name' => 'Scanner',
             'description' => 'The higher the Sector Scanner level, the more sectors will be scanned',
-            'image' => '/storage/buildings/scanner_sm.webp',
+            'image' => '/storage/buildings/scanner.webp',
             'effect' => '',
         ]);
 

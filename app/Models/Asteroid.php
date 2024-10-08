@@ -22,7 +22,7 @@ class Asteroid extends Model
         'pixel_size',
     ];
 
-    protected $indexes = ['name', 'size', 'x', 'y', 'pixel_size'];
+    protected $indexes = ['id', 'name', 'size', 'x', 'y', 'pixel_size'];
 
     public function resources()
     {

@@ -9,7 +9,7 @@ const useAsteroidSearch = () => {
   const highlightedAsteroids = ref<number[]>([]);
   const highlightedStations = ref<number[]>([]);
 
-  const performSearch = () => {
+  const performSearch = (onSearchComplete = () => {}) => {
     searchForm.get('/asteroidMap/search', {
       preserveState: true,
       preserveScroll: true,
@@ -18,12 +18,16 @@ const useAsteroidSearch = () => {
         const updateHighlightedItems = (items, highlightedRef) => {
           highlightedRef.value = items?.length ? items.map(item => item.id) : [];
         };
-
+  
         updateHighlightedItems(page.props.searched_asteroids, highlightedAsteroids);
         updateHighlightedItems(page.props.searched_stations, highlightedStations);
+        
+        // Callback aufrufen, wenn die Suche abgeschlossen ist
+        onSearchComplete();
       },
       onError: (errors) => {
         console.error('Error during search:', errors);
+        onSearchComplete();
       }
     });
   };

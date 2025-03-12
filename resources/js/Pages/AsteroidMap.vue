@@ -6,6 +6,7 @@ import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
+import useAnimateView from '@/Composables/useAnimateView';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import * as config from '@/config';
 
@@ -163,19 +164,14 @@ function drawStation(x: number, y: number, name: string, id: number) {
     const imageY = y - (scaledSize / 2);
 
     if (highlightedStations.value.includes(id)) {
-      const padding = 15 * scale.value;
-      const adjustedRadius = scaledSize + padding;
-      ctx.value.strokeStyle = 'yellow';
-      ctx.value.lineWidth = 5 * scale.value;
-      ctx.value.beginPath();
-      ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
-      ctx.value.stroke();
+      drawHighlight(x, y, scaledSize);
     }
 
     ctx.value.drawImage(
       stationImage,
       0, 0,
-      stationImage.width, stationImage.height,
+      stationImage.width,
+      stationImage.height,
       imageX, imageY,
       scaledSize, scaledSize
     );
@@ -196,18 +192,11 @@ function drawStation(x: number, y: number, name: string, id: number) {
 function drawAsteroid(x: number, y: number, id: number, size: number) {
   if (ctx.value) {
     const scaledSize = (asteroidBaseSize * size) * scale.value;
-
     const imageX = x - (scaledSize / 2);
     const imageY = y - (scaledSize / 2);
 
     if (highlightedAsteroids.value.includes(id)) {
-      const padding = 15 * scale.value;
-      const adjustedRadius = scaledSize + padding;
-      ctx.value.strokeStyle = 'yellow';
-      ctx.value.lineWidth = 5 * scale.value;
-      ctx.value.beginPath();
-      ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
-      ctx.value.stroke();
+      drawHighlight(x, y, scaledSize);
     }
 
     ctx.value.drawImage(
@@ -218,6 +207,25 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
       imageX, imageY,
       scaledSize, scaledSize);
   }
+}
+
+function drawHighlight(x: number, y: number, scaledSize: number, type: 'station' | 'asteroid' = 'asteroid') {
+  if (!ctx.value) return;
+
+  const padding = 15 * scale.value;
+  const adjustedRadius = scaledSize + padding;
+  
+  // Typ-spezifische Anpassungen
+  if (type === 'station') {
+    ctx.value.strokeStyle = 'yellow';
+  } else {
+    ctx.value.strokeStyle = 'yellow';
+  }
+  
+  ctx.value.lineWidth = 5 * scale.value;
+  ctx.value.beginPath();
+  ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
+  ctx.value.stroke();
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -328,49 +336,7 @@ function getAsteroidResources(asteroid: Asteroid) {
   });
 }
 
-function animateView(
-  targetX: number,
-  targetY: number,
-  targetZoomLevel: number
-) {
-  const startPointX = pointX.value;
-  const startPointY = pointY.value;
-  const startZoomLevel = zoomLevel.value;
-
-  const endPointX = targetX;
-  const endPointY = targetY;
-  const endZoomLevel = targetZoomLevel;
-
-  const distance = Math.sqrt(
-    Math.pow(endPointX - startPointX, 2) + Math.pow(endPointY - startPointY, 2)
-  );
-
-  const maxAnimationDuration = 1500;
-  const minAnimationDuration = 300;
-  const animationDuration = Math.round(Math.max(
-    minAnimationDuration,
-    Math.min(maxAnimationDuration, distance / 8)
-  ));
-
-  const startTime = performance.now();
-
-  function animate(time: number) {
-    const elapsedTime = time - startTime;
-    const progress = Math.min(elapsedTime / animationDuration, 1);
-
-    pointX.value = startPointX + (endPointX - startPointX) * progress;
-    pointY.value = startPointY + (endPointY - startPointY) * progress;
-    zoomLevel.value = startZoomLevel + (endZoomLevel - startZoomLevel) * progress;
-
-    drawScene();
-
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    }
-  }
-
-  requestAnimationFrame(animate);
-}
+const { animateView } = useAnimateView(pointX, pointY, zoomLevel, drawScene);
 
 function focusOnObject(object: Station | Asteroid, userId?: number) {
   const targetObject = userId
@@ -397,9 +363,15 @@ function focusUserStationOnInitialLoad(userId: number) {
 }
 
 function searchAndFocus() {
-  performSearch();
-  focusOnSingleResult();
-  requestAnimationFrame(drawScene);
+  performSearch(() => {
+    focusOnSingleResult();
+    drawScene();
+  });
+}
+
+function clearSearchAndUpdate() {
+  clearSearch();
+  drawScene();
 }
 
 const focusOnSingleResult = () => {
@@ -445,7 +417,7 @@ function selectAsteroid(asteroid: Asteroid) {
       </canvas>
 
       <div class="absolute top-0 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
-        <Search v-model="searchForm.query" @clear="clearSearch" @search="searchAndFocus" />
+        <Search v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
       </div>
 
       <AsteroidMapDropdown v-if="searched_asteroids && searched_asteroids.length > 0"

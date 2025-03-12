@@ -250,7 +250,7 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
         enter-to-class="opacity-100 translate-y-0 sm:scale-100" leave-active-class="ease-in duration-200"
         leave-from-class="opacity-100 translate-y-0 sm:scale-100"
         leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-80">
-        <div v-show="show" class="flex h-full items-center justify-between gap-24">
+        <div v-show="show" class="flex h-full items-center justify-around gap-24">
 
           <div v-if="content?.type === 'asteroid'" class="flex flex-col justify-center relative">
             <div class="flex flex-col items-center">

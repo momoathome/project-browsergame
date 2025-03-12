@@ -28,8 +28,8 @@ const asteroid = computed<Asteroid>(() => props.content?.data);
 const station = computed<Station>(() => props.content?.data);
 
 const form = useForm({
-  asteroid_id: null,
-  station_user_id: null,
+  asteroid_id: null as number | null,
+  station_user_id: null as number | null,
   spacecrafts: {
     Merlin: 0,
     Comet: 0,
@@ -48,7 +48,9 @@ const form = useForm({
 });
 
 function exploreAsteroid() {
-  form.asteroid_id = asteroid.value.id;
+  if (asteroid.value) {
+    form.asteroid_id = asteroid.value.id;
+  }
 
   // if form spacecrafts are all 0, return
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
@@ -69,7 +71,9 @@ function fastExploreAsteroid() {
 }
 
 function attackUser() {
-  form.station_user_id = station.value.user_id;
+  if (station.value) {
+    form.station_user_id = station.value.user_id;
+  }
 
   // if form spacecrafts are all 0, return
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
@@ -96,7 +100,7 @@ watch(() => props.show, () => {
     document.body.style.overflow = 'hidden';
     dialog.value?.showModal();
   } else {
-    document.body.style.overflow = null;
+    document.body.style.overflow = 'visible';
     setTimeout(() => {
       dialog.value?.close();
     }, 200);
@@ -117,7 +121,10 @@ const totalCombatPower = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    total += props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.combat * form.spacecrafts[spacecraft];
+    const combat = props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.combat;
+    if (combat !== undefined) {
+      total += combat * form.spacecrafts[spacecraft];
+    }
   }
 
   return total;
@@ -127,7 +134,10 @@ const totalCargoCapacity = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    total += props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.cargo * form.spacecrafts[spacecraft];
+    const cargo = props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.cargo;
+    if (cargo !== undefined) {
+      total += cargo * form.spacecrafts[spacecraft];
+    }
   }
 
   return total;
@@ -195,7 +205,7 @@ onMounted(() => document.addEventListener('keydown', closeOnEscape));
 
 onUnmounted(() => {
   document.removeEventListener('keydown', closeOnEscape);
-  document.body.style.overflow = null;
+  document.body.style.overflow = 'visible';
 });
 
 const userScanRange = computed(() => {

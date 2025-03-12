@@ -50,11 +50,13 @@ class AsteroidController extends Controller
             'asteroid_id' => 'required|exists:asteroids,id',
             'spacecrafts' => 'required|array',
         ]);
-
+    
         $spaceCrafts = $validated['spacecrafts'];
-
+    
         $user = auth()->user();
         $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
+        
+        return redirect()->route('asteroidMap')->banner('Asteroid explored successfully');
     }
 
     public function search(Request $request)

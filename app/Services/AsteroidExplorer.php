@@ -16,20 +16,20 @@ class AsteroidExplorer
     public function exploreAsteroid($user, $asteroidId, $spaceCrafts)
     {
         $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
-
+    
         list($totalCargoCapacity, $hasMiner) = $this->calculateCapacityAndMinerStatus($user, $filteredSpacecrafts);
-
+    
         $asteroid = Asteroid::findOrFail($asteroidId);
         $asteroidResources = $asteroid->resources()->get();
-
+    
         list($resourcesExtracted, $remainingResources) = $this->extractResources($asteroidResources, $totalCargoCapacity, $hasMiner);
-
+    
         DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted) {
             $this->updateUserResources($user, $resourcesExtracted);
             $this->updateAsteroidResources($asteroid, $remainingResources);
         });
-
-        return redirect()->route('asteroidMap')->banner('Asteroid explored successfully');
+    
+        return true;
     }
 
     private function filterSpacecrafts($spaceCrafts)

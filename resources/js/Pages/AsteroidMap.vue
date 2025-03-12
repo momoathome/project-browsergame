@@ -399,7 +399,7 @@ function focusUserStationOnInitialLoad(userId: number) {
 function searchAndFocus() {
   performSearch();
   focusOnSingleResult();
-  drawScene();
+  requestAnimationFrame(drawScene);
 }
 
 const focusOnSingleResult = () => {

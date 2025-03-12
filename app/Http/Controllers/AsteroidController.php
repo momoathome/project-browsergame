@@ -56,7 +56,7 @@ class AsteroidController extends Controller
         $user = auth()->user();
         $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
         
-        return redirect()->route('asteroidMap')->banner('Asteroid explored successfully');
+        return $this->renderAsteroidMap();
     }
 
     public function search(Request $request)
@@ -96,7 +96,7 @@ class AsteroidController extends Controller
 
     public function getAsteroidResources(Request $request)
     {
-        $asteroidId = $request->input('asteroid_id');
+        $asteroidId = $request->input('asteroid');
         $asteroid = Asteroid::with('resources')->findOrFail($asteroidId);
 
         return $this->renderAsteroidMap([], [], $asteroid);

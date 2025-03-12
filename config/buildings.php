@@ -19,7 +19,7 @@ return [
         [
             'name' => 'Hangar',
             'details_id' => 2,
-            'effect_value' => 20,
+            'effect_value' => 10,
             'build_time' => 720,
             'is_active' => true,
             'level' => 1,
@@ -33,7 +33,7 @@ return [
         [
             'name' => 'Laboratory',
             'details_id' => 3,
-            'effect_value' => 20,
+            'effect_value' => 2,
             'build_time' => 1800,
             'is_active' => true,
             'level' => 1,
@@ -47,7 +47,7 @@ return [
         [
             'name' => 'Warehouse',
             'details_id' => 4,
-            'effect_value' => 20,
+            'effect_value' => 1.3,
             'build_time' => 900,
             'is_active' => true,
             'level' => 1,
@@ -75,7 +75,7 @@ return [
          [
             'name' => 'Scanner',
             'details_id' => 6,
-            'effect_value' => 20,
+            'effect_value' => 5000,
             'build_time' => 500,
             'is_active' => true,
             'level' => 1,

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
-import { usePage, useForm } from '@inertiajs/vue3';
+import { usePage, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
@@ -57,7 +57,7 @@ const {
   clearSearch,
   highlightedAsteroids,
   highlightedStations,
-} = useAsteroidSearch();
+} = useAsteroidSearch(drawScene);
 
 onMounted(() => {
   if (props.searched_asteroids && props.searched_asteroids.length) {
@@ -214,14 +214,14 @@ function drawHighlight(x: number, y: number, scaledSize: number, type: 'station'
 
   const padding = 15 * scale.value;
   const adjustedRadius = scaledSize + padding;
-  
+
   // Typ-spezifische Anpassungen
   if (type === 'station') {
     ctx.value.strokeStyle = 'yellow';
   } else {
     ctx.value.strokeStyle = 'yellow';
   }
-  
+
   ctx.value.lineWidth = 5 * scale.value;
   ctx.value.beginPath();
   ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
@@ -320,10 +320,10 @@ function onWheel(e: WheelEvent) {
 
 function getAsteroidResources(asteroid: Asteroid) {
   const asteroidId = useForm({
-    asteroid_id: asteroid.id,
+    asteroid: asteroid.id,
   })
 
-  asteroidId.get(`/asteroidMap/${asteroid.name}`, {
+  asteroidId.get(route('asteroidMap.asteroid'), {
     preserveState: true,
     only: ['selected_asteroid'],
     onSuccess: () => {
@@ -390,10 +390,19 @@ const focusOnSingleResult = () => {
 
 const isModalOpen = ref(false)
 function closeModal() {
-  const url = new URL(window.location.href);
-  url.searchParams.delete('asteroid_id');
-  url.pathname = '/asteroidMap';
-  window.history.pushState({}, '', url);
+
+  if (searchForm.query) {
+    router.visit(route('asteroidMap.search', { query: searchForm.query }), {
+      preserveScroll: true,
+      preserveState: true
+    });
+  } else {
+    router.visit(route('asteroidMap'), {
+      preserveScroll: true,
+      preserveState: true
+    });
+  }
+
 
   isModalOpen.value = false;
   setTimeout(() => {

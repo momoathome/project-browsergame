@@ -13,7 +13,7 @@ class SetupInitialUserAttribute
    */
   public function create(int $userId): void
   {
-    $attributesConfig = config('user_attributes.attributes');
+    $attributesConfig = config('game.user_attributes.attributes');
 
     foreach ($attributesConfig as $attributeConfig) {
       UserAttribute::create([

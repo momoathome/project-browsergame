@@ -10,7 +10,7 @@ class SetupInitialBuildings
 {
     public function create(int $userId)
     {
-        $buildingsConfig = config('buildings.buildings');
+        $buildingsConfig = config('game.buildings.buildings');
         $resources = Resource::pluck('id', 'name')->toArray();
 
         foreach ($buildingsConfig as $buildingConfig) {

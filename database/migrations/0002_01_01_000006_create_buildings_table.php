@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('details_id')
                   ->constrained('building_details')
                   ->onDelete('cascade');
-            $table->integer('effect_value')->nullable();
+            $table->decimal('effect_value')->nullable();
             $table->integer('level')->default(1);
             $table->integer('build_time')->nullable();
             $table->timestamps();

@@ -14,7 +14,7 @@ class SetupInitialUserResources
      */
     public function create(int $userId): void
     {
-        $resourcesConfig = config('user_resources.resources');
+        $resourcesConfig = config('game.user_resources.resources');
         $resources = Resource::pluck('id', 'name')->toArray();
 
         foreach ($resourcesConfig as $resourceConfig) {

@@ -14,6 +14,35 @@ class ActionQueue extends Model
         'details' => 'json',
     ];
 
+    // Definiere erlaubte Werte als Konstanten
+    public const ACTION_TYPE_MINING = 'mining';
+    public const ACTION_TYPE_BUILDING = 'building';
+    public const ACTION_TYPE_PRODUCE = 'produce';
+    public const ACTION_TYPE_TRADE = 'trade';
+    
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_IN_PROGRESS = 'in_progress';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_CANCELLED = 'cancelled';
+    public const STATUS_FAILED = 'failed';
+
+    // Liste aller erlaubten Aktionstypen
+    public static $allowedActionTypes = [
+        self::ACTION_TYPE_MINING,
+        self::ACTION_TYPE_BUILDING,
+        self::ACTION_TYPE_PRODUCE,
+        self::ACTION_TYPE_TRADE,
+    ];
+
+    // Liste aller erlaubten Status
+    public static $allowedStatuses = [
+        self::STATUS_PENDING,
+        self::STATUS_IN_PROGRESS,
+        self::STATUS_COMPLETED,
+        self::STATUS_CANCELLED,
+        self::STATUS_FAILED,
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

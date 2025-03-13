@@ -15,7 +15,7 @@ class AsteroidGenerator
 
   public function __construct()
   {
-    $this->config = config('asteroids');
+    $this->config = config('game.asteroids');
     $this->stations = $this->getStations();
   }
 

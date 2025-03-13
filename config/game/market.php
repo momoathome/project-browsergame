@@ -1,7 +1,5 @@
 <?php
 
-// config/market.php
-
 return [
     'markets' => [
         [

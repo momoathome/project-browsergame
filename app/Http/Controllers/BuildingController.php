@@ -9,43 +9,55 @@ use Illuminate\Support\Facades\DB;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
 use App\Models\BuildingResourceCost;
+use App\Services\QueueService;
+use App\Models\ActionQueue;
 
 class BuildingController extends Controller
 {
+    protected $queueService;
+
+    public function __construct(QueueService $queueService)
+    {
+        $this->queueService = $queueService;
+    }
+
     /**
      * Display a listing of the resource.
      */
+    // In der index-Methode:
+
     public function index()
     {
-        // Hole den aktuell angemeldeten Benutzer
         $user = auth()->user();
 
-        // Hole die Gebäude-Daten für den aktuell angemeldeten Benutzer
+        // Gebäude-Daten laden
         $buildings = Building::with('details', 'resources')
             ->where('user_id', $user->id)
             ->orderBy('id', 'asc')
             ->get();
 
-        // Übergibt die Daten an die Inertia-Seite
+        // Queue-Informationen holen
+        $buildingQueues = ActionQueue::where('user_id', $user->id)
+            ->where('action_type', 'building')
+            ->where('status', 'pending')
+            ->get()
+            ->keyBy('target_id');
+
+        // Queue-Infos den Gebäuden hinzufügen
+        $buildings = $buildings->map(function ($building) use ($buildingQueues) {
+            $isUpgrading = isset($buildingQueues[$building->id]);
+            $building->is_upgrading = $isUpgrading;
+
+            if ($isUpgrading) {
+                $building->upgrade_end_time = $buildingQueues[$building->id]->end_time;
+            }
+
+            return $building;
+        });
+
         return Inertia::render('Buildings', [
             'buildings' => $buildings,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**
@@ -67,23 +79,23 @@ class BuildingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, building $building)
+    public function update(Building $building)
     {
-
         $user = auth()->user();
         $requiredResources = BuildingResourceCost::where('building_id', $building->id)->get();
 
+        // Prüfen, ob genügend Ressourcen vorhanden sind
         foreach ($requiredResources as $requiredResource) {
             $userResource = UserResource::where('user_id', $user->id)
                 ->where('resource_id', $requiredResource->resource_id)
                 ->first();
 
             if (!$userResource || $userResource->amount < $requiredResource->amount) {
-                // Fehler-Banner setzen, bevor die Transaktion beginnt
-                return redirect()->route('buildings')->dangerBanner('Not enough resources');
+                return back()->with('error', 'Not enough resources');
             }
         }
 
+        // Ressourcen abziehen in einer Transaktion
         DB::transaction(function () use ($user, $building, $requiredResources) {
             foreach ($requiredResources as $requiredResource) {
                 $userResource = UserResource::where('user_id', $user->id)
@@ -93,6 +105,35 @@ class BuildingController extends Controller
                 $userResource->amount -= $requiredResource->amount;
                 $userResource->save();
             }
+
+            // Upgrade zur Queue hinzufügen
+            $this->queueService->addToQueue(
+                $user->id,
+                ActionQueue::ACTION_TYPE_BUILDING,
+                $building->id,
+                $building->build_time, // Dauer in Sekunden
+                [
+                    'building_id' => $building->id,
+                    'current_level' => $building->level
+                ]
+            );
+        });
+
+        return back()->with('success', 'Building upgrade started');
+    }
+
+    public function completeUpgrade($buildingId, $userId)
+    {
+        $building = Building::where('id', $buildingId)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$building) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($building, $userId) {
+            $user = \App\Models\User::find($userId);
 
             $building->level += 1;
             $building->build_time = $this->calculateNewBuildTime($building);
@@ -108,22 +149,16 @@ class BuildingController extends Controller
 
             if (isset($buildingEffects[$building->details->name])) {
                 foreach ($buildingEffects[$building->details->name] as $attributeName => $value) {
-                    $this->updateUserAttribute($user->id, $attributeName, $value, $buildingEffects[$building->details->name]['multiply'] ?? false);
+                    if ($attributeName !== 'multiply') {
+                        $this->updateUserAttribute($user->id, $attributeName, $value, $buildingEffects[$building->details->name]['multiply'] ?? false);
+                    }
                 }
             }
 
             $this->updateResourceCosts($building);
+
+            return true;
         });
-
-        return redirect()->route('buildings')->banner('Building upgraded successfully');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(building $building)
-    {
-        //
     }
 
     private function updateUserAttribute($userId, $attributeName, $value, $multiply = false)

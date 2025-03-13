@@ -13,7 +13,7 @@ class AsteroidSeeder extends Seeder
 
   public function __construct()
   {
-    $this->config = config('asteroids');
+    $this->config = config('game.asteroids');
   }
   public function run()
   {

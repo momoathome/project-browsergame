@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { timeFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -11,12 +11,24 @@ const props = defineProps<{
   building: FormattedBuilding
 }>();
 
+
+const isUpgrading = ref(props.building.is_upgrading || false);
+const upgradeEndTime = ref(props.building.upgrade_end_time || null);
 const formattedBuildTime = computed(() => timeFormat(props.building.build_time));
 // const formattedEnergy = computed(() => numberFormat(props.building.energy!));
 
 function upgradeBuilding() {
-  router.post(`/buildings/${props.building.id}/update`, {
+  router.post(route('buildings.update', props.building.id), {
     preserveState: true,
+    onSuccess: (page) => {
+      if (page.props.flash.success) {
+        isUpgrading.value = true;
+        // Du könntest hier die Endzeit setzen, wenn sie vom Server zurückgegeben wird
+      }
+    },
+    onError: (error) => {
+      console.error('Building upgrade failed:', error);
+    }
   });
 }
 

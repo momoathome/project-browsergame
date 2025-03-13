@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\ActionQueue;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\App;
 
 class QueueService
 {
@@ -33,9 +33,29 @@ class QueueService
 
     private function completeAction(ActionQueue $action)
     {
-        // Implementieren Sie hier die Logik für die Aktionsabschlüsse
-        // z.B. Ressourcen hinzufügen, Gebäude upgraden usw.
-        $action->status = 'completed';
+        // Je nach Aktionstyp die entsprechende Methode aufrufen
+        $success = match ($action->action_type) {
+            ActionQueue::ACTION_TYPE_BUILDING => $this->completeBuildingUpgrade($action),
+            // ActionQueue::ACTION_TYPE_PRODUCE => $this->completeSpacecraftBuild($action),
+            // ActionQueue::ACTION_TYPE_MINING => $this->completeAsteroidFarming($action),
+            // ActionQueue::ACTION_TYPE_TRADE => $this->completeTrade($action),
+            default => false
+        };
+
+        if ($success) {
+            $action->status = ActionQueue::STATUS_COMPLETED;
+        } else {
+            $action->status = ActionQueue::STATUS_FAILED;
+        }
+
         $action->save();
     }
+
+    private function completeBuildingUpgrade(ActionQueue $action)
+    {
+        $buildingController = App::make(\App\Http\Controllers\BuildingController::class);
+        return $buildingController->completeUpgrade($action->target_id, $action->user_id);
+    }
+
+    // Weitere Methoden für andere Aktionstypen
 }

@@ -15,7 +15,7 @@ class ResourceSeeder extends Seeder
     {
         DB::table('resources')->truncate();
 
-        $resourcesConfig = config('resources.resources');
+        $resourcesConfig = config('game.resources.resources');
 
         foreach ($resourcesConfig as $resourceConfig) {
             Resource::create($resourceConfig);

@@ -13,7 +13,7 @@ class SetupInitialStation
 
     public function __construct()
     {
-        $this->config = config('stations');
+        $this->config = config('game.stations');
         $this->stations = $this->getStations();
         $this->asteroids = $this->getAsteroids();
     }

@@ -15,7 +15,7 @@ class MarketSeeder extends Seeder
     {
         Market::truncate();
         $resources = Resource::pluck('id', 'name')->toArray();
-        $marketsConfig = config('market.markets');
+        $marketsConfig = config('game.market.markets');
 
         foreach ($marketsConfig as $marketConfig) {
             Market::create([

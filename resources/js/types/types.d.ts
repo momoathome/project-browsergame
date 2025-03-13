@@ -90,6 +90,8 @@ export interface FormattedBuilding {
   description: string;
   level: number;
   build_time: number;
+  is_upgrading: boolean;
+  upgrade_end_time: string;
   resources: SimpleResource[];
 };
 

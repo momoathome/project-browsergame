@@ -10,7 +10,7 @@ class SetupInitialSpacecrafts
 {
     public function create(int $userId)
     {
-        $spacecraftsConfig = config('spacecrafts.spacecrafts');
+        $spacecraftsConfig = config('game.spacecrafts.spacecrafts');
         $resources = Resource::pluck('id', 'name')->toArray();
 
         foreach ($spacecraftsConfig as $spacecraftConfig) {

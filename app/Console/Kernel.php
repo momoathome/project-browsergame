@@ -12,6 +12,9 @@ class Kernel extends ConsoleKernel
    */
   protected function schedule(Schedule $schedule): void
   {
+    // Queue alle Minute verarbeiten
+    $schedule->command('queue:process')->everyMinute();
+
     // Beispiel: Einmal täglich um Mitternacht Asteroiden generieren
 /*     $schedule->call(function () {
       $generator = new \App\Services\AsteroidGenerator();

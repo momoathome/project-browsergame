@@ -58,7 +58,7 @@ function exploreAsteroid() {
     return;
   }
 
-  form.post(`/asteroidMap/update`, {
+  form.post(route('asteroidMap.update'), {
     onSuccess: () => {
       close();
     },
@@ -66,7 +66,7 @@ function exploreAsteroid() {
 }
 
 function fastExploreAsteroid() {
-  setMinNeededUnits()
+  setMinNeededUnits();
   exploreAsteroid();
 }
 

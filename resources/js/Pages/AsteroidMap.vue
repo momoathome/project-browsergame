@@ -291,7 +291,9 @@ function onMouseClick(e: MouseEvent) {
       selectedObject.value = clickedObject;
       isModalOpen.value = true;
     } else if (clickedObject.type === 'asteroid') {
-      getAsteroidResources(clickedObject.data);
+      if (clickedObject.type === 'asteroid' && clickedObject.data) {
+        getAsteroidResources(clickedObject.data as Asteroid);
+      }
     }
   }
 }
@@ -323,7 +325,7 @@ function getAsteroidResources(asteroid: Asteroid) {
     asteroid: asteroid.id,
   })
 
-  asteroidId.get(route('asteroidMap.asteroid'), {
+  asteroidId.get(route('asteroidMap.asteroid', { asteroid: asteroid.id }), {
     preserveState: true,
     only: ['selected_asteroid'],
     onSuccess: () => {
@@ -444,7 +446,7 @@ function selectAsteroid(asteroid: Asteroid) {
       :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
-        data: selectedObject?.data
+        data: selectedObject?.data as Asteroid | Station,
       }" />
   </AppLayout>
 </template>

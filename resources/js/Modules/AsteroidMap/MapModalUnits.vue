@@ -23,7 +23,6 @@ const unlockedSpacecrafts = computed(() => {
         <div class="grid grid-cols-5 gap-4">
           <div class="flex items-center relative" v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.details.name">
             <MapModalUnitCard :spacecraft="spacecraft" v-model="form[spacecraft.details.name]" />
-
           </div>
         </div>
       </div>

@@ -8,11 +8,21 @@ use App\Models\Resource;
 use App\Models\Spacecraft;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
+use App\Http\Requests\AsteroidExploreRequest;
+use App\Dto\ExplorationResult;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class AsteroidExplorer
 {
+    public function exploreWithRequest($user, AsteroidExploreRequest $request)
+    {
+        return $this->exploreAsteroid(
+            $user, 
+            $request->getAsteroidId(), 
+            $request->getSpacecrafts()
+        );
+    }
+
     public function exploreAsteroid($user, $asteroidId, $spaceCrafts)
     {
         $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
@@ -29,7 +39,12 @@ class AsteroidExplorer
             $this->updateAsteroidResources($asteroid, $remainingResources);
         });
     
-        return true;
+        return new ExplorationResult(
+            $resourcesExtracted,
+            $totalCargoCapacity,
+            $asteroid->id,
+            $hasMiner
+        );
     }
 
     private function filterSpacecrafts($spaceCrafts)

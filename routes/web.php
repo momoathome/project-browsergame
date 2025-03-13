@@ -46,7 +46,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
     Route::post('/asteroidMap/combat', [BattleController::class, 'combat'])->name('asteroidMap.combat');
     Route::get('/asteroidMap/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
-    Route::get('/asteroidMap/asteroid', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
+    Route::get('/asteroidMap/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
 
     Route::get('/simulator', [BattleController::class, 'index'])->name('simulator');
     Route::post('/simulator', [BattleController::class, 'simulate'])->name('simulator.simulate');

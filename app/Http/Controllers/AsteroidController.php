@@ -9,6 +9,7 @@ use App\Services\AsteroidSearch;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Spacecraft;
+use App\Http\Requests\AsteroidExploreRequest;
 use Illuminate\Support\Facades\Log;
 
 
@@ -44,18 +45,15 @@ class AsteroidController extends Controller
 
     }
 
-    public function update(Request $request)
+    public function update(AsteroidExploreRequest $request)
     {
-        $validated = $request->validate([
-            'asteroid_id' => 'required|exists:asteroids,id',
-            'spacecrafts' => 'required|array',
-        ]);
-    
-        $spaceCrafts = $validated['spacecrafts'];
-    
         $user = auth()->user();
-        $this->asteroidExplorer->exploreAsteroid($user, $validated['asteroid_id'], $spaceCrafts);
-        
+        $explorationResult = $this->asteroidExplorer->exploreWithRequest($user, $request);
+
+        if (!$explorationResult->wasSuccessful()) {
+            return response()->json(['message' => 'Keine Ressourcen extrahiert'], 200);
+        }
+
         return $this->renderAsteroidMap();
     }
 
@@ -94,10 +92,9 @@ class AsteroidController extends Controller
         ]);
     }
 
-    public function getAsteroidResources(Request $request)
+    public function getAsteroidResources(Asteroid $asteroid)
     {
-        $asteroidId = $request->input('asteroid');
-        $asteroid = Asteroid::with('resources')->findOrFail($asteroidId);
+        $asteroid->load(['resources']);
 
         return $this->renderAsteroidMap([], [], $asteroid);
     }

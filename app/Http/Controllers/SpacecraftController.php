@@ -8,10 +8,18 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
-use Illuminate\Support\Facades\Log;
+use App\Services\QueueService;
+use App\Models\ActionQueue;
 
 class SpacecraftController extends Controller
 {
+    protected $queueService;
+
+    public function __construct(QueueService $queueService)
+    {
+        $this->queueService = $queueService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -20,32 +28,32 @@ class SpacecraftController extends Controller
         // Hole den aktuell angemeldeten Benutzer
         $user = auth()->user();
 
-        // Hole die spacecraft-Daten für den aktuell angemeldeten Benutzer
+        $this->queueService->processQueueForUser($user->id);
+
         $spacecrafts = Spacecraft::with('details', 'resources')
             ->where('user_id', $user->id)
             ->orderBy('id', 'asc')
             ->get();
 
-        // Übergibt die Daten an die Inertia-Seite
+        // Queue-Informationen holen
+        $spacecraftQueues = $this->queueService->getPendingQueuesByType($user->id, ActionQueue::ACTION_TYPE_PRODUCE);
+
+        // Queue-Infos den Raumschiffen hinzufügen
+        $spacecrafts = $spacecrafts->map(function ($spacecraft) use ($spacecraftQueues) {
+            $isProducing = isset($spacecraftQueues[$spacecraft->id]);
+            $spacecraft->is_producing = $isProducing;
+
+            if ($isProducing) {
+                $spacecraft->production_end_time = $spacecraftQueues[$spacecraft->id]->end_time;
+                $spacecraft->currently_producing = $spacecraftQueues[$spacecraft->id]->details['quantity'];
+            }
+
+            return $spacecraft;
+        });
+
         return Inertia::render('Shipyard', [
             'spacecrafts' => $spacecrafts,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**
@@ -98,24 +106,52 @@ class SpacecraftController extends Controller
             }
         }
 
-        DB::transaction(function () use ($spacecraft, $quantity, $user, $totalCosts) {
+        // Ressourcen abziehen in einer Transaktion
+        DB::transaction(function () use ($user, $quantity, $totalCosts, $spacecraft) {
             foreach ($totalCosts as $resourceId => $requiredResource) {
                 UserResource::where('user_id', $user->id)
                     ->where('resource_id', $resourceId)
                     ->decrement('amount', $requiredResource);
             }
 
-            $spacecraft->count += $quantity;
-            $spacecraft->save();
-
-
             UserAttribute::where('user_id', $user->id)
                 ->where('attribute_name', 'total_units')
                 ->increment('attribute_value', $quantity);
+
+            // Produktion zur Queue hinzufügen
+            $this->queueService->addToQueue(
+                $user->id,
+                ActionQueue::ACTION_TYPE_PRODUCE,
+                $spacecraft->id,
+                $spacecraft->build_time * $quantity,
+                [
+                    'spacecraft_id' => $spacecraft->id,
+                    'quantity' => $quantity,
+                ]
+            );
         });
 
+        return back()->with('success', 'Production started');
+    }
 
-        return redirect()->route('shipyard')->banner('Spacecraft produced successfully');
+    public function completeProduction($spacecraft, $userId, $details)
+    {
+        $spacecraft = Spacecraft::where('id', $spacecraft)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$spacecraft) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($spacecraft, $userId, $details) {
+            $quantity = $details['quantity'];
+
+            $spacecraft->count += $quantity;
+            $spacecraft->save();
+
+            return true;
+        });
     }
 
     public function unlock(Spacecraft $spacecraft)

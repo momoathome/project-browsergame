@@ -75,6 +75,9 @@ export interface Spacecraft {
   unit_limit: number;
   unlocked: boolean;
   research_cost: number;
+  is_producing: boolean;
+  production_end_time: string;
+  currently_producing: number;
   resources: Resource[];
 }
 
@@ -111,6 +114,9 @@ export interface FormattedSpacecraft {
   unit_limit: number;
   unlocked: boolean;
   research_cost: number;
+  is_producing: boolean;
+  production_end_time: string;
+  currently_producing: number;
   resources: SimpleResource[];
 };
 

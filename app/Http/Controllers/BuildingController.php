@@ -32,18 +32,13 @@ class BuildingController extends Controller
 
         $this->queueService->processQueueForUser($user->id);
 
-        // Gebäude-Daten laden
         $buildings = Building::with('details', 'resources')
             ->where('user_id', $user->id)
             ->orderBy('id', 'asc')
             ->get();
 
         // Queue-Informationen holen
-        $buildingQueues = ActionQueue::where('user_id', $user->id)
-            ->where('action_type', 'building')
-            ->where('status', 'pending')
-            ->get()
-            ->keyBy('target_id');
+        $buildingQueues = $this->queueService->getPendingQueuesByType($user->id, ActionQueue::ACTION_TYPE_BUILDING);
 
         // Queue-Infos den Gebäuden hinzufügen
         $buildings = $buildings->map(function ($building) use ($buildingQueues) {
@@ -100,16 +95,13 @@ class BuildingController extends Controller
         // Ressourcen abziehen in einer Transaktion
         DB::transaction(function () use ($user, $building, $requiredResources) {
             foreach ($requiredResources as $requiredResource) {
-                $userResource = UserResource::where('user_id', $user->id)
+                UserResource::where('user_id', $user->id)
                     ->where('resource_id', $requiredResource->resource_id)
-                    ->first();
-
-                $userResource->amount -= $requiredResource->amount;
-                $userResource->save();
+                    ->decrement('amount', $requiredResource->amount);
             }
 
             // Upgrade zur Queue hinzufügen
-            $queueEntry = $this->queueService->addToQueue(
+            $this->queueService->addToQueue(
                 $user->id,
                 ActionQueue::ACTION_TYPE_BUILDING,
                 $building->id,
@@ -119,12 +111,6 @@ class BuildingController extends Controller
                     'current_level' => $building->level
                 ]
             );
-
-            // Upgrade-Zeit aus dem Queue-Eintrag extrahieren
-            $endTime = $queueEntry->end_time;
-
-            // Diese Information im Flash speichern, damit sie im Frontend verfügbar ist
-            session()->flash('endTime', $endTime);
         });
 
         return back()->with('success', 'Building upgrade started');

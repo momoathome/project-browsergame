@@ -97,7 +97,8 @@ const unitsRatio = computed(() => {
 
             <Divider class="!w-[2px] h-[24px] bg-primary/50" />
             <!-- onClick open settings Menu/Modal -->
-            <img src="/storage/MenuFilled.svg" alt="Menu" @click="logout" />
+            <!-- <img src="/storage/MenuFilled.svg" alt="Menu" @click="logout" /> -->
+             <p class="text-white cursor-pointer">logout</p>
           </div>
         </div>
 

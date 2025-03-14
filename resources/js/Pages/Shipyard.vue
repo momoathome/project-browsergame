@@ -3,34 +3,16 @@ import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import type { Spacecraft } from '@/types/types';
+import { useSpacecraftFormatting } from '@/Composables/useSpacecraftFormatting';
 
 const props = defineProps<{
   spacecrafts: Spacecraft[]
 }>()
 
+const { formatSpacecraft } = useSpacecraftFormatting();
+
 const formattedSpacecrafts = computed(() => {
-  return props.spacecrafts.map((spacecraft: Spacecraft) => {
-    return {
-      id: spacecraft.id,
-      image: spacecraft.details.image,
-      name: spacecraft.details.name,
-      description: spacecraft.details.description,
-      type: spacecraft.details.type,
-      combat: spacecraft.combat,
-      count: spacecraft.count,
-      cargo: spacecraft.cargo,
-      build_time: spacecraft.build_time,
-      unit_limit: spacecraft.unit_limit,
-      unlocked: spacecraft.unlocked,
-      research_cost: spacecraft.research_cost,
-      resources: spacecraft.resources.map((resource) => ({
-        id: resource.id,
-        name: resource.name,
-        image: resource.image,
-        amount: resource.pivot.amount
-      }))
-    };
-  });
+  return props.spacecrafts.map(formatSpacecraft);
 });
 </script>
 

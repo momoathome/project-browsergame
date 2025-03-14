@@ -13,6 +13,9 @@ const props = defineProps<{
   spacecraft: FormattedSpacecraft
 }>();
 
+const isProducing = computed(() => props.spacecraft.is_producing || false);
+const productionEndTime = computed(() => props.spacecraft.production_end_time || null);
+
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
 const formattedBuildTime = computed(() => timeFormat(props.spacecraft.build_time));
@@ -26,7 +29,7 @@ function produceSpacecraft() {
     return
   }
 
-  form.post(`/shipyard/${props.spacecraft.id}/update`, {
+  form.post(route('shipyard.update', props.spacecraft.id), {
     preserveState: true,
     preserveScroll: true,
 
@@ -38,6 +41,26 @@ function produceSpacecraft() {
     },
   });
 }
+
+function handleProduceComplete() {
+  setTimeout(() => {
+    router.reload({ only: ['spacecrafts'] });
+  }, 500);
+}
+
+const actualBuildTime = computed(() => {
+  if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
+    return props.spacecraft.build_time * props.spacecraft.currently_producing;
+  }
+  return props.spacecraft.build_time * form.amount;
+});
+
+const activeProduction = computed(() => {
+  if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
+    return props.spacecraft.currently_producing;
+  }
+  return form.amount;
+});
 
 const maxSpacecraftCount = computed(() => {
   const userResources = usePage().props.userResources;
@@ -79,9 +102,9 @@ const decrementBy10 = () => {
 }
 
 function unlockSpacecraft() {
-  router.post(`/shipyard/${props.spacecraft.id}/unlock`, {
+  router.post(route('shipyard.unlock', props.spacecraft.id), {
     preserveState: true,
-    preserveSCroll: true,
+    preserveScroll: true,
   });
 }
 </script>
@@ -133,7 +156,7 @@ function unlockSpacecraft() {
             <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm">{{ resource.amount }}</p>
-            <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount}})</span>
+            <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
           </div>
         </div>
 
@@ -141,16 +164,18 @@ function unlockSpacecraft() {
           <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
             <div class="flex justify-between gap-4">
               <div class="flex items-center">
-                <button @click="decrement" @click.shift="decrementBy10" type="button" :disabled="maxSpacecraftCount == 0" class="border-none p-0">
+                <button @click="decrement" @click.shift="decrementBy10" type="button"
+                  :disabled="maxSpacecraftCount == 0 || isProducing" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
                   </svg>
                 </button>
 
-                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" class="h-10" />
+                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing" class="h-10" />
 
-                <button @click="increment" @click.shift="incrementBy10" type="button" :disabled="maxSpacecraftCount == 0" class="border-none p-0">
+                <button @click="increment" @click.shift="incrementBy10" type="button"
+                  :disabled="maxSpacecraftCount == 0 || isProducing" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
@@ -158,14 +183,15 @@ function unlockSpacecraft() {
                 </button>
               </div>
 
-              <PrimaryButton>
+              <PrimaryButton :disabled="isProducing || form.amount == 0">
                 Produce
               </PrimaryButton>
             </div>
           </form>
 
-          <AppCardTimer v-if="spacecraft.unlocked" :time="spacecraft.build_time * form.amount"
-            :description="`produce ${form.amount} Spacecrafts`" />
+          <AppCardTimer v-if="spacecraft.unlocked" :buildTime="actualBuildTime"
+            @upgrade-complete="handleProduceComplete" :isInProgress="isProducing" :endTime="productionEndTime"
+            :description="`produce ${activeProduction}`" />
         </div>
 
       </div>

@@ -3,13 +3,13 @@ import { Link } from '@inertiajs/vue3';
 import AppTooltip from '@/Components/AppTooltip.vue';
 
 const NavigationLinks = [
-  { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
+  // { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
   { name: 'buildings', label: 'Buildings', image: '/storage/navigation/buildings.png' },
   { name: 'shipyard', label: 'Shipyard', image: '/storage/navigation/shipyard.png' },
-  { name: 'research', label: 'Research', image: '/storage/navigation/research.png' },
+  // { name: 'research', label: 'Research', image: '/storage/navigation/research.png' },
   { name: 'asteroidMap', label: 'AsteroidMap', image: '/storage/navigation/asteroidmap.png' },
   { name: 'market', label: 'Market', image: '/storage/navigation/market.png' },
-  { name: 'logbook', label: 'Logbook', image: '/storage/navigation/logbook.png' },
+  // { name: 'logbook', label: 'Logbook', image: '/storage/navigation/logbook.png' },
   { name: 'simulator', label: 'Simulator', image: '/storage/navigation/simulator.png' },
   { name: 'profile.show', label: 'Profile', image: '/storage/navigation/profile.png' },
 ];

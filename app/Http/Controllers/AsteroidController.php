@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Asteroid;
 use App\Models\Station;
+use App\Models\Spacecraft;
 use App\Services\AsteroidExplorer;
 use App\Services\AsteroidSearch;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use App\Models\Spacecraft;
 use App\Http\Requests\AsteroidExploreRequest;
+use Inertia\Inertia;
+use App\Services\QueueService;
 use Illuminate\Support\Facades\Log;
 
 
@@ -17,44 +18,36 @@ class AsteroidController extends Controller
 {
     protected $asteroidExplorer;
     protected $asteroidSearch;
+    protected $queueService;
 
-    public function __construct(AsteroidExplorer $asteroidExplorer, AsteroidSearch $asteroidSearch)
+    public function __construct(AsteroidExplorer $asteroidExplorer, AsteroidSearch $asteroidSearch, QueueService $queueService)
     {
         $this->asteroidExplorer = $asteroidExplorer;
         $this->asteroidSearch = $asteroidSearch;
+        $this->queueService = $queueService;
+
     }
 
     public function index()
     {
-/*         $asteroids = Asteroid::with('resources')->get();
-        $stations = Station::all();
         $user = auth()->user();
 
-        $spacecrafts = Spacecraft::with('details')
-            ->where('user_id', $user->id)
-            ->orderBy('id', 'asc')
-            ->get();
-
-        return Inertia::render('AsteroidMap', [
-            'asteroids' => $asteroids,
-            'spacecrafts' => $spacecrafts,
-            'stations' => $stations,
-        ]); */
+        $this->queueService->processQueueForUser($user->id);
 
         return $this->renderAsteroidMap();
-
     }
 
     public function update(AsteroidExploreRequest $request)
     {
         $user = auth()->user();
-        $explorationResult = $this->asteroidExplorer->exploreWithRequest($user, $request);
-
-        if (!$explorationResult->wasSuccessful()) {
-            return response()->json(['message' => 'Keine Ressourcen extrahiert'], 200);
-        }
+        $this->asteroidExplorer->exploreWithRequest($user, $request);
 
         return $this->renderAsteroidMap();
+    }
+
+    public function completeAsteroidMining($asteroidId, $userId, $details)
+    {
+        return $this->asteroidExplorer->completeAsteroidMining($asteroidId, $userId, $details);
     }
 
     public function search(Request $request)

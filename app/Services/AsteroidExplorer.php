@@ -6,45 +6,130 @@ use App\Models\Asteroid;
 use App\Models\AsteroidResource;
 use App\Models\Resource;
 use App\Models\Spacecraft;
+use App\Models\User;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
 use App\Http\Requests\AsteroidExploreRequest;
 use App\Dto\ExplorationResult;
+use App\Services\QueueService;
+use App\Models\ActionQueue;
 use Illuminate\Support\Facades\DB;
 
 class AsteroidExplorer
 {
+    protected $queueService;
+
+    public function __construct(QueueService $queueService)
+    {
+        $this->queueService = $queueService;
+    }
+
     public function exploreWithRequest($user, AsteroidExploreRequest $request)
     {
-        return $this->exploreAsteroid(
-            $user, 
-            $request->getAsteroidId(), 
+        return $this->asteroidMining(
+            $user,
+            $request->getAsteroidId(),
             $request->getSpacecrafts()
         );
     }
 
-    public function exploreAsteroid($user, $asteroidId, $spaceCrafts)
+    public function asteroidMining($user, $asteroidId, $spaceCrafts)
     {
-        $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
-    
+        DB::transaction(function () use ($user, $asteroidId, $spaceCrafts) {
+            $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
+
+            $this->queueService->addToQueue(
+                $user->id,
+                ActionQueue::ACTION_TYPE_MINING,
+                $asteroidId,
+                10, // Dauer in Sekunden
+                [
+                    'asteroid_id' => $asteroidId,
+                    'spacecrafts' => $filteredSpacecrafts
+                ]
+            );
+
+            // spacecrafts für die dauer der exploration sperren
+            $this->lockSpacecrafts($user, $filteredSpacecrafts);
+        });
+    }
+
+    public function completeAsteroidMining($asteroidId, $userId, $details)
+    {
+        $user = User::find($userId);
+        $filteredSpacecrafts = $this->filterSpacecrafts($details['spacecrafts']);
+
         list($totalCargoCapacity, $hasMiner) = $this->calculateCapacityAndMinerStatus($user, $filteredSpacecrafts);
-    
-        $asteroid = Asteroid::findOrFail($asteroidId);
+
+        $asteroid = Asteroid::find($asteroidId);
+        if (!$asteroid) {
+            // Raumschiffe freigeben
+            $this->freeSpacecrafts($user, $filteredSpacecrafts);
+            return false;
+        }
+
         $asteroidResources = $asteroid->resources()->get();
-    
+
         list($resourcesExtracted, $remainingResources) = $this->extractResources($asteroidResources, $totalCargoCapacity, $hasMiner);
-    
-        DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted) {
+
+        $transactionResult = DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $details, $filteredSpacecrafts) {
             $this->updateUserResources($user, $resourcesExtracted);
             $this->updateAsteroidResources($asteroid, $remainingResources);
+
+            // Raumschiffe freigeben
+            $this->freeSpacecrafts($user, $filteredSpacecrafts);
+
+            return true;
         });
-    
+
+        if (!$transactionResult) {
+            // Raumschiffe freigeben
+            $this->freeSpacecrafts($user, $filteredSpacecrafts);
+            return false;
+        }
+
         return new ExplorationResult(
             $resourcesExtracted,
             $totalCargoCapacity,
             $asteroid->id,
             $hasMiner
         );
+    }
+
+    private function updateSpacecraftCount($userId, $filteredSpacecrafts, $increment = false)
+{
+    return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
+        $spacecrafts = Spacecraft::where('user_id', $userId)
+            ->whereHas('details', function ($query) use ($filteredSpacecrafts) {
+                $query->whereIn('name', array_keys($filteredSpacecrafts));
+            })
+            ->lockForUpdate()
+            ->get();
+        
+        foreach ($spacecrafts as $spacecraft) {
+            $changeAmount = $filteredSpacecrafts[$spacecraft->details->name];
+            
+            if ($increment) {
+                $spacecraft->count += $changeAmount;
+            } else {
+                $spacecraft->count -= $changeAmount;
+            }
+            
+            $spacecraft->save();
+        }
+        
+        return true;
+    });
+}
+
+    private function lockSpacecrafts($user, $filteredSpacecrafts) 
+    {
+        return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, false);
+    }
+    
+    private function freeSpacecrafts($user, $filteredSpacecrafts)
+    {
+        return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, true);
     }
 
     private function filterSpacecrafts($spaceCrafts)
@@ -63,11 +148,6 @@ class AsteroidExplorer
 
         foreach ($spacecraftsWithDetails as $spacecraft) {
             $amountOfSpacecrafts = $filteredSpacecrafts[$spacecraft->details->name];
-
-            if ($spacecraft->count < $amountOfSpacecrafts) {
-                throw new \Exception('You do not own enough ' . $spacecraft->details->name . ' spacecrafts.');
-            }
-
             $totalCargoCapacity += $amountOfSpacecrafts * $spacecraft->cargo;
             $hasMiner = $hasMiner || ($spacecraft->details->type === 'Miner');
         }
@@ -91,7 +171,7 @@ class AsteroidExplorer
         $remainingResources = [];
         $extractionMultiplier = $hasMiner ? 1 : 0.5;
 
-        // First: calculate total available resources and initial extraction amounts
+        // calculate total available resources and initial extraction amounts
         $totalAvailable = 0;
         $initialExtraction = [];
         foreach ($asteroidResources as $asteroidResource) {
@@ -105,7 +185,7 @@ class AsteroidExplorer
         // Calculate the extraction ratio if total available exceeds cargo capacity
         $extractionRatio = $totalAvailable > $totalCargoCapacity ? $totalCargoCapacity / $totalAvailable : 1;
 
-        // Second: adjust extraction amounts based on the ratio
+        // adjust extraction amounts based on the ratio
         foreach ($initialExtraction as $resourceId => $amount) {
             $extractedAmount = floor($amount * $extractionRatio);
             $resourcesExtracted[$resourceId] = $extractedAmount;
@@ -124,7 +204,7 @@ class AsteroidExplorer
             ->where('attribute_name', 'storage')
             ->first();
 
-        $storageCapacity = $userStorageAttribute ? $userStorageAttribute->attribute_value : 0;
+        $storageCapacity = $userStorageAttribute->attribute_value;
 
         foreach ($resourcesExtracted as $resourceId => $extractedAmount) {
             $userResource = UserResource::firstOrNew([

@@ -65,7 +65,7 @@ class QueueService
         $success = match ($action->action_type) {
             ActionQueue::ACTION_TYPE_BUILDING => $this->completeBuildingUpgrade($action),
             ActionQueue::ACTION_TYPE_PRODUCE => $this->completeSpacecraftProduction($action),
-            // ActionQueue::ACTION_TYPE_MINING => $this->completeAsteroidFarming($action),
+            ActionQueue::ACTION_TYPE_MINING => $this->completeAsteroidMining($action),
             // ActionQueue::ACTION_TYPE_TRADE => $this->completeTrade($action),
             default => false
         };
@@ -89,6 +89,12 @@ class QueueService
     {
         $spacecraftController = App::make(\App\Http\Controllers\SpacecraftController::class);
         return $spacecraftController->completeProduction($action->target_id, $action->user_id, $action->details);
+    }
+
+    private function completeAsteroidMining(ActionQueue $action)
+    {
+        $asteroidController = App::make(\App\Http\Controllers\AsteroidController::class);
+        return $asteroidController->completeAsteroidMining($action->target_id, $action->user_id, $action->details);
     }
 
     // Weitere Methoden für andere Aktionstypen

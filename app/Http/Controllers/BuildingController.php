@@ -30,6 +30,8 @@ class BuildingController extends Controller
     {
         $user = auth()->user();
 
+        $this->queueService->processQueueForUser($user->id);
+
         // Gebäude-Daten laden
         $buildings = Building::with('details', 'resources')
             ->where('user_id', $user->id)
@@ -107,7 +109,7 @@ class BuildingController extends Controller
             }
 
             // Upgrade zur Queue hinzufügen
-            $this->queueService->addToQueue(
+            $queueEntry = $this->queueService->addToQueue(
                 $user->id,
                 ActionQueue::ACTION_TYPE_BUILDING,
                 $building->id,
@@ -117,6 +119,12 @@ class BuildingController extends Controller
                     'current_level' => $building->level
                 ]
             );
+
+            // Upgrade-Zeit aus dem Queue-Eintrag extrahieren
+            $endTime = $queueEntry->end_time;
+
+            // Diese Information im Flash speichern, damit sie im Frontend verfügbar ist
+            session()->flash('endTime', $endTime);
         });
 
         return back()->with('success', 'Building upgrade started');

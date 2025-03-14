@@ -1,14 +1,103 @@
 <script lang="ts" setup>
 import { timeFormat } from '@/Utils/format';
-import { ref} from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps<{
-  time: number
-  progress?: number
-  description: string
-}>()
+  buildTime: number,
+  description: string,
+  endTime?: string | null,
+  isInProgress?: boolean
+}>();
 
-const progress = ref(85)
+const emit = defineEmits<{
+  'upgrade-complete': []
+}>();
+
+const remainingTime = ref(0);
+const progress = ref(0);
+const timer = ref();
+
+const totalDuration = computed(() => props.buildTime * 1000);
+
+function updateTimerAndProgress() {
+  if (!props.isInProgress || !props.endTime) {
+    remainingTime.value = 0;
+    progress.value = 0;
+    return;
+  }
+
+  const endTime = new Date(props.endTime).getTime();
+  const now = new Date().getTime();
+  const diff = endTime - now;
+  
+  if (diff <= 0) {
+    remainingTime.value = 0;
+    progress.value = 100;
+    clearInterval(timer.value);
+
+    emit('upgrade-complete');
+    return;
+  }
+  
+  remainingTime.value = diff;
+  
+  // Berechne die verstrichene Zeit und den Fortschritt
+  const startTime = endTime - totalDuration.value;
+  const elapsed = now - startTime;
+  progress.value = Math.min(100, Math.floor((elapsed / totalDuration.value) * 100));
+}
+
+const formattedRemainingTime = computed(() => {
+  if (!props.isInProgress) return timeFormat(props.buildTime);
+  
+  if (remainingTime.value <= 0) return '00:00';
+  
+  const remainingSeconds = Math.floor(remainingTime.value / 1000);
+  return timeFormat(remainingSeconds);
+});
+
+function startTimer() {
+  updateTimerAndProgress();
+  if (!timer.value) {
+    timer.value = setInterval(updateTimerAndProgress, 1000);
+  }
+}
+
+function stopTimer() {
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = undefined;
+  }
+}
+
+onMounted(() => {
+  if (props.isInProgress && props.endTime) {
+    startTimer();
+  }
+});
+
+onUnmounted(() => {
+  stopTimer();
+});
+
+watch(() => props.isInProgress, (newValue) => {
+  if (newValue && props.endTime) {
+    startTimer();
+  } else {
+    stopTimer();
+  }
+});
+
+watch(() => props.endTime, (newValue) => {
+  if (newValue && props.isInProgress) {
+    updateTimerAndProgress();
+    if (!timer.value) {
+      timer.value = setInterval(updateTimerAndProgress, 1000);
+    }
+  } else if (!newValue && timer.value) {
+    clearInterval(timer.value);
+  }
+});
 
 </script>
 
@@ -21,10 +110,13 @@ const progress = ref(85)
     <div class="flex flex-col flex-1">
       <div class="flex justify-between">
         <p class="font-medium text-sm">{{ description }}</p>
-        <p class="font-medium text-sm">{{ timeFormat(time) }}</p>
+        <p class="font-medium text-sm">{{ formattedRemainingTime }}</p>
       </div>
-      <div class="rounded-lg h-2 bg-primary">
-        <div class="progress-bar h-2 rounded-lg bg-secondary transition transition-duration-300">
+      <div v-if="isInProgress" class="rounded-lg h-2 bg-primary">
+        <div 
+          class="h-2 rounded-lg bg-secondary progress-bar" 
+          :style="{ width: progress + '%' }"
+        >
         </div>
       </div>
     </div>
@@ -33,15 +125,17 @@ const progress = ref(85)
 
 <style scoped>
 .progress-bar {
-  animation: progressAnimation 3s forwards;
+  /* animation: progressAnimation 3s forwards; */
+  transition: width 1s linear;
+  transform: translateZ(0);
+  will-change: width;
 }
-@keyframes progressAnimation {
+/* @keyframes progressAnimation {
   0% {
     width: 0%;
   }
   100% {
     width: v-bind(progress + '%');
-    /* width: 85%; */
   }
-}
+} */
 </style>

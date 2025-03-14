@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
-import { timeFormat } from '@/Utils/format';
+import { ref, computed } from 'vue';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
@@ -11,28 +10,22 @@ const props = defineProps<{
   building: FormattedBuilding
 }>();
 
-
-const isUpgrading = ref(props.building.is_upgrading || false);
-const upgradeEndTime = ref(props.building.upgrade_end_time || null);
-const formattedBuildTime = computed(() => timeFormat(props.building.build_time));
-// const formattedEnergy = computed(() => numberFormat(props.building.energy!));
+const isUpgrading = computed(() => props.building.is_upgrading || false);
+const upgradeEndTime = computed(() => props.building.upgrade_end_time || null);
 
 function upgradeBuilding() {
+  if (isUpgrading.value) return;
+
   router.post(route('buildings.update', props.building.id), {
     preserveState: true,
-    onSuccess: (page) => {
-      if (page.props.flash.success) {
-        isUpgrading.value = true;
-        // Du könntest hier die Endzeit setzen, wenn sie vom Server zurückgegeben wird
-      }
-    },
-    onError: (error) => {
-      console.error('Building upgrade failed:', error);
-    }
   });
 }
 
-
+function handleUpgradeComplete() {
+  setTimeout(() => {
+    router.reload({ only: ['buildings'] });
+  }, 500);
+}
 </script>
 
 <template>
@@ -61,11 +54,17 @@ function upgradeBuilding() {
         </div>
       </div>
       <div class="flex justify-center my-2">
-        <PrimaryButton @click="upgradeBuilding">
+        <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading">
           Upgrade
         </PrimaryButton>
       </div>
-      <AppCardTimer :time="building.build_time" :description="`upgrade to lv. ${building.level + 1}`" />
+      <AppCardTimer 
+        :buildTime="building.build_time" 
+        :endTime="upgradeEndTime" 
+        :isInProgress="isUpgrading" 
+        @upgrade-complete="handleUpgradeComplete"
+        :description="`upgrade to lv. ${building.level + 1}`"
+       />
     </div>
   </div>
 </template>

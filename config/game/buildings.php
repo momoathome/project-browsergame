@@ -5,7 +5,7 @@ return [
         [
             'name' => 'Shipyard',
             'details_id' => 1,
-            'effect_value' => 10,
+            'effect_value' => 1.1,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
@@ -61,7 +61,7 @@ return [
         [
             'name' => 'Market',
             'details_id' => 5,
-            'effect_value' => 20,
+            'effect_value' => 200,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
@@ -103,7 +103,7 @@ return [
         [
             'name' => 'Shield',
             'details_id' => 8,
-            'effect_value' => 20,
+            'effect_value' => 1.1,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,

@@ -7,7 +7,7 @@ return [
             'attribute_value' => 1_500,
         ],
         [
-            'attribute_name' => 'unit_limit',
+            'attribute_name' => 'crew_limit',
             'attribute_value' => 10,
         ],
         [
@@ -33,6 +33,14 @@ return [
         [
             'attribute_name' => 'scan_range',
             'attribute_value' => 5_000,
+        ],
+        [
+            'attribute_name' => 'production_speed',
+            'attribute_value' => 1,
+        ],
+        [
+            'attribute_name' => 'base_defense',
+            'attribute_value' => 1,
         ],
     ],
 ];

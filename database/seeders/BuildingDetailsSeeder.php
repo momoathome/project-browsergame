@@ -18,63 +18,63 @@ class BuildingDetailsSeeder extends Seeder
             'name' => 'Shipyard',
             'description' => 'The higher the shipyard level, the faster spaceships are made.',
             'image' => '/storage/buildings/shipyard_sm.webp',
-            'effect' => 'increases production speed of spacecrafts',
+            'effect' => 'Spacecraft production speed',
         ]);
 
         BuildingDetails::create([
             'name' => 'Hangar',
             'description' => 'The higher the hangar level, the more spaceships can be stored.',
             'image' => '/storage/buildings/hangar_sm.webp',
-            'effect' => 'increases unit Limit',
+            'effect' => 'Crew Limit',
         ]);
 
         BuildingDetails::create([
             'name' => 'Laboratory',
             'description' => 'The higher the laboratory level, the better spaceships can be produced.',
             'image' => '/storage/buildings/laboratory_sm.webp',
-            'effect' => '',
+            'effect' => 'Research Points',
         ]);
 
         BuildingDetails::create([
             'name' => 'Warehouse',
             'description' => 'The higher the Warehouse level, the more resources can be stored.',
             'image' => '/storage/buildings/warehouse_sm.webp',
-            'effect' => '',
+            'effect' => 'Resource storage',
         ]);
 
         BuildingDetails::create([
             'name' => 'Market',
             'description' => 'The higher the market level, the more resources can be traded.',
             'image' => '/storage/buildings/market_sm.webp',
-            'effect' => '',
+            'effect' => 'Trade capacity',
         ]);
 
         BuildingDetails::create([
             'name' => 'Scanner',
-            'description' => 'The higher the Sector Scanner level, the more sectors will be scanned',
+            'description' => 'The higher the Scanner level, the more space can be scanned.',
             'image' => '/storage/buildings/scanner.webp',
-            'effect' => '',
+            'effect' => 'Scanner range',
         ]);
 
         BuildingDetails::create([
             'name' => 'Supply',
             'description' => 'The higher the supply level, the more crew can be supplied.',
             'image' => '/storage/buildings/supply_sm.jpg',
-            'effect' => '',
+            'effect' => 'Supply capacity',
         ]);
 
         BuildingDetails::create([
             'name' => 'Shield',
             'description' => 'The higher the energy shield level, the more attackers are blocked.',
             'image' => '/storage/buildings/shield_sm.webp',
-            'effect' => '',
+            'effect' => 'Combat on defence',
         ]);
 
         BuildingDetails::create([
             'name' => 'Energy',
             'description' => 'The higher the Energy Modul level, the more energy will be produced',
             'image' => '/storage/buildings/energy_sm.webp',
-            'effect' => '',
+            'effect' => 'Energy',
         ]);
     }
 }

@@ -18,6 +18,8 @@ const formattedBuildings = computed(() => {
       description: building.details.description,
       level: building.level,
       build_time: building.build_time,
+      effect: building.details.effect,
+      effect_value: building.effect_value,
       is_upgrading: building.is_upgrading,
       upgrade_end_time: building.upgrade_end_time,
       resources: building.resources.map((resource: Resource) => ({

@@ -12,7 +12,22 @@ const props = defineProps<{
 
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.upgrade_end_time || null);
+const formattedBuildingEffectAndValue = computed(() => {
+  const { name, effect, effect_value } = props.building;
+  
+  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
+  
+  if (percentageBuildings.includes(name)) {
+    return `${effect}: +${formatBuildingEffectValue(effect_value)}%`;
+  }
 
+  return `${effect}: +${effect_value}`;
+});
+
+function formatBuildingEffectValue(effectValue: number) {
+  return Math.round((effectValue - 1) * 100);
+}
+  
 function upgradeBuilding() {
   if (isUpgrading.value) return;
 
@@ -33,7 +48,7 @@ function handleUpgradeComplete() {
     <div class="image relative">
       <img :src="building.image" class="rounded-t-3xl object-cover aspect-[5/3] min-h-[195px]" alt="" />
     </div>
-    <div class="px-6 pt-0 pb-6 flex flex-col gap-4">
+    <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
       <div class="flex flex-col gap-4">
         <div class="flex justify-between">
           <p class="font-semibold text-2xl">{{ building.name }}</p>
@@ -45,6 +60,11 @@ function handleUpgradeComplete() {
         <p class="text-gray text-sm">{{ building.description }}</p>
       </div>
 
+      <div>
+        <span class="text-sm text-secondary">Effect</span>
+        <p class="font-medium text-sm">{{ formattedBuildingEffectAndValue }}</p>
+      </div>
+
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
@@ -53,18 +73,15 @@ function handleUpgradeComplete() {
           <p class="font-medium text-sm">{{ resource.amount }}</p>
         </div>
       </div>
-      <div class="flex justify-center my-2">
-        <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading">
-          Upgrade
-        </PrimaryButton>
+      <div class="flex flex-col gap-4 mt-auto">
+        <div class="flex justify-center my-2">
+          <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading">
+            Upgrade
+          </PrimaryButton>
+        </div>
+        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
+          @upgrade-complete="handleUpgradeComplete" :description="`upgrade to lv. ${building.level + 1}`" />
       </div>
-      <AppCardTimer 
-        :buildTime="building.build_time" 
-        :endTime="upgradeEndTime" 
-        :isInProgress="isUpgrading" 
-        @upgrade-complete="handleUpgradeComplete"
-        :description="`upgrade to lv. ${building.level + 1}`"
-       />
     </div>
   </div>
 </template>

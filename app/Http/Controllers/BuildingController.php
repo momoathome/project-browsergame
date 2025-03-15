@@ -127,35 +127,41 @@ class BuildingController extends Controller
         }
 
         return DB::transaction(function () use ($building, $userId) {
-            $user = \App\Models\User::find($userId);
-
+            $buildingEffectValue = $building->effect_value;
             $building->level += 1;
             $building->build_time = $this->calculateNewBuildTime($building);
             $building->save();
 
             /* name and effect of each building if multiply = the effect is a multiplier instead of additive */
             $buildingEffects = [
-                'Hangar' => ['unit_limit' => 10],
-                'Warehouse' => ['storage' => 1.3, 'multiply' => true],
-                'Laboratory' => ['research_points' => 2],
-                'Scanner' => ['scan_range' => 5000],
+                'Shipyard' => ['production_speed' => $buildingEffectValue - 1, 'replace' => true],
+                'Hangar' => ['crew_limit' => $buildingEffectValue],
+                'Warehouse' => ['storage' => $buildingEffectValue, 'multiply' => true],
+                'Laboratory' => ['research_points' => $buildingEffectValue],
+                'Scanner' => ['scan_range' => $buildingEffectValue],
+                'Shield' => ['base_defense' => $buildingEffectValue - 1, 'replace' => true],
             ];
 
             if (isset($buildingEffects[$building->details->name])) {
                 foreach ($buildingEffects[$building->details->name] as $attributeName => $value) {
-                    if ($attributeName !== 'multiply') {
-                        $this->updateUserAttribute($user->id, $attributeName, $value, $buildingEffects[$building->details->name]['multiply'] ?? false);
-                    }
+                    $this->updateUserAttribute(
+                        $userId,
+                        $attributeName,
+                        $value,
+                        $buildingEffects[$building->details->name]['multiply'] ?? false,
+                        $buildingEffects[$building->details->name]['replace'] ?? false
+                    );
                 }
             }
 
             $this->updateResourceCosts($building);
+            // $this->updateEffectValue($building);
 
             return true;
         });
     }
 
-    private function updateUserAttribute($userId, $attributeName, $value, $multiply = false)
+    private function updateUserAttribute($userId, $attributeName, $value, $multiply = false, $replace = false)
     {
         $userAttribute = UserAttribute::where('user_id', $userId)
             ->where('attribute_name', $attributeName)
@@ -164,6 +170,8 @@ class BuildingController extends Controller
         if ($userAttribute) {
             if ($multiply) {
                 $userAttribute->attribute_value = round($userAttribute->attribute_value * $value);
+            } else if ($replace) {
+                $userAttribute->attribute_value = $value;
             } else {
                 $userAttribute->attribute_value += $value;
             }
@@ -186,5 +194,12 @@ class BuildingController extends Controller
             $newAmount = round($currentAmount * $costIncreaseFactor);
             $building->resources()->updateExistingPivot($resource->id, ['amount' => $newAmount]);
         }
+    }
+
+    private function updateEffectValue(Building $building)
+    {
+        $effectIncreaseFactor = 1.1; // 10% Erhöhung
+        $building->effect_value = round($building->effect_value * $effectIncreaseFactor);
+        $building->save();
     }
 }

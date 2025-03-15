@@ -66,7 +66,7 @@ class AsteroidController extends Controller
     private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
     {
         // $asteroids = Asteroid::with('resources')->get();
-         
+
         $asteroids = Asteroid::select('id', 'x', 'y', 'pixel_size')->get();
         $stations = Station::all();
         $user = auth()->user();
@@ -90,6 +90,20 @@ class AsteroidController extends Controller
         $asteroid->load(['resources']);
 
         return $this->renderAsteroidMap([], [], $asteroid);
+    }
+
+    public function calculateMiningDuration(Request $request)
+    {
+        $asteroidId = $request->asteroid_id;
+        $spacecrafts = $request->spacecrafts;
+        
+        $duration = $this->asteroidExplorer->calculateTravelDuration(
+            auth()->user(),
+            $asteroidId,
+            $spacecrafts
+        );
+        
+        return back()->with('duration', $duration);
     }
 
     public function universeResources()

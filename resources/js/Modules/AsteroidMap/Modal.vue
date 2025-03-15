@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useForm, usePage } from '@inertiajs/vue3';
+import { useForm, usePage, router } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -8,6 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Components/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
+import { timeFormat } from '@/Utils/format';
 
 interface Content {
   data: Asteroid | Station;
@@ -26,6 +27,7 @@ const props = defineProps<{
 
 const asteroid = computed<Asteroid>(() => props.content?.data);
 const station = computed<Station>(() => props.content?.data);
+const formattedDuration = computed(() => calculateMiningDuration());
 
 const form = useForm({
   asteroid_id: null as number | null,
@@ -142,6 +144,47 @@ const totalCargoCapacity = computed(() => {
 
   return total;
 });
+
+const calculateMiningDuration = () => {
+  if (!asteroid.value) return '00:00';
+  
+  // Prüfen, ob Raumschiffe ausgewählt wurden
+  const anySpacecraftSelected = Object.values(form.spacecrafts).some(value => value > 0);
+  if (!anySpacecraftSelected) return '00:00';
+  
+  // Niedrigste Geschwindigkeit finden
+  let lowestSpeed = 100;
+  
+  for (const spacecraftName in form.spacecrafts) {
+    const count = form.spacecrafts[spacecraftName];
+    if (count > 0) {
+      const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
+      if (spacecraft && spacecraft.speed < lowestSpeed) {
+        lowestSpeed = spacecraft.speed;
+      }
+    }
+  }
+  
+  // Distanz berechnen
+  const userStation = usePage().props.stations.find(station => 
+    station.user_id === usePage().props.auth.user.id
+  );
+  
+  const distance = Math.sqrt(
+    Math.pow(userStation.x - asteroid.value.x, 2) + 
+    Math.pow(userStation.y - asteroid.value.y, 2)
+  );
+  
+  // Berechnungslogik aus AsteroidExplorer.php
+  const baseDuration = 10;
+  const travelFactor = 1;
+  const calculatedDuration = Math.max(
+    baseDuration, 
+    Math.round(distance / lowestSpeed * travelFactor)
+  );
+  
+  return timeFormat(calculatedDuration);
+};
 
 const setMaxAvailableUnits = () => {
   const MaxAvailableUnits = {};
@@ -293,7 +336,7 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
                   <p class="text-secondary">Cargo: <span class="text-white">{{ numberFormat(totalCargoCapacity)
                       }}</span>
                   </p>
-                  <p class="text-secondary">Tavel Time: <span class="text-white">00:00</span></p>
+                  <p class="text-secondary">Travel Time: <span class="text-white">{{ formattedDuration }}</span></p>
                 </div>
                 <div class="flex gap-2">
                   <div class="relative group z-10" v-if="content?.type === 'asteroid'">

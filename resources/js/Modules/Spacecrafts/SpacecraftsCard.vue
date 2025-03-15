@@ -62,22 +62,57 @@ const activeProduction = computed(() => {
   return form.amount;
 });
 
-const maxSpacecraftCount = computed(() => {
+const resourceStatus = computed(() => {
   const userResources = usePage().props.userResources;
   const spacecraftResources = props.spacecraft.resources;
+  
+  return spacecraftResources.map(resource => {
+    const userResource = userResources.find(ur => ur.resource_id === resource.id);
+    if (!userResource) return { id: resource.id, sufficient: false };
+    
+    // Prüfe ob genug Ressourcen für EIN Raumschiff vorhanden sind
+    return { 
+      id: resource.id, 
+      sufficient: userResource.amount >= resource.amount,
+      userAmount: userResource.amount,
+      required: resource.amount,
+      maxCount: Math.floor(userResource.amount / resource.amount)
+    };
+  });
+});
+
+function isResourceSufficient(resourceId: number): boolean {
+  const status = resourceStatus.value.find(res => res.id === resourceId);
+  return status ? status.sufficient : false;
+}
+
+const crewStatus = computed(() => {
   const userAttributes = usePage().props.userAttributes;
   const userCrewLimit = userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
   const userTotalUnits = userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
   const availableUnitSlots = userCrewLimit - userTotalUnits;
+  
+  const hasEnoughCrewSlots = availableUnitSlots >= props.spacecraft.crew_limit;
+  const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
+  
+  return {
+    sufficient: hasEnoughCrewSlots,
+    available: availableUnitSlots,
+    required: props.spacecraft.crew_limit,
+    maxCount: maxCrewCount
+  };
+});
 
-  return Math.min(
-    ...spacecraftResources.map(resource => {
-      const userResource = userResources.find(ur => ur.resource_id === resource.id);
-      if (!userResource) return 0;
-      return Math.floor(userResource.amount / resource.amount);
-    }),
-    Math.floor(availableUnitSlots / props.spacecraft.crew_limit)
-  );
+const maxSpacecraftCount = computed(() => {
+  const resourceLimits = resourceStatus.value.map(res => res.maxCount || 0);
+  const crewLimit = crewStatus.value.maxCount || 0;
+  
+  return Math.min(...resourceLimits, crewLimit);
+});
+
+const canProduce = computed(() => {
+  const hasEnoughResources = resourceStatus.value.every(resource => resource.sufficient);
+  return hasEnoughResources && crewStatus.value.sufficient;
 });
 
 const increment = () => {
@@ -141,7 +176,7 @@ function unlockSpacecraft() {
           </div>
           <div class="flex flex-col items-center">
             <span class="text-sm text-secondary">Crew</span>
-            <p class="font-medium text-sm">{{ spacecraft.crew_limit }}</p>
+            <p class="font-medium text-sm" :class="{'text-red-600': !crewStatus.sufficient}">{{ spacecraft.crew_limit }}</p>
           </div>
           <div class="flex flex-col items-center">
             <span class="text-sm text-secondary">Build Time</span>
@@ -155,7 +190,7 @@ function unlockSpacecraft() {
           <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
             <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
-            <p class="font-medium text-sm">{{ resource.amount }}</p>
+            <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">{{ resource.amount }}</p>
             <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
           </div>
         </div>
@@ -165,17 +200,17 @@ function unlockSpacecraft() {
             <div class="flex justify-between gap-4">
               <div class="flex items-center">
                 <button @click="decrement" @click.shift="decrementBy10" type="button"
-                  :disabled="maxSpacecraftCount == 0 || isProducing" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
+                  :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
                   </svg>
                 </button>
 
-                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing || maxSpacecraftCount <= 0" class="h-10" />
+                <AppInput :id="spacecraft.name" :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing || !canProduce" class="h-10" />
 
                 <button @click="increment" @click.shift="incrementBy10" type="button"
-                  :disabled="maxSpacecraftCount == 0 || isProducing" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
+                  :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
                     <path fill="currentColor"
                       d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
@@ -183,7 +218,7 @@ function unlockSpacecraft() {
                 </button>
               </div>
 
-              <PrimaryButton :disabled="isProducing || form.amount == 0">
+              <PrimaryButton :disabled="isProducing || form.amount == 0 || !canProduce">
                 <span v-if="isProducing">Producing...</span>
                 <span v-else>Produce</span>
               </PrimaryButton>

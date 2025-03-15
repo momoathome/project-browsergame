@@ -28,21 +28,27 @@ function formatBuildingEffectValue(effectValue: number) {
   return Math.round((effectValue - 1) * 100);
 }
 
-const canUpgradeCheck = computed(() => {
+const insufficientResources = computed(() => {
   const userResources = usePage().props.userResources;
   const buildingResources = props.building.resources;
-
-  return Math.min(
-    ...buildingResources.map(resource => {
-      const userResource = userResources.find(ur => ur.resource_id === resource.id);
-      if (!userResource) return 0;
-      return userResource.amount / resource.amount;
-    })
-  );
+  
+  return buildingResources.map(resource => {
+    const userResource = userResources.find(ur => ur.resource_id === resource.id);
+    if (!userResource) return { id: resource.id, sufficient: false };
+    return { 
+      id: resource.id, 
+      sufficient: userResource.amount >= resource.amount 
+    };
+  });
 });
 
+function isResourceSufficient(resourceId: number): boolean {
+  const resourceStatus = insufficientResources.value.find(res => res.id === resourceId);
+  return resourceStatus ? resourceStatus.sufficient : false;
+}
+
 const canUpgrade = computed(() => {
-  return canUpgradeCheck.value >= 1;
+  return insufficientResources.value.every(resource => resource.sufficient);
 });
 
 function upgradeBuilding() {
@@ -87,7 +93,7 @@ function handleUpgradeComplete() {
       <div class="grid grid-cols-4 gap-4 items-center">
         <div class="flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
           <img :src="resource.image" class="h-7 w-7" alt="resource" />
-          <p class="font-medium text-sm">{{ resource.amount }}</p>
+          <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id)}">{{ resource.amount }}</p>
         </div>
       </div>
       <div class="flex flex-col gap-4 mt-auto">

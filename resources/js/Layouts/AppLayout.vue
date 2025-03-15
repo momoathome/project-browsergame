@@ -86,7 +86,7 @@ const unitsRatio = computed(() => {
 
             <!-- total resources -->
             <div class="relative group flex flex-col gap-1 items-center"
-              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense'].includes(attr.name))"
+              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense', 'energy'].includes(attr.name))"
               :key="attribute.name">
               <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
               <span class="text-sm font-medium text-white">

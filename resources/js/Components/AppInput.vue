@@ -44,7 +44,7 @@ function handleInputValue(e: Event): void {
   <input
     class="border border-solid outline-none bg-primary border-primary-light focus:border-primary-light focus:ring-primary-light inline-flex w-16 text-center items-center justify-center text-light disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none"
     type="text" min="0" :max="maxInputValue" inputmode="numeric" pattern="[0-9]*" :maxlength="maxlength" v-model.number="count"
-    @focus="handleFocus" @blur="handleFocusOut" @input="handleInputValue" @keypress="handleInputKeys" :disabled="maxInputValue == 0">
+    @focus="handleFocus" @blur="handleFocusOut" @input="handleInputValue" :onkeypress="handleInputKeys" :disabled="maxInputValue == 0">
 </template>
 
 <style scoped>

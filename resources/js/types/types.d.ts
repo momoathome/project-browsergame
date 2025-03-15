@@ -74,7 +74,7 @@ export interface Spacecraft {
   speed: number;
   count: number;
   build_time: number;
-  unit_limit: number;
+  crew_limit: number;
   unlocked: boolean;
   research_cost: number;
   is_producing: boolean;
@@ -115,7 +115,7 @@ export interface FormattedSpacecraft {
   speed: number;
   count: number;
   build_time: number;
-  unit_limit: number;
+  crew_limit: number;
   unlocked: boolean;
   research_cost: number;
   is_producing: boolean;

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('speed')->default(1);
             $table->integer('count')->default(1);
             $table->integer('build_time')->nullable();
-            $table->integer('unit_limit')->default(1);
+            $table->integer('crew_limit')->default(1);
             $table->integer('research_cost')->default(1);
             $table->boolean('unlocked')->default(false);
             $table->timestamps();

@@ -20,14 +20,22 @@ class MarketService
       ->where('attribute_name', 'credits')
       ->first();
 
+    $userStorageAttribute = UserAttribute::where('user_id', $user->id)
+      ->where('attribute_name', 'storage')
+      ->first();
+
     $totalCost = $marketItem->cost * $quantity;
 
     if (!$userCreditsAttribute || $userCreditsAttribute->attribute_value < $totalCost) {
-      throw new \Exception('Not enough Credits');
+      return redirect()->route('market')->dangerBanner('Not enough credits');
     }
 
     if ($marketItem->stock < $quantity) {
-      throw new \Exception('Not enough stock');
+      return redirect()->route('market')->dangerBanner('Not enough stock');
+    }
+
+    if ($userStorageAttribute->attribute_value < $quantity) {
+      return redirect()->route('market')->dangerBanner('Not enough storage');
     }
 
     DB::transaction(function () use ($marketItem, $user, $quantity, $totalCost, $userCreditsAttribute) {
@@ -61,19 +69,19 @@ class MarketService
     $user = Auth::user();
     $marketItem = Market::findOrFail($resourceId);
 
-    $userCreditsAttribute = UserAttribute::where('user_id', $user->id)
-      ->where('attribute_name', 'credits')
-      ->first();
-
-    $totalCost = $marketItem->cost * $quantity;
-
     $userResource = UserResource::where('user_id', $user->id)
       ->where('resource_id', $marketItem->resource_id)
       ->first();
 
     if (!$userResource || $userResource->amount < $quantity) {
-      throw new \Exception('Not enough resources');
+      return redirect()->route('market')->dangerBanner('Not enough resources');
     }
+
+    $userCreditsAttribute = UserAttribute::where('user_id', $user->id)
+      ->where('attribute_name', 'credits')
+      ->first();
+
+    $totalCost = $marketItem->cost * $quantity;
 
     DB::transaction(function () use ($marketItem, $quantity, $userResource, $totalCost, $userCreditsAttribute) {
       $userResource->amount -= $quantity;

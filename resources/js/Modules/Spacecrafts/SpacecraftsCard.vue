@@ -66,9 +66,9 @@ const maxSpacecraftCount = computed(() => {
   const userResources = usePage().props.userResources;
   const spacecraftResources = props.spacecraft.resources;
   const userAttributes = usePage().props.userAttributes;
-  const userUnitLimit = userAttributes.find(attr => attr.attribute_name === 'unit_limit')?.attribute_value || 0;
+  const userCrewLimit = userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
   const userTotalUnits = userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
-  const availableUnitSlots = userUnitLimit - userTotalUnits;
+  const availableUnitSlots = userCrewLimit - userTotalUnits;
 
   return Math.min(
     ...spacecraftResources.map(resource => {
@@ -76,7 +76,7 @@ const maxSpacecraftCount = computed(() => {
       if (!userResource) return 0;
       return Math.floor(userResource.amount / resource.amount);
     }),
-    Math.floor(availableUnitSlots / props.spacecraft.unit_limit)
+    Math.floor(availableUnitSlots / props.spacecraft.crew_limit)
   );
 });
 
@@ -141,7 +141,7 @@ function unlockSpacecraft() {
           </div>
           <div class="flex flex-col items-center">
             <span class="text-sm text-secondary">Crew</span>
-            <p class="font-medium text-sm">{{ spacecraft.unit_limit }}</p>
+            <p class="font-medium text-sm">{{ spacecraft.crew_limit }}</p>
           </div>
           <div class="flex flex-col items-center">
             <span class="text-sm text-secondary">Build Time</span>
@@ -172,7 +172,7 @@ function unlockSpacecraft() {
                   </svg>
                 </button>
 
-                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing" class="h-10" />
+                <AppInput :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing || maxSpacecraftCount <= 0" class="h-10" />
 
                 <button @click="increment" @click.shift="incrementBy10" type="button"
                   :disabled="maxSpacecraftCount == 0 || isProducing" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
@@ -184,7 +184,8 @@ function unlockSpacecraft() {
               </div>
 
               <PrimaryButton :disabled="isProducing || form.amount == 0">
-                Produce
+                <span v-if="isProducing">Producing...</span>
+                <span v-else>Produce</span>
               </PrimaryButton>
             </div>
           </form>

@@ -4,7 +4,7 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
 import type { FormattedBuilding } from '@/types/types';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 
 const props = defineProps<{
   building: FormattedBuilding
@@ -18,16 +18,33 @@ const formattedBuildingEffectAndValue = computed(() => {
   const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
   
   if (percentageBuildings.includes(name)) {
-    return `${effect}: +${formatBuildingEffectValue(effect_value)}%`;
+    return `${effect}: + ${formatBuildingEffectValue(effect_value)}%`;
   }
 
-  return `${effect}: +${effect_value}`;
+  return `${effect}: + ${Math.round(effect_value)}`;
 });
 
 function formatBuildingEffectValue(effectValue: number) {
   return Math.round((effectValue - 1) * 100);
 }
-  
+
+const canUpgradeCheck = computed(() => {
+  const userResources = usePage().props.userResources;
+  const buildingResources = props.building.resources;
+
+  return Math.min(
+    ...buildingResources.map(resource => {
+      const userResource = userResources.find(ur => ur.resource_id === resource.id);
+      if (!userResource) return 0;
+      return userResource.amount / resource.amount;
+    })
+  );
+});
+
+const canUpgrade = computed(() => {
+  return canUpgradeCheck.value >= 1;
+});
+
 function upgradeBuilding() {
   if (isUpgrading.value) return;
 
@@ -75,8 +92,9 @@ function handleUpgradeComplete() {
       </div>
       <div class="flex flex-col gap-4 mt-auto">
         <div class="flex justify-center my-2">
-          <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading">
-            Upgrade
+          <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade">
+            <span v-if="isUpgrading">Upgrading...</span>
+            <span v-else>Upgrade</span>
           </PrimaryButton>
         </div>
         <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"

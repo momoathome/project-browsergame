@@ -23,7 +23,7 @@ const attributeLabels = {
   energy: 'Energy',
   influence: 'Influence',
   credits: 'Credits',
-  unit_limit: 'Crew Limit',
+  crew_limit: 'Crew Limit',
   total_units: 'Total Units',
   scan_range: 'Scan Range',
 };
@@ -52,8 +52,8 @@ const formattedAttributes = computed(() => {
 
 const unitsRatio = computed(() => {
   const totalUnits = usePage().props.userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
-  const unitLimit = usePage().props.userAttributes.find(attr => attr.attribute_name === 'unit_limit')?.attribute_value || 0;
-  return `${numberFormat(totalUnits)} / ${numberFormat(unitLimit)}`;
+  const crewLimit = usePage().props.userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
+  return `${numberFormat(totalUnits)} / ${numberFormat(crewLimit)}`;
 });
 </script>
 
@@ -86,7 +86,7 @@ const unitsRatio = computed(() => {
 
             <!-- total resources -->
             <div class="relative group flex flex-col gap-1 items-center"
-              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'unit_limit', 'scan_range'].includes(attr.name))"
+              v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense'].includes(attr.name))"
               :key="attribute.name">
               <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
               <span class="text-sm font-medium text-white">

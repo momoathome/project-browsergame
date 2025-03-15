@@ -88,7 +88,7 @@ class BuildingController extends Controller
                 ->first();
 
             if (!$userResource || $userResource->amount < $requiredResource->amount) {
-                return back()->with('error', 'Not enough resources');
+                return redirect()->route('buildings')->dangerBanner('Not enough resources');
             }
         }
 
@@ -113,7 +113,7 @@ class BuildingController extends Controller
             );
         });
 
-        return back()->with('success', 'Building upgrade started');
+        return redirect()->route('buildings')->banner('Building upgrade started');
     }
 
     public function completeUpgrade($buildingId, $userId)

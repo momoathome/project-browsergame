@@ -13,7 +13,7 @@ export function useSpacecraftFormatting() {
       cargo: spacecraft.cargo,
       speed: spacecraft.speed,
       build_time: spacecraft.build_time,
-      unit_limit: spacecraft.unit_limit,
+      crew_limit: spacecraft.crew_limit,
       unlocked: spacecraft.unlocked,
       research_cost: spacecraft.research_cost,
       is_producing: spacecraft.is_producing,

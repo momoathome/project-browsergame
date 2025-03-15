@@ -88,11 +88,11 @@ class SpacecraftController extends Controller
             return [$resource->id => $resource->pivot->amount * $quantity];
         });
 
-        $unitLimit = UserAttribute::where('user_id', $user->id)
-            ->where('attribute_name', 'unit_limit')
+        $crewLimit = UserAttribute::where('user_id', $user->id)
+            ->where('attribute_name', 'crew_limit')
             ->first();
 
-        if ($unitLimit && $unitLimit->attribute_value < $spacecraft->count + $quantity) {
+        if ($crewLimit && $crewLimit->attribute_value < $spacecraft->count + $quantity) {
             return redirect()->route('shipyard')->dangerBanner('maximum Crew Limit reached');
         }
 
@@ -131,7 +131,7 @@ class SpacecraftController extends Controller
             );
         });
 
-        return back()->with('success', 'Production started');
+        return redirect()->route('shipyard')->banner('Production started');
     }
 
     public function completeProduction($spacecraft, $userId, $details)

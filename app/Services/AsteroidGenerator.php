@@ -206,7 +206,7 @@ class AsteroidGenerator
     $resource_ratio_range = $this->config['resource_ratio_range'];
     $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
 
-    // wenn die Größe extrem ist, extreme und high Value Pools entfernen
+    // wenn die Größe extrem ist, extreme und high Value Pools entfernen aus balance Gründen
     if ($size === 'extreme') {
       unset($poolWeights['extreme_value'], $poolWeights['high_value']);
       $poolWeights = array_map(function ($weight) use ($poolWeights) {

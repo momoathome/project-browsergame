@@ -6,6 +6,7 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppInput from '@/Components/AppInput.vue';
+import AppTooltip from '@/Components/AppTooltip.vue';
 import type { formattedMarketResource } from '@/types/types';
 
 const props = defineProps<{
@@ -55,7 +56,12 @@ function setUserResourcesInput() {
   } else {
     form.amount = 0;
   }
+}
 
+function setMaxAmount() {
+  const userCredits = usePage().props.userAttributes.find((attribute) => attribute.attribute_name === 'credits')?.attribute_value || 0;
+  const maxAmount = Math.floor(userCredits / props.marketData.cost);
+  form.amount = maxAmount;
 }
 </script>
 
@@ -76,7 +82,10 @@ function setUserResourcesInput() {
     </div>
 
     <div class="relative flex justify-center items-center py-2">
-      <img :src="marketData.image" class="h-[56px] cursor-pointer" @click="setUserResourcesInput" alt="resource" />
+      <div class="group relative">
+        <img :src="marketData.image" class="h-[56px] cursor-pointer" @click="setUserResourcesInput" @click.shift="setMaxAmount" alt="resource" />
+        <AppTooltip class="py-2 px-3" label="click to add all sellable resources<br>shift click to add all buyable resources" position="bottom" />
+      </div>
     </div>
 
     <Divider />

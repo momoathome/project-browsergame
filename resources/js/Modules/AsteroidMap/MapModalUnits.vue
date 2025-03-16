@@ -10,22 +10,26 @@ const props = defineProps<{
 const form = defineModel({ required: false, type: Object })
 
 // filter spacecrafts based on is unlocked status
-
 const unlockedSpacecrafts = computed(() => {
   return props.spacecrafts.filter((spacecraft) => spacecraft.unlocked);
+});
+
+const gridColumnsCount = computed(() => {
+  return Math.min(unlockedSpacecrafts.value.length, 5);
 });
 </script>
 
 <template>
-  <div class="flex items-center text-base">
-    <div class="flex flex-col gap-6">
-      <div class="flex flex-col gap-6">
-        <div class="grid grid-cols-5 gap-4">
-          <div class="flex items-center relative" v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.details.name">
-            <MapModalUnitCard :spacecraft="spacecraft" v-model="form[spacecraft.details.name]" />
-          </div>
-        </div>
-      </div>
+  <div class="gap-4 dynamic-grid" :style="{ '--grid-cols': gridColumnsCount }">
+    <div v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.details.name">
+      <MapModalUnitCard :spacecraft="spacecraft" v-model="form[spacecraft.details.name]" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.dynamic-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 5), 1fr);
+}
+</style>

@@ -46,7 +46,7 @@ const setCount = () => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-3xl bg-base content_card text-[#DADCE5] select-none">
+  <div class="flex flex-col rounded-3xl bg-base content_card text-light text-base select-none">
     <div class="image relative">
       <img :src="spacecraft.details.image" class="rounded-t-3xl h-[65px]" alt="" />
     </div>

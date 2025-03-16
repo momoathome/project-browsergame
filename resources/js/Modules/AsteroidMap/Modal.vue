@@ -83,7 +83,7 @@ function attackUser() {
     return;
   }
 
-  form.post(`/asteroidMap/combat`, {
+  form.post(route('asteroidMap.combat'), {
     onSuccess: () => {
       close();
     },
@@ -342,7 +342,7 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
                   <div class="relative group z-10" v-if="content?.type === 'asteroid'">
                     <SecondaryButton @click="setMinNeededUnits">Min</SecondaryButton>
                     <AppTooltip label="set the minimum needed Spacecrafts to mine all resources" position="bottom"
-                      class="!mt-3 text-pretty w-40" />
+                      class="!mt-2 text-pretty w-40" />
                   </div>
                   <div class="relative group z-10" v-if="content?.type === 'station'">
                     <SecondaryButton @click="setMaxAvailableUnits">Max</SecondaryButton>

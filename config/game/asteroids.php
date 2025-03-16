@@ -19,11 +19,13 @@ return [
         'extreme' => 8,
     ],
 
+    /* base amount */
     'asteroid_faktor' => [
         'min' => 90,
         'max' => 125,
     ],
 
+    /* chance to generate of asteroid sizes */
     'asteroid_size' => [
         'small' => 660, // chance of $asteroid_count
         'medium' => 300,

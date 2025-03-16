@@ -69,7 +69,7 @@ function handleUpgradeComplete() {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light">
     <div class="image relative">
-      <img :src="building.image" class="rounded-t-3xl object-cover aspect-[5/3] min-h-[195px]" alt="" />
+      <img :src="building.image" class="rounded-t-3xl object-cover aspect-[2/1] h-[185px]" alt="" />
     </div>
     <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
       <div class="flex flex-col gap-4">

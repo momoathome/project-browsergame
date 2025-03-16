@@ -266,7 +266,7 @@ return [
                 ['resource_name' => 'Cobalt', 'amount' => 200],
             ],
         ],
-        [
+        /* [
             'name' => 'Collector',
             'details_id' => 14,
             'combat' => 100,
@@ -284,8 +284,8 @@ return [
                 ['resource_name' => 'Kyberkristall', 'amount' => 50],
                 ['resource_name' => 'Cobalt', 'amount' => 50],
             ],
-        ],
-        [
+        ], */
+        /* [
             'name' => 'Reclaimer',
             'details_id' => 15,
             'combat' => 250,
@@ -305,6 +305,6 @@ return [
                 ['resource_name' => 'Iridium', 'amount' => 200],
                 ['resource_name' => 'Uraninite', 'amount' => 100],
             ],
-        ],
+        ], */
     ],
 ];

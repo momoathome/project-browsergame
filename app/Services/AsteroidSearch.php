@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Asteroid;
 use App\Models\Station;
+use App\Models\UserAttribute;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -25,16 +27,45 @@ class AsteroidSearch
 
   private function searchAsteroids($query, $queryParts): Collection
   {
+    $userId = Auth::id();
+    $userStation = Station::where('user_id', $userId)->first();
+    $scanRange = $this->getUserScanRange($userId);
+
     if ($this->isSingleWordQuery($queryParts)) {
-      return $this->performMeilisearchQuery($query);
+      $searchResults = $this->performMeilisearchQuery($query);
     } else {
-      return $this->performComplexQuery($queryParts);
+      $searchResults = $this->performComplexQuery($queryParts);
     }
+
+    // Filterung der Ergebnisse nach Scan-Bereich
+    return $searchResults->filter(function ($asteroid) use ($userStation, $scanRange) {
+      $distance = $this->calculateDistance(
+        $userStation->x,
+        $userStation->y,
+        $asteroid->x,
+        $asteroid->y
+      );
+      return $distance <= $scanRange;
+    })->values();
   }
 
   private function searchStations($query): Collection
   {
     return Station::search($query)->take(100)->get();
+  }
+
+  private function getUserScanRange($userId): int
+  {
+    $scanRangeAttribute = UserAttribute::where('user_id', $userId)
+      ->where('attribute_name', 'scan_range')
+      ->first();
+
+    return $scanRangeAttribute ? (int) $scanRangeAttribute->attribute_value : 5000;
+  }
+
+  private function calculateDistance($x1, $y1, $x2, $y2): float
+  {
+    return sqrt(pow($x2 - $x1, 2) + pow($y2 - $y1, 2));
   }
 
   private function isSingleWordQuery($queryParts): bool

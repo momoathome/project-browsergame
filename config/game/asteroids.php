@@ -1,7 +1,7 @@
 <?php
 
 $asteroid_count = 10000;
-$asteroid_density = 50; // kleinere Zahl = dichter besiedelt
+$asteroid_density = 40; // kleinere Zahl = dichter besiedelt
 $min_distance_between_asteroids = 1000;
 $station_to_station_distance = 5000;
 $universe_size = $asteroid_count * $asteroid_density;

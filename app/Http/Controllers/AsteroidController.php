@@ -105,21 +105,5 @@ class AsteroidController extends Controller
         
         return back()->with('duration', $duration);
     }
-
-    public function universeResources()
-    {
-        $resources = Asteroid::with('resources')
-            ->get()
-            ->pluck('resources')
-            ->flatten()
-            ->groupBy('resource_type')
-            ->map(function ($resources) {
-                return [$resources->sum('amount')];
-            });
-
-        return Inertia::render('Admin/Dashboard', [
-            'universeResources' => $resources,
-        ]);
-    }
 }
 

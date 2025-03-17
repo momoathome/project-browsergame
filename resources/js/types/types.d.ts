@@ -8,6 +8,7 @@ export interface BuildingDetails {
 
 export interface Building {
   id: number;
+  user_id: number;
   details: BuildingDetails;
   level: number;
   build_time: number;

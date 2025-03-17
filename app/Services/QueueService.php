@@ -69,6 +69,18 @@ class QueueService
         }
     }
 
+    public function processQueueForUserInstant($userId)
+    {
+        // check for admin role
+        $completedActions = ActionQueue::where('user_id', $userId)
+            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
+            ->get();
+
+        foreach ($completedActions as $action) {
+            $this->completeAction($action);
+        }
+    }
+
     private function completeAction(ActionQueue $action)
     {
         // Je nach Aktionstyp die entsprechende Methode aufrufen

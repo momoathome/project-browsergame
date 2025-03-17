@@ -63,10 +63,27 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Get the stations for the user.
+     */
+    public function stations()
+    {
+        return $this->hasMany(Station::class);
+    }
+
+    public function spacecrafts()
+    {
+        return $this->hasMany(Spacecraft::class);
+    }
+
+    public function buildings()
+    {
+        return $this->hasMany(Building::class);
+    }
+
     public function resources()
     {
-        return $this->belongsToMany(Resource::class, 'user_resources', 'resource_id', 'user_id')
-            ->withPivot('amount')
-            ->withTimestamps();
+        return $this->belongsToMany(Resource::class, 'user_resources', 'user_id', 'resource_id')
+            ->withPivot('amount');
     }
 }

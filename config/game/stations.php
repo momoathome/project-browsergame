@@ -2,7 +2,7 @@
 $config = config('game.asteroids');
 
 $min_distance = 10_000;
-$universe_border_distance = 10_000;
+$universe_border_distance = 20_000;
 $asteroid_min_distance = $config['min_distance'] ?? 0;
 
 return [

@@ -10,8 +10,6 @@ class ConfigureMeilisearch extends Command
     protected $signature = 'meilisearch:configure';
     protected $description = 'Konfiguriert die Meilisearch-Indizes für die Asteroiden-Suche';
 
-    // In der handle()-Methode
-
     public function handle()
     {
         $client = new Client(config('scout.meilisearch.host'), config('scout.meilisearch.key'));
@@ -59,8 +57,9 @@ class ConfigureMeilisearch extends Command
                     'twoTypos' => 6
                 ]
             ],
-            // Diese Einstellung ist wichtig für case-insensitive Suche
-            'nonSeparatorChars' => ['à', 'â', 'æ', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ü', 'ÿ']
+            // Korrekte Einstellung für Tokenisierung
+            'separatorTokens' => [' ', '-', '_', '.'],
+            'nonSeparatorTokens' => ['à', 'â', 'æ', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ü', 'ÿ']
         ]);
 
         // Synonyme hinzufügen

@@ -20,7 +20,7 @@ docker run --rm \
     composer install --ignore-platform-reqs
 ```
 
-### Step 3: Install Composer Dependencies 
+### Step 3: Install Composer Dependencies
 
 ``` bash
 sail composer install
@@ -85,6 +85,14 @@ php artisan migrate:fresh --seed
 ``` bash
 sail artisan scout:import "App\Models\Asteroid"
 sail artisan scout:index "App\Models\Asteroid"
+```
+
+## Commands
+
+``` bash
+sail artisan db:seed --class=AsteroidSeeder
+sail artisan game:generate-test-stations
+sail artisan game:cleanup-test-stations --all
 ```
 
 ## Authors

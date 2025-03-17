@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ use App\Http\Controllers\UserResourceController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\AsteroidController;
 use App\Http\Controllers\BattleController;
+use App\Services\QueueService;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -53,7 +55,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
-    Route::get('/admin/dashboard', [AsteroidController::class, 'universeResources'])->name('admin.dashboard');
+    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');    
+    Route::get('/admin/user/{id}', [DashboardController::class, 'show'])->name('admin.user.show');
+    Route::put('/admin/stations/{id}', [DashboardController::class, 'update'])->name('admin.stations.update');    
+    Route::put('/admin/buildings/{id}', [DashboardController::class, 'updateBuilding'])->name('admin.buildings.update');
+    Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
 

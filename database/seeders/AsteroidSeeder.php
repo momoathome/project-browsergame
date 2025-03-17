@@ -28,7 +28,7 @@ class AsteroidSeeder extends Seeder
     $executionTime = $endTime - $startTime;
     $this->command->info("{$count} Asteroids created in " . number_format($executionTime, 2) . " seconds.");
     $this->command->info("Indexing asteroids... depending on the amount of asteroids, this may take a few minutes.");
-    
+
     // Index the asteroids 
     $startTime = microtime(true);
     $asteroidModel = "App\\Models\\Asteroid";
@@ -38,6 +38,10 @@ class AsteroidSeeder extends Seeder
     $endTime = microtime(true);
     $executionTime = $endTime - $startTime;
     $this->command->info("Asteroids imported and indexed in " . number_format($executionTime, 2) . " seconds.");
+
+    $this->command->info("Konfiguriere Meilisearch für optimale Suche...");
+    Artisan::call('meilisearch:configure');
+    $this->command->info("Meilisearch-Konfiguration abgeschlossen.");
   }
 }
 

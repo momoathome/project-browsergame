@@ -17,41 +17,75 @@ class AsteroidSearch
       return [[], []];
     }
 
-    $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
-
-    $searchedAsteroids = $this->searchAsteroids($query, $queryParts);
-    $searchedStations = $this->searchStations($query);
-
-    return [$searchedAsteroids, $searchedStations];
-  }
-
-  private function searchAsteroids($query, $queryParts): Collection
-  {
     $userId = Auth::id();
     $userStation = Station::where('user_id', $userId)->first();
     $scanRange = $this->getUserScanRange($userId);
-
-    if ($this->isSingleWordQuery($queryParts)) {
-      $searchResults = $this->performMeilisearchQuery($query);
-    } else {
-      $searchResults = $this->performComplexQuery($queryParts);
+    
+    // Abfrageteile extrahieren
+    $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
+    
+    // Kombinierte Ressourcen (mit Bindestrichen) extrahieren und in einzelne Teile zerlegen
+    $sizeFilter = null;
+    $resourceFilters = [];
+    
+    foreach ($queryParts as $part) {
+      if (in_array(strtolower($part), ['small', 'medium', 'large', 'extreme'])) {
+        $sizeFilter = strtolower($part);
+      } else if (strpos($part, '-') !== false) {
+        // Kombinierte Ressourcen aufteilen
+        $resources = explode('-', $part);
+        foreach ($resources as $resource) {
+          $resourceFilters[] = $resource;
+        }
+      } else {
+        // Einzelne Ressource
+        $resourceFilters[] = $part;
+      }
     }
-
-    // Filterung der Ergebnisse nach Scan-Bereich
-    return $searchResults->filter(function ($asteroid) use ($userStation, $scanRange) {
+    
+    // Erstelle die Basisabfrage für Meilisearch - ohne kombinierte Teile
+    $searchQuery = implode(' ', array_diff($queryParts, $resourceFilters));
+    if (empty(trim($searchQuery))) {
+      $searchQuery = '*'; // Wildcard-Suche, wenn nur Filter vorhanden sind
+    }
+    
+    $meiliSearchQuery = Asteroid::search($searchQuery)->take(50000);
+    
+    // Filter nach Größe anwenden
+    if ($sizeFilter) {
+      $meiliSearchQuery->where('size', $sizeFilter);
+    }
+    
+    // Suche ausführen
+    $searchedAsteroids = $meiliSearchQuery->get()->load('resources');
+    
+    // Bei Ressourcenfiltern manuelle Filterung anwenden
+    if (!empty($resourceFilters)) {
+      $expandedFilters = $this->expandResources($resourceFilters);
+      $searchedAsteroids = $searchedAsteroids->filter(function($asteroid) use ($expandedFilters) {
+        // Prüfe, ob der Asteroid alle spezifizierten Ressourcen hat
+        foreach ($expandedFilters as $resource) {
+          if (!$asteroid->resources->contains('resource_type', $resource)) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+    
+    // Filterung nach Scan-Bereich
+    $filteredAsteroids = $searchedAsteroids->filter(function ($asteroid) use ($userStation, $scanRange) {
       $distance = $this->calculateDistance(
-        $userStation->x,
-        $userStation->y,
-        $asteroid->x,
-        $asteroid->y
+        $userStation->x, $userStation->y,
+        $asteroid->x, $asteroid->y
       );
       return $distance <= $scanRange;
     })->values();
-  }
-
-  private function searchStations($query): Collection
-  {
-    return Station::search($query)->take(100)->get();
+    
+    // Stationssuche wie bisher
+    $searchedStations = Station::search($query)->take(100)->get();
+    
+    return [$filteredAsteroids, $searchedStations];
   }
 
   private function getUserScanRange($userId): int
@@ -68,76 +102,9 @@ class AsteroidSearch
     return sqrt(pow($x2 - $x1, 2) + pow($y2 - $y1, 2));
   }
 
-  private function isSingleWordQuery($queryParts): bool
-  {
-    return count($queryParts) === 1 && strpos($queryParts[0], '-') === false;
-  }
-
-  private function performMeilisearchQuery($query): Collection
-  {
-    return Asteroid::search($query)->take(1000)->get();
-  }
-
-  private function performComplexQuery($queryParts): Collection
-  {
-    $searchedAsteroids = Asteroid::query();
-    $this->applySizeFilter($searchedAsteroids, $queryParts);
-    $this->applyResourceFilter($searchedAsteroids, $queryParts);
-    return $searchedAsteroids->take(1000)->get();
-  }
-
-  private function applySizeFilter($query, $queryParts): void
-  {
-    $rarities = ['small', 'medium', 'large', 'extreme'];
-    foreach ($queryParts as $part) {
-      if (in_array($part, $rarities)) {
-        $query->where('size', $part);
-        break;
-      }
-    }
-  }
-
-  private function applyResourceFilter($query, $queryParts): void
-  {
-    $resourceFilter = array_diff($queryParts, ['small', 'medium', 'large', 'extreme']);
-    if (empty($resourceFilter)) {
-      return;
-    }
-
-    $combinedResources = $this->getCombinedResources($resourceFilter);
-    $expandedResourceFilter = $this->expandResources(array_diff($resourceFilter, $combinedResources));
-
-    $this->applyCombinedResourcesFilter($query, $combinedResources);
-    $this->applyExpandedResourceFilter($query, $expandedResourceFilter);
-  }
-
-  private function applyCombinedResourcesFilter($query, $combinedResources): void
-  {
-    foreach ($combinedResources as $combinedResource) {
-      $resources = explode('-', $combinedResource);
-      $expandedResources = $this->expandResources($resources);
-      $query->whereHas('resources', function ($subQuery) use ($expandedResources) {
-        $subQuery->whereIn('resource_type', $expandedResources);
-      }, '=', count($expandedResources));
-    }
-  }
-
-  private function applyExpandedResourceFilter($query, $expandedResourceFilter): void
-  {
-    if (!empty($expandedResourceFilter)) {
-      $query->whereHas('resources', function ($subQuery) use ($expandedResourceFilter) {
-        $subQuery->whereIn('resource_type', $expandedResourceFilter);
-      });
-    }
-  }
-
-  private function getCombinedResources($resourceFilter): array
-  {
-    return array_filter($resourceFilter, function ($item) {
-      return strpos($item, '-') !== false;
-    });
-  }
-
+  /**
+   * Erweitert die Ressourcenfilter um deren Synonyme
+   */
   private function expandResources($resourceFilter): array
   {
     $expandedResourceFilter = [];
@@ -155,7 +122,10 @@ class AsteroidSearch
     return $expandedResourceFilter;
   }
 
-  private function getResourceSynonyms(): array
+  /**
+   * Gibt ein Array mit allen Ressource-Synonymen zurück
+   */
+  public function getResourceSynonyms(): array
   {
     return [
       'car' => ['Carbon'],
@@ -251,5 +221,4 @@ class AsteroidSearch
       'edu' => ['Deuterium'],
     ];
   }
-
 }

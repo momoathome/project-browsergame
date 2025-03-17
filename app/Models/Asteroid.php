@@ -29,16 +29,29 @@ class Asteroid extends Model
         return $this->hasMany(AsteroidResource::class);
     }
 
-    public function toSearchableArray(): array
+    public function toSearchableArray()
     {
-        $resources = $this->resources()->pluck('resource_type')->toArray();
-        $resources = implode(', ', $resources);
+        $array = $this->toArray();
 
-        return [
-            'name' => $this->name,
-            'size' => $this->size,
-            'resources' => $resources,
-        ];
+        if (!$this->relationLoaded('resources')) {
+            $this->load('resources');
+        }
+
+        // Ressourcen als durchsuchbare Attribute hinzufügen
+        $array['resources'] = $this->resources->map(function ($resource) {
+            return [
+                'type' => $resource->resource_type,
+                'amount' => $resource->amount,
+            ];
+        })->toArray();
+
+        // Liste aller Ressourcentypen als eigenes Feld für bessere Filterung
+        $array['resource_types'] = $this->resources->pluck('resource_type')->toArray();
+
+        // Alle Ressourcen als String für bessere Volltextsuche
+        $array['all_resources'] = implode(' ', $this->resources->pluck('resource_type')->toArray());
+
+        return $array;
     }
 
 }

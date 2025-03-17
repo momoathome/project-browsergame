@@ -36,16 +36,5 @@ class DefaultUserSeeder extends Seeder
             'password' => Hash::make('password')
         ]);
 
-        User::create([
-            'name' => 'user2',
-            'email' => 'user2@browsergame.de',
-            'password' => Hash::make('password')
-        ]);
-
-        User::create([
-            'name' => 'user3',
-            'email' => 'user3@browsergame.de',
-            'password' => Hash::make('password')
-        ]);
     }
 }

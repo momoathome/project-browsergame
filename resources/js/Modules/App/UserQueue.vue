@@ -36,27 +36,37 @@ interface ProcessedQueueItem {
   completed: boolean;
 }
 
-const loadSeenItems = (): Set<number> => {
+interface SavedQueueItemState {
+  id: number;
+  seen: boolean;
+  showInfos: boolean;
+}
+
+const loadQueueItemStates = (): Map<number, SavedQueueItemState> => {
   try {
-    const savedItems = localStorage.getItem('seenQueueItems')
+    const savedItems = localStorage.getItem('queueItemStates')
     if (savedItems) {
-      return new Set(JSON.parse(savedItems))
+      const parsedItems = JSON.parse(savedItems) as SavedQueueItemState[]
+      const itemMap = new Map<number, SavedQueueItemState>()
+      parsedItems.forEach(item => itemMap.set(item.id, item))
+      return itemMap
     }
   } catch (e) {
-    console.error('Fehler beim Laden gesehener Items:', e)
+    console.error('Fehler beim Laden der Item-Status:', e)
   }
-  return new Set()
+  return new Map()
 }
 
-const saveSeenItems = (itemIds: Set<number>): void => {
+const saveQueueItemStates = (itemStates: Map<number, SavedQueueItemState>): void => {
   try {
-    localStorage.setItem('seenQueueItems', JSON.stringify(Array.from(itemIds)))
+    const itemArray = Array.from(itemStates.values())
+    localStorage.setItem('queueItemStates', JSON.stringify(itemArray))
   } catch (e) {
-    console.error('Fehler beim Speichern gesehener Items:', e)
+    console.error('Fehler beim Speichern der Item-Status:', e)
   }
 }
 
-const seenItemIds = ref<Set<number>>(loadSeenItems())
+const queueItemStates = ref<Map<number, SavedQueueItemState>>(loadQueueItemStates())
 const page = usePage()
 const rawQueueData = computed<RawQueueItem[]>(() => page.props.queue || [])
 
@@ -70,6 +80,10 @@ const getImageByActionType = (actionType: string): string => {
       return '/storage/navigation/shipyard.png'
     case 'mining':
       return '/storage/navigation/asteroidmap.png'
+    case 'research':
+      return '/storage/navigation/research.png'
+    case 'battle':
+      return '/storage/navigation/simulator.png'
     default:
       return '/storage/navigation/buildings.png'
   }
@@ -105,7 +119,7 @@ const getDetailsByActionType = (actionType: string, details: QueueItemDetails | 
   }
 }
 
-const getMiningTime = (item: RawQueueItem): number => {
+const getRemainingTime = (item: RawQueueItem): number => {
   if (!item.end_time) return 0
 
   const endTime = new Date(item.end_time).getTime()
@@ -120,14 +134,27 @@ const processQueueData = (): void => {
     return
   }
 
-  let hasNewItems = false
+  let hasStateChanges = false
 
   const newItems: ProcessedQueueItem[] = rawQueueData.value.map(item => {
-    const isItemNew = !seenItemIds.value.has(item.id)
+    let itemState = queueItemStates.value.get(item.id)
+
+    if (!itemState) {
+      // Neues Item gefunden
+      itemState = {
+        id: item.id,
+        seen: false,
+        showInfos: false
+      }
+      queueItemStates.value.set(item.id, itemState)
+      hasStateChanges = true
+    }
+
+    const isItemNew = !itemState.seen
 
     if (isItemNew) {
-      seenItemIds.value.add(item.id)
-      hasNewItems = true
+      itemState.seen = true
+      hasStateChanges = true
     }
 
     const processedItem: ProcessedQueueItem = {
@@ -135,15 +162,14 @@ const processQueueData = (): void => {
       name: getNameByActionType(item.action_type, item.details),
       image: getImageByActionType(item.action_type),
       details: getDetailsByActionType(item.action_type, item.details),
-      showInfos: false,
+      showInfos: itemState.showInfos,
       isNew: isItemNew,
       rawData: item,
       completed: false
     }
 
-    // Füge Mining-Zeit für Asteroiden hinzu
-    if (item.action_type === 'mining' && item.end_time) {
-      const remainingTimeMs = getMiningTime(item)
+    if (item.end_time) {
+      const remainingTimeMs = getRemainingTime(item)
       processedItem.remainingTime = remainingTimeMs
       processedItem.formattedTime = timeFormat(Math.floor(remainingTimeMs / 1000))
 
@@ -156,8 +182,8 @@ const processQueueData = (): void => {
     return processedItem
   })
 
-  if (hasNewItems) {
-    saveSeenItems(seenItemIds.value)
+  if (hasStateChanges) {
+    saveQueueItemStates(queueItemStates.value)
   }
 
   newItems.forEach(item => {
@@ -178,6 +204,12 @@ const toggleInfo = (item: ProcessedQueueItem): void => {
   const foundItem = processedQueueItems.value.find(i => i.id === item.id)
   if (foundItem) {
     foundItem.showInfos = !foundItem.showInfos
+
+    const itemState = queueItemStates.value.get(item.id)
+    if (itemState) {
+      itemState.showInfos = foundItem.showInfos
+      saveQueueItemStates(queueItemStates.value)
+    }
   }
 }
 
@@ -185,7 +217,7 @@ const updateMiningTimers = (): void => {
   if (!processedQueueItems.value.length) return
 
   processedQueueItems.value.forEach(item => {
-    if (item.rawData.action_type === 'mining' && item.rawData.end_time && !item.completed) {
+    if (item.rawData.end_time && !item.completed) {
       const endTime = new Date(item.rawData.end_time).getTime();
       const now = new Date().getTime();
       const diff = endTime - now;
@@ -206,17 +238,20 @@ const updateMiningTimers = (): void => {
     }
   });
 
-  const hasActiveMiningItems = processedQueueItems.value.some(
-    item => item.rawData.action_type === 'mining' && !item.completed
+  const hasActiveItems = processedQueueItems.value.some(
+    item => !item.completed
   );
 
-  if (!hasActiveMiningItems && timerInterval) {
+  if (!hasActiveItems && timerInterval) {
     clearInterval(timerInterval);
     timerInterval = undefined;
   }
 }
 
-function handleMiningComplete(item) {
+function handleMiningComplete(item: ProcessedQueueItem): void {
+  queueItemStates.value.delete(item.id);
+  saveQueueItemStates(queueItemStates.value);
+
   setTimeout(() => {
     router.reload({ only: ['queue', 'userResources'] });
   }, 1000);
@@ -247,22 +282,27 @@ onUnmounted(() => {
 
     <div v-for="item in processedQueueItems" :key="item.id">
       <div @click="toggleInfo(item)"
-        class="flex h-10 gap-2 p-2 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition"
+        class="flex items-center h-10 gap-2 p-1.5 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition"
         :class="{ 'fade-in': item.isNew }">
-        <img :src="item.image" width="24px" height="24px" alt="Item icon" class="queue-item-icon">
+        <img :src="item.image" width="24px" height="24px" alt="Item icon" class="w-6 h-6" />
         <transition name="expand">
-          <div v-if="item.showInfos" class="flex flex-col justify-center">
-            <h3 class="text-xs font-medium text-white whitespace-nowrap">{{ item.name }}</h3>
-            <p class="text-xs text-gray-400 whitespace-nowrap">
-              <span v-if="item.rawData.action_type === 'building'">Upgrade to Level {{ item.details }}</span>
-              <span v-else-if="item.rawData.action_type === 'produce'">Quantity: {{ item.details }}</span>
-              <span v-else-if="item.rawData.action_type === 'mining'" class="flex justify-between w-full">
-                <span>{{ item.details }}</span>
-                <span class="ml-4 font-medium">{{ item.formattedTime }}</span>
-              </span>
-              <span v-else>{{ item.details }}</span>
-            </p>
+          <div class="flex">
+            <div v-if="item.showInfos" class="flex flex-col justify-center">
+              <h3 class="text-xs font-medium text-white whitespace-nowrap">{{ item.name }}</h3>
+              <p class="text-xs text-gray-400 whitespace-nowrap">
+                <span v-if="item.rawData.action_type === 'building'">upgrade to lv. {{ item.details }}</span>
+                <span v-else-if="item.rawData.action_type === 'produce'">
+                  <span>quantity: {{ item.details }}</span>
+                </span>
+                <span v-else-if="item.rawData.action_type === 'mining'" class="flex justify-between w-full">
+                  <span>{{ item.details }}</span>
+                </span>
+                <span v-else>{{ item.details }}</span>
+              </p>
+            </div>
+            <p class="text-xs text-gray-400 ml-2 self-end">{{ item.formattedTime }}</p>
           </div>
+
         </transition>
       </div>
     </div>

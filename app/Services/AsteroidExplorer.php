@@ -44,7 +44,9 @@ class AsteroidExplorer
             $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
             // Berechne die Dauer basierend auf dem niedrigsten Speed-Wert
             $duration = $this->calculateMiningDuration($spacecraftsWithDetails, $user, $asteroid);
-
+            // spacecrafts für die dauer der exploration sperren
+            $this->lockSpacecrafts($user, $filteredSpacecrafts);
+            
             $this->queueService->addToQueue(
                 $user->id,
                 ActionQueue::ACTION_TYPE_MINING,
@@ -57,8 +59,6 @@ class AsteroidExplorer
                 ]
             );
 
-            // spacecrafts für die dauer der exploration sperren
-            $this->lockSpacecrafts($user, $filteredSpacecrafts);
         });
     }
 

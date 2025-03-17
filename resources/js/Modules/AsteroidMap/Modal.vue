@@ -152,8 +152,7 @@ const calculateMiningDuration = () => {
   const anySpacecraftSelected = Object.values(form.spacecrafts).some(value => value > 0);
   if (!anySpacecraftSelected) return '00:00';
   
-  // Niedrigste Geschwindigkeit finden
-  let lowestSpeed = 100;
+  let lowestSpeed = 0;
   
   for (const spacecraftName in form.spacecrafts) {
     const count = form.spacecrafts[spacecraftName];
@@ -161,15 +160,17 @@ const calculateMiningDuration = () => {
       const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
       if (spacecraft && spacecraft.speed < lowestSpeed) {
         lowestSpeed = spacecraft.speed;
+      } else if (lowestSpeed === 0 && spacecraft) {
+        lowestSpeed = spacecraft.speed;
       }
     }
   }
   
-  // Distanz berechnen
   const userStation = usePage().props.stations.find(station => 
     station.user_id === usePage().props.auth.user.id
   );
   
+  // Distanz berechnen
   const distance = Math.sqrt(
     Math.pow(userStation.x - asteroid.value.x, 2) + 
     Math.pow(userStation.y - asteroid.value.y, 2)

@@ -27,7 +27,7 @@ function buyResource() {
     return;
   }
 
-  form.post(`/market/buy`, {
+  form.post(route('market.buy'), {
     preserveState: true,
 
     onSuccess: () => {
@@ -41,7 +41,7 @@ function sellResource() {
     return;
   }
 
-  form.post(`/market/sell`, {
+  form.post(route('market.sell'), {
     onSuccess: () => {
       form.reset();
     },

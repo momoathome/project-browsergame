@@ -4,6 +4,9 @@ namespace App\Dto;
 
 class BattleResult
 {
+    public $attackerName;
+    public $defenderName;
+    
     public function __construct(
         public readonly string $winner,
         public readonly array $attackerLosses,

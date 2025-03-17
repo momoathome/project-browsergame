@@ -90,7 +90,7 @@ class BattleController extends Controller
     $result->attackerName = auth()->user()->name;
     $result->defenderName = User::find($defender_id)->name;
 
-    return redirect()->route('asteroidMap')->banner('Winner is '. $result->attackerName . '!');
+    return redirect()->route('asteroidMap')->banner('Winner is '. $result->winner . '!');
     
     /* return Inertia::render('AsteroidMap', [
       'result' => $result,

@@ -10,6 +10,8 @@ class QueueService
 
     public function getPlayerQueue($userId)
     {
+        $this->processQueueForUser($userId);
+        
         return ActionQueue::where('user_id', $userId)
             ->where('status', 'pending')
             ->get();

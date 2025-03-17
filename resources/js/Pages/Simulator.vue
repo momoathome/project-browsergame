@@ -59,7 +59,7 @@ function simulateBattle() {
   form.attacker = attacker.value;
   form.defender = defender.value;
 
-  form.post('/simulator', {
+  form.post(route('simulator.simulate'), {
     preserveState: true,
     only: ['result'],
     onSuccess: () => {

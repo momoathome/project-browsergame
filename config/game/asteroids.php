@@ -1,16 +1,34 @@
 <?php
 
-$asteroid_count = 2000;
-$asteroid_density = 55; // smaller number = more dense because smaller universe_size
-$min_distance = 1000;
+$asteroid_count = 10000;
+$asteroid_density = 40; // kleinere Zahl = dichter besiedelt
+$min_distance_between_asteroids = 1000;
 $station_to_station_distance = 5000;
 $universe_size = $asteroid_count * $asteroid_density;
 
 return [
     'asteroid_count' => $asteroid_count,
     'asteroid_density' => $asteroid_density,
-    'min_distance' => $min_distance,
+    'min_distance_between_asteroids' => $min_distance_between_asteroids,
+    'station_to_station_distance' => $station_to_station_distance,
     'universe_size' => $universe_size,
+    
+    // Koordinatenbereich, in dem Asteroiden generiert werden können
+    'spawn_area' => [
+        'min_x' => 0,
+        'min_y' => 0,
+        'max_x' => $universe_size,
+        'max_y' => $universe_size,
+    ],
+
+    // Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
+    'station_safety_distance' => [
+        'base' => 1000,
+        'small_asteroid' => 2.0,
+        'medium_asteroid' => 4.0,
+        'large_asteroid' => 8.0,
+        'extreme_asteroid' => 15.0,
+    ],
 
     'asteroid_img_size' => [
         'small' => 1,
@@ -27,7 +45,7 @@ return [
 
     /* chance to generate of asteroid sizes */
     'asteroid_size' => [
-        'small' => 750, // chance of $asteroid_count
+        'small' => 750, // Gewicht für die Zufallsauswahl
         'medium' => 210,
         'large' => 30,
         'extreme' => 10,
@@ -40,35 +58,31 @@ return [
         'extreme' => ['min' => 89, 'max' => 144],
     ],
 
-    'distance_modifiers' => [
-        'small' => 0,
-        'medium' => 2 * $min_distance,
-        'large' => 8 * $min_distance,
-        'extreme' => 15 * $min_distance,
+    'resource_min_distances' => [
+        'low_value' => 1 * $min_distance_between_asteroids,
+        'medium_value' => 12 * $min_distance_between_asteroids,
+        'high_value' => 20 * $min_distance_between_asteroids,
+        'extreme_value' => 25 * $min_distance_between_asteroids,
     ],
 
     'resource_pools' => [
         'low_value' => [
             'resources' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'resource_distance_modifier' => 1 * $min_distance,
         ],
         'medium_value' => [
             'resources' => ['Cobalt', 'Iridium', 'Uraninite'],
-            'resource_distance_modifier' => 12 * $min_distance,
         ],
         'high_value' => [
             'resources' => ['Thorium', 'Astatine', 'Hyperdiamond'],
-            'resource_distance_modifier' => 20 * $min_distance,
         ],
         'extreme_value' => [
             'resources' => ['Dilithium', 'Deuterium'],
-            'resource_distance_modifier' => 25 * $min_distance,
         ],
     ],
 
     'pool_weights' => [
-        'low_value' => 0.60, //60%
-        'medium_value' => 0.35, //35%
+        'low_value' => 0.65, //60%
+        'medium_value' => 0.30, //30%
         'high_value' => 0.04, //4%
         'extreme_value' => 0.01, //1%
     ],

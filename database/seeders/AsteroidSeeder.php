@@ -20,21 +20,24 @@ class AsteroidSeeder extends Seeder
     $startTime = microtime(true);
 
     DB::table(table: 'asteroids')->truncate();
-
     $asteroidGenerator = app(AsteroidGenerator::class);
-
     $count = $this->config['asteroid_count'];
-
     $asteroidGenerator->generateAsteroids($count);
 
-    $this->command->info("{$count} Asteroids created.");
+    $endTime = microtime(true);
+    $executionTime = $endTime - $startTime;
+    $this->command->info("{$count} Asteroids created in " . number_format($executionTime, 2) . " seconds.");
+    $this->command->info("Indexing asteroids... depending on the amount of asteroids, this may take a few minutes.");
+    
+    // Index the asteroids 
+    $startTime = microtime(true);
     $asteroidModel = "App\\Models\\Asteroid";
     Artisan::call('scout:flush', ['model' => $asteroidModel]);
     Artisan::call('scout:import', ['model' => $asteroidModel]);
     Artisan::call('scout:index', ['name' => 'asteroids']);
     $endTime = microtime(true);
     $executionTime = $endTime - $startTime;
-    $this->command->info("Asteroids imported and indexed. In " . number_format($executionTime, 2) . " seconds.");
+    $this->command->info("Asteroids imported and indexed in " . number_format($executionTime, 2) . " seconds.");
   }
 }
 

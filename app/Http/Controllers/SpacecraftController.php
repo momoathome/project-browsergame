@@ -92,7 +92,7 @@ class SpacecraftController extends Controller
             ->where('attribute_name', 'crew_limit')
             ->first();
 
-        if ($crewLimit && $crewLimit->attribute_value < $spacecraft->count + $quantity) {
+        if ($crewLimit && $crewLimit->attribute_value < $spacecraft->crew_limit * $quantity) {
             return redirect()->route('shipyard')->dangerBanner('maximum Crew Limit reached');
         }
 
@@ -116,7 +116,7 @@ class SpacecraftController extends Controller
 
             UserAttribute::where('user_id', $user->id)
                 ->where('attribute_name', 'total_units')
-                ->increment('attribute_value', $quantity);
+                ->increment('attribute_value', $spacecraft->crew_limit * $quantity);
 
             // Produktion zur Queue hinzufügen
             $this->queueService->addToQueue(
@@ -125,7 +125,7 @@ class SpacecraftController extends Controller
                 $spacecraft->id,
                 $spacecraft->build_time * $quantity,
                 [
-                    'spacecraft_id' => $spacecraft->id,
+                    'spacecraft_name' => $spacecraft->details->name,
                     'quantity' => $quantity,
                 ]
             );

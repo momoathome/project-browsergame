@@ -4,6 +4,8 @@ import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppTooltip from '@/Components/AppTooltip.vue';
 
+const page = usePage();
+
 const attributeLabels = {
   storage: 'Resource storage',
   research_points: 'Research Points',
@@ -16,7 +18,7 @@ const attributeLabels = {
 };
 
 const formattedAttributesNames = computed(() => {
-  return usePage().props.userAttributes.map((attribute) => {
+  return page.props.userAttributes.map((attribute) => {
     const attributeName = attribute ? attribute.attribute_name : null;
     return {
       name: attributeName,
@@ -26,7 +28,7 @@ const formattedAttributesNames = computed(() => {
 });
 
 const formattedAttributes = computed(() => {
-  return usePage().props.userAttributes.map((attribute) => {
+  return page.props.userAttributes.map((attribute) => {
     return {
       // attribute name from formattedAttributesNames
       name: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.name : null,
@@ -37,8 +39,8 @@ const formattedAttributes = computed(() => {
 });
 
 const unitsRatio = computed(() => {
-  const totalUnits = usePage().props.userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
-  const crewLimit = usePage().props.userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
+  const totalUnits = page.props.userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
+  const crewLimit = page.props.userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
   return `${numberFormat(totalUnits)} / ${numberFormat(crewLimit)}`;
 });
 </script>

@@ -6,7 +6,7 @@ import UserQueue from '@/Modules/App/UserQueue.vue';
 import Divider from '@/Components/Divider.vue';
 
 const logout = () => {
-  router.post(route('logout'));
+    router.post(route('logout'));
 };
 </script>
 
@@ -27,9 +27,7 @@ const logout = () => {
         </div>
 
         <Divider class="bg-primary/50" />
-        <!-- userQueue container -->
-        <div class="flex gap-2">
-            <UserQueue />
-        </div>
+
+        <UserQueue />
     </header>
 </template>

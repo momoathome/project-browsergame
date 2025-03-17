@@ -107,8 +107,9 @@ class BuildingController extends Controller
                 $building->id,
                 $building->build_time, // Dauer in Sekunden
                 [
-                    'building_id' => $building->id,
-                    'current_level' => $building->level
+                    'building_name' => $building->details->name,
+                    'current_level' => $building->level,
+                    'next_level' => $building->level + 1,
                 ]
             );
         });

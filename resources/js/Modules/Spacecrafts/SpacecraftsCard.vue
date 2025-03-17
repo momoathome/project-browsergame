@@ -44,7 +44,7 @@ function produceSpacecraft() {
 
 function handleProduceComplete() {
   setTimeout(() => {
-    router.reload({ only: ['spacecrafts'] });
+    router.reload({ only: ['spacecrafts', 'queue', 'userAttributes'] });
   }, 500);
 }
 

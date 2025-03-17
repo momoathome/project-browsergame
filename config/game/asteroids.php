@@ -1,9 +1,9 @@
 <?php
 
-$asteroid_count = 1000;
+$asteroid_count = 1500;
 $asteroid_density = 55;
 $min_distance = 1000;
-$station_to_station_distance = 3000;
+$station_to_station_distance = 5000;
 $universe_size = $asteroid_count * $asteroid_density;
 
 return [
@@ -50,19 +50,19 @@ return [
     'resource_pools' => [
         'low_value' => [
             'resources' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'resource_distance_modifier' => 0,
+            'resource_distance_modifier' => 1 * $min_distance,
         ],
         'medium_value' => [
-            'resources' => ['Cobalt', 'Iridium', 'Uraninite', 'Thorium'],
-            'resource_distance_modifier' => 8 * $min_distance,
+            'resources' => ['Cobalt', 'Iridium', 'Uraninite'],
+            'resource_distance_modifier' => 12 * $min_distance,
         ],
         'high_value' => [
-            'resources' => ['Astatine', 'Hyperdiamond'],
-            'resource_distance_modifier' => 15 * $min_distance,
+            'resources' => ['Thorium', 'Astatine', 'Hyperdiamond'],
+            'resource_distance_modifier' => 20 * $min_distance,
         ],
         'extreme_value' => [
             'resources' => ['Dilithium', 'Deuterium'],
-            'resource_distance_modifier' => 20 * $min_distance,
+            'resource_distance_modifier' => 25 * $min_distance,
         ],
     ],
 

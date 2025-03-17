@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\App;
 
 class QueueService
 {
+
+    public function getPlayerQueue($userId)
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->get();
+    }
+
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)
     {
         return ActionQueue::create([

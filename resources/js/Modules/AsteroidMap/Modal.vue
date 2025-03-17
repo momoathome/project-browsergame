@@ -339,7 +339,7 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
                   <p class="text-secondary">Travel Time: <span class="text-white">{{ formattedDuration }}</span></p>
                 </div>
                 <div class="flex gap-2">
-                  <div class="relative group z-10" v-if="content?.type === 'asteroid'">
+                  <div class="relative group z-10" v-if="content?.type === 'asteroid' && canScanAsteroid">
                     <SecondaryButton @click="setMinNeededUnits">Min</SecondaryButton>
                     <AppTooltip label="set the minimum needed Spacecrafts to mine all resources" position="bottom"
                       class="!mt-2 text-pretty w-40" />

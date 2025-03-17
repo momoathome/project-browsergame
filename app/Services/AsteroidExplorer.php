@@ -38,11 +38,12 @@ class AsteroidExplorer
     {
         DB::transaction(function () use ($user, $asteroidId, $spaceCrafts) {
             $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
+            $asteroid = Asteroid::find($asteroidId);
 
             // Lade die Raumschiffe mit ihren Details
             $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
             // Berechne die Dauer basierend auf dem niedrigsten Speed-Wert
-            $duration = $this->calculateMiningDuration($spacecraftsWithDetails, $user, $asteroidId);
+            $duration = $this->calculateMiningDuration($spacecraftsWithDetails, $user, $asteroid);
 
             $this->queueService->addToQueue(
                 $user->id,
@@ -50,7 +51,7 @@ class AsteroidExplorer
                 $asteroidId,
                 $duration, // Dauer in Sekunden
                 [
-                    'asteroid_id' => $asteroidId,
+                    'asteroid_name' => $asteroid->name,
                     'spacecrafts' => $filteredSpacecrafts,
                     'duration' => $duration
                 ]
@@ -172,7 +173,7 @@ class AsteroidExplorer
             ->get();
     }
 
-    private function calculateMiningDuration($spacecrafts, $user, $asteroidId)
+    private function calculateMiningDuration($spacecrafts, $user, $asteroid)
     {
         // Standardwert, falls keine Speed-Werte gefunden werden können
         $lowestSpeed = 100;
@@ -184,7 +185,7 @@ class AsteroidExplorer
         }
 
         // Distanz zum Asteroiden berechnen
-        $distance = $this->calculateDistanceToAsteroid($user, $asteroidId);
+        $distance = $this->calculateDistanceToAsteroid($user, $asteroid);
         // Für 1000 Einheiten wird 1 Sekunde benötigt
         // Je niedriger der Speed, desto länger die Dauer
         // basisdauer in Sekunden
@@ -197,10 +198,9 @@ class AsteroidExplorer
         return $calculatedDuration;
     }
 
-    private function calculateDistanceToAsteroid($user, $asteroidId)
+    private function calculateDistanceToAsteroid($user, $asteroid)
     {
         $station = Station::where('user_id', $user->id)->first();
-        $asteroid = Asteroid::find($asteroidId);
 
         // Distanz berechnen
         $distance = sqrt(

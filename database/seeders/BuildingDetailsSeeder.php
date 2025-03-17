@@ -51,7 +51,7 @@ class BuildingDetailsSeeder extends Seeder
 
         BuildingDetails::create([
             'name' => 'Scanner',
-            'description' => 'The higher the Scanner level, the more space can be scanned.',
+            'description' => 'The higher the Scanner level, the wider the scanning range.',
             'image' => '/storage/buildings/scanner.webp',
             'effect' => 'Scanner range',
         ]);

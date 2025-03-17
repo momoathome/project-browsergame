@@ -7,9 +7,17 @@ use Inertia\Middleware;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
+use App\Services\QueueService;
 
 class HandleInertiaRequests extends Middleware
 {
+    protected $queueService;
+
+    public function __construct(QueueService $queueService)
+    {
+        $this->queueService = $queueService;
+    }
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -49,6 +57,9 @@ class HandleInertiaRequests extends Middleware
                 ? UserAttribute::where('user_id', Auth::user()->id)
                 ->orderBy('id', 'asc')
                 ->get()
+                : [],
+            'queue' => Auth::check()
+                ? $this->queueService->getPlayerQueue(Auth::user()->id)
                 : [],
         ]);
     }

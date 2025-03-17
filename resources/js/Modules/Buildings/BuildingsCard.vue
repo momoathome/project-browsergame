@@ -61,7 +61,7 @@ function upgradeBuilding() {
 
 function handleUpgradeComplete() {
   setTimeout(() => {
-    router.reload({ only: ['buildings'] });
+    router.reload({ only: ['buildings', 'queue', 'userAttributes'] });
   }, 500);
 }
 </script>

@@ -148,7 +148,6 @@ const totalCargoCapacity = computed(() => {
 const calculateMiningDuration = () => {
   if (!asteroid.value) return '00:00';
   
-  // Prüfen, ob Raumschiffe ausgewählt wurden
   const anySpacecraftSelected = Object.values(form.spacecrafts).some(value => value > 0);
   if (!anySpacecraftSelected) return '00:00';
   
@@ -158,9 +157,7 @@ const calculateMiningDuration = () => {
     const count = form.spacecrafts[spacecraftName];
     if (count > 0) {
       const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
-      if (spacecraft && spacecraft.speed < lowestSpeed) {
-        lowestSpeed = spacecraft.speed;
-      } else if (lowestSpeed === 0 && spacecraft) {
+      if (spacecraft && spacecraft.speed > 0 && (lowestSpeed === 0 || spacecraft.speed < lowestSpeed)) {
         lowestSpeed = spacecraft.speed;
       }
     }
@@ -176,13 +173,12 @@ const calculateMiningDuration = () => {
     Math.pow(userStation.y - asteroid.value.y, 2)
   );
   
-  // Berechnungslogik aus AsteroidExplorer.php
-  const baseDuration = 10;
+  const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
   const travelFactor = 1;
-  const calculatedDuration = Math.max(
+  const calculatedDuration = Math.floor(Math.max(
     baseDuration, 
-    Math.round(distance / lowestSpeed * travelFactor)
-  );
+    distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor
+  ));
   
   return timeFormat(calculatedDuration);
 };

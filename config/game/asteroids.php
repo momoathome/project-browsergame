@@ -1,7 +1,7 @@
 <?php
 
-$asteroid_count = 1500;
-$asteroid_density = 55;
+$asteroid_count = 2000;
+$asteroid_density = 55; // smaller number = more dense because smaller universe_size
 $min_distance = 1000;
 $station_to_station_distance = 5000;
 $universe_size = $asteroid_count * $asteroid_density;
@@ -27,8 +27,8 @@ return [
 
     /* chance to generate of asteroid sizes */
     'asteroid_size' => [
-        'small' => 660, // chance of $asteroid_count
-        'medium' => 300,
+        'small' => 750, // chance of $asteroid_count
+        'medium' => 210,
         'large' => 30,
         'extreme' => 10,
     ],
@@ -42,9 +42,9 @@ return [
 
     'distance_modifiers' => [
         'small' => 0,
-        'medium' => 0,
-        'large' => 4 * $min_distance,
-        'extreme' => 8 * $min_distance,
+        'medium' => 2 * $min_distance,
+        'large' => 8 * $min_distance,
+        'extreme' => 15 * $min_distance,
     ],
 
     'resource_pools' => [

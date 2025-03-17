@@ -213,7 +213,7 @@ const toggleInfo = (item: ProcessedQueueItem): void => {
   }
 }
 
-const updateMiningTimers = (): void => {
+const updateTimers = (): void => {
   if (!processedQueueItems.value.length) return
 
   processedQueueItems.value.forEach(item => {
@@ -228,7 +228,7 @@ const updateMiningTimers = (): void => {
         item.formattedTime = '00:00';
         item.completed = true;
 
-        handleMiningComplete(item);
+        handleTimerComplete(item);
         return;
       }
 
@@ -248,19 +248,19 @@ const updateMiningTimers = (): void => {
   }
 }
 
-function handleMiningComplete(item: ProcessedQueueItem): void {
+function handleTimerComplete(item: ProcessedQueueItem): void {
   queueItemStates.value.delete(item.id);
   saveQueueItemStates(queueItemStates.value);
 
   setTimeout(() => {
-    router.reload({ only: ['queue', 'userResources'] });
+    router.reload();
   }, 1000);
 }
 
 let timerInterval: number | undefined
 onMounted(() => {
   processQueueData()
-  timerInterval = setInterval(updateMiningTimers, 1000)
+  timerInterval = setInterval(updateTimers, 1000)
 })
 
 watch(() => rawQueueData.value, () => {

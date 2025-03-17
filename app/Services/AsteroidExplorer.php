@@ -130,12 +130,12 @@ class AsteroidExplorer
         });
     }
 
-    private function lockSpacecrafts($user, $filteredSpacecrafts)
+    public function lockSpacecrafts($user, $filteredSpacecrafts)
     {
         return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, false);
     }
 
-    private function freeSpacecrafts($user, $filteredSpacecrafts)
+    public function freeSpacecrafts($user, $filteredSpacecrafts)
     {
         return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, true);
     }
@@ -163,7 +163,7 @@ class AsteroidExplorer
         return [$totalCargoCapacity, $hasMiner];
     }
 
-    private function getSpacecraftsWithDetails($user, $filteredSpacecrafts)
+    public function getSpacecraftsWithDetails($user, $filteredSpacecrafts)
     {
         return Spacecraft::with('details')
             ->where('user_id', $user->id)
@@ -173,13 +173,12 @@ class AsteroidExplorer
             ->get();
     }
 
-    private function calculateMiningDuration($spacecrafts, $user, $asteroid)
+    public function calculateMiningDuration($spacecrafts, $user, $asteroid)
     {
-        // Standardwert, falls keine Speed-Werte gefunden werden können
-        $lowestSpeed = 100;
+        $lowestSpeed = 0;
 
         foreach ($spacecrafts as $spacecraft) {
-            if ($spacecraft->speed < $lowestSpeed) {
+            if ($spacecraft->speed > 0 && ($lowestSpeed === 0 || $spacecraft->speed < $lowestSpeed)) {
                 $lowestSpeed = $spacecraft->speed;
             }
         }
@@ -189,11 +188,11 @@ class AsteroidExplorer
         // Für 1000 Einheiten wird 1 Sekunde benötigt
         // Je niedriger der Speed, desto länger die Dauer
         // basisdauer in Sekunden
-        $baseDuration = 10;
+        $baseDuration = max(10, $distance / ($lowestSpeed > 0 ? $lowestSpeed : 1));
         // Anpassungsfaktor für die Spielbalance
         $travelFactor = 1;
         // Formel: Distanz / Speed * Faktor (angepasst für die Spielbalance)
-        $calculatedDuration = max($baseDuration, (int) ($distance / $lowestSpeed * $travelFactor));
+        $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor));
 
         return $calculatedDuration;
     }

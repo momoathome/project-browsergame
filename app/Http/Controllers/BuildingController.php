@@ -38,7 +38,7 @@ class BuildingController extends Controller
             ->get();
 
         // Queue-Informationen holen
-        $buildingQueues = $this->queueService->getPendingQueuesByType($user->id, ActionQueue::ACTION_TYPE_BUILDING);
+        $buildingQueues = $this->queueService->getInProgressQueuesByType($user->id, ActionQueue::ACTION_TYPE_BUILDING);
 
         // Queue-Infos den Gebäuden hinzufügen
         $buildings = $buildings->map(function ($building) use ($buildingQueues) {

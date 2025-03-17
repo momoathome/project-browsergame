@@ -13,7 +13,7 @@ class QueueService
         $this->processQueueForUser($userId);
         
         return ActionQueue::where('user_id', $userId)
-            ->where('status', 'pending')
+            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
             ->get();
     }
 
@@ -25,30 +25,30 @@ class QueueService
             'target_id' => $targetId,
             'start_time' => now(),
             'end_time' => now()->addSeconds($duration),
-            'status' => 'pending',
+            'status' => ActionQueue::STATUS_IN_PROGRESS,
             'details' => $details,
         ]);
     }
 
     /**
-     * Get pending queues for a specific user and action type
+     * Get in progress queues for a specific user and action type
      *
      * @param int $userId
      * @param string $actionType
      * @return \Illuminate\Support\Collection
      */
-    public function getPendingQueuesByType($userId, $actionType)
+    public function getInProgressQueuesByType($userId, $actionType)
     {
         return ActionQueue::where('user_id', $userId)
             ->where('action_type', $actionType)
-            ->where('status', 'pending')
+            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
             ->get()
             ->keyBy('target_id');
     }
 
     public function processQueue()
     {
-        $completedActions = ActionQueue::where('status', 'pending')
+        $completedActions = ActionQueue::where('status', ActionQueue::STATUS_IN_PROGRESS)
             ->where('end_time', '<=', now())
             ->get();
 
@@ -60,7 +60,7 @@ class QueueService
     public function processQueueForUser($userId)
     {
         $completedActions = ActionQueue::where('user_id', $userId)
-            ->where('status', 'pending')
+            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
             ->where('end_time', '<=', now())
             ->get();
 
@@ -75,7 +75,9 @@ class QueueService
         $success = match ($action->action_type) {
             ActionQueue::ACTION_TYPE_BUILDING => $this->completeBuildingUpgrade($action),
             ActionQueue::ACTION_TYPE_PRODUCE => $this->completeSpacecraftProduction($action),
-            ActionQueue::ACTION_TYPE_MINING => $this->completeAsteroidMining($action),
+            ActionQueue::ACTION_TYPE_MINING => $this->completeAsteroidMining($action),            
+            ActionQueue::ACTION_TYPE_COMBAT => $this->completeCombat($action),
+            // ActionQueue::ACTION_TYPE_RESEARCH => $this->completeResearch($action),
             // ActionQueue::ACTION_TYPE_TRADE => $this->completeTrade($action),
             default => false
         };
@@ -106,6 +108,18 @@ class QueueService
         $asteroidController = App::make(\App\Http\Controllers\AsteroidController::class);
         return $asteroidController->completeAsteroidMining($action->target_id, $action->user_id, $action->details);
     }
+
+    private function completeCombat(ActionQueue $action)
+    {
+        $battleController = App::make(\App\Http\Controllers\BattleController::class);
+        return $battleController->completeCombat($action->user_id, $action->target_id, $action->details);
+    }
+
+/*     private function completeResearch(ActionQueue $action)
+    {
+        $researchController = App::make(\App\Http\Controllers\ResearchController::class);
+        return $researchController->completeResearch($action->target_id, $action->user_id, $action->details);
+    } */
 
     // Weitere Methoden für andere Aktionstypen
 }

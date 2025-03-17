@@ -89,7 +89,6 @@ class AsteroidGenerator
     $minDistance = $this->config['min_distance'];
     $universeSize = $this->config['universe_size'];
     $distanceModifier = $this->config['distance_modifiers'][$asteroid['size']] ?? 0;
-
     $resourceDistanceModifier = $this->calculateResourceDistanceModifier($resources);
     $distanceModifier += $resourceDistanceModifier;
 
@@ -130,17 +129,14 @@ class AsteroidGenerator
     return false;
   }
 
-  private function isCollidingWithStation($x, $y, $distanceModifier): bool
+  private function isCollidingWithStation(int $x, int $y, int $minDistanceFromStation): bool
   {
     foreach ($this->stations as $station) {
-      if (
-        abs($station['x'] - $x) < $distanceModifier &&
-        abs($station['y'] - $y) < $distanceModifier
-      ) {
+      $distance = sqrt(pow($station['x'] - $x, 2) + pow($station['y'] - $y, 2));
+      if ($distance < $minDistanceFromStation) {
         return true;
       }
     }
-
     return false;
   }
 

@@ -29,11 +29,11 @@ return new class extends Migration {
             $table->index('end_time');
 
             // Composite index for common queries
-            $table->index(['user_id', 'status', 'action_type']);
+            $table->index(['user_id', 'status', 'action_type', 'end_time']);
         });
 
         // Add check constraints using raw SQL
-        DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_action_type CHECK (action_type IN ('mining', 'building', 'produce', 'trade'))");
+        DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_action_type CHECK (action_type IN ('mining', 'building', 'produce', 'trade', 'combat', 'research'))");
         DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_status CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled', 'failed'))");
     }
 

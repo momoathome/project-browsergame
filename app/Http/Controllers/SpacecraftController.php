@@ -36,7 +36,7 @@ class SpacecraftController extends Controller
             ->get();
 
         // Queue-Informationen holen
-        $spacecraftQueues = $this->queueService->getPendingQueuesByType($user->id, ActionQueue::ACTION_TYPE_PRODUCE);
+        $spacecraftQueues = $this->queueService->getInProgressQueuesByType($user->id, ActionQueue::ACTION_TYPE_PRODUCE);
 
         // Queue-Infos den Raumschiffen hinzufügen
         $spacecrafts = $spacecrafts->map(function ($spacecraft) use ($spacecraftQueues) {

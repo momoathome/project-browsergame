@@ -19,6 +19,8 @@ class ActionQueue extends Model
     public const ACTION_TYPE_BUILDING = 'building';
     public const ACTION_TYPE_PRODUCE = 'produce';
     public const ACTION_TYPE_TRADE = 'trade';
+    public const ACTION_TYPE_COMBAT = 'combat';
+    public const ACTION_TYPE_RESEARCH = 'research';
     
     public const STATUS_PENDING = 'pending';
     public const STATUS_IN_PROGRESS = 'in_progress';
@@ -32,6 +34,8 @@ class ActionQueue extends Model
         self::ACTION_TYPE_BUILDING,
         self::ACTION_TYPE_PRODUCE,
         self::ACTION_TYPE_TRADE,
+        self::ACTION_TYPE_COMBAT,
+        self::ACTION_TYPE_RESEARCH
     ];
 
     // Liste aller erlaubten Status

@@ -40,7 +40,6 @@ const updateBuildingLevel = (building) => {
     });
 };
 
-// Funktion zum sofortigen Abschließen der Warteschlange
 const finishQueue = () => {
     router.post(route('admin.queue.finish', { userId: props.user.id }), {
         preserveScroll: true,

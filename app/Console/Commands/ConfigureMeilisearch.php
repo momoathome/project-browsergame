@@ -18,16 +18,19 @@ class ConfigureMeilisearch extends Command
         // Suchbare Attribute mit besserer Priorisierung
         $index->updateSearchableAttributes([
             'name',
-            'all_resources', // Neues Feld mit allen Ressourcen als Text
-            'size',
+            'all_resources',
+            'resources_flat',
             'resource_types',
+            'size',
             'resources.type'
         ]);
 
-        // Filterbare Attribute für WHERE-Abfragen
         $index->updateFilterableAttributes([
             'size',
-            'resource_types'
+            'resource_types',
+            'resource_map',
+            'x',
+            'y'
         ]);
 
         // Sortierbare Attribute
@@ -57,9 +60,9 @@ class ConfigureMeilisearch extends Command
                     'twoTypos' => 6
                 ]
             ],
-            // Korrekte Einstellung für Tokenisierung
-            'separatorTokens' => [' ', '-', '_', '.'],
-            'nonSeparatorTokens' => ['à', 'â', 'æ', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ü', 'ÿ']
+            // Tokenisierungseinstellungen
+            'separatorTokens' => [' ', '.','-', '_'],
+            'nonSeparatorTokens' => ['à', 'â', 'æ', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ü', 'ÿ',]
         ]);
 
         // Synonyme hinzufügen

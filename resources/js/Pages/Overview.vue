@@ -1,14 +1,13 @@
 <script lang="ts" setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Link } from '@inertiajs/vue3';
-import type { Building, Spacecraft } from '@/types/types';
+import type { Building, Spacecraft, RawQueueItem } from '@/types/types';
 import AppTooltip from '@/Components/AppTooltip.vue';
 import SectionHeader from '@/Components/SectionHeader.vue';
 
 const props = defineProps<{
   buildings: Building[],
   spacecrafts: Spacecraft[],
-  queue: Object,
+  queue: RawQueueItem[],
 }>()
 
 const getTypeIcon = (type) => {
@@ -66,7 +65,7 @@ const getTypeIcon = (type) => {
                   {{ item.details.building_name }} upgrade to lv. {{ item.details.next_level }}
                 </span>
                 <span v-else-if="item.action_type === 'produce'">
-                  {{ item.details.spacecraft_name }} produce quantity: {{ item.details.count }}
+                  {{ item.details.spacecraft_name }} produce quantity: {{ item.details.quantity }}
                 </span>
                 <span v-else-if="item.action_type === 'mining'" class="flex justify-between w-full">
                   Mining: {{ item.details.asteroid_name }}

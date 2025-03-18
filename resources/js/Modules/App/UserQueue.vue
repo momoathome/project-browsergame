@@ -2,45 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { timeFormat } from '@/Utils/format'
-
-// Typdefinitionen
-interface QueueItemDetails {
-  building_name?: string;
-  spacecraft_name?: string;
-  asteroid_name?: string;
-  next_level?: number;
-  quantity?: number;
-}
-
-interface RawQueueItem {
-  id: number;
-  action_type: 'building' | 'produce' | 'mining' | string;
-  details: QueueItemDetails;
-  user_id?: number;
-  target_id?: number;
-  start_time?: string;
-  end_time?: string;
-  status?: string;
-}
-
-interface ProcessedQueueItem {
-  id: number;
-  name: string;
-  image: string;
-  details: string | number;
-  showInfos: boolean;
-  isNew: boolean;
-  rawData: RawQueueItem;
-  remainingTime?: number;
-  formattedTime?: string;
-  completed: boolean;
-}
-
-interface SavedQueueItemState {
-  id: number;
-  seen: boolean;
-  showInfos: boolean;
-}
+import type { SavedQueueItemState, RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
 
 const loadQueueItemStates = (): Map<number, SavedQueueItemState> => {
   try {

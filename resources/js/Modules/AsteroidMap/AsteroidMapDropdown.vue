@@ -54,9 +54,9 @@ onUnmounted(() => {
         <span>
           {{ asteroid.name }}
         </span>
-        <span>
+<!--         <span>
           {{ asteroid.resources }}
-        </span>
+        </span> -->
       </li>
     </ul>
   </div>

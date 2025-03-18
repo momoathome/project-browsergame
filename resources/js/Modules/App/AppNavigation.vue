@@ -11,7 +11,6 @@ const NavigationLinks = [
   { name: 'market', label: 'Market', image: '/storage/navigation/market.png' },
   // { name: 'logbook', label: 'Logbook', image: '/storage/navigation/logbook.png' },
   { name: 'simulator', label: 'Simulator', image: '/storage/navigation/simulator.png' },
-  { name: 'profile.show', label: 'Profile', image: '/storage/navigation/profile.png' },
 ];
 </script>
 

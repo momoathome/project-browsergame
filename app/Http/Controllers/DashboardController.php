@@ -60,8 +60,8 @@ class DashboardController extends Controller
         $user = User::with('stations')
             ->find($id);
 
-        $buildings = $user->buildings()->with('details')->get();
-        $spacecrafts = $user->spacecrafts()->with('details')->get();
+        $buildings = $user->buildings()->with('details')->orderBy('id', 'asc')->get();
+        $spacecrafts = $user->spacecrafts()->with('details')->orderBy('id', 'asc')->get();
         $ressources = $user->resources()->get();
 
         return Inertia::render('Admin/UserDetail', [

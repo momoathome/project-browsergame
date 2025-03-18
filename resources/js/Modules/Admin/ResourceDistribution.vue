@@ -58,7 +58,7 @@ const formattedResources = computed(() => {
 </script>
 
 <template>
-  <div class="bg-primary rounded-xl p-4 text-light font-medium">
+  <div class="bg-base rounded-xl p-4 text-light font-medium">
     <div class="flex gap-2 font-bold">
       <span>Total Resources</span>
       <span>{{ numberFormat(formattedResources.totalResourceAmount) }}</span>

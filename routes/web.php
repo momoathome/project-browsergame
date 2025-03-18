@@ -13,6 +13,7 @@ use App\Http\Controllers\UserResourceController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\AsteroidController;
 use App\Http\Controllers\BattleController;
+use App\Http\Controllers\OverviewController;
 use App\Services\QueueService;
 
 Route::get('/', function () {
@@ -25,8 +26,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', HandleExceptionsForJetstream::class,])->group(function () {
-    Route::get('/overview', function () {
-        return Inertia::render('Overview'); })->name('overview');
+    Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
 
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');

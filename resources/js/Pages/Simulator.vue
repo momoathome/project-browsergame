@@ -75,11 +75,11 @@ const isResultEmpty = computed(() => {
 
 <template>
   <AppLayout title="simulator">
-    <div class="flex flex-col gap-12 p-4 me-20">
+    <div class="flex flex-col gap-12 p-4 text-light me-20">
       <div>
         <div class="mb-4">
           <h1 class="text-4xl font-black">Battle Simulator</h1>
-          <p class="text-base">Simulate epic battles</p>
+          <p class="text-light">Simulate epic battles</p>
         </div>
         <div class="flex flex-col gap-4">
           <div>
@@ -99,7 +99,7 @@ const isResultEmpty = computed(() => {
         </PrimaryButton>
       </div>
 
-      <div v-if="!isResultEmpty" class="bg-slate-200 rounded-lg">
+      <div v-if="!isResultEmpty" class="rounded-lg">
         <BattleSimulatorLosses :result="result" />
       </div>
     </div>

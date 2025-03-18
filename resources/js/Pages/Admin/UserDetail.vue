@@ -55,7 +55,7 @@ const toggleEditStation = (index: number) => {
 
 <template>
     <AppLayout title="User Details">
-        <div class="mx-8 my-8">
+        <div class="mx-8 my-8 text-light">
             <div class="flex justify-between items-center mb-6">
                 <h1 class="text-3xl font-bold">
                     Benutzerdetails: {{ user.name }}
@@ -71,7 +71,7 @@ const toggleEditStation = (index: number) => {
             <div class="flex gap-8">
 
                 <!-- Benutzer-Basisinformationen -->
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Basisinformationen</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <p><span class="font-medium">ID:</span> {{ user.id }}</p>
@@ -82,7 +82,7 @@ const toggleEditStation = (index: number) => {
                 </div>
 
                 <!-- Stationen -->
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Stationen ({{ user.stations.length }})</h2>
                     <div v-for="(station, index) in user.stations" :key="station.id"
                         class="mb-4 p-4 border border-gray-300 rounded-md">
@@ -105,12 +105,12 @@ const toggleEditStation = (index: number) => {
                                 <div>
                                     <label class="block text-sm font-medium mb-1">X-Koordinate</label>
                                     <input v-model="stationForms[index].x" type="number"
-                                        class="w-full px-3 py-2 border rounded-md" />
+                                        class="w-full px-3 py-2 border rounded-md bg-base-dark" />
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium mb-1">Y-Koordinate</label>
                                     <input v-model="stationForms[index].y" type="number"
-                                        class="w-full px-3 py-2 border rounded-md" />
+                                        class="w-full px-3 py-2 border rounded-md bg-base-dark" />
                                 </div>
                             </div>
                             <button type="submit"
@@ -122,7 +122,7 @@ const toggleEditStation = (index: number) => {
                 </div>
 
                 <!-- Ressources -->
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Ressourcen</h2>
                     <div class="grid grid-cols-2 gap-4">
                         <div v-for="resource in ressources" :key="resource.id">
@@ -135,11 +135,11 @@ const toggleEditStation = (index: number) => {
             <div class="flex gap-8">
 
                 <!-- Buildings -->
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm w-1/3">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/3">
                     <h2 class="text-xl font-semibold mb-4">Gebäude ({{ buildings.length }})</h2>
-                    <table class="w-full text-sm">
+                    <table class="w-full">
                         <thead>
-                            <tr class="bg-gray-100">
+                            <tr>
                                 <th class="text-left p-2">Name</th>
                                 <th class="text-left p-2">Level</th>
                                 <th class="text-left p-2">Effect name</th>
@@ -147,7 +147,7 @@ const toggleEditStation = (index: number) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="building in buildings" :key="building.id" class="border-b">
+                            <tr v-for="building in buildings" :key="building.id">
                                 <td class="p-2">{{ building.details.name }}</td>
                                 <td class="p-2">{{ building.level || 'Unbekannt' }}</td>
                                 <td class="p-2">{{ building.details.effect }}</td>
@@ -164,17 +164,17 @@ const toggleEditStation = (index: number) => {
                 </div>
 
                 <!-- Raumschiffe -->
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm w-1/3">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/3">
                     <h2 class="text-xl font-semibold mb-4">Raumschiffe ({{ spacecrafts.length }})</h2>
-                    <table class="w-full text-sm">
+                    <table class="w-full">
                         <thead>
-                            <tr class="bg-gray-100">
+                            <tr>
                                 <th class="text-left p-2">Name</th>
                                 <th class="text-left p-2">Anzahl</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="spacecraft in spacecrafts" :key="spacecraft.id" class="border-b">
+                            <tr v-for="spacecraft in spacecrafts" :key="spacecraft.id">
                                 <td class="p-2">{{ spacecraft.details.name }}</td>
                                 <td class="p-2">{{ spacecraft.count || 0 }}</td>
                             </tr>

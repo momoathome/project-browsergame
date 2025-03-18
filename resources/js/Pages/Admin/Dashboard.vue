@@ -15,17 +15,17 @@ const props = defineProps<{
 <template>
     <AppLayout title="dashboard">
         <div class="mx-8 my-8">
-            <h1 class="text-3xl mb-4 font-bold">
+            <h1 class="text-3xl mb-4 font-bold text-light">
                 Dashboard
             </h1>
             <div class="grid grid-cols-3 gap-4">
                 <ResourceDistribution :universeResources="universeResources" />
 
-                <div class="bg-slate-100 rounded-lg p-6 mb-6 shadow-sm">
+                <div class="bg-base text-light rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Users ({{ users.length }})</h2>
-                    <table class="w-full text-sm">
+                    <table class="w-full">
                         <thead>
-                            <tr class="bg-gray-100">
+                            <tr>
                                 <th class="text-left p-2">ID</th>
                                 <th class="text-left p-2">Name</th>
                                 <th class="text-left p-2">Email</th>

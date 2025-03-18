@@ -119,11 +119,13 @@ function setMaxAmount() {
 
 <style scoped>
 .content_card {
-  --shadow-color: 0deg 0% 57%;
+  --shadow-color: 210deg 30% 15%;
+  --glow-color: 210deg 70% 50%;
 
-  box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.42),
-    3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.42),
-    8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.42),
-    12.5px 15.5px 25.2px -2.5px hsl(var(--shadow-color) / 0.42);
+  box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.3),
+    3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
+    8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
+    0 0 20px -2px hsl(var(--glow-color) / 0.15);
+  border: 1px solid hsl(210deg 30% 25% / 0.5);
 }
 </style>

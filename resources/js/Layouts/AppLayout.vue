@@ -20,7 +20,7 @@ const props = defineProps<{
 
     <AppNavigation />
 
-    <div class="min-h-screen bg-gray-200">
+    <div class="min-h-screen bg-[#1E2530]">
 
       <!-- Page Heading -->
       <AppHeader class="sticky top-0 z-50" />
@@ -30,7 +30,7 @@ const props = defineProps<{
         <slot />
       </main>
 
-      <pre>{{ $page.props }}</pre>
+      <pre class="text-light">{{ $page.props }}</pre>
 
     </div>
   </div>

@@ -76,8 +76,11 @@ const isResultEmpty = computed(() => {
 <template>
   <AppLayout title="simulator">
     <div class="flex flex-col gap-12 p-4 me-20">
-      <div class="">
-        <h1 class="text-4xl font-black mb-4">Battle Simulator</h1>
+      <div>
+        <div class="mb-4">
+          <h1 class="text-4xl font-black">Battle Simulator</h1>
+          <p class="text-base">Simulate epic battles</p>
+        </div>
         <div class="flex flex-col gap-4">
           <div>
             <h2 class="text-2xl font-bold">Attacker</h2>

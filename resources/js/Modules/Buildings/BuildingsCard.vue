@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
 import type { FormattedBuilding } from '@/types/types';
-import { router, usePage } from '@inertiajs/vue3';
+import { numberFormat } from '@/Utils/format';
 
 const props = defineProps<{
   building: FormattedBuilding
@@ -21,8 +22,26 @@ const formattedBuildingEffectAndValue = computed(() => {
     return `${effect}: + ${formatBuildingEffectValue(effect_value)}%`;
   }
 
-  return `${effect}: + ${Math.round(effect_value)}`;
+  return `${effect}: + ${numberFormat(Math.round(effect_value))}`;
 });
+
+const formattedTotalBuildingEffectAndValue = computed(() => {
+  const { name, effect_value } = props.building;
+
+  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
+  
+  if (percentageBuildings.includes(name)) {
+    return `(${formatBuildingEffectValue(effect_value) * props.building.level}%)`;
+  }
+
+  if (name === 'Laboratory') {
+    const totalEffectValue = Math.round(effect_value * props.building.level - 2);
+    return `(${numberFormat(totalEffectValue)})`;
+  }
+
+  const totalEffectValue = Math.round(effect_value * props.building.level);
+  return `(${numberFormat(totalEffectValue)})`;
+})
 
 function formatBuildingEffectValue(effectValue: number) {
   return Math.round((effectValue - 1) * 100);
@@ -83,10 +102,14 @@ function handleUpgradeComplete() {
         <p class="text-gray text-sm">{{ building.description }}</p>
       </div>
 
-      <div>
-        <span class="text-sm text-secondary">Effect</span>
-        <p class="font-medium text-sm">{{ formattedBuildingEffectAndValue }}</p>
+      <div class="flex justify-between">
+        <div>
+          <span class="text-sm text-secondary">Effect</span>
+          <p class="font-medium text-sm">{{ formattedBuildingEffectAndValue }} {{ formattedTotalBuildingEffectAndValue }}</p>
+        </div>
       </div>
+
+
 
       <Divider />
 

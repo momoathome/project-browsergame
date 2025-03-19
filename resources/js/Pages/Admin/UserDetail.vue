@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { defineProps, ref } from 'vue';
-import { useForm, router } from '@inertiajs/vue3';
+import { useForm, router, Link } from '@inertiajs/vue3';
 import type { User, Station, Spacecraft, Building, Resource } from '@/types/types';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
@@ -51,21 +51,52 @@ const editingStation = ref<number | null>(null);
 const toggleEditStation = (index: number) => {
     editingStation.value = editingStation.value === index ? null : index;
 };
+
+// Editiermodus für Ressourcen
+const editingResource = ref<number | null>(null);
+const resourceForms = ref(props.ressources.map(resource => useForm({
+    amount: resource.pivot.amount,
+    user_id: props.user.id
+})));
+
+const toggleEditResource = (index: number) => {
+    editingResource.value = editingResource.value === index ? null : index;
+};
+
+const updateResourceAmount = (index: number, resourceId: number) => {
+    resourceForms.value[index].put(route('admin.resources.update', { id: resourceId }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            editingResource.value = null;
+            router.reload({ only: ['ressources'] });
+        }
+    });
+};
 </script>
 
 <template>
     <AppLayout title="User Details">
         <div class="mx-8 my-8 text-light">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold">
+            <div class="flex flex-col mb-6">
+                <!-- breadcrumb with back button -->
+                <div class="flex justify-between">
+                    <div class="flex items">
+                        <Link :href="route('admin.dashboard')"
+                            class="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">
+                        Zurück
+                        </Link>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button @click="finishQueue"
+                            class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
+                            Warteschlange sofort beenden
+                        </button>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold mt-4">
                     Benutzerdetails: {{ user.name }}
                 </h1>
-                <div class="flex gap-4">
-                    <button @click="finishQueue"
-                        class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
-                        Warteschlange sofort beenden
-                    </button>
-                </div>
             </div>
 
             <div class="flex gap-8">
@@ -120,22 +151,12 @@ const toggleEditStation = (index: number) => {
                         </form>
                     </div>
                 </div>
-
-                <!-- Ressources -->
-                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm">
-                    <h2 class="text-xl font-semibold mb-4">Ressourcen</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div v-for="resource in ressources" :key="resource.id">
-                            <p><span class="font-medium">{{ resource.name }}:</span> {{ resource.pivot.amount }}</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="flex gap-8">
 
                 <!-- Buildings -->
-                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/3">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Gebäude ({{ buildings.length }})</h2>
                     <table class="w-full">
                         <thead>
@@ -164,7 +185,7 @@ const toggleEditStation = (index: number) => {
                 </div>
 
                 <!-- Raumschiffe -->
-                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/3">
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/5">
                     <h2 class="text-xl font-semibold mb-4">Raumschiffe ({{ spacecrafts.length }})</h2>
                     <table class="w-full">
                         <thead>
@@ -181,6 +202,47 @@ const toggleEditStation = (index: number) => {
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Ressources -->
+                <div class="bg-base rounded-lg p-6 mb-6 shadow-sm w-1/5">
+                    <h2 class="text-xl font-semibold mb-4">Ressourcen</h2>
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left p-2">Ressource</th>
+                                <th class="text-left p-2">Menge</th>
+                                <th class="text-left p-2">Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(resource, index) in ressources" :key="resource.id">
+                                <td class="p-2 font-medium">{{ resource.name }}</td>
+                                <td class="p-2">
+                                    <span v-if="editingResource !== index">{{ resource.pivot.amount }}</span>
+                                    <input v-else v-model="resourceForms[index].amount" type="number" min="0"
+                                        class="w-full px-2 py-1 border rounded-md bg-base-dark" />
+                                </td>
+                                <td class="p-2">
+                                    <button v-if="editingResource !== index" @click="toggleEditResource(index)"
+                                        class="text-blue-600 hover:text-blue-800">
+                                        Bearbeiten
+                                    </button>
+                                    <div v-else class="flex gap-2">
+                                        <button @click="updateResourceAmount(index, resource.id)"
+                                            class="bg-blue-600 text-white py-1 px-3 rounded-md hover:bg-blue-700 text-sm">
+                                            Speichern
+                                        </button>
+                                        <button @click="toggleEditResource(null)"
+                                            class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">
+                                            Abbrechen
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </AppLayout>

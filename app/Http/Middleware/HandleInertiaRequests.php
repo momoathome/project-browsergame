@@ -49,7 +49,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'userResources' => Auth::check()
                 ? UserResource::where('user_id', Auth::user()->id)
-                    ->with('resources')
+                    ->with('resource')
                     ->orderBy('resource_id', 'asc')
                     ->get()
                 : [],

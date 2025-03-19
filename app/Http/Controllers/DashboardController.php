@@ -17,20 +17,20 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $resources = Asteroid::with('resources')
+/*         $resources = Asteroid::with('resources')
             ->get()
             ->pluck('resources')
             ->flatten()
             ->groupBy('resource_type')
             ->map(function ($resources) {
                 return [$resources->sum('amount')];
-            });
+            }); */
 
         // get all users with their stations and spacecrafts
         $users = User::all();
 
         return Inertia::render('Admin/Dashboard', [
-            'universeResources' => $resources,
+            // 'universeResources' => $resources,
             'users' => $users,
         ]);
     }

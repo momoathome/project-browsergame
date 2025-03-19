@@ -39,10 +39,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');
     Route::post('/market/sell', [MarketController::class, 'sell'])->name('market.sell');
 
-    Route::get('/logbook', function () {
-        return Inertia::render('Logbook'); })->name('logbook');
-    Route::get('/research', function () {
-        return Inertia::render('Research'); })->name('research');
+    Route::get('/logbook', function () {return Inertia::render('Logbook');})->name('logbook');
+    Route::get('/research', function () {return Inertia::render('Research');})->name('research');
 
     Route::get('/asteroidMap', [AsteroidController::class, 'index'])->name('asteroidMap');
     Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
@@ -55,10 +53,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');    
+    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/user/{id}', [DashboardController::class, 'show'])->name('admin.user.show');
-    Route::put('/admin/stations/{id}', [DashboardController::class, 'update'])->name('admin.stations.update');    
+    Route::put('/admin/stations/{id}', [DashboardController::class, 'update'])->name('admin.stations.update');
     Route::put('/admin/buildings/{id}', [DashboardController::class, 'updateBuilding'])->name('admin.buildings.update');
+    Route::put('/admin/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
     Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);

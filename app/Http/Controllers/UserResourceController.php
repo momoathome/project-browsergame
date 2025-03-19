@@ -41,4 +41,23 @@ class UserResourceController extends Controller
             ]);
         }
     }
+
+    public function updateResourceAmount(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:0',
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $userResource = UserResource::where('user_id', $request->user_id)
+            ->where('resource_id', $id)
+            ->first();
+
+        if ($userResource) {
+            $userResource->amount = $request->amount;
+            $userResource->save();
+        }
+        
+        return redirect()->back()->with('message', 'Resource added successfully');
+    }
 }

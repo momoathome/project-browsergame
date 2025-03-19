@@ -14,9 +14,9 @@ const formattedResources = computed(() => {
   return page.props.userResources.map((resource) => {
     return {
       resource_id: resource.resource_id || null,
-      name: resource.resources ? resource.resources.name : null,
-      description: resource.resources ? resource.resources.description : null,
-      image: resource.resources ? resource.resources.image : null,
+      name: resource.resource ? resource.resource.name : null,
+      description: resource.resource ? resource.resource.description : null,
+      image: resource.resource ? resource.resource.image : null,
       amount: computed(() => numberFormat(resource.amount)),
     };
   });

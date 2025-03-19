@@ -19,7 +19,7 @@ const props = defineProps<{
                 Dashboard
             </h1>
             <div class="grid grid-cols-3 gap-4">
-                <ResourceDistribution :universeResources="universeResources" />
+                <!-- <ResourceDistribution :universeResources="universeResources" /> -->
 
                 <div class="bg-base text-light rounded-lg p-6 mb-6 shadow-sm">
                     <h2 class="text-xl font-semibold mb-4">Users ({{ users.length }})</h2>

@@ -20,7 +20,7 @@ class UserResource extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function resources()
+    public function resource()
     {
         return $this->belongsTo(Resource::class, 'resource_id');
     }

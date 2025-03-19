@@ -44,7 +44,7 @@ const getImageByActionType = (actionType: string): string => {
       return '/storage/navigation/asteroidmap.png'
     case 'research':
       return '/storage/navigation/research.png'
-    case 'battle':
+    case 'combat':
       return '/storage/navigation/simulator.png'
     default:
       return '/storage/navigation/buildings.png'
@@ -61,6 +61,8 @@ const getNameByActionType = (actionType: string, details: QueueItemDetails | und
       return details.spacecraft_name || 'Spacecraft'
     case 'mining':
       return 'Mining'
+    case 'combat':
+      return 'Combat'
     default:
       return actionType
   }
@@ -76,6 +78,8 @@ const getDetailsByActionType = (actionType: string, details: QueueItemDetails | 
       return details.quantity || 1
     case 'mining':
       return details.asteroid_name || 'Asteroid'
+    case 'combat':
+      return 'attack ' + details.defender_name || 'Defender'
     default:
       return ''
   }
@@ -181,8 +185,8 @@ const updateTimers = (): void => {
   processedQueueItems.value.forEach(item => {
     if (item.rawData.end_time && !item.completed) {
       const endTime = new Date(item.rawData.end_time).getTime();
-      const now = new Date().getTime();
-      const diff = endTime - now;
+      const currentTime = new Date().getTime();
+      const diff = endTime - currentTime;
 
       if (diff <= 0) {
         // Mining ist abgeschlossen

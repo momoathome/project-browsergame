@@ -1,8 +1,11 @@
 <script lang="ts" setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import type { Building, Spacecraft, RawQueueItem } from '@/types/types';
 import AppTooltip from '@/Components/AppTooltip.vue';
 import SectionHeader from '@/Components/SectionHeader.vue';
+import { timeFormat, numberFormat } from '@/Utils/format';
 
 const props = defineProps<{
   buildings: Building[],
@@ -10,71 +13,151 @@ const props = defineProps<{
   queue: RawQueueItem[],
 }>()
 
+const page = usePage()
+
 const getTypeIcon = (type) => {
   switch (type) {
     case 'Fighter': return '/storage/navigation/simulator.png';
     case 'Miner': return '/storage/attributes/storage.png';
     case 'Transporter': return '/storage/supply-chain_light.png';
+    case 'mining': return '/storage/navigation/asteroidmap.png';
+    case 'combat': return '/storage/navigation/simulator.png';
     default: return '';
   }
 };
 
+const currentTime = ref(new Date().getTime());
+
+const getRemainingTime = (item: RawQueueItem): number => {
+  if (!item.end_time) return 0
+
+  const endTime = new Date(item.end_time).getTime()
+
+  return Math.max(0, endTime - currentTime.value)
+}
+
+const FormattedTime = (item) => {
+  const remainingTimeMs = getRemainingTime(item)
+  return timeFormat(Math.floor(remainingTimeMs / 1000));
+}
+
+const queueBuildings = computed(() => props.queue.filter(item => item.action_type === 'building'));
+const queueSpacecrafts = computed(() => props.queue.filter(item => item.action_type === 'produce'));
+const queueMining = computed(() => props.queue.filter(item => item.action_type === 'mining'));
+// const queueResearch = props.queue.filter(item => item.action_type === 'research');
+const queueCombat = computed(() => props.queue.filter(item => item.action_type === 'combat'));
+
+const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) => {
+  if (item.action_type === 'combat') {
+    const totalSpacecrafts = item.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0);
+    acc += totalSpacecrafts;
+  }
+  if (item.action_type === 'mining') {
+    const totalSpacecrafts = Object.values(item.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0);
+    acc += totalSpacecrafts;
+  }
+  return acc;
+}, 0));
+
+const totalMiningOperations = computed(() => props.queue.reduce((acc, item) => {
+  if (item.action_type === 'mining') {
+    acc++;
+  }
+  return acc;
+}, 0));
+
+const getBuildingQueueItem = computed(() => (buildingId: number) => {
+  return queueBuildings.value.find(item => item.target_id === buildingId);
+});
+const getSpacecraftsQueueItem = computed(() => (spacecraftId: number) => {
+  return queueSpacecrafts.value.find(item => item.target_id === spacecraftId);
+});
+
+const formattedTotalBuildingEffectAndValue = computed(() => (building: Building) => {
+  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
+
+  if (percentageBuildings.includes(building.details.name)) {
+    return `${formatBuildingEffectValue(building.effect_value) * building.level}%`;
+  }
+
+  if (building.details.name === 'Laboratory') {
+    const totalEffectValue = Math.round(building.effect_value * building.level - 2);
+    return `${numberFormat(totalEffectValue)}`;
+  }
+
+  const totalEffectValue = Math.round(building.effect_value * building.level);
+  return `${numberFormat(totalEffectValue)}`;
+})
+
+function formatBuildingEffectValue(effectValue: number) {
+  return Math.round((effectValue - 1) * 100);
+}
+
+const fleetSummary = computed(() => ({
+  totalCount: props.spacecrafts.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
+  totalCrew: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.crew_limit * spacecraft.count), 0),
+  totalCombat: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
+  totalCargo: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
+}));
+
+const crewLimit = computed(() => {
+  const userAttributes = page.props.userAttributes;
+  if (!userAttributes) return 0;
+  
+  const crewLimitAttribute = userAttributes.find(item => item.attribute_name === 'crew_limit');
+  return crewLimitAttribute ? crewLimitAttribute.attribute_value : 0;
+});
+
+let timerInterval: number | undefined
+onMounted(() => {
+  timerInterval = setInterval(() => {
+    currentTime.value = new Date().getTime();
+  }, 1000);
+})
+
+onUnmounted(() => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
+})
 </script>
 
 <template>
   <AppLayout title="overview">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 ps-4 py-8 me-20">
 
-      <div class="flex flex-col gap-4">
-        <!-- Buildings -->
-        <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-          <SectionHeader title="Buildings" iconSrc="/storage/navigation/buildings.png" :route="route('buildings')"
-            :isPrimary="true" />
-          <!-- List of Buildings -->
-          <table class="w-full text-light mt-1">
-            <thead class="text-gray-400 border-b border-primary">
-              <tr>
-                <th class="text-left p-2">Name</th>
-                <th class="text-left p-2">Level</th>
-                <th class="text-left p-2">Effect</th>
-                <th class="text-left p-2">Effect Value</th>
-                <th class="text-left p-2">Upgrade</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="building in buildings" :key="building.id">
-                <td class="p-2">{{ building.details.name }}</td>
-                <td class="p-2">{{ building.level }}</td>
-                <td class="p-2">{{ building.details.effect }}</td>
-                <td class="p-2">{{ building.effect_value }}</td>
-                <td class="p-2">{{ building.is_upgrading ? 'Upgrading' : 'Not Upgrading' }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- UserQueue -->
-        <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-          <SectionHeader title="Queue" iconSrc="/storage/hourglass.svg" />
-          <div class="px-4 py-2">
-            <span v-if="queue.length === 0" class="text-gray-400 text-xs p-1">no active items in queue</span>
-            <!-- List of queue -->
-            <ul class="text-light mt-1">
-              <li v-for="item in queue" :key="item.id">
-                <span v-if="item.action_type === 'building'">
-                  {{ item.details.building_name }} upgrade to lv. {{ item.details.next_level }}
-                </span>
-                <span v-else-if="item.action_type === 'produce'">
-                  {{ item.details.spacecraft_name }} produce quantity: {{ item.details.quantity }}
-                </span>
-                <span v-else-if="item.action_type === 'mining'" class="flex justify-between w-full">
-                  Mining: {{ item.details.asteroid_name }}
-                </span>
-                <span v-else>{{ item.details }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+      <!-- Buildings -->
+      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+        <SectionHeader title="Buildings" iconSrc="/storage/navigation/buildings.png" :route="route('buildings')"
+          :isPrimary="true" />
+        <!-- List of Buildings -->
+        <table class="w-full text-light mt-1">
+          <thead class="text-gray-400 border-b border-primary">
+            <tr>
+              <th class="text-left p-2">Name</th>
+              <th class="text-left p-2">Level</th>
+              <th class="text-left p-2">Effect</th>
+              <th class="text-left p-2">Effect Value</th>
+              <th class="text-left p-2">Upgrade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="building in buildings" :key="building.id">
+              <td class="p-2">{{ building.details.name }}</td>
+              <td class="p-2">{{ building.level }}</td>
+              <td class="p-2">{{ building.details.effect }}</td>
+              <td class="p-2">{{ formattedTotalBuildingEffectAndValue(building) }}</td>
+              <td class="p-2">
+                <template v-if="getBuildingQueueItem(building.id)">
+                  {{ FormattedTime(getBuildingQueueItem(building.id)) }}
+                </template>
+                <template v-else>
+                  -
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Spacecrafts -->
@@ -89,9 +172,10 @@ const getTypeIcon = (type) => {
               <th class="text-left p-2">Name</th>
               <th class="text-left p-2">Type</th>
               <th class="text-left p-2">Count</th>
+              <th class="text-left p-2">Crew</th>
               <th class="text-left p-2">Combat</th>
               <th class="text-left p-2">Cargo</th>
-              <th class="text-left p-2">Upgrade</th>
+              <th class="text-left p-2">Produce</th>
             </tr>
           </thead>
           <tbody>
@@ -104,25 +188,101 @@ const getTypeIcon = (type) => {
                 </div>
               </td>
               <td class="p-2">{{ spacecraft.count }}</td>
+              <td class="p-2">{{ spacecraft.crew_limit }}</td>
               <td class="p-2">{{ spacecraft.combat }}</td>
               <td class="p-2">{{ spacecraft.cargo }}</td>
-              <td class="p-2">{{ spacecraft.is_producing ? 'Producing' : 'Not Producing' }}</td>
+              <td class="p-2">
+                <template v-if="getSpacecraftsQueueItem(spacecraft.id)">
+                  {{ getSpacecraftsQueueItem(spacecraft.id)?.details.quantity }} - {{
+                    FormattedTime(getSpacecraftsQueueItem(spacecraft.id)) }}
+                </template>
+                <template v-else>
+                  -
+                </template>
+              </td>
             </tr>
           </tbody>
           <tfoot>
-            <tr class="border-t border-primary bg-primary rounded-b-xl pb-4">
-              <td class="p-2" colspan="2">Fleet Summary</td>
+            <tr class="border-t border-primary bg-primary rounded-b-xl">
+              <td class="px-2 py-3" colspan="2">Fleet Summary</td>
               <td class="p-2">
-                {{spacecrafts.reduce((acc, spacecraft) => acc + spacecraft.count, 0)}}
+                {{ fleetSummary.totalCount }}
               </td>
               <td class="p-2">
-                {{spacecrafts.filter(spacecraft => spacecraft.count > 0).reduce((acc, spacecraft) => acc +
-                  spacecraft.combat, 0)}}
+                {{ fleetSummary.totalCrew }} / {{ crewLimit }}
               </td>
               <td class="p-2">
-                {{spacecrafts.filter(spacecraft => spacecraft.count > 0).reduce((acc, spacecraft) => acc +
-                  spacecraft.cargo, 0)}}
+                {{ fleetSummary.totalCombat }}
               </td>
+              <td class="p-2">
+                {{ fleetSummary.totalCargo }}
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- AsteroidMap -->
+      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+        <SectionHeader title="Asteroid Map" iconSrc="/storage/navigation/asteroidmap.png" :route="route('asteroidMap')"
+          :isPrimary="true" />
+
+        <!-- List of mining and attack -->
+        <table class="w-full text-light mt-1">
+          <thead class="text-gray-400 border-b border-primary">
+            <tr>
+              <th class="text-left p-2">Name</th>
+              <th class="text-left p-2">Type</th>
+              <th class="text-left p-2">Spacecrafts</th>
+              <th class="text-left p-2">End Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-if="queueCombat.length > 0 || queueMining.length > 0">
+              <tr v-for="combat in queueCombat" :key="combat.id">
+                <td class="p-2"><span class="text-secondary">attack</span> {{ combat.details.defender_name }}</td>
+                <td class="p-2">
+                  <div class="relative group flex">
+                    <img :src="getTypeIcon(combat.action_type)" alt="Type Icon" class="w-6 h-6">
+                    <AppTooltip :label="combat.action_type" position="left" />
+                  </div>
+                </td>
+                <td class="p-2">
+                  {{combat.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0)}}
+                </td>
+                <td class="p-2">{{ FormattedTime(combat) }}</td>
+              </tr>
+
+              <tr v-for="mining in queueMining" :key="mining.id">
+                <td class="p-2">{{ mining.details.asteroid_name }}</td>
+                <td class="p-2">
+                  <div class="relative group flex">
+                    <img :src="getTypeIcon(mining.action_type)" alt="Type Icon" class="w-6 h-6">
+                    <AppTooltip :label="mining.action_type" position="left" />
+                  </div>
+                </td>
+                <td class="p-2">
+                  {{Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0) }}
+                </td>
+                <td class="p-2">{{ FormattedTime(mining) }}</td>
+              </tr>
+            </template>
+            <template v-else>
+              <tr>
+                <td class="p-2">-</td>
+                <td class="p-2">-</td>
+                <td class="p-2">-</td>
+                <td class="p-2">-</td>
+              </tr>
+            </template>
+          </tbody>
+          <tfoot>
+            <tr class="border-t border-primary bg-primary rounded-b-xl">
+              <td class="px-2 py-3" colspan="3">
+                {{ totalSpacecraftsInOrbit }} Spacecrafts in Orbit • {{ totalMiningOperations }} Mining Operations
+              </td>
+              <td></td>
               <td></td>
             </tr>
           </tfoot>

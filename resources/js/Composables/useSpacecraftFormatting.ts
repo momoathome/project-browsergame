@@ -17,7 +17,7 @@ export function useSpacecraftFormatting() {
       unlocked: spacecraft.unlocked,
       research_cost: spacecraft.research_cost,
       is_producing: spacecraft.is_producing,
-      production_end_time: spacecraft.production_end_time,
+      end_time: spacecraft.end_time,
       currently_producing: spacecraft.currently_producing,
       resources: spacecraft.resources.map((resource) => ({
         id: resource.id,

@@ -12,7 +12,7 @@ export function useBuildingFormatting() {
         effect: building.details.effect,
         effect_value: building.effect_value,
         is_upgrading: building.is_upgrading,
-        upgrade_end_time: building.upgrade_end_time,
+        end_time: building.end_time,
         resources: building.resources.map((resource: Resource) => ({
           id: resource.id,
           name: resource.name,

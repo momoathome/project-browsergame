@@ -15,7 +15,7 @@ export interface Building {
   effect: string;
   effect_value: number;
   is_upgrading: boolean;
-  upgrade_end_time: string;
+  end_time: string;
   resources: Resource[];
 }
 
@@ -79,7 +79,7 @@ export interface Spacecraft {
   unlocked: boolean;
   research_cost: number;
   is_producing: boolean;
-  production_end_time: string;
+  end_time: string;
   currently_producing: number;
   resources: Resource[];
 }
@@ -101,7 +101,7 @@ export interface FormattedBuilding {
   effect: string;
   effect_value: number;
   is_upgrading: boolean;
-  upgrade_end_time: string;
+  end_time: string;
   resources: SimpleResource[];
 };
 
@@ -120,7 +120,7 @@ export interface FormattedSpacecraft {
   unlocked: boolean;
   research_cost: number;
   is_producing: boolean;
-  production_end_time: string;
+  end_time: string;
   currently_producing: number;
   resources: SimpleResource[];
 };
@@ -191,6 +191,11 @@ export interface QueueItemDetails {
   asteroid_name?: string;
   next_level?: number;
   quantity?: number;
+  spacecrafts?: Record<string, number>;
+  attacker_name?: string;
+  defender_name?: string;
+  attacker_formatted?: array;
+  defender_formatted?: array;
 }
 
 export interface RawQueueItem {

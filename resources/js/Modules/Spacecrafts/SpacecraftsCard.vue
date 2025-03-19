@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const isProducing = computed(() => props.spacecraft.is_producing || false);
-const productionEndTime = computed(() => props.spacecraft.production_end_time || null);
+const productionEndTime = computed(() => props.spacecraft.end_time || null);
 
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));

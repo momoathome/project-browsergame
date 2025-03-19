@@ -44,7 +44,7 @@ class SpacecraftController extends Controller
             $spacecraft->is_producing = $isProducing;
 
             if ($isProducing) {
-                $spacecraft->production_end_time = $spacecraftQueues[$spacecraft->id]->end_time;
+                $spacecraft->end_time = $spacecraftQueues[$spacecraft->id]->end_time;
                 $spacecraft->currently_producing = $spacecraftQueues[$spacecraft->id]->details['quantity'];
             }
 

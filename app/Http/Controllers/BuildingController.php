@@ -46,7 +46,7 @@ class BuildingController extends Controller
             $building->is_upgrading = $isUpgrading;
 
             if ($isUpgrading) {
-                $building->upgrade_end_time = $buildingQueues[$building->id]->end_time;
+                $building->end_time = $buildingQueues[$building->id]->end_time;
             }
 
             return $building;

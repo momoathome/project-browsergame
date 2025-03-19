@@ -12,7 +12,7 @@ const props = defineProps<{
 }>();
 
 const isUpgrading = computed(() => props.building.is_upgrading || false);
-const upgradeEndTime = computed(() => props.building.upgrade_end_time || null);
+const upgradeEndTime = computed(() => props.building.end_time || null);
 const formattedBuildingEffectAndValue = computed(() => {
   const { name, effect, effect_value } = props.building;
   

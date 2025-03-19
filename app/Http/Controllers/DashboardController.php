@@ -112,6 +112,22 @@ class DashboardController extends Controller
         }
     }
 
+    public function updateSpacecraft(Request $request)
+    {
+        $request->validate([
+            'count' => 'required|integer',
+            'user_id' => 'required|integer',
+        ]);
+
+        $spacecraft = Spacecraft::find($request->id);
+        $spacecraft->update([
+            'count' => $request->count,
+            'user_id' => $request->user_id,
+        ]);
+
+        return redirect()->back()->with('message', 'Raumschiff erfolgreich aktualisiert');
+    }
+
     /**
      * Remove the specified resource from storage.
      */

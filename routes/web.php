@@ -58,8 +58,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::put('/admin/stations/{id}', [DashboardController::class, 'update'])->name('admin.stations.update');
     Route::put('/admin/buildings/{id}', [DashboardController::class, 'updateBuilding'])->name('admin.buildings.update');
     Route::put('/admin/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
+    Route::put('/admin/spacecrafts/{id}', [DashboardController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
     Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
+    
+
 
 });

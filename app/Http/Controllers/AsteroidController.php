@@ -30,10 +30,6 @@ class AsteroidController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
-
-        $this->queueService->processQueueForUser($user->id);
-
         return $this->renderAsteroidMap();
     }
 

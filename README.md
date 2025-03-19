@@ -85,6 +85,7 @@ php artisan migrate:fresh --seed
 ``` bash
 sail artisan scout:import "App\Models\Asteroid"
 sail artisan scout:index "App\Models\Asteroid"
+sail artisan meilisearch:configure
 ```
 
 ## Commands
@@ -93,6 +94,7 @@ sail artisan scout:index "App\Models\Asteroid"
 sail artisan db:seed --class=AsteroidSeeder
 sail artisan game:generate-test-stations
 sail artisan game:cleanup-test-stations --all
+sail artisan test:station-spawns 100 --refresh --debug
 ```
 
 ## Authors

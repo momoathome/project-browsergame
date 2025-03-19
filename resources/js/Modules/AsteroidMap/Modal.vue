@@ -23,6 +23,7 @@ const props = defineProps<{
   title: string | undefined,
   content: Content | undefined,
   spacecrafts: Spacecraft[],
+  userScanRange: number,
 }>();
 
 const asteroid = computed<Asteroid>(() => props.content?.data);
@@ -256,12 +257,6 @@ onUnmounted(() => {
   document.body.style.overflow = 'visible';
 });
 
-const userScanRange = computed(() => {
-  const scanRangeAttribute = usePage().props.userAttributes.find(
-    (attr) => attr.attribute_name === 'scan_range'
-  );
-  return scanRangeAttribute ? scanRangeAttribute.attribute_value : 5000;
-});
 const userStation = usePage().props.stations.find(station => station.user_id === usePage().props.auth.user.id);
 
 // calculate the distance between the userstation x,y and the asteroid x,y if asteroid is not undefined
@@ -277,10 +272,11 @@ const distance = computed(() => {
 
 const canScanAsteroid = computed(() => {
   if (asteroid.value && distance.value) {
-    return distance.value <= userScanRange.value;
+    return distance.value <= props.userScanRange;
   }
 });
-const canAttackUser = computed(() => userStation && distance <= userScanRange.value);
+
+// const canAttackUser = computed(() => userStation && distance.value <= props.userScanRange);
 </script>
 
 <template>
@@ -339,7 +335,7 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
                   <p class="text-secondary">Combat: <span class="text-white">{{ numberFormat(totalCombatPower) }}</span>
                   </p>
                   <p class="text-secondary">Cargo: <span class="text-white">
-                    {{ numberFormat(totalCargoCapacity) }} ({{ calculateCargoPercentage }}%)
+                    {{ numberFormat(totalCargoCapacity) }} <span v-if="canScanAsteroid">({{ calculateCargoPercentage }}%)</span> 
                   </span>
                   </p>
                   <p class="text-secondary">Travel Time: <span class="text-white">{{ formattedDuration }}</span></p>

@@ -217,7 +217,6 @@ class AsteroidGenerator
   private function calculateMinStationDistance(string $size, array $resources): int
   {
     $baseDistance = $this->config['station_safety_distance']['base'];
-
     $sizeModifier = $this->config['station_safety_distance']["{$size}_asteroid"];
     $distance = $baseDistance * $sizeModifier;
 
@@ -263,7 +262,8 @@ class AsteroidGenerator
 
   private function generateAsteroidCoordinate(int $minStationDistance): array
   {
-    $minDistance = $this->config['min_distance_between_asteroids'];
+    $asteroidToAsteroidDistance = $this->config['min_distance_between_asteroids'];
+    $minDistance = $this->config['asteroid_to_station_distance'];
     $spawnArea = $this->config['spawn_area'];
     $maxAttempts = 5000;
     $attempts = 0;
@@ -297,7 +297,7 @@ class AsteroidGenerator
       }
 
       $isValid = !$this->isCollidingWithStation($x, $y, $minStationDistance) &&
-        !$this->isCollidingWithAsteroid($x, $y, $minDistance);
+        !$this->isCollidingWithAsteroid($x, $y, $asteroidToAsteroidDistance);
 
       $attempts++;
 

@@ -25,10 +25,7 @@ class SpacecraftController extends Controller
      */
     public function index()
     {
-        // Hole den aktuell angemeldeten Benutzer
         $user = auth()->user();
-
-        $this->queueService->processQueueForUser($user->id);
 
         $spacecrafts = Spacecraft::with('details', 'resources')
             ->where('user_id', $user->id)

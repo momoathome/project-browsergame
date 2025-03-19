@@ -442,12 +442,12 @@ function selectAsteroid(asteroid: Asteroid) {
       </span>
     </div>
 
-    <Modal :spacecrafts="spacecrafts" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data?.name"
+    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data?.name"
       :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
         data: selectedObject?.data as Asteroid | Station,
-      }" />
+      }"/>
   </AppLayout>
 </template>
 

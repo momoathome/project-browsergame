@@ -75,7 +75,7 @@ return [
         [
             'name' => 'Scanner',
             'details_id' => 6,
-            'effect_value' => 5000,
+            'effect_value' => 4000,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,

@@ -30,8 +30,6 @@ class BuildingController extends Controller
     {
         $user = auth()->user();
 
-        $this->queueService->processQueueForUser($user->id);
-
         $buildings = Building::with('details', 'resources')
             ->where('user_id', $user->id)
             ->orderBy('id', 'asc')

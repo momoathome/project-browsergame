@@ -18,7 +18,7 @@ const props = defineProps<{
             <h1 class="text-3xl mb-4 font-bold text-light">
                 Dashboard
             </h1>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <!-- <ResourceDistribution :universeResources="universeResources" /> -->
 
                 <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
@@ -31,6 +31,8 @@ const props = defineProps<{
                                 <th class="text-left p-2">Name</th>
                                 <th class="text-left p-2">Email</th>
                                 <th class="text-left p-2">Role</th>
+                                <th class="text-left p-2">Status</th>
+                                <th class="text-left p-2">Last Login</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -40,11 +42,13 @@ const props = defineProps<{
                                 <td class="p-2">{{ user.name }}</td>
                                 <td class="p-2">{{ user.email }}</td>
                                 <td class="p-2">{{ user.role }}</td>
+                                <td class="p-2">{{ user.status }}</td>
+                                <td class="p-2">{{ user.last_login }}</td>
                             </tr>
                         </tbody>
                         <tfoot>
                             <tr class="border-t border-primary bg-primary rounded-b-xl">
-                                <td class="px-2 py-3" colspan="4">
+                                <td class="px-2 py-3" colspan="6">
                                     Total Users: {{ users.length }}
                                 </td>
                             </tr>

@@ -20,7 +20,7 @@ const props = defineProps<{
 
     <AppNavigation />
 
-    <div class="min-h-screen bg-[#1E2530]">
+    <div class="min-h-screen background">
 
       <!-- Page Heading -->
       <AppHeader class="sticky top-0 z-50" />
@@ -30,8 +30,15 @@ const props = defineProps<{
         <slot />
       </main>
 
-      <pre class="text-light">{{ $page.props }}</pre>
-
     </div>
+
+    <pre>{{ $page.props }}</pre>
+
   </div>
 </template>
+
+<style>
+.background {
+  background: linear-gradient(30deg, #1e2530, #1d242e, #1c222c, #1b212b, #1a1f29, #181e27, #171d25, #161b24, #151a22, #141920, #13171f, #12161d);
+}
+</style>

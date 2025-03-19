@@ -127,7 +127,7 @@ onUnmounted(() => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 ps-4 py-8 me-20">
 
       <!-- Buildings -->
-      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Buildings" iconSrc="/storage/navigation/buildings.png" :route="route('buildings')"
           :isPrimary="true" />
         <!-- List of Buildings -->
@@ -161,7 +161,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Spacecrafts -->
-      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Shipyard" iconSrc="/storage/navigation/shipyard.png" :route="route('shipyard')"
           :isPrimary="true" />
 
@@ -224,7 +224,7 @@ onUnmounted(() => {
       </div>
 
       <!-- AsteroidMap -->
-      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+      <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Asteroid Map" iconSrc="/storage/navigation/asteroidmap.png" :route="route('asteroidMap')"
           :isPrimary="true" />
 
@@ -292,3 +292,15 @@ onUnmounted(() => {
     </div>
   </AppLayout>
 </template>
+
+<style scoped>
+.content_card {
+  --shadow-color: 210deg 30% 15%;
+  --glow-color: 210deg 70% 50%;
+
+  box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.3),
+    3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
+    8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
+    0 0 20px -2px hsl(var(--glow-color) / 0.15);
+}
+</style>

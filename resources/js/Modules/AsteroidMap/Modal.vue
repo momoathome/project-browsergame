@@ -145,6 +145,14 @@ const totalCargoCapacity = computed(() => {
   return total;
 });
 
+const calculateCargoPercentage = computed(() => {
+  if (!asteroid.value) return 0;
+
+  const totalResources = asteroid.value.resources.reduce((total, resource) => total + resource.amount, 0);
+  
+  return Math.round((totalCargoCapacity.value / totalResources) * 100);
+});
+
 const calculateMiningDuration = () => {
   if (!asteroid.value) return '00:00';
   
@@ -330,8 +338,9 @@ const canAttackUser = computed(() => userStation && distance <= userScanRange.va
                 <div class="flex gap-4 items-center">
                   <p class="text-secondary">Combat: <span class="text-white">{{ numberFormat(totalCombatPower) }}</span>
                   </p>
-                  <p class="text-secondary">Cargo: <span class="text-white">{{ numberFormat(totalCargoCapacity)
-                      }}</span>
+                  <p class="text-secondary">Cargo: <span class="text-white">
+                    {{ numberFormat(totalCargoCapacity) }} ({{ calculateCargoPercentage }}%)
+                  </span>
                   </p>
                   <p class="text-secondary">Travel Time: <span class="text-white">{{ formattedDuration }}</span></p>
                 </div>

@@ -427,12 +427,12 @@ function selectAsteroid(asteroid: Asteroid) {
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
 
-      <div class="absolute top-0 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
+      <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
         <Search v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
       </div>
 
       <AsteroidMapDropdown v-if="searched_asteroids && searched_asteroids.length > 0"
-        class="absolute top-0 left-64 ms-2 w-44" :searched-asteroids="searched_asteroids"
+        class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="searched_asteroids"
         :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
 
       <span class="absolute top-0 right-0 z-100 text-white me-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>

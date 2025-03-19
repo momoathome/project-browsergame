@@ -33,12 +33,12 @@
 
                     <template v-else>
                         <Link :href="route('login')"
-                            class="flex px-4 py-2 rounded-lg text-white bg-primary font-medium outline-none transition hover:bg-primary-dark">
+                            class="flex px-4 py-2 rounded-lg text-white bg-primary font-medium outline-none transition hover:bg-primary-dark border-primary-light border border-solid">
                         Log in
                         </Link>
 
                         <Link v-if="canRegister" :href="route('register')"
-                            class="flex px-4 py-2 rounded-lg bg-secondary hover:bg-secondary-light text-tertiary-dark font-medium transition">
+                            class="flex px-4 py-2 rounded-lg bg-secondary hover:bg-secondary-light text-tertiary-dark font-medium transition border border-solid border-secondary-dark">
                         Register
                         </Link>
                     </template>
@@ -65,12 +65,12 @@
                 </p>
                 <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
                     <Link v-if="canRegister" :href="route('register')"
-                        class="px-8 py-4 bg-secondary hover:bg-secondary-light text-tertiary-dark font-bold text-lg rounded-lg transition transform hover:scale-105">
+                        class="px-8 py-4 bg-secondary hover:bg-secondary-light border border-solid border-secondary-dark text-tertiary-dark font-bold text-lg rounded-lg transition transform hover:scale-105">
                     Play Now
                     </Link>
                 </div>
 
-                <div class="mt-16 relative w-full max-w-4xl">
+                <div class="mt-16 relative w-full max-w-6xl">
                     <div class="rounded-lg shadow-2xl">
                         <div class="bg-base p-1 rounded">
                             <div class="aspect-auto rounded overflow-hidden">

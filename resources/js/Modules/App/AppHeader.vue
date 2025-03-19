@@ -60,7 +60,7 @@ onBeforeUnmount(() => {
                         <ul class="py-2">
                             <li>
                                 <a :href="route('profile.show')"
-                                    class="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-[hsl(263,45%,12%)] text-white">
+                                    class="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-slate-900 text-white">
                                     <img src="/storage/navigation/profile.png" alt="Profile" class="w-5 h-5" />
                                     <span>Profile</span>
                                 </a>

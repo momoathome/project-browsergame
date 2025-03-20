@@ -19,7 +19,7 @@ class UserAttributeService
             ->get();
 
         $totalCrewLimit = $spacecrafts->sum(function ($spacecraft) {
-            return $spacecraft->count > 0 ? $spacecraft->crew_limit : 0;
+            return $spacecraft->count > 0 ? $spacecraft->crew_limit * $spacecraft->count : 0;
         });
 
         // Finde oder aktualisiere das total_units Attribut

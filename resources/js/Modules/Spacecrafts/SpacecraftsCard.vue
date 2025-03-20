@@ -90,7 +90,18 @@ const crewStatus = computed(() => {
   const userAttributes = usePage().props.userAttributes;
   const userCrewLimit = userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
   const userTotalUnits = userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
-  const availableUnitSlots = userCrewLimit - userTotalUnits;
+  // crew_limit of spacecrafts in queue
+  const queuedCrewLimit = usePage().props.queue.reduce((acc, item) => {
+    if (item.action_type === 'produce') {
+      const queuedSpacecraft = usePage().props.spacecrafts.find(s => s.id === item.target_id);
+      if (queuedSpacecraft) {
+        const quantity = item.details?.quantity || 1;
+        return acc + (queuedSpacecraft.crew_limit * quantity);
+      }
+    }
+    return acc;
+  }, 0);
+  const availableUnitSlots = userCrewLimit - userTotalUnits - queuedCrewLimit;
   
   const hasEnoughCrewSlots = availableUnitSlots >= props.spacecraft.crew_limit;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
@@ -111,6 +122,7 @@ const maxSpacecraftCount = computed(() => {
 });
 
 const canProduce = computed(() => {
+  console.log(crewStatus.value);
   const hasEnoughResources = resourceStatus.value.every(resource => resource.sufficient);
   return hasEnoughResources && crewStatus.value.sufficient;
 });

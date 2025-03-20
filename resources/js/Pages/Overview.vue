@@ -95,7 +95,7 @@ function formatBuildingEffectValue(effectValue: number) {
 
 const fleetSummary = computed(() => ({
   totalCount: props.spacecrafts.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
-  totalCrew: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.crew_limit * spacecraft.count), 0),
+  totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
   totalCombat: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
   totalCargo: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
 }));

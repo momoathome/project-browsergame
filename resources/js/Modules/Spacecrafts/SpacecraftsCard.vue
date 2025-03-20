@@ -115,6 +115,12 @@ const canProduce = computed(() => {
   return hasEnoughResources && crewStatus.value.sufficient;
 });
 
+const canUnlockSpacecraft = computed(() => {
+  const userAttributes = usePage().props.userAttributes;
+  const researchPoints = userAttributes.find(ua => ua.attribute_name === 'research_points')?.attribute_value || 0;
+  return researchPoints >= props.spacecraft.research_cost;
+});
+
 const increment = () => {
   if (form.amount < maxSpacecraftCount.value) {
     form.amount++
@@ -137,6 +143,10 @@ const decrementBy10 = () => {
 }
 
 function unlockSpacecraft() {
+  if (!canUnlockSpacecraft.value) {
+    return;
+  }
+
   router.post(route('shipyard.unlock', props.spacecraft.id), {
     preserveState: true,
     preserveScroll: true,
@@ -234,7 +244,8 @@ function unlockSpacecraft() {
     </div>
 
     <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft"
-      class="mt-4 gap-4 w-36 absolute left-1/2 -translate-x-1/2 bottom-12">
+      class="mt-4 gap-4 w-36 absolute left-1/2 -translate-x-1/2 bottom-12"
+      :disabled="!canUnlockSpacecraft">
       Unlock
       <div class="flex gap-1">
         <img src="/storage/attributes/research_points.png" class="h-5" alt="research icon">
@@ -268,10 +279,5 @@ function unlockSpacecraft() {
 .locked {
   filter: brightness(0.7) grayscale(1);
   pointer-events: none;
-}
-
-:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 </style>

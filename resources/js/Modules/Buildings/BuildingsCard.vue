@@ -13,16 +13,16 @@ const props = defineProps<{
 
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
-const formattedBuildingEffectAndValue = computed(() => {
-  const { name, effect, effect_value } = props.building;
+const formattedBuildingEffectValue = computed(() => {
+  const { name, effect_value } = props.building;
   
   const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
   
   if (percentageBuildings.includes(name)) {
-    return `${effect}: + ${formatBuildingEffectValue(effect_value)}%`;
+    return ` +${formatBuildingEffectValue(effect_value)}%`;
   }
 
-  return `${effect}: + ${numberFormat(Math.round(effect_value))}`;
+  return ` +${numberFormat(Math.round(effect_value))}`;
 });
 
 const formattedTotalBuildingEffectAndValue = computed(() => {
@@ -102,14 +102,11 @@ function handleUpgradeComplete() {
         <p class="text-gray text-sm">{{ building.description }}</p>
       </div>
 
-      <div class="flex justify-between">
-        <div>
-          <span class="text-sm text-secondary">Effect</span>
-          <p class="font-medium text-sm">{{ formattedBuildingEffectAndValue }} {{ formattedTotalBuildingEffectAndValue }}</p>
+        <div class="flex gap-1">
+          <span class="text-sm text-secondary">{{building.effect}}:</span>
+          <span class="font-medium text-sm">{{ formattedBuildingEffectValue }}</span>
+          <span class="font-medium text-sm">{{ formattedTotalBuildingEffectAndValue }}</span>
         </div>
-      </div>
-
-
 
       <Divider />
 

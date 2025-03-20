@@ -12,7 +12,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
     <button :type="type"
-        class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white bg-secondary border-secondary-light font-medium border border-solid outline-none transition hover:bg-secondary-dark disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none">
+        class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white bg-secondary border-secondary-light font-medium border border-solid outline-none transition hover:bg-secondary-dark disabled:opacity-70 disabled:shadow-none disabled:pointer-events-none">
         <slot />
     </button>
 </template>
+
+<style scoped>
+:disabled {
+  filter: brightness(0.7) grayscale(0.4);
+}
+</style>

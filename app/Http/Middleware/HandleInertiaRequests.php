@@ -8,14 +8,18 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\UserResource;
 use App\Models\UserAttribute;
 use App\Services\QueueService;
+use App\Services\UserAttributeService;
+
 
 class HandleInertiaRequests extends Middleware
 {
     protected $queueService;
+    protected $userAttributeService;
 
-    public function __construct(QueueService $queueService)
+    public function __construct(QueueService $queueService, UserAttributeService $userAttributeService)
     {
         $this->queueService = $queueService;
+        $this->userAttributeService = $userAttributeService;
     }
 
     /**
@@ -54,9 +58,7 @@ class HandleInertiaRequests extends Middleware
                     ->get()
                 : [],
             'userAttributes' => Auth::check()
-                ? UserAttribute::where('user_id', Auth::user()->id)
-                ->orderBy('id', 'asc')
-                ->get()
+                ? $this->userAttributeService->getUserAttributes(Auth::user()->id)
                 : [],
             'queue' => Auth::check()
                 ? $this->queueService->getPlayerQueue(Auth::user()->id)

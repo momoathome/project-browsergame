@@ -111,10 +111,6 @@ class SpacecraftController extends Controller
                     ->decrement('amount', $requiredResource);
             }
 
-            UserAttribute::where('user_id', $user->id)
-                ->where('attribute_name', 'total_units')
-                ->increment('attribute_value', $spacecraft->crew_limit * $quantity);
-
             // Produktion zur Queue hinzufügen
             $this->queueService->addToQueue(
                 $user->id,
@@ -141,7 +137,7 @@ class SpacecraftController extends Controller
             return false;
         }
 
-        return DB::transaction(function () use ($spacecraft, $userId, $details) {
+        return DB::transaction(function () use ($spacecraft, $details) {
             $quantity = $details['quantity'];
 
             $spacecraft->count += $quantity;

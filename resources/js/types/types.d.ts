@@ -74,6 +74,7 @@ export interface Spacecraft {
   cargo: number;
   speed: number;
   count: number;
+  locked_count: number;
   build_time: number;
   crew_limit: number;
   unlocked: boolean;
@@ -115,6 +116,7 @@ export interface FormattedSpacecraft {
   cargo: number;
   speed: number;
   count: number;
+  locked_count: number;
   build_time: number;
   crew_limit: number;
   unlocked: boolean;

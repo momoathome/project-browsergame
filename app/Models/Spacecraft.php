@@ -16,6 +16,7 @@ class Spacecraft extends Model
         'cargo',
         'speed',
         'count',
+        'locked_count',
         'build_time',
         'crewLimit',
         'unlocked',

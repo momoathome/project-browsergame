@@ -122,7 +122,6 @@ const maxSpacecraftCount = computed(() => {
 });
 
 const canProduce = computed(() => {
-  console.log(crewStatus.value);
   const hasEnoughResources = resourceStatus.value.every(resource => resource.sufficient);
   return hasEnoughResources && crewStatus.value.sufficient;
 });

@@ -11,21 +11,19 @@ use Illuminate\Http\Request;
 use App\Http\Requests\AsteroidExploreRequest;
 use Inertia\Inertia;
 use App\Services\QueueService;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\Log;
 
 
 class AsteroidController extends Controller
 {
-    protected $asteroidExplorer;
-    protected $asteroidSearch;
-    protected $queueService;
 
-    public function __construct(AsteroidExplorer $asteroidExplorer, AsteroidSearch $asteroidSearch, QueueService $queueService)
-    {
-        $this->asteroidExplorer = $asteroidExplorer;
-        $this->asteroidSearch = $asteroidSearch;
-        $this->queueService = $queueService;
-
+    public function __construct(
+        private readonly AsteroidExplorer $asteroidExplorer,
+        private readonly AsteroidSearch $asteroidSearch,
+        private readonly QueueService $queueService,
+        private readonly AuthManager $authManager
+    ){
     }
 
     public function index()
@@ -35,7 +33,7 @@ class AsteroidController extends Controller
 
     public function update(AsteroidExploreRequest $request)
     {
-        $user = auth()->user();
+        $user = $this->authManager->user();
         $this->asteroidExplorer->exploreWithRequest($user, $request);
 
         return $this->renderAsteroidMap();
@@ -86,20 +84,6 @@ class AsteroidController extends Controller
         $asteroid->load(['resources']);
 
         return $this->renderAsteroidMap([], [], $asteroid);
-    }
-
-    public function calculateMiningDuration(Request $request)
-    {
-        $asteroidId = $request->asteroid_id;
-        $spacecrafts = $request->spacecrafts;
-        
-        $duration = $this->asteroidExplorer->calculateTravelDuration(
-            auth()->user(),
-            $asteroidId,
-            $spacecrafts
-        );
-        
-        return back()->with('duration', $duration);
     }
 }
 

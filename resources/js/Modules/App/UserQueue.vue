@@ -220,7 +220,7 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
 
   setTimeout(() => {
     router.reload();
-  }, 1000);
+  }, 3000);
 }
 
 let timerInterval: number | undefined

@@ -184,10 +184,29 @@ const calculateMiningDuration = () => {
   
   const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
   const travelFactor = 1;
-  const calculatedDuration = Math.floor(Math.max(
+  let calculatedDuration = Math.floor(Math.max(
     baseDuration, 
     distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor
   ));
+  
+  // Mining-Dauer reduzieren basierend auf der Anzahl der Miner
+  // Dies sollte nur für Asteroidenexploration gelten
+  if (props.content?.type === 'asteroid') {
+    let minerCount = 0;
+    for (const spacecraftName in form.spacecrafts) {
+      const count = form.spacecrafts[spacecraftName];
+      if (count > 0) {
+        const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
+        if (spacecraft && spacecraft.details.type === 'Miner') {
+          minerCount += count;
+        }
+      }
+    }
+    
+    if (minerCount > 0) {
+      calculatedDuration = Math.max(10, Math.floor(calculatedDuration / minerCount));
+    }
+  }
   
   return timeFormat(calculatedDuration);
 };
@@ -197,7 +216,8 @@ const setMaxAvailableUnits = () => {
 
   props.spacecrafts.forEach((spacecraft: Spacecraft) => {
     if (spacecraft.details.type !== "Miner") {
-      MaxAvailableUnits[spacecraft.details.name] = spacecraft.count;
+      // Berücksichtige nur die verfügbaren Schiffe (count - locked_count)
+      MaxAvailableUnits[spacecraft.details.name] = spacecraft.count - (spacecraft.locked_count || 0);
     }
   });
 
@@ -218,8 +238,9 @@ const setMinNeededUnits = () => {
       }
 
       if (spacecraft.details.type === type) {
+        const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
         const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
-        const usedUnits = Math.min(neededUnits, spacecraft.count);
+        const usedUnits = Math.min(neededUnits, availableCount);
 
         MinNeededUnits[spacecraft.details.name] = usedUnits;
         remainingResources -= usedUnits * spacecraft.cargo;
@@ -239,8 +260,9 @@ const setMinNeededUnits = () => {
     }
 
     if (spacecraft.details.type !== "Miner" && spacecraft.details.type !== "Transporter") {
+      const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
       const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
-      const usedUnits = Math.min(neededUnits, spacecraft.count);
+      const usedUnits = Math.min(neededUnits, availableCount);
 
       MinNeededUnits[spacecraft.details.name] = usedUnits;
       remainingResources -= usedUnits * spacecraft.cargo;
@@ -248,7 +270,7 @@ const setMinNeededUnits = () => {
   });
 
   form.spacecrafts = MinNeededUnits;
-};
+}
 
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
 

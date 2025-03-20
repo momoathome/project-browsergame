@@ -10,6 +10,7 @@ export function useSpacecraftFormatting() {
       type: spacecraft.details.type,
       combat: spacecraft.combat,
       count: spacecraft.count,
+      locked_count: spacecraft.locked_count,
       cargo: spacecraft.cargo,
       speed: spacecraft.speed,
       build_time: spacecraft.build_time,

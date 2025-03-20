@@ -20,13 +20,4 @@ class AsteroidExploreRequest extends FormRequest
         ];
     }
 
-    public function getAsteroidId(): int
-    {
-        return $this->validated('asteroid_id');
-    }
-
-    public function getSpacecrafts(): array
-    {
-        return $this->validated('spacecrafts');
-    }
 }

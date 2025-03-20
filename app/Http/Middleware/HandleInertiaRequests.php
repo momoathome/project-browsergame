@@ -50,6 +50,10 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        if (Auth::check()) {
+            $this->queueService->processQueueForUser(Auth::user()->id);
+        }
+        
         return array_merge(parent::share($request), [
             'userResources' => Auth::check()
                 ? UserResource::where('user_id', Auth::user()->id)

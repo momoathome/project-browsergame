@@ -15,6 +15,8 @@ use App\Dto\ExplorationResult;
 use App\Services\QueueService;
 use App\Models\ActionQueue;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class AsteroidExplorer
 {
@@ -27,10 +29,14 @@ class AsteroidExplorer
 
     public function exploreWithRequest($user, AsteroidExploreRequest $request)
     {
+        if (!$request->validated()) {
+            return false;
+        }
+
         return $this->asteroidMining(
             $user,
-            $request->getAsteroidId(),
-            $request->getSpacecrafts()
+            $request->integer('asteroid_id'),
+            $request->collect('spacecrafts')
         );
     }
 
@@ -39,12 +45,20 @@ class AsteroidExplorer
         DB::transaction(function () use ($user, $asteroidId, $spaceCrafts) {
             $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
             $asteroid = Asteroid::find($asteroidId);
-
-            // Lade die Raumschiffe mit ihren Details
+        
             $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
-            // Berechne die Dauer basierend auf dem niedrigsten Speed-Wert
-            $duration = $this->calculateMiningDuration($spacecraftsWithDetails, $user, $asteroid);
-            // spacecrafts für die dauer der exploration sperren
+            
+            $minerCount = 0;
+            foreach ($spacecraftsWithDetails as $spacecraft) {
+                if ($spacecraft->details->type === 'Miner') {
+                    $count = $filteredSpacecrafts->get($spacecraft->details->name);
+                    $minerCount += $count;
+                }
+            }
+    
+            // Berechne die Dauer basierend auf dem niedrigsten Speed-Wert und berücksichtige den ActionType
+            $duration = $this->calculateTravelDuration($spacecraftsWithDetails, $user, $asteroid, ActionQueue::ACTION_TYPE_MINING, $minerCount);
+
             $this->lockSpacecrafts($user, $filteredSpacecrafts);
             
             $this->queueService->addToQueue(
@@ -55,10 +69,10 @@ class AsteroidExplorer
                 [
                     'asteroid_name' => $asteroid->name,
                     'spacecrafts' => $filteredSpacecrafts,
-                    'duration' => $duration
+                    'duration' => $duration,
+                    'miner_count' => $minerCount
                 ]
             );
-
         });
     }
 
@@ -71,7 +85,6 @@ class AsteroidExplorer
 
         $asteroid = Asteroid::find($asteroidId);
         if (!$asteroid) {
-            // Raumschiffe freigeben
             $this->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }
@@ -84,14 +97,12 @@ class AsteroidExplorer
             $this->updateUserResources($user, $resourcesExtracted);
             $this->updateAsteroidResources($asteroid, $remainingResources);
 
-            // Raumschiffe freigeben
             $this->freeSpacecrafts($user, $filteredSpacecrafts);
 
             return true;
         });
 
         if (!$transactionResult) {
-            // Raumschiffe freigeben
             $this->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }
@@ -109,23 +120,39 @@ class AsteroidExplorer
         return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
             $spacecrafts = Spacecraft::where('user_id', $userId)
                 ->whereHas('details', function ($query) use ($filteredSpacecrafts) {
-                    $query->whereIn('name', array_keys($filteredSpacecrafts));
+                    // Wir brauchen nur die Keys der Collection für das whereIn
+                    $query->whereIn('name', $filteredSpacecrafts->keys());
                 })
                 ->lockForUpdate()
                 ->get();
-
+    
             foreach ($spacecrafts as $spacecraft) {
-                $changeAmount = $filteredSpacecrafts[$spacecraft->details->name];
-
-                if ($increment) {
-                    $spacecraft->count += $changeAmount;
-                } else {
-                    $spacecraft->count -= $changeAmount;
+                $spacecraft->locked_count = $spacecraft->locked_count ?? 0;
+                
+                $changeAmount = $filteredSpacecrafts->has($spacecraft->details->name) ? 
+                    $filteredSpacecrafts->get($spacecraft->details->name) : 0;
+                    
+                if ($changeAmount <= 0) {
+                    continue;
                 }
-
+    
+                if ($increment) {
+                    // Wenn wir Schiffe freigeben, reduzieren wir locked_count
+                    $spacecraft->locked_count = max(0, $spacecraft->locked_count - $changeAmount);
+                } else {
+                    // Wenn wir Schiffe sperren, erhöhen wir locked_count
+                    // Begrenzen Sie die Änderung auf die Anzahl verfügbarer Schiffe
+                    $changeAmount = min($changeAmount, $spacecraft->count);
+                    $spacecraft->locked_count += $changeAmount;
+                }
+    
+                // Sicherstellen, dass keine negativen Werte existieren
+                $spacecraft->count = max(0, $spacecraft->count);
+                $spacecraft->locked_count = max(0, $spacecraft->locked_count);
+                                
                 $spacecraft->save();
             }
-
+    
             return true;
         });
     }
@@ -142,9 +169,15 @@ class AsteroidExplorer
 
     private function filterSpacecrafts($spaceCrafts)
     {
-        return array_filter($spaceCrafts, function ($count) {
+        $collection = $spaceCrafts instanceof Collection 
+            ? $spaceCrafts 
+            : collect($spaceCrafts);
+        
+        $filtered = $collection->filter(function ($count) {
             return $count > 0;
         });
+        
+        return $filtered;
     }
 
     private function calculateCapacityAndMinerStatus($user, $filteredSpacecrafts)
@@ -165,43 +198,49 @@ class AsteroidExplorer
 
     public function getSpacecraftsWithDetails($user, $filteredSpacecrafts)
     {
-        return Spacecraft::with('details')
+        $spacecrafts = Spacecraft::with('details')
             ->where('user_id', $user->id)
             ->whereHas('details', function ($query) use ($filteredSpacecrafts) {
-                $query->whereIn('name', array_keys($filteredSpacecrafts));
+                $query->whereIn('name', $filteredSpacecrafts->keys());
             })
             ->get();
+        
+        return $spacecrafts;
     }
 
-    public function calculateMiningDuration($spacecrafts, $user, $asteroid)
+     public function calculateTravelDuration($spacecrafts, $user, $asteroid, $actionType = null, $minerCount = null)
     {
         $lowestSpeed = 0;
-
+    
         foreach ($spacecrafts as $spacecraft) {
             if ($spacecraft->speed > 0 && ($lowestSpeed === 0 || $spacecraft->speed < $lowestSpeed)) {
                 $lowestSpeed = $spacecraft->speed;
             }
         }
-
-        // Distanz zum Asteroiden berechnen
+    
         $distance = $this->calculateDistanceToAsteroid($user, $asteroid);
-        // Für 1000 Einheiten wird 1 Sekunde benötigt
-        // Je niedriger der Speed, desto länger die Dauer
-        // basisdauer in Sekunden
-        $baseDuration = max(10, $distance / ($lowestSpeed > 0 ? $lowestSpeed : 1));
-        // Anpassungsfaktor für die Spielbalance
+        
+        // Basisberechnung: Distanz / Geschwindigkeit min 10 Sekunden
+        $baseDuration = max(10, round($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1)));
+        
         $travelFactor = 1;
-        // Formel: Distanz / Speed * Faktor (angepasst für die Spielbalance)
+        
+        // Finale Berechnung der Dauer
         $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor));
-
+    
+        // Wenn es sich um Mining handelt, reduziere die Dauer basierend auf der Anzahl der Miner
+        if ($actionType === ActionQueue::ACTION_TYPE_MINING && $minerCount !== null) {
+            if ($minerCount > 0) {
+                $calculatedDuration = max(10, (int)($calculatedDuration / $minerCount));
+            }
+        }
+    
         return $calculatedDuration;
     }
 
     private function calculateDistanceToAsteroid($user, $asteroid)
     {
         $station = Station::where('user_id', $user->id)->first();
-
-        // Distanz berechnen
         $distance = sqrt(
             pow($station->x - $asteroid->x, 2) +
             pow($station->y - $asteroid->y, 2)
@@ -283,12 +322,5 @@ class AsteroidExplorer
         if ($asteroid->resources()->count() == 0) {
             $asteroid->delete();
         }
-    }
-
-    public function calculateTravelDuration($user, $asteroidId, $spaceCrafts)
-    {
-        $filteredSpacecrafts = $this->filterSpacecrafts($spaceCrafts);
-        $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
-        return $this->calculateMiningDuration($spacecraftsWithDetails, $user, $asteroidId);
     }
 }

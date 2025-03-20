@@ -111,7 +111,7 @@ class BattleController extends Controller
     $filteredSpacecrafts = $this->formatSpacecraftsForLocking($attacker_formatted);
     $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
 
-    $duration = $this->asteroidExplorer->calculateMiningDuration($spacecraftsWithDetails, $user, $defenderStation);
+    $duration = $this->asteroidExplorer->calculateTravelDuration($spacecraftsWithDetails, $user, $defenderStation, ActionQueue::ACTION_TYPE_COMBAT);
 
     $this->asteroidExplorer->lockSpacecrafts($user, $filteredSpacecrafts);
 
@@ -137,7 +137,8 @@ class BattleController extends Controller
     foreach ($spacecrafts as $spacecraft) {
       $formatted[$spacecraft['name']] = $spacecraft['count'];
     }
-    return $formatted;
+
+    return collect($formatted);
   }
 
   public function completeCombat($attackerId, $defenderId, $details)
@@ -152,15 +153,14 @@ class BattleController extends Controller
     $result->attackerName = $details['attacker_name'];
     $result->defenderName = $details['defender_name'];
 
-    $this->asteroidExplorer->freeSpacecrafts($attacker, $this->formatSpacecraftsForLocking($attacker_formatted));
+    // Konvertiere das Ergebnis in eine Collection
+    $formattedSpacecrafts = $this->formatSpacecraftsForLocking($attacker_formatted);
+    $this->asteroidExplorer->freeSpacecrafts($attacker, $formattedSpacecrafts);
 
     if ($result->winner === 'attacker') {
       // Implementierung für Ressourcenplünderung
       $this->transferResources($attacker, $defender, $attacker_formatted);
     }
-
-    // Speichere das Kampfergebnis in der Datenbank oder sende eine Benachrichtigung
-    // $this->saveBattleResult($result, $attackerId, $defenderId);
 
     return $result;
   }

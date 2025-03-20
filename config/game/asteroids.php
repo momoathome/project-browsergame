@@ -64,7 +64,7 @@ return [
         'low_value' => 1 * $asteroid_to_station_distance,
         'medium_value' => 8 * $asteroid_to_station_distance,
         'high_value' => 15 * $asteroid_to_station_distance,
-        'extreme_value' => 20 * $asteroid_to_station_distance,
+        'extreme_value' => 25 * $asteroid_to_station_distance,
     ],
 
     'resource_pools' => [

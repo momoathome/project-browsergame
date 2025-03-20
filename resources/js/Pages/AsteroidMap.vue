@@ -115,7 +115,7 @@ const userScanRange = computed(() => {
   const scanRangeAttribute = usePage().props.userAttributes.find(
     (attr) => attr.attribute_name === 'scan_range'
   );
-  return scanRangeAttribute ? scanRangeAttribute.attribute_value : 5000;
+  return scanRangeAttribute ? +scanRangeAttribute.attribute_value : 5000;
 });
 
 function drawUserScanRange() {
@@ -262,6 +262,14 @@ function onMouseClick(e: MouseEvent) {
   const zoomedX = (x - pointX.value) / zoomLevel.value;
   const zoomedY = (y - pointY.value) / zoomLevel.value;
 
+  // Strg+Linksklick zur Anzeige von Koordinaten
+  if (e.ctrlKey) {
+    console.log(`Koordinaten: x=${Math.round(zoomedX)}, y=${Math.round(zoomedY)}`);
+    // showCoordinatesOverlay(zoomedX, zoomedY);
+    e.stopPropagation();
+    return;
+  }
+
   let clickedObject: { type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } = { type: null, data: null };
 
   for (const station of props.stations) {
@@ -319,6 +327,37 @@ function onWheel(e: WheelEvent) {
     }
   }
 }
+
+/* function showCoordinatesOverlay(x: number, y: number) {
+  if (!canvasRef.value) return;
+  
+  const overlay = document.createElement('div');
+  const roundedX = Math.round(x);
+  const roundedY = Math.round(y);
+  
+  overlay.textContent = `X: ${roundedX}, Y: ${roundedY}`;
+  overlay.style.position = 'absolute';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+  overlay.style.color = 'white';
+  overlay.style.padding = '8px 12px';
+  overlay.style.borderRadius = '4px';
+  overlay.style.fontSize = '14px';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.zIndex = '1000';
+  
+  // Positionierung direkt am Mauszeiger (mit leichtem Offset)
+  const mousePosX = (x * zoomLevel.value) + pointX.value;
+  const mousePosY = (y * zoomLevel.value) + pointY.value;
+  overlay.style.left = `${mousePosX}px`;
+  overlay.style.top = `${mousePosY}px`;
+  
+  document.body.appendChild(overlay);
+  
+  // Overlay nach 3 Sekunden wieder entfernen
+  setTimeout(() => {
+    document.body.removeChild(overlay);
+  }, 3000);
+} */
 
 function getAsteroidResources(asteroid: Asteroid) {
   const asteroidId = useForm({
@@ -442,12 +481,12 @@ function selectAsteroid(asteroid: Asteroid) {
       </span>
     </div>
 
-    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @close="closeModal" :show="isModalOpen" :title="selectedObject?.data?.name"
-      :content="{
+    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @close="closeModal" :show="isModalOpen"
+      :title="selectedObject?.data?.name" :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
         data: selectedObject?.data as Asteroid | Station,
-      }"/>
+      }" />
   </AppLayout>
 </template>
 

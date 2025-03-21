@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
-use App\Services\SetupInitialStation;
+use Orion\Modules\Station\Services\SetupInitialStation;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

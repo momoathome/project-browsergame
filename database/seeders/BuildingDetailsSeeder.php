@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\BuildingDetails;
+use Orion\Modules\Building\Models\BuildingDetails;
 
 class BuildingDetailsSeeder extends Seeder
 {

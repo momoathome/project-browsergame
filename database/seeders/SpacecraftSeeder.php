@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use App\Services\SetupInitialSpacecrafts;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\Spacecraft\Services\SetupInitialSpacecrafts;
 
 class SpacecraftSeeder extends Seeder
 {

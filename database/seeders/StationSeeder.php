@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Services\SetupInitialStation;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\Station\Services\SetupInitialStation;
 
 class StationSeeder extends Seeder
 {

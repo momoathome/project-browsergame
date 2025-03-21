@@ -3,12 +3,12 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use App\Services\AsteroidGenerator;
-use Illuminate\Support\Facades\Log;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 class GenerateAsteroidBatch implements ShouldQueue
 {

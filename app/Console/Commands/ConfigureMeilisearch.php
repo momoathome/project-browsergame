@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use MeiliSearch\Client;
+use Orion\Modules\Asteroid\Services\AsteroidSearch;
 
 class ConfigureMeilisearch extends Command
 {
@@ -75,7 +76,7 @@ class ConfigureMeilisearch extends Command
     private function getResourceSynonyms()
     {
         // Hole die vorhandenen Synonyme aus deinem AsteroidSearch-Service
-        $synonymsMap = app(\App\Services\AsteroidSearch::class)->getResourceSynonyms();
+        $synonymsMap = app(AsteroidSearch::class)->getResourceSynonyms();
 
         // Konvertiere das Format für Meilisearch
         $meilisearchSynonyms = [];

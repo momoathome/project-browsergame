@@ -3,19 +3,17 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use Laravel\Jetstream\Jetstream;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Laravel\Jetstream\Jetstream;
-use App\Services\SetupInitialUserData;
+use Orion\Modules\User\Services\SetupInitialUserData;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    protected $setupInitialUserData;
-
-    public function __construct(SetupInitialUserData $setupInitialUserData)
-    {
-        $this->setupInitialUserData = $setupInitialUserData;
+    public function __construct(
+        private readonly SetupInitialUserData $setupInitialUserData
+    ) {
     }
 
     use PasswordValidationRules;

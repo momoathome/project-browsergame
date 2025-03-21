@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Station\Services\SetupInitialStation;
 use App\Models\User;
-use App\Models\Station;
-use App\Services\SetupInitialStation;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 

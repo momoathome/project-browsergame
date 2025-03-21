@@ -1,20 +1,19 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Middleware\HandleExceptionsForJetstream;
-
-use App\Http\Controllers\BuildingController;
-use App\Http\Controllers\SpacecraftController;
-use App\Http\Controllers\MarketController;
-use App\Http\Controllers\UserResourceController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
-use App\Http\Controllers\AsteroidController;
-use App\Http\Controllers\BattleController;
-use App\Http\Controllers\OverviewController;
-use App\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Admin\Controllers\AdminController;
+use App\Http\Middleware\HandleExceptionsForJetstream;
+use Orion\Modules\Combat\Http\Controllers\CombatController;
+use Orion\Modules\Market\Http\Controllers\MarketController;
+use Orion\Modules\User\Http\Controllers\OverviewController;
+use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
+use Orion\Modules\Building\Http\Controllers\BuildingController;
+use Orion\Modules\User\Http\Controllers\UserResourceController;
+use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -44,21 +43,21 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/asteroidMap', [AsteroidController::class, 'index'])->name('asteroidMap');
     Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
-    Route::post('/asteroidMap/combat', [BattleController::class, 'combat'])->name('asteroidMap.combat');
+    Route::post('/asteroidMap/combat', [CombatController::class, 'combat'])->name('asteroidMap.combat');
     Route::get('/asteroidMap/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
     Route::get('/asteroidMap/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
 
-    Route::get('/simulator', [BattleController::class, 'index'])->name('simulator');
-    Route::post('/simulator', [BattleController::class, 'simulate'])->name('simulator.simulate');
+    Route::get('/simulator', [CombatController::class, 'index'])->name('simulator');
+    Route::post('/simulator', [CombatController::class, 'simulate'])->name('simulator.simulate');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/user/{id}', [DashboardController::class, 'show'])->name('admin.user.show');
-    Route::put('/admin/stations/{id}', [DashboardController::class, 'update'])->name('admin.stations.update');
-    Route::put('/admin/buildings/{id}', [DashboardController::class, 'updateBuilding'])->name('admin.buildings.update');
+    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/admin/user/{id}', [AdminController::class, 'show'])->name('admin.user.show');
+    Route::put('/admin/stations/{id}', [AdminController::class, 'update'])->name('admin.stations.update');
+    Route::put('/admin/buildings/{id}', [AdminController::class, 'updateBuilding'])->name('admin.buildings.update');
     Route::put('/admin/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
-    Route::put('/admin/spacecrafts/{id}', [DashboardController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
+    Route::put('/admin/spacecrafts/{id}', [AdminController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
     Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);

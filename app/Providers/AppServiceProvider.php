@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\AsteroidGenerator;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 class AppServiceProvider extends ServiceProvider
 {

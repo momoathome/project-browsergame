@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Services\SetupInitialUserResources;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\User\Services\SetupInitialUserResources;
 
 class UserResourceSeeder extends Seeder
 {

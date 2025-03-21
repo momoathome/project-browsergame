@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Market;
-use App\Models\Resource;
+use Orion\Modules\Market\Models\Market;
+use Orion\Modules\Resource\Models\Resource;
 
 class MarketSeeder extends Seeder
 {

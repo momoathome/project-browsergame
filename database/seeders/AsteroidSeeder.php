@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Services\AsteroidGenerator;
 use Illuminate\Support\Facades\Artisan;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 class AsteroidSeeder extends Seeder
 {
@@ -31,7 +31,7 @@ class AsteroidSeeder extends Seeder
 
     // Index the asteroids 
     $startTime = microtime(true);
-    $asteroidModel = "App\\Models\\Asteroid";
+    $asteroidModel = "Orion\\Modules\\Asteroid\\Models\\Asteroid";
     Artisan::call('scout:flush', ['model' => $asteroidModel]);
     Artisan::call('scout:import', ['model' => $asteroidModel]);
     Artisan::call('scout:index', ['name' => 'asteroids']);

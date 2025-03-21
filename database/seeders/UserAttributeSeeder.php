@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Services\SetupInitialUserAttribute;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\User\Services\SetupInitialUserAttribute;
 
 class UserAttributeSeeder extends Seeder
 {

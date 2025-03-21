@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\SpacecraftDetails;
+use Orion\Modules\Spacecraft\Models\SpacecraftDetails;
 
 
 class SpacecraftDetailsSeeder extends Seeder

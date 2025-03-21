@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Services\SetupInitialStation;
 use Illuminate\Console\Command;
+use Orion\Modules\Station\Services\SetupInitialStation;
 
 class TestStationSpawns extends Command
 {

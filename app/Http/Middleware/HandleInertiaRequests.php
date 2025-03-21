@@ -2,24 +2,21 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\UserResource;
-use App\Models\UserAttribute;
-use App\Services\QueueService;
-use App\Services\UserAttributeService;
+use Orion\Modules\User\Models\UserResource;
+use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\User\Services\UserAttributeService;
 
 
 class HandleInertiaRequests extends Middleware
 {
-    protected $queueService;
-    protected $userAttributeService;
+    public function __construct(
+        private readonly QueueService $queueService,
+        private readonly UserAttributeService $userAttributeService
+    ) {
 
-    public function __construct(QueueService $queueService, UserAttributeService $userAttributeService)
-    {
-        $this->queueService = $queueService;
-        $this->userAttributeService = $userAttributeService;
     }
 
     /**
@@ -53,7 +50,7 @@ class HandleInertiaRequests extends Middleware
         if (Auth::check()) {
             $this->queueService->processQueueForUser(Auth::user()->id);
         }
-        
+
         return array_merge(parent::share($request), [
             'userResources' => Auth::check()
                 ? UserResource::where('user_id', Auth::user()->id)

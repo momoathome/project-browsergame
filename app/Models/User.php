@@ -3,12 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Laravel\Sanctum\HasApiTokens;
+use Laravel\Jetstream\HasProfilePhoto;
+use Illuminate\Notifications\Notifiable;
+use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Building\Models\Building;
+use Orion\Modules\Resource\Models\Resource;
+use Laravel\Fortify\TwoFactorAuthenticatable;
+use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Jetstream\HasProfilePhoto;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {

@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\QueueService;
 
 class ProcessQueue extends Command
 {

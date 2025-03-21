@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Resource;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\Resource\Models\Resource;
 
 class ResourceSeeder extends Seeder
 {

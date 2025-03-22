@@ -52,4 +52,18 @@ class UserAttributeService
             $userAttribute->save();
         }
     }
+
+    public function addAttributeAmount(int $userId, string $attributeName, int $amount)
+    {
+        $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
+        $userAttribute->attribute_value += $amount;
+        $userAttribute->save();
+    }
+
+    public function subtractAttributeAmount(int $userId, string $attributeName, int $amount)
+    {
+        $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
+        $userAttribute->attribute_value -= $amount;
+        $userAttribute->save();
+    }
 }

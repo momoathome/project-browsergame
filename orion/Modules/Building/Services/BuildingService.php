@@ -44,7 +44,6 @@ class BuildingService
         return $buildings->map(function ($building) use ($buildingQueues) {
             $isUpgrading = isset($buildingQueues[$building->id]);
             $building->is_upgrading = $isUpgrading;
-            $building->next_level_costs = $this->buildingCostCalculator->calculateUpgradeCost($building);
 
             if ($isUpgrading) {
                 $building->end_time = $buildingQueues[$building->id]->end_time;

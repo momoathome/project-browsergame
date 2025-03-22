@@ -7,8 +7,9 @@ use Orion\Modules\Resource\Repositories\ResourceRepository;
 readonly class ResourceService
 {
 
-    public function __construct(private ResourceRepository $resourceRepository)
-    {
+    public function __construct(
+        private readonly ResourceRepository $resourceRepository
+    ) {
     }
 
     // Add service logic here

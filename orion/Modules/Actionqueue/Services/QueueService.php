@@ -4,55 +4,35 @@ namespace Orion\Modules\Actionqueue\Services;
 
 use Illuminate\Support\Facades\App;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
-use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
-use Orion\Modules\Building\Http\Controllers\BuildingController;
-use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
+use Orion\Modules\Actionqueue\Repositories\ActionqueueRepository;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
+use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
+use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
 
 class QueueService
 {
-
-    public function getPlayerQueue($userId)
+    public function __construct(
+        private readonly ActionqueueRepository $actionqueueRepository,
+    ) {
+    }
+    public function getUserQueue($userId)
     {
-        return ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
-            ->get();
+        return $this->actionqueueRepository->getUserQueue($userId);
     }
 
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)
     {
-        return ActionQueue::create([
-            'user_id' => $userId,
-            'action_type' => $actionType,
-            'target_id' => $targetId,
-            'start_time' => now(),
-            'end_time' => now()->addSeconds($duration),
-            'status' => ActionQueue::STATUS_IN_PROGRESS,
-            'details' => $details,
-        ]);
+        return $this->actionqueueRepository->addToQueue($userId, $actionType, $targetId, $duration, $details);
     }
 
-    /**
-     * Get in progress queues for a specific user and action type
-     *
-     * @param int $userId
-     * @param string $actionType
-     * @return \Illuminate\Support\Collection
-     */
-    public function getInProgressQueuesByType($userId, $actionType)
+    public function getInProgressQueuesFromUserByType($userId, $actionType)
     {
-        return ActionQueue::where('user_id', $userId)
-            ->where('action_type', $actionType)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
-            ->get()
-            ->keyBy('target_id');
+        return $this->actionqueueRepository->getInProgressQueuesFromUserByType($userId, $actionType);
     }
 
     public function processQueue()
     {
-        $completedActions = ActionQueue::where('status', ActionQueue::STATUS_IN_PROGRESS)
-            ->where('end_time', '<=', now())
-            ->get();
+        $completedActions = $this->actionqueueRepository->processQueue();
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);
@@ -61,10 +41,7 @@ class QueueService
 
     public function processQueueForUser($userId)
     {
-        $completedActions = ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
-            ->where('end_time', '<=', now())
-            ->get();
+        $completedActions = $this->actionqueueRepository->processQueueForUser($userId);
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);
@@ -74,9 +51,7 @@ class QueueService
     public function processQueueForUserInstant($userId)
     {
         // check for admin role
-        $completedActions = ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
-            ->get();
+        $completedActions = $this->actionqueueRepository->processQueueForUserInstant($userId);
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);
@@ -107,26 +82,29 @@ class QueueService
 
     private function completeBuildingUpgrade(ActionQueue $action)
     {
-        $buildingController = App::make(BuildingController::class);
-        return $buildingController->completeUpgrade($action->target_id, $action->user_id);
+        $buildingUpgradeService = App::make('Orion\Modules\Building\Services\BuildingUpgradeService');
+        return $buildingUpgradeService->completeUpgrade($action->target_id, $action->user_id);
     }
 
     private function completeSpacecraftProduction(ActionQueue $action)
     {
         $spacecraftController = App::make(SpacecraftController::class);
-        return $spacecraftController->completeProduction($action->target_id, $action->user_id, $action->details);
+        $details = $action->details;
+        return $spacecraftController->completeProduction($action->target_id, $action->user_id, $details);
     }
 
     private function completeAsteroidMining(ActionQueue $action)
     {
         $asteroidController = App::make(AsteroidController::class);
-        return $asteroidController->completeAsteroidMining($action->target_id, $action->user_id, $action->details);
+        $details = $action->details;
+        return $asteroidController->completeAsteroidMining($action->target_id, $action->user_id, $details);
     }
 
     private function completeCombat(ActionQueue $action)
     {
         $battleController = App::make(CombatController::class);
-        return $battleController->completeCombat($action->user_id, $action->target_id, $action->details);
+        $details = $action->details;
+        return $battleController->completeCombat($action->user_id, $action->target_id, $details);
     }
 
 /*     private function completeResearch(ActionQueue $action)

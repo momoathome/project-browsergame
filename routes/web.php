@@ -4,16 +4,16 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
-use Orion\Modules\Actionqueue\Services\QueueService;
-use Orion\Modules\Admin\Controllers\AdminController;
 use App\Http\Middleware\HandleExceptionsForJetstream;
+use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Admin\Http\Controllers\AdminController;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
 use Orion\Modules\Market\Http\Controllers\MarketController;
-use Orion\Modules\User\Http\Controllers\OverviewController;
 use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
 use Orion\Modules\Building\Http\Controllers\BuildingController;
-use Orion\Modules\User\Http\Controllers\UserResourceController;
 use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
+use Orion\Modules\User\Http\Controllers\UserResourceController;
+use Orion\Modules\User\Http\Controllers\OverviewController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [

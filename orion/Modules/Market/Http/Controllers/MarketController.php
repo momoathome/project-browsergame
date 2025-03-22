@@ -4,7 +4,7 @@ namespace Orion\Modules\Market\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Orion\Modules\Market\Services\MarketService;
-use Orion\Modules\market\Models\Market;
+use Orion\Modules\Market\Models\Market;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;

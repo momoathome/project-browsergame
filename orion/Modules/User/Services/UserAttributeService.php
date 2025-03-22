@@ -2,19 +2,23 @@
 
 namespace Orion\Modules\User\Services;
 
-use Orion\Modules\User\Models\UserAttribute;
-use Orion\Modules\Spacecraft\Models\Spacecraft;
+use Orion\Modules\User\Repositories\UserAttributeRepository;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
 class UserAttributeService
 {
-    public function getUserAttributes($userId)
+    public function __construct(
+        private readonly UserAttributeRepository $userAttributeRepository,
+        private readonly SpacecraftService $spacecraftService
+    ) {
+    }
+    public function getAllUserAttributesByUserId($userId)
     {
-        $userAttributes = UserAttribute::where('user_id', $userId)
-            ->orderBy('id', 'asc')
-            ->get();
+        $userAttributes = $this->userAttributeRepository->getAllUserAttributesByUserId($userId);
 
-        $spacecrafts = Spacecraft::where('user_id', $userId)->get();
+        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserId($userId);
 
+        // fill total units attribute
         $totalCrewLimit = $spacecrafts->sum(function ($spacecraft) {
             $totalCount = $spacecraft->count + ($spacecraft->locked_count ?? 0);
             return $totalCount > 0 ? $spacecraft->crew_limit * $totalCount : 0;
@@ -26,5 +30,26 @@ class UserAttributeService
         }
 
         return $userAttributes;
+    }
+
+    public function getSpecificUserAttribute($userId, $attributeName)
+    {
+        return $this->userAttributeRepository->getSpecificUserAttribute($userId, $attributeName);
+    }
+
+    public function updateUserAttribute($userId, $attributeName, $value, $multiply = false, $replace = false)
+    {
+        $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
+
+        if ($userAttribute) {
+            if ($multiply) {
+                $userAttribute->attribute_value = round($userAttribute->attribute_value * $value);
+            } else if ($replace) {
+                $userAttribute->attribute_value = $value;
+            } else {
+                $userAttribute->attribute_value += $value;
+            }
+            $userAttribute->save();
+        }
     }
 }

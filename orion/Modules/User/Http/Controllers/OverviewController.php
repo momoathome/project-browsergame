@@ -2,25 +2,28 @@
 
 namespace Orion\Modules\User\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
+use Illuminate\Auth\AuthManager;
+use App\Http\Controllers\Controller;
+use Orion\Modules\Building\Services\BuildingService;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
 class OverviewController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private readonly AuthManager $authManager,
+        private readonly BuildingService $buildingService,
+        private readonly SpacecraftService $spacecraftService
+    ) {
+    }
+
     public function index()
     {
-        $user = auth()->user();
+        $user = $this->authManager->user();
 
-        $buildings = $user->buildings()->with('details')
-            ->orderBy('id', 'asc')
-            ->get();
-        $spacecrafts = $user->spacecrafts()->with('details')
-            ->orderBy('id', 'asc')
-            ->get();
+        $buildings = $this->buildingService->getAllBuildingsByUserIdWithDetailsAndResources($user->id);
+        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
 
         return Inertia::render('Overview', [
             'buildings' => $buildings,

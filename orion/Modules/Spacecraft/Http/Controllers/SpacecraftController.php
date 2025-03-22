@@ -29,10 +29,10 @@ class SpacecraftController extends Controller
     public function index()
     {
         $user = $this->authManager->user();
-        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserId($user->id);
+        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetailsAndResources($user->id);
 
         // Queue-Informationen holen
-        $spacecraftQueues = $this->queueService->getInProgressQueuesByType($user->id, ActionQueue::ACTION_TYPE_PRODUCE);
+        $spacecraftQueues = $this->queueService->getInProgressQueuesFromUserByType($user->id, ActionQueue::ACTION_TYPE_PRODUCE);
 
         // Queue-Infos den Raumschiffen hinzufügen
         $spacecrafts = $spacecrafts->map(function ($spacecraft) use ($spacecraftQueues) {
@@ -41,7 +41,7 @@ class SpacecraftController extends Controller
 
             if ($isProducing) {
                 $spacecraft->end_time = $spacecraftQueues[$spacecraft->id]->end_time;
-                $spacecraft->currently_producing = $spacecraftQueues[$spacecraft->id]->details['quantity'];
+                $spacecraft->currently_producing = $spacecraftQueues[$spacecraft->id]->details['quantity'] ?? 0;
             }
 
             return $spacecraft;
@@ -137,6 +137,9 @@ class SpacecraftController extends Controller
         }
 
         return DB::transaction(function () use ($spacecraft, $details) {
+            if (is_string($details)) {
+                $details = json_decode($details, true);
+            }
             $quantity = $details['quantity'];
 
             $spacecraft->count += $quantity;

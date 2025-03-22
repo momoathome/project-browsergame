@@ -10,10 +10,11 @@ import { timeFormat, numberFormat } from '@/Utils/format';
 const props = defineProps<{
   buildings: Building[],
   spacecrafts: Spacecraft[],
-  queue: RawQueueItem[],
+  queue?: RawQueueItem[],
 }>()
 
 const page = usePage()
+const queue = props.queue || [];
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -103,7 +104,7 @@ const fleetSummary = computed(() => ({
 const crewLimit = computed(() => {
   const userAttributes = page.props.userAttributes;
   if (!userAttributes) return 0;
-  
+
   const crewLimitAttribute = userAttributes.find(item => item.attribute_name === 'crew_limit');
   return crewLimitAttribute ? crewLimitAttribute.attribute_value : 0;
 });
@@ -130,7 +131,6 @@ onUnmounted(() => {
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Buildings" iconSrc="/storage/navigation/buildings.png" :route="route('buildings')"
           :isPrimary="true" />
-        <!-- List of Buildings -->
         <table class="w-full text-light mt-1">
           <thead class="text-gray-400 border-b border-primary">
             <tr>
@@ -165,7 +165,6 @@ onUnmounted(() => {
         <SectionHeader title="Shipyard" iconSrc="/storage/navigation/shipyard.png" :route="route('shipyard')"
           :isPrimary="true" />
 
-        <!-- List of Spacecrafts -->
         <table class="w-full text-light mt-1">
           <thead class="text-gray-400 border-b border-primary">
             <tr>
@@ -228,7 +227,6 @@ onUnmounted(() => {
         <SectionHeader title="Asteroid Map" iconSrc="/storage/navigation/asteroidmap.png" :route="route('asteroidMap')"
           :isPrimary="true" />
 
-        <!-- List of mining and attack -->
         <table class="w-full text-light mt-1">
           <thead class="text-gray-400 border-b border-primary">
             <tr>
@@ -263,7 +261,8 @@ onUnmounted(() => {
                   </div>
                 </td>
                 <td class="p-2">
-                  {{Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0) }}
+                  {{Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc +
+                    count, 0) }}
                 </td>
                 <td class="p-2">{{ FormattedTime(mining) }}</td>
               </tr>

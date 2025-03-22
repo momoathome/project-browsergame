@@ -4,6 +4,7 @@ namespace Orion\Modules\Building\Models;
 
 use App\Models\User;
 use Orion\Modules\Resource\Models\Resource;
+use Orion\Modules\Building\Models\BuildingDetails;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +22,7 @@ class Building extends Model
 
     public function details()
     {
-        return $this->belongsTo(BuildingDetails::class);
+        return $this->belongsTo(BuildingDetails::class, 'details_id', 'id');
     }
 
     public function user()

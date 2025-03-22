@@ -4,12 +4,15 @@ namespace Orion\Modules\Resource\Http\Controllers;
 
 use Orion\Modules\Resource\Services\ResourceService;
 
-use App\Models\Resource;
+use App\Http\Controllers\Controller;
+use Orion\Modules\Resource\Models\Resource;
 use Illuminate\Http\Request;
 
 class ResourceController extends Controller
 {
-    public function __construct(private readonly ResourceService $ResourceService)
+    public function __construct(
+        private readonly ResourceService $resourceService
+        )
     {
     }
     /**

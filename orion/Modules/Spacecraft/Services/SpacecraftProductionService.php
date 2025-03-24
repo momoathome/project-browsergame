@@ -3,7 +3,7 @@
 namespace Orion\Modules\Spacecraft\Services;
 
 use Illuminate\Support\Facades\DB;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
@@ -88,7 +88,7 @@ class SpacecraftProductionService
     {
         $this->queueService->addToQueue(
             $userId,
-            ActionQueue::ACTION_TYPE_PRODUCE,
+            QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
             $spacecraft->build_time * $quantity,
             [

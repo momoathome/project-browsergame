@@ -10,11 +10,10 @@ import { timeFormat, numberFormat } from '@/Utils/format';
 const props = defineProps<{
   buildings: Building[],
   spacecrafts: Spacecraft[],
-  queue?: RawQueueItem[],
+  queue: RawQueueItem[],
 }>()
 
 const page = usePage()
-const queue = props.queue || [];
 
 const getTypeIcon = (type) => {
   switch (type) {

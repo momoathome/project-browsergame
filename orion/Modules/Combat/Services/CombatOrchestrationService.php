@@ -7,7 +7,7 @@ use App\Services\UserService;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
 use Orion\Modules\Combat\Dto\CombatResult;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
@@ -54,7 +54,7 @@ readonly class CombatOrchestrationService
             $spacecraftsWithDetails,
             $attacker,
             $defenderStation,
-            ActionQueue::ACTION_TYPE_COMBAT
+            QueueActionType::ACTION_TYPE_COMBAT
         );
         
         // Sperre die Raumschiffe für andere Aktionen
@@ -63,7 +63,7 @@ readonly class CombatOrchestrationService
         // Füge den Kampf zur Warteschlange hinzu
         $this->queueService->addToQueue(
             $attacker->id,
-            ActionQueue::ACTION_TYPE_COMBAT,
+            QueueActionType::ACTION_TYPE_COMBAT,
             $defenderId,
             $duration,
             $combatRequest->toArray()

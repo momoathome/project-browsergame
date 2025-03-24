@@ -4,13 +4,15 @@ namespace Orion\Modules\Building\Services;
 
 use Illuminate\Support\Facades\DB;
 use Orion\Modules\Building\Models\Building;
-use Orion\Modules\Resource\Models\Resource;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Building\Enums\BuildingType;
+use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Building\Services\BuildingService;
+use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
-use Orion\Modules\Building\Services\BuildingService;
 
 class BuildingUpgradeService
 {
@@ -20,6 +22,7 @@ class BuildingUpgradeService
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
         private readonly QueueService $queueService,
+        private readonly ResourceService $resourceService
     ) {
     }
 
@@ -86,7 +89,7 @@ class BuildingUpgradeService
     {
         $this->queueService->addToQueue(
             $userId,
-            ActionQueue::ACTION_TYPE_BUILDING,
+            QueueActionType::ACTION_TYPE_BUILDING,
             $building->id,
             $building->build_time,
             [
@@ -122,13 +125,23 @@ class BuildingUpgradeService
 
     private function calculateNewEffectValue(Building $building)
     {
+        $buildingType = BuildingType::tryFrom($building->details->name);
+
         // Hier die Logik für Effektverbesserung je nach Gebäudetyp
         // Dies ist nur ein einfaches Beispiel
-        switch ($building->details->name) {
-            case 'Shipyard':
+        switch ($buildingType) {
+            case BuildingType::SHIPYARD:
                 return 1.1 + ($building->level - 1) * 0.05;
-            case 'Hangar':
+            case BuildingType::HANGAR:
                 return 10 + ($building->level - 1) * 10;
+            case BuildingType::WAREHOUSE:
+                return 5 + ($building->level - 1) * 2;
+            case BuildingType::LABORATORY:
+                return 3 + ($building->level - 1) * 1;
+            case BuildingType::SCANNER:
+                return 2 + ($building->level - 1) * 0.5;
+            case BuildingType::SHIELD:
+                return 1 + ($building->level - 1) * 0.2;
             // Weitere Gebäude...
             default:
                 return $building->effect_value * 1.1;
@@ -145,17 +158,17 @@ class BuildingUpgradeService
     {
         // Bestehende Verknüpfungen löschen
         $building->resources()->detach();
-
-        $resources = Resource::pluck('id', 'name')->toArray();
+    
+        $resources = $this->resourceService->getResourceIdMapping();
         $resourceData = [];
-
+    
         foreach ($costs as $cost) {
             if (isset($resources[$cost['resource_name']])) {
                 $resourceId = $resources[$cost['resource_name']];
                 $resourceData[$resourceId] = ['amount' => $cost['amount']];
             }
         }
-
+    
         // Neue Verknüpfungen mit Pivot-Daten erstellen
         $building->resources()->attach($resourceData);
     }
@@ -172,31 +185,32 @@ class BuildingUpgradeService
             // Upgrade durchführen
             $this->upgradeBuilding($building);
 
-            // User-Attribute basierend auf dem Gebäudetyp aktualisieren
-            $buildingEffects = [
-                'Shipyard' => ['production_speed' => $building->effect_value - 1, 'replace' => true],
-                'Hangar' => ['crew_limit' => $building->effect_value],
-                'Warehouse' => ['storage' => $building->effect_value, 'multiply' => true],
-                'Laboratory' => ['research_points' => $building->effect_value],
-                'Scanner' => ['scan_range' => $building->effect_value],
-                'Shield' => ['base_defense' => $building->effect_value - 1, 'replace' => true],
-            ];
+            $buildingType = BuildingType::tryFrom($building->details->name);
 
-            if (isset($buildingEffects[$building->details->name])) {
-                foreach ($buildingEffects[$building->details->name] as $attributeName => $value) {
-                    if (!is_array($value)) {
-                        $this->userAttributeService->updateUserAttribute(
-                            $userId,
-                            $attributeName,
-                            $value,
-                            $buildingEffects[$building->details->name]['multiply'] ?? false,
-                            $buildingEffects[$building->details->name]['replace'] ?? false
-                        );
-                    }
-                }
+            if ($buildingType) {
+                $this->updateUserAttributesForBuilding($userId, $building, $buildingType);
             }
 
             return true;
         });
+    }
+
+    private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): void
+    {
+        $effectAttributes = $buildingType->getEffectAttributes();
+        
+        foreach ($effectAttributes as $attributeName => $config) {
+            $value = $building->effect_value + ($config['modifier'] ?? 0);
+            $multiply = $config['multiply'] ?? false;
+            $replace = $config['replace'] ?? false;
+            
+            $this->userAttributeService->updateUserAttribute(
+                $userId,
+                $attributeName,
+                $value,
+                $multiply,
+                $replace
+            );
+        }
     }
 }

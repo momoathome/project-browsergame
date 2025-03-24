@@ -26,4 +26,14 @@ readonly class ResourceRepository
     {
         return Resource::where('name', $resourceType)->first();
     }
+
+    /**
+     * Gibt eine Zuordnung von Ressourcennamen zu IDs zurück
+     * 
+     * @return array Assoziatives Array mit Ressourcennamen als Schlüssel und IDs als Werte
+     */
+    public function getResourceIdMapping(): array
+    {
+        return Resource::pluck('id', 'name')->toArray();
+    }
 }

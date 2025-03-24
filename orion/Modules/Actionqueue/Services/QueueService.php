@@ -3,6 +3,8 @@
 namespace Orion\Modules\Actionqueue\Services;
 
 use Illuminate\Support\Facades\App;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Handlers\BuildingUpgradeHandler;
 use Orion\Modules\Actionqueue\Handlers\SpacecraftProductionHandler;
@@ -63,19 +65,19 @@ class QueueService
     {
         // Handlerklassen für verschiedene Aktionstypen
         $handler = match ($action->action_type) {
-            ActionQueue::ACTION_TYPE_BUILDING => App::make(BuildingUpgradeHandler::class),
-            ActionQueue::ACTION_TYPE_PRODUCE => App::make(SpacecraftProductionHandler::class),
-            ActionQueue::ACTION_TYPE_MINING => App::make(AsteroidMiningHandler::class),            
-            ActionQueue::ACTION_TYPE_COMBAT => App::make(CombatHandler::class),
+            QueueActionType::ACTION_TYPE_BUILDING => App::make(BuildingUpgradeHandler::class),
+            QueueActionType::ACTION_TYPE_PRODUCE => App::make(SpacecraftProductionHandler::class),
+            QueueActionType::ACTION_TYPE_MINING => App::make(AsteroidMiningHandler::class),            
+            QueueActionType::ACTION_TYPE_COMBAT => App::make(CombatHandler::class),
             default => null
         };
 
         $success = $handler ? $handler->handle($action) : false;
 
         if ($success) {
-            $action->status = ActionQueue::STATUS_COMPLETED;
+            $action->status = QueueStatusType::STATUS_COMPLETED;
         } else {
-            $action->status = ActionQueue::STATUS_FAILED;
+            $action->status = QueueStatusType::STATUS_FAILED;
         }
 
         $action->save();

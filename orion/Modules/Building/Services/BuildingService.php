@@ -2,7 +2,7 @@
 
 namespace Orion\Modules\Building\Services;
 
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
@@ -39,7 +39,7 @@ class BuildingService
     public function addQueueInformationToBuildings(int $userId)
     {
         $buildings = $this->getAllBuildingsByUserIdWithDetailsAndResources($userId);
-        $buildingQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, ActionQueue::ACTION_TYPE_BUILDING);
+        $buildingQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, QueueActionType::ACTION_TYPE_BUILDING);
 
         return $buildings->map(function ($building) use ($buildingQueues) {
             $isUpgrading = isset($buildingQueues[$building->id]);

@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\User\Services\UserResourceService;
@@ -90,7 +90,7 @@ class AsteroidService
                 $spacecraftsWithDetails,
                 $user,
                 $asteroid,
-                ActionQueue::ACTION_TYPE_MINING,
+                QueueActionType::ACTION_TYPE_MINING,
                 $minerCount
             );
             
@@ -98,7 +98,7 @@ class AsteroidService
             
             $this->queueService->addToQueue(
                 $user->id,
-                ActionQueue::ACTION_TYPE_MINING,
+                QueueActionType::ACTION_TYPE_MINING,
                 $asteroidId,
                 $duration,
                 [

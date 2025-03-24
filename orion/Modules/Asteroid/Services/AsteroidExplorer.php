@@ -5,9 +5,10 @@ namespace Orion\Modules\Asteroid\Services;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Orion\Modules\Asteroid\Models\Asteroid;
-use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 
 class AsteroidExplorer
 {
@@ -47,7 +48,7 @@ class AsteroidExplorer
         Collection $spacecrafts, 
         $user, 
         Asteroid | Station $asteroid, 
-        ?string $actionType = null, 
+        QueueActionType $actionType = null, 
         ?int $minerCount = null
     ): int {
         $lowestSpeed = 0;

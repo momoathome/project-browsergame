@@ -32,4 +32,9 @@ readonly class ResourceService
     {
         return $this->resourceRepository->findResourceByType($resourceType);
     }
+
+    public function getResourceIdMapping(): array
+    {
+        return $this->resourceRepository->getResourceIdMapping();
+    }
 }

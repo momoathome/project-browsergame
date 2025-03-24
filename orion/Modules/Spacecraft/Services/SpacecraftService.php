@@ -2,9 +2,8 @@
 
 namespace Orion\Modules\Spacecraft\Services;
 
-use App\Models\User;
 use Illuminate\Support\Collection;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 
@@ -45,7 +44,7 @@ readonly class SpacecraftService
     public function addQueueInformationToSpacecrafts(int $userId)
     {
         $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
-        $spacecraftQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, ActionQueue::ACTION_TYPE_PRODUCE);
+        $spacecraftQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, QueueActionType::ACTION_TYPE_PRODUCE);
 
         $spacecrafts = $spacecrafts->map(function ($spacecraft) use ($spacecraftQueues) {
             $isProducing = isset($spacecraftQueues[$spacecraft->id]);

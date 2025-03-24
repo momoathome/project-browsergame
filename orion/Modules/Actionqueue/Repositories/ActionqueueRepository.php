@@ -2,6 +2,8 @@
 
 namespace Orion\Modules\Actionqueue\Repositories;
 
+use Orion\Modules\Actionqueue\Enums\QueueStatusType;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 
 readonly class ActionqueueRepository
@@ -9,11 +11,11 @@ readonly class ActionqueueRepository
     public function getUserQueue(int $userId)
     {
         return ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
             ->get();
     }
 
-    public function addToQueue(int $userId, string $actionType, int $targetId, int $duration, array $details)
+    public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
     {
         return ActionQueue::create([
             'user_id' => $userId,
@@ -21,23 +23,23 @@ readonly class ActionqueueRepository
             'target_id' => $targetId,
             'start_time' => now(),
             'end_time' => now()->addSeconds($duration),
-            'status' => ActionQueue::STATUS_IN_PROGRESS,
+            'status' => QueueStatusType::STATUS_IN_PROGRESS,
             'details' => $details,
         ]);
     }
 
-    public function getInProgressQueuesFromUserByType(int $userId, string $actionType)
+    public function getInProgressQueuesFromUserByType(int $userId, QueueActionType $actionType)
     {
         return ActionQueue::where('user_id', $userId)
             ->where('action_type', $actionType)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
             ->get()
             ->keyBy('target_id');
     }
 
     public function processQueue()
     {
-        return ActionQueue::where('status', ActionQueue::STATUS_IN_PROGRESS)
+        return ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
             ->where('end_time', '<=', now())
             ->get();
     }
@@ -45,7 +47,7 @@ readonly class ActionqueueRepository
     public function processQueueForUser(int $userId)
     {
         return ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
             ->where('end_time', '<=', now())
             ->get();
     }
@@ -53,7 +55,7 @@ readonly class ActionqueueRepository
     public function processQueueForUserInstant(int $userId)
     {
         return ActionQueue::where('user_id', $userId)
-            ->where('status', ActionQueue::STATUS_IN_PROGRESS)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
             ->get();
     }
 }

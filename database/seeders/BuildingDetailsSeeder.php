@@ -18,7 +18,7 @@ class BuildingDetailsSeeder extends Seeder
             'name' => 'Shipyard',
             'description' => 'The higher the shipyard level, the faster spaceships are made.',
             'image' => '/storage/buildings/shipyard_sm.webp',
-            'effect' => 'Spacecraft production speed',
+            'effect' => 'Production speed',
         ]);
 
         BuildingDetails::create([
@@ -46,7 +46,7 @@ class BuildingDetailsSeeder extends Seeder
             'name' => 'Market',
             'description' => 'The higher the market level, the more resources can be traded.',
             'image' => '/storage/buildings/market_sm.webp',
-            'effect' => 'Trade capacity',
+            'effect' => 'Trade Limit',
         ]);
 
         BuildingDetails::create([
@@ -67,7 +67,7 @@ class BuildingDetailsSeeder extends Seeder
             'name' => 'Shield',
             'description' => 'The higher the energy shield level, the more attackers are blocked.',
             'image' => '/storage/buildings/shield_sm.webp',
-            'effect' => 'Combat on defence',
+            'effect' => 'Defense',
         ]);
 
         BuildingDetails::create([

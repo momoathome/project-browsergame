@@ -40,7 +40,7 @@ enum BuildingType: string
             ],
             self::WAREHOUSE => [
                 'type' => BuildingEffectType::MULTIPLICATIVE,
-                'base_value' => 1500,
+                'base_value' => 1_500,
                 'increment' => 0.3,
                 'description' => 'Erhöht die Lagerkapazität um 30% pro Level'
             ],
@@ -52,8 +52,8 @@ enum BuildingType: string
             ],
             self::SCANNER => [
                 'type' => BuildingEffectType::ADDITIVE,
-                'base_value' => 4000,
-                'increment' => 4000,
+                'base_value' => 4_000,
+                'increment' => 4_000,
                 'description' => 'Erhöht die Scan-Reichweite um 4000 pro Level'
             ],
             self::SHIELD => [

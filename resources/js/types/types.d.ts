@@ -1,22 +1,27 @@
-export interface BuildingDetails {
+export interface Building {
   id: number;
   name: string;
   description: string;
   image: string;
-  effect: string;
-}
-
-export interface Building {
-  id: number;
-  user_id: number;
-  details: BuildingDetails;
   level: number;
   build_time: number;
   effect: string;
-  effect_value: number;
   is_upgrading: boolean;
   end_time: string;
-  resources: Resource[];
+  resources: Array<{
+    id: number;
+    name: string;
+    image: string;
+    amount: number;
+  }>;
+  current_effects: BuildingEffect[];
+  next_level_effects: BuildingEffect[];
+}
+
+export interface BuildingEffect {
+  attribute: string;
+  value: number;
+  display: string;
 }
 
 export interface ResourcePivot {
@@ -91,20 +96,6 @@ export interface SimpleResource {
   image: string;
   amount: number;
 }
-
-export interface FormattedBuilding {
-  id: number;
-  image: string;
-  name: string;
-  description: string;
-  level: number;
-  build_time: number;
-  effect: string;
-  effect_value: number;
-  is_upgrading: boolean;
-  end_time: string;
-  resources: SimpleResource[];
-};
 
 export interface FormattedSpacecraft {
   id: number;

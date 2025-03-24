@@ -22,7 +22,7 @@ class BuildingController extends Controller
     public function index()
     {
         $user = $this->authManager->user();
-        $buildings = $this->buildingService->getAllBuildingsByUserIdWithQueueInformation($user->id);
+        $buildings = $this->buildingService->formatBuildingsForDisplay($user->id);
 
         return Inertia::render('Buildings', [
             'buildings' => $buildings,
@@ -40,5 +40,4 @@ class BuildingController extends Controller
             return redirect()->route('buildings')->dangerBanner($e->getMessage());
         }
     }
-
 }

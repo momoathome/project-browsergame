@@ -4,48 +4,44 @@ import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Components/AppCardTimer.vue';
-import type { FormattedBuilding } from '@/types/types';
-import { numberFormat } from '@/Utils/format';
+import type { Building } from '@/types/types';
 
 const props = defineProps<{
-  building: FormattedBuilding
+  building: Building
 }>();
 
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
-const formattedBuildingEffectValue = computed(() => {
-  const { name, effect_value } = props.building;
-  
-  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
-  
-  if (percentageBuildings.includes(name)) {
-    return ` +${formatBuildingEffectValue(effect_value)}%`;
-  }
 
-  return ` +${numberFormat(Math.round(effect_value))}`;
+const currentEffect = computed(() => {
+  if (!props.building.current_effects || props.building.current_effects.length === 0) {
+    return null;
+  }
+  return props.building.current_effects[0];
 });
 
-const formattedTotalBuildingEffectAndValue = computed(() => {
-  const { name, effect_value } = props.building;
+const nextLevelEffect = computed(() => {
+  if (!props.building.next_level_effects || props.building.next_level_effects.length === 0) {
+    return null;
+  }
+  return props.building.next_level_effects[0];
+});
 
-  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
+const formattedEffectValue = computed(() => {
+  if (!currentEffect.value) {
+    return '';
+  }
   
-  if (percentageBuildings.includes(name)) {
-    return `(${formatBuildingEffectValue(effect_value) * props.building.level}%)`;
+  return currentEffect.value.display;
+});
+
+const formattedNextLevelValue = computed(() => {
+  if (!nextLevelEffect.value) {
+    return '';
   }
-
-  if (name === 'Laboratory') {
-    const totalEffectValue = Math.round(effect_value * props.building.level - 2);
-    return `(${numberFormat(totalEffectValue)})`;
-  }
-
-  const totalEffectValue = Math.round(effect_value * props.building.level);
-  return `(${numberFormat(totalEffectValue)})`;
-})
-
-function formatBuildingEffectValue(effectValue: number) {
-  return Math.round((effectValue - 1) * 100);
-}
+  
+  return nextLevelEffect.value.display;
+});
 
 const insufficientResources = computed(() => {
   const userResources = usePage().props.userResources;
@@ -102,11 +98,17 @@ function handleUpgradeComplete() {
         <p class="text-gray text-sm">{{ building.description }}</p>
       </div>
 
+      <!-- Neue Effektanzeige basierend auf Backend-Daten -->
+      <div v-if="currentEffect" class="flex flex-col gap-1">
         <div class="flex gap-1">
-          <span class="text-sm text-secondary">{{building.effect}}:</span>
-          <span class="font-medium text-sm">{{ formattedBuildingEffectValue }}</span>
-          <span class="font-medium text-sm">{{ formattedTotalBuildingEffectAndValue }}</span>
+          <span class="text-sm text-secondary">Current Effect:</span>
+          <span class="font-medium text-sm">{{ formattedEffectValue }}</span>
         </div>
+        <div v-if="nextLevelEffect" class="flex gap-1">
+          <span class="text-sm text-secondary">Next Level:</span>
+          <span class="font-medium text-sm text-green-400">{{ formattedNextLevelValue }}</span>
+        </div>
+      </div>
 
       <Divider />
 

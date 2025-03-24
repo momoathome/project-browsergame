@@ -1,27 +1,19 @@
 <script lang="ts" setup>
 
-import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
 import type { Building} from '@/types/types';
-import { useBuildingFormatting } from '@/Composables/useBuildingFormatting';
 
 const props = defineProps<{
   buildings: Building[]
 }>()
-
-const { formatBuilding } = useBuildingFormatting();
-
-const formattedBuildings = computed(() => {
-  return props.buildings.map(building => formatBuilding(building));
-});
 
 </script>
 
 <template>
   <AppLayout title="buildings">
     <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
-      <BuildingsCard v-for="building in formattedBuildings" :key="building.id" :building="building" />
+      <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" />
     </div>
   </AppLayout>
 </template>

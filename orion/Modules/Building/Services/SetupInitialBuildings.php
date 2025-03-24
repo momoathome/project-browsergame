@@ -65,36 +65,16 @@ class SetupInitialBuildings
     
             $effectAttributeNames = $buildingType->getEffectAttributes();
             $effectConfig = $buildingType->getEffectConfiguration();
-            $effectType = $effectConfig['type'] ?? BuildingEffectType::MULTIPLICATIVE;
+            $baseValue = $effectConfig['base_value'] ?? 0;
             
             foreach ($effectAttributeNames as $attributeName) {
-                // Bestimme, ob multipliziert oder ersetzt werden soll basierend auf dem EffectType
-                $multiply = false;
-                $replace = false;
-                
-                switch ($effectType) {
-                    case BuildingEffectType::ADDITIVE:
-                        // Additive Effekte werden zum Wert hinzugefügt
-                        break;
-                        
-                    case BuildingEffectType::MULTIPLICATIVE:
-                        // Multiplikative Effekte verwenden den Wert als Faktor
-                        $multiply = true;
-                        break;
-                        
-                    case BuildingEffectType::EXPONENTIAL:
-                    case BuildingEffectType::LOGARITHMIC:
-                        // Diese komplexen Typen ersetzen den Wert komplett
-                        $replace = true;
-                        break;
-                }
-                
+                // Setze für jedes Attribut einfach den base_value aus der Konfiguration
                 $this->userAttributeService->updateUserAttribute(
                     $userId,
                     $attributeName,
-                    $building->effect_value,
-                    $multiply,
-                    $replace
+                    $baseValue,
+                    false,  // nicht multiplizieren
+                    true    // Wert komplett ersetzen
                 );
             }
         }

@@ -248,12 +248,13 @@ class BuildingUpgradeService
             // Parameter basierend auf dem Effekttyp bestimmen
             $multiply = false;
             $replace = false;
+            $valueToApply = $building->effect_value;
             
             switch ($effectType) {
                 case BuildingEffectType::ADDITIVE:
-                    // Additive Effekte werden zum Wert hinzugefügt
-                    $multiply = false;
-                    $replace = false;
+                    // Additive Effekte - nur die Steigerung hinzufügen
+                    $increment = $effectConfig['increment'] ?? 0.1;
+                    $valueToApply = $increment; 
                     break;
                     
                 case BuildingEffectType::MULTIPLICATIVE:
@@ -273,7 +274,7 @@ class BuildingUpgradeService
             $updatedAttribute = $this->userAttributeService->updateUserAttribute(
                 $userId,
                 $attributeName,
-                $building->effect_value,
+                $valueToApply,
                 $multiply,
                 $replace
             );
@@ -282,18 +283,19 @@ class BuildingUpgradeService
                 $updatedAttributes[$attributeName] = [
                     'name' => $attributeName,
                     'new_value' => $updatedAttribute->attribute_value,
-                    'effect_applied' => $building->effect_value,
+                    'effect_applied' => $valueToApply,
                     'effect_type' => $effectType->value
                 ];
             } else {
                 \Log::warning("Attribut {$attributeName} konnte nicht aktualisiert werden", [
                     'user_id' => $userId,
                     'building_id' => $building->id,
-                    'effect_value' => $building->effect_value
+                    'effect_value' => $valueToApply
                 ]);
             }
         }
         
         return $updatedAttributes;
     }
+    
 }

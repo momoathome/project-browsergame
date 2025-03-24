@@ -22,7 +22,7 @@ class OverviewController extends Controller
     {
         $user = $this->authManager->user();
 
-        $buildings = $this->buildingService->getAllBuildingsByUserIdWithDetailsAndResources($user->id);
+        $buildings = $this->buildingService->formatBuildingsForDisplay($user->id);
         $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
 
         return Inertia::render('Overview', [

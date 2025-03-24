@@ -44,7 +44,6 @@ const FormattedTime = (item) => {
 const queueBuildings = computed(() => props.queue.filter(item => item.action_type === 'building'));
 const queueSpacecrafts = computed(() => props.queue.filter(item => item.action_type === 'produce'));
 const queueMining = computed(() => props.queue.filter(item => item.action_type === 'mining'));
-// const queueResearch = props.queue.filter(item => item.action_type === 'research');
 const queueCombat = computed(() => props.queue.filter(item => item.action_type === 'combat'));
 
 const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) => {
@@ -69,29 +68,17 @@ const totalMiningOperations = computed(() => props.queue.reduce((acc, item) => {
 const getBuildingQueueItem = computed(() => (buildingId: number) => {
   return queueBuildings.value.find(item => item.target_id === buildingId);
 });
+
 const getSpacecraftsQueueItem = computed(() => (spacecraftId: number) => {
   return queueSpacecrafts.value.find(item => item.target_id === spacecraftId);
 });
 
-const formattedTotalBuildingEffectAndValue = computed(() => (building: Building) => {
-  const percentageBuildings = ['Shipyard', 'Warehouse', 'Shield'];
-
-  if (percentageBuildings.includes(building.details.name)) {
-    return `${formatBuildingEffectValue(building.effect_value) * building.level}%`;
+// Neue Funktion zur Anzeige formatierter Effekte
+const getBuildingEffectDisplay = (building) => {
+  if (building.current_effects && building.current_effects.length > 0) {
+    return building.current_effects[0].display;
   }
-
-  if (building.details.name === 'Laboratory') {
-    const totalEffectValue = Math.round(building.effect_value * building.level - 2);
-    return `${numberFormat(totalEffectValue)}`;
-  }
-
-  const totalEffectValue = Math.round(building.effect_value * building.level);
-  return `${numberFormat(totalEffectValue)}`;
-})
-
-function formatBuildingEffectValue(effectValue: number) {
-  return Math.round((effectValue - 1) * 100);
-}
+};
 
 const fleetSummary = computed(() => ({
   totalCount: props.spacecrafts.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
@@ -136,16 +123,14 @@ onUnmounted(() => {
               <th class="text-left p-2">Name</th>
               <th class="text-left p-2">Level</th>
               <th class="text-left p-2">Effect</th>
-              <th class="text-left p-2">Effect Value</th>
               <th class="text-left p-2">Upgrade</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="building in buildings" :key="building.id">
-              <td class="p-2">{{ building.details.name }}</td>
+              <td class="p-2">{{ building.name }}</td>
               <td class="p-2">{{ building.level }}</td>
-              <td class="p-2">{{ building.details.effect }}</td>
-              <td class="p-2">{{ formattedTotalBuildingEffectAndValue(building) }}</td>
+              <td class="p-2">{{ getBuildingEffectDisplay(building) }}</td>
               <td class="p-2">
                 <template v-if="getBuildingQueueItem(building.id)">
                   {{ FormattedTime(getBuildingQueueItem(building.id)) }}
@@ -159,6 +144,7 @@ onUnmounted(() => {
         </table>
       </div>
 
+      <!-- Rest des Templates bleibt gleich -->
       <!-- Spacecrafts -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Shipyard" iconSrc="/storage/navigation/shipyard.png" :route="route('shipyard')"

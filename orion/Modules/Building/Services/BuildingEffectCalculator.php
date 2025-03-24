@@ -110,15 +110,18 @@ class BuildingEffectCalculator
         $results = [];
     
         foreach ($attributes as $attributeName) {
-            $formattedValue = is_int($effectValue) ? $effectValue : number_format($effectValue, 2);
+            $formattedValue = number_format($effectValue, 1, ',', '.');
+            $formattedValueNoDecimals = number_format($effectValue, 0, ',', '.');
             $displayText = match ($attributeName) {
-                'production_speed' => "{$formattedValue}x Produktionsgeschwindigkeit",
-                'storage' => "+{$formattedValue}% Lagerkapazität",
-                'scan_range' => "{$formattedValue} Lichtjahre Scan-Reichweite",
-                'crew_limit' => "+{$formattedValue} Besatzungsmitglieder",
-                'research_points' => "+{$formattedValue} Forschungspunkte pro Stunde",
-                'base_defense' => "{$formattedValue}x Verteidigungsstärke",
-                default => "{$formattedValue} {$attributeName}"
+                'production_speed' => "x{$formattedValue} Production speed",
+                'storage' => "+{$formattedValueNoDecimals} Resource storage",
+                'scan_range' => "+{$formattedValueNoDecimals} Scanner range",
+                'crew_limit' => "+{$formattedValueNoDecimals} Crew Limit",
+                'research_points' => "+{$formattedValueNoDecimals} Research Points",
+                'base_defense' => "x{$formattedValue} Defense",
+                // 'energy_output' => "+{$effectValue} energy output",
+                // 'trade_income' => "+{$effectValue} Trade Limit",
+                default => "+{$effectValue} {$attributeName}"
             };
     
             $results[] = [

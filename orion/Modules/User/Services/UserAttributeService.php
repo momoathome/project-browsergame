@@ -20,7 +20,7 @@ class UserAttributeService
 
         // fill total units attribute
         $totalCrewLimit = $spacecrafts->sum(function ($spacecraft) {
-            $totalCount = $spacecraft->count + ($spacecraft->locked_count ?? 0);
+            $totalCount = $spacecraft->count;
             return $totalCount > 0 ? $spacecraft->crew_limit * $totalCount : 0;
         });
 

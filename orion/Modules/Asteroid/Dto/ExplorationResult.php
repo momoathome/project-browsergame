@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Asteroid\Dto;
+namespace Orion\Modules\Asteroid\Dto;
 
 class ExplorationResult
 {

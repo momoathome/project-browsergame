@@ -48,9 +48,7 @@ readonly class SpacecraftRepository
     private function updateSpacecraftCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
     {
         return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
-            $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId, $filteredSpacecrafts)
-                ->lockForUpdate()
-                ->get();
+            $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId, $filteredSpacecrafts);
                 
             foreach ($spacecrafts as $spacecraft) {
                 $spacecraft->locked_count = $spacecraft->locked_count ?? 0;

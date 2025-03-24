@@ -7,7 +7,7 @@ use App\Services\UserService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Orion\Modules\Asteroid\Models\Asteroid;
-use App\Modules\Asteroid\Dto\ExplorationResult;
+use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Services\QueueService;

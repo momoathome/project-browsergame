@@ -5,7 +5,6 @@ import type { Resource } from '@/types/types';
 import type { User } from '@/types/types';
 import { Link, router } from '@inertiajs/vue3';
 
-
 const props = defineProps<{
     universeResources: Resource[];
     users: User[];

@@ -18,9 +18,9 @@ readonly class UserResourceRepository
     public function getSpecificUserResource(int $userId, int $resourceId) 
     {
         return UserResource::with('resource')
-        ->where('user_id', $userId)
-        ->where('resource_id', $resourceId)
-        ->first();
+            ->where('user_id', $userId)
+            ->where('resource_id', $resourceId)
+            ->first();
     }
 
     public function updateResourceAmount(int $userId, int $resourceId, int $amount)

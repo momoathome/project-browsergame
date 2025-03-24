@@ -52,7 +52,7 @@ export interface UserResources {
   amount: number;
   created_at: string;
   updated_at: string;
-  resources: Resource;
+  resource: Resource;
 }
 
 export interface UserAttributes {

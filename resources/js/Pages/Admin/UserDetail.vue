@@ -1,15 +1,22 @@
 <script lang="ts" setup>
 import { defineProps, ref } from 'vue';
 import { useForm, router, Link } from '@inertiajs/vue3';
-import type { User, Station, Spacecraft, Building, Resource } from '@/types/types';
+import type { User, Station, Spacecraft, Building, UserResources, UserAttributes } from '@/types/types';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps<{
     user: User;
     buildings: Building[];
     spacecrafts: Spacecraft[];
-    ressources: Resource[];
+    resources: UserResources[];
+    attributes: UserAttributes[];
 }>();
+
+const getBuildingEffectDisplay = (building) => {
+  if (building.current_effects && building.current_effects.length > 0) {
+    return building.current_effects[0].display;
+  }
+};
 
 const updateBuildingLevel = (building) => {
     const form = useForm({
@@ -56,8 +63,8 @@ const updateStationCoordinates = (index: number) => {
 
 // Editiermodus für Ressourcen
 const editingResource = ref<number | null>(null);
-const resourceForms = ref(props.ressources.map(resource => useForm({
-    amount: resource.pivot.amount,
+const resourceForms = ref(props.resources.map(resource => useForm({
+    amount: resource.amount,
     user_id: props.user.id
 })));
 
@@ -70,7 +77,7 @@ const updateResourceAmount = (index: number, resourceId: number) => {
         preserveScroll: true,
         onSuccess: () => {
             editingResource.value = null;
-            router.reload({ only: ['ressources'] });
+            router.reload({ only: ['resources'] });
         }
     });
 };
@@ -96,6 +103,10 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
         }
     });
 };
+
+// user attributes
+// find credits attribute
+const credits = props.attributes.find(attr => attr.attribute_name === 'credits')?.attribute_value || 0;
 
 </script>
 
@@ -197,17 +208,15 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                             <tr>
                                 <th class="text-left p-2">Name</th>
                                 <th class="text-left p-2">Level</th>
-                                <th class="text-left p-2">Effect name</th>
                                 <th class="text-left p-2">Effect value</th>
                                 <th class="text-left p-2">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="building in buildings" :key="building.id">
-                                <td class="p-2">{{ building.details.name }}</td>
+                                <td class="p-2">{{ building.name }}</td>
                                 <td class="p-2">{{ building.level || 'Unbekannt' }}</td>
-                                <td class="p-2">{{ building.details.effect }}</td>
-                                <td class="p-2">{{ building.effect_value }}</td>
+                                <td class="p-2">{{ getBuildingEffectDisplay(building) }}</td>
                                 <td class="p-2">
                                     <button @click="updateBuildingLevel(building)"
                                         class="bg-primary text-white py-1 px-4 rounded-md hover:bg-primary-dark transition">
@@ -287,10 +296,10 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(resource, index) in ressources" :key="resource.id">
-                                <td class="p-2 font-medium">{{ resource.name }}</td>
+                            <tr v-for="(resource, index) in resources" :key="resource.id">
+                                <td class="p-2 font-medium">{{ resource.resource.name }}</td>
                                 <td class="p-2">
-                                    <span v-if="editingResource !== index">{{ resource.pivot.amount }}</span>
+                                    <span v-if="editingResource !== index">{{ resource.amount }}</span>
                                     <input v-else v-model="resourceForms[index].amount" type="number" min="0"
                                         class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
                                 </td>
@@ -300,7 +309,7 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                                         Bearbeiten
                                     </button>
                                     <div v-else class="flex gap-2">
-                                        <button @click="updateResourceAmount(index, resource.id)"
+                                        <button @click="updateResourceAmount(index, resource.resource_id)"
                                             class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm">
                                             Speichern
                                         </button>
@@ -311,7 +320,10 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="h-10"></tr>
+                            <tr class="h-10">
+                                <td class="p-2">Credits</td>
+                                <td class="p-2">{{ credits }}</td>
+                            </tr>
                         </tbody>
                         <tfoot>
                             <tr class="border-t border-primary bg-primary rounded-b-xl">
@@ -319,7 +331,7 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                                     Ressources Total:
                                 </td>
                                 <td class="px-2 py-3">
-                                    {{ressources.reduce((sum, resource) => sum + resource.pivot.amount, 0)}}
+                                    {{resources.reduce((sum, resource) => sum + resource.amount, 0)}}
                                 </td>
                                 <td></td>
                             </tr>

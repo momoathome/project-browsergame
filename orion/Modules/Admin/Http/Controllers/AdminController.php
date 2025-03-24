@@ -7,7 +7,10 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Controllers\Controller;
+use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 
@@ -16,9 +19,12 @@ class AdminController extends Controller
 
     public function __construct(
         private readonly BuildingUpgradeService $buildingUpgradeService,
+        private readonly BuildingService $buildingService,
         private readonly UserService $userService,
         private readonly StationService $stationService,
         private readonly SpacecraftService $spacecraftService,
+        private readonly UserResourceService $userResourceService,
+        private readonly UserAttributeService $userAttributeService
     ) {
     }
 
@@ -57,15 +63,17 @@ class AdminController extends Controller
         $user = User::with('stations')
             ->find($id);
 
-        $buildings = $user->buildings()->with('details')->orderBy('id', 'asc')->get();
-        $spacecrafts = $user->spacecrafts()->with('details')->orderBy('id', 'asc')->get();
-        $ressources = $user->resources()->get();
+        $buildings = $this->buildingService->formatBuildingsForDisplay($id);
+        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($id);
+        $resources = $this->userResourceService->getAllUserResourcesByUserId($id);
+        $attributes = $this->userAttributeService->getAllUserAttributesByUserId($id);
 
         return Inertia::render('Admin/UserDetail', [
             'user' => $user,
             'buildings' => $buildings,
             'spacecrafts' => $spacecrafts,
-            'ressources' => $ressources,
+            'resources' => $resources,
+            'attributes' => $attributes,
         ]);
     }
 

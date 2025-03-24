@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Resource\Models\Resource;
+use Orion\Modules\User\Models\UserAttribute;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -89,5 +90,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Resource::class, 'user_resources', 'user_id', 'resource_id')
             ->withPivot('amount');
+    }
+
+    public function attributes()
+    {
+        return $this->belongsToMany(UserAttribute::class, 'user_attributes', 'user_id', 'attribute_id');
     }
 }

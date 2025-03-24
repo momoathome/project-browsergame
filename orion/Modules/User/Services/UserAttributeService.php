@@ -40,17 +40,27 @@ class UserAttributeService
     public function updateUserAttribute($userId, $attributeName, $value, $multiply = false, $replace = false)
     {
         $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
-
+    
         if ($userAttribute) {
-            if ($multiply) {
-                $userAttribute->attribute_value = round($userAttribute->attribute_value * $value);
-            } else if ($replace) {
+            if ($replace) {
+                // Komplett ersetzen
                 $userAttribute->attribute_value = $value;
+            } else if ($multiply) {
+                // Wert als Multiplikator verwenden
+                $userAttribute->attribute_value = round($userAttribute->attribute_value * $value);
             } else {
+                // Wert addieren (Standard)
                 $userAttribute->attribute_value += $value;
             }
+            
+            // Sicherstellen, dass der Wert nicht negativ wird
+            $userAttribute->attribute_value = max(0, $userAttribute->attribute_value);
             $userAttribute->save();
+            
+            return $userAttribute;
         }
+        
+        return null;
     }
 
     public function addAttributeAmount(int $userId, string $attributeName, int $amount)

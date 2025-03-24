@@ -5,20 +5,22 @@ namespace Orion\Modules\Building\Services;
 use Illuminate\Support\Facades\DB;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
-use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
-use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
+use Orion\Modules\Building\Services\BuildingEffectCalculator;
+use Orion\Modules\Building\Enums\BuildingEffectType;
 
 class BuildingUpgradeService
 {
     public function __construct(
         private readonly BuildingService $buildingService,
         private readonly BuildingCostCalculator $costCalculator,
+        private readonly BuildingEffectCalculator $effectCalculator,
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
         private readonly QueueService $queueService,
@@ -61,16 +63,16 @@ class BuildingUpgradeService
             ];
         })->keyBy('id')->toArray();
     }
-    
+
     private function validateUserHasEnoughResources(int $userId, array $requiredResources): void
     {
         $userResources = collect($this->userResourceService->getAllUserResourcesByUserId($userId))
             ->keyBy('resource_id');
-        
+
         foreach ($requiredResources as $resourceId => $resourceCost) {
             $userResource = $userResources->get($resourceId);
             $requiredAmount = $resourceCost['amount'];
-            
+
             if (!$userResource || $userResource->amount < $requiredAmount) {
                 $resourceName = $resourceCost['name'] ?? 'Resource #' . $resourceId;
                 throw new \Exception("Not enough {$resourceName}");
@@ -123,29 +125,9 @@ class BuildingUpgradeService
         });
     }
 
-    private function calculateNewEffectValue(Building $building)
+    private function calculateNewEffectValue(Building $building): float
     {
-        $buildingType = BuildingType::tryFrom($building->details->name);
-
-        // Hier die Logik für Effektverbesserung je nach Gebäudetyp
-        // Dies ist nur ein einfaches Beispiel
-        switch ($buildingType) {
-            case BuildingType::SHIPYARD:
-                return 1.1 + ($building->level - 1) * 0.05;
-            case BuildingType::HANGAR:
-                return 10 + ($building->level - 1) * 10;
-            case BuildingType::WAREHOUSE:
-                return 5 + ($building->level - 1) * 2;
-            case BuildingType::LABORATORY:
-                return 3 + ($building->level - 1) * 1;
-            case BuildingType::SCANNER:
-                return 2 + ($building->level - 1) * 0.5;
-            case BuildingType::SHIELD:
-                return 1 + ($building->level - 1) * 0.2;
-            // Weitere Gebäude...
-            default:
-                return $building->effect_value * 1.1;
-        }
+        return $this->effectCalculator->calculateEffectValue($building);
     }
 
     private function calculateBuildTime(Building $building)
@@ -158,59 +140,160 @@ class BuildingUpgradeService
     {
         // Bestehende Verknüpfungen löschen
         $building->resources()->detach();
-    
+
         $resources = $this->resourceService->getResourceIdMapping();
         $resourceData = [];
-    
+
         foreach ($costs as $cost) {
             if (isset($resources[$cost['resource_name']])) {
                 $resourceId = $resources[$cost['resource_name']];
                 $resourceData[$resourceId] = ['amount' => $cost['amount']];
             }
         }
-    
+
         // Neue Verknüpfungen mit Pivot-Daten erstellen
         $building->resources()->attach($resourceData);
     }
 
-    public function completeUpgrade($buildingId, $userId)
+    /**
+     * Schließt ein Gebäude-Upgrade ab und wendet die Effekte an
+     * 
+     * @param int $buildingId Die ID des zu aktualisierenden Gebäudes
+     * @param int $userId Der Benutzer, dem das Gebäude gehört
+     * @return array Statusmeldung mit Erfolg/Misserfolg und Details
+     */
+    public function completeUpgrade(int $buildingId, int $userId): array
     {
+        // Gebäude abrufen mit Validierung
         $building = $this->buildingService->getOneBuildingByUserId($buildingId, $userId);
-
-        if (!$building) {
-            return false;
-        }
-
-        return DB::transaction(function () use ($building, $userId) {
-            // Upgrade durchführen
-            $this->upgradeBuilding($building);
-
-            $buildingType = BuildingType::tryFrom($building->details->name);
-
-            if ($buildingType) {
-                $this->updateUserAttributesForBuilding($userId, $building, $buildingType);
-            }
-
-            return true;
-        });
-    }
-
-    private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): void
-    {
-        $effectAttributes = $buildingType->getEffectAttributes();
         
-        foreach ($effectAttributes as $attributeName => $config) {
-            $value = $building->effect_value + ($config['modifier'] ?? 0);
-            $multiply = $config['multiply'] ?? false;
-            $replace = $config['replace'] ?? false;
+        if (!$building) {
+            return [
+                'success' => false, 
+                'message' => 'Gebäude nicht gefunden oder gehört nicht diesem Benutzer'
+            ];
+        }
+        
+        try {
+            $result = DB::transaction(function () use ($building, $userId) {
+                // 1. Upgrade durchführen
+                $upgradedBuilding = $this->upgradeBuilding($building);
+                
+                if (!$upgradedBuilding) {
+                    throw new \Exception("Fehler beim Upgrade des Gebäudes");
+                }
+                
+                // 2. BuildingType bestimmen
+                $buildingType = BuildingType::tryFrom($upgradedBuilding->details->name);
+                
+                if (!$buildingType) {
+                    throw new \Exception("Ungültiger Gebäudetyp: " . $upgradedBuilding->details->name);
+                }
+                
+                // 3. Benutzerattribute aktualisieren
+                $attributeUpdates = $this->updateUserAttributesForBuilding($userId, $upgradedBuilding, $buildingType);
+                
+                if (empty($attributeUpdates)) {
+                    // Kein Fehler, aber keine Attribute wurden aktualisiert
+                    \Log::info("Keine Attribute für Gebäudetyp {$buildingType->value} aktualisiert");
+                }
+                
+                return [
+                    'success' => true,
+                    'building' => $upgradedBuilding,
+                    'updated_attributes' => $attributeUpdates
+                ];
+            });
             
-            $this->userAttributeService->updateUserAttribute(
+            return [
+                'success' => true,
+                'message' => 'Gebäude-Upgrade erfolgreich abgeschlossen',
+                'details' => $result
+            ];
+        } catch (\Exception $e) {
+            \Log::error("Fehler beim Gebäude-Upgrade: " . $e->getMessage(), [
+                'building_id' => $buildingId,
+                'user_id' => $userId,
+                'exception' => $e
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Fehler beim Abschließen des Upgrades: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Aktualisiert die Benutzerattribute basierend auf den Gebäudeeffekten
+     * 
+     * @param int $userId Die ID des Benutzers
+     * @param Building $building Das aktualisierte Gebäude
+     * @param BuildingType $buildingType Der Gebäudetyp
+     * @return array Liste der aktualisierten Attribute
+     */
+    private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): array
+    {
+        $effectAttributeNames = $buildingType->getEffectAttributes();
+        $effectConfig = $buildingType->getEffectConfiguration();
+        $effectType = $effectConfig['type'] ?? BuildingEffectType::MULTIPLICATIVE;
+        $updatedAttributes = [];
+        
+        // Wenn keine Attribute definiert sind, frühzeitig beenden
+        if (empty($effectAttributeNames)) {
+            return $updatedAttributes;
+        }
+        
+        foreach ($effectAttributeNames as $attributeName) {
+            // Parameter basierend auf dem Effekttyp bestimmen
+            $multiply = false;
+            $replace = false;
+            
+            switch ($effectType) {
+                case BuildingEffectType::ADDITIVE:
+                    // Additive Effekte werden zum Wert hinzugefügt
+                    $multiply = false;
+                    $replace = false;
+                    break;
+                    
+                case BuildingEffectType::MULTIPLICATIVE:
+                    // Multiplikative Effekte verwenden den Wert als Faktor
+                    $multiply = true;
+                    $replace = false;
+                    break;
+                    
+                case BuildingEffectType::EXPONENTIAL:
+                case BuildingEffectType::LOGARITHMIC:
+                    // Diese komplexen Typen ersetzen den Wert komplett
+                    $multiply = false;
+                    $replace = true;
+                    break;
+            }
+            
+            $updatedAttribute = $this->userAttributeService->updateUserAttribute(
                 $userId,
                 $attributeName,
-                $value,
+                $building->effect_value,
                 $multiply,
                 $replace
             );
+            
+            if ($updatedAttribute) {
+                $updatedAttributes[$attributeName] = [
+                    'name' => $attributeName,
+                    'new_value' => $updatedAttribute->attribute_value,
+                    'effect_applied' => $building->effect_value,
+                    'effect_type' => $effectType->value
+                ];
+            } else {
+                \Log::warning("Attribut {$attributeName} konnte nicht aktualisiert werden", [
+                    'user_id' => $userId,
+                    'building_id' => $building->id,
+                    'effect_value' => $building->effect_value
+                ]);
+            }
         }
+        
+        return $updatedAttributes;
     }
 }

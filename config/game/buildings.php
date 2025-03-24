@@ -5,7 +5,7 @@ return [
         [
             'name' => 'Shipyard',
             'details_id' => 1,
-            'effect_value' => 1.1,
+            'effect_value' => 1, // Basiswert für Level 1
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
@@ -47,7 +47,7 @@ return [
         [
             'name' => 'Warehouse',
             'details_id' => 4,
-            'effect_value' => 1.3,
+            'effect_value' => 1_500,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
@@ -75,7 +75,7 @@ return [
         [
             'name' => 'Shield',
             'details_id' => 8,
-            'effect_value' => 1.1,
+            'effect_value' => 1,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,

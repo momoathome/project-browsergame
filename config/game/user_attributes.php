@@ -4,11 +4,11 @@ return [
     'attributes' => [
         [
             'attribute_name' => 'storage',
-            'attribute_value' => 1_500,
+            'attribute_value' => 0,
         ],
         [
             'attribute_name' => 'crew_limit',
-            'attribute_value' => 10,
+            'attribute_value' => 0,
         ],
         [
             'attribute_name' => 'credits',
@@ -32,15 +32,15 @@ return [
         ],
         [
             'attribute_name' => 'scan_range',
-            'attribute_value' => 5_000,
+            'attribute_value' => 0,
         ],
         [
             'attribute_name' => 'production_speed',
-            'attribute_value' => 1,
+            'attribute_value' => 0,
         ],
         [
             'attribute_name' => 'base_defense',
-            'attribute_value' => 1,
+            'attribute_value' => 0,
         ],
     ],
 ];

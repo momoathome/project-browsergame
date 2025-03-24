@@ -4,6 +4,8 @@ namespace Orion\Modules\Actionqueue\Models;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 
 class ActionQueue extends Model
 {
@@ -13,6 +15,8 @@ class ActionQueue extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'details' => 'json',
+        'action_type' => QueueActionType::class,
+        'status' => QueueStatusType::class,
     ];
 
     public function user()

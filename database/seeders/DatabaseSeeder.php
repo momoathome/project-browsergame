@@ -16,10 +16,10 @@ class DatabaseSeeder extends Seeder
         $this->call(SpacecraftDetailsSeeder::class);
         $this->call(ResourceSeeder::class);
         $this->call(MarketSeeder::class);
+        $this->call(UserAttributeSeeder::class);
+        $this->call(UserResourceSeeder::class);
         $this->call(BuildingSeeder::class);
         $this->call(SpacecraftSeeder::class);
-        $this->call(UserResourceSeeder::class);
-        $this->call(UserAttributeSeeder::class);
         $this->call(StationSeeder::class);
         $this->call(AsteroidSeeder::class);
 

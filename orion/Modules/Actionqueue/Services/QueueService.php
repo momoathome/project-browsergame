@@ -63,23 +63,71 @@ class QueueService
 
     private function completeAction(ActionQueue $action)
     {
+        // Aktionstyp normalisieren - falls als String statt Enum
+        $actionType = $action->action_type;
+        
+        if (is_string($actionType)) {
+            // Versuche, den String in den entsprechenden Enum-Wert zu konvertieren
+            try {
+                $actionType = QueueActionType::from($action->action_type);
+            } catch (\ValueError $e) {
+                \Log::error("Ungültiger Aktionstyp", [
+                    'action_id' => $action->id,
+                    'action_type' => $action->action_type,
+                    'error' => $e->getMessage()
+                ]);
+                $action->status = QueueStatusType::STATUS_FAILED;
+                $action->save();
+                return;
+            }
+        }
+        
         // Handlerklassen für verschiedene Aktionstypen
-        $handler = match ($action->action_type) {
-            QueueActionType::ACTION_TYPE_BUILDING => App::make(BuildingUpgradeHandler::class),
-            QueueActionType::ACTION_TYPE_PRODUCE => App::make(SpacecraftProductionHandler::class),
-            QueueActionType::ACTION_TYPE_MINING => App::make(AsteroidMiningHandler::class),            
-            QueueActionType::ACTION_TYPE_COMBAT => App::make(CombatHandler::class),
+        $handlerClass = match ($actionType) {
+            QueueActionType::ACTION_TYPE_BUILDING => BuildingUpgradeHandler::class,
+            QueueActionType::ACTION_TYPE_PRODUCE => SpacecraftProductionHandler::class,
+            QueueActionType::ACTION_TYPE_MINING => AsteroidMiningHandler::class,
+            QueueActionType::ACTION_TYPE_COMBAT => CombatHandler::class,
             default => null
         };
-
-        $success = $handler ? $handler->handle($action) : false;
-
-        if ($success) {
-            $action->status = QueueStatusType::STATUS_COMPLETED;
-        } else {
+        
+        if (!$handlerClass) {
+            \Log::error("Kein Handler für Aktionstyp gefunden", [
+                'action_id' => $action->id,
+                'action_type' => $action->action_type,
+                'normalized_type' => $actionType instanceof QueueActionType ? $actionType->value : $actionType
+            ]);
+            $action->status = QueueStatusType::STATUS_FAILED;
+            $action->save();
+            return;
+        }
+        
+        $handler = App::make($handlerClass);
+        
+        try {
+            $success = $handler->handle($action);
+            
+            \Log::info("Aktionsverarbeitung abgeschlossen", [
+                'action_id' => $action->id,
+                'action_type' => $action_type = $action->action_type,
+                'success' => $success
+            ]);
+            
+            if ($success) {
+                $action->status = QueueStatusType::STATUS_COMPLETED;
+            } else {
+                $action->status = QueueStatusType::STATUS_FAILED;
+            }
+        } catch (\Exception $e) {
+            \Log::error("Fehler bei der Aktionsverarbeitung", [
+                'action_id' => $action->id,
+                'action_type' => $action->action_type,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $action->status = QueueStatusType::STATUS_FAILED;
         }
-
+        
         $action->save();
     }
 

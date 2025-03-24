@@ -42,11 +42,11 @@ onBeforeUnmount(() => {
 
 <template>
     <header class="bg-[hsl(263,45%,7%)] flex flex-col gap-2 py-2 px-4">
-        <div class="flex justify-between items-center">
+        <div class="flex justify-between gap-1 items-center">
 
             <UserResources />
 
-            <div class="flex gap-4 items-center">
+            <div class="flex gap-2 2xl:gap-4 items-center">
                 <UserAttributes />
 
                 <Divider class="!w-[2px] h-[24px] bg-primary/50" />

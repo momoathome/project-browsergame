@@ -4,9 +4,9 @@ import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import AppInput from '@/Components/AppInput.vue';
+import AppInput from '@/Modules/Shared/AppInput.vue';
 import type { FormattedSpacecraft } from '@/types/types';
-import AppCardTimer from '@/Components/AppCardTimer.vue';
+import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
 
 const props = defineProps<{

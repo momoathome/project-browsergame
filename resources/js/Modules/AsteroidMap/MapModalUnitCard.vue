@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
-import AppInput from '@/Components/AppInput.vue';
+import AppInput from '@/Modules/Shared/AppInput.vue';
 import type { Spacecraft } from '@/types/types';
 
 const props = defineProps<{

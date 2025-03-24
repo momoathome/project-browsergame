@@ -2,7 +2,7 @@
 import { numberFormat } from '@/Utils/format';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 
 const page = usePage();
 
@@ -46,22 +46,25 @@ const unitsRatio = computed(() => {
 </script>
 
 <template>
-    <div class="relative group flex flex-col gap-1 items-center">
-        <img src="/storage/attributes/unit_limit.png" class="h-7" alt="Units">
-        <span class="text-sm font-medium text-white">
-            {{ unitsRatio }}
-        </span>
-        <AppTooltip label="Crew limit" position="bottom" class="!mt-3" />
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-1 rounded-sm">
+    <div class="relative group flex gap-2 items-center p-2 bg-[hsl(263,45%,7%)] border-base border rounded-md cursor-pointer">
+      <img src="/storage/attributes/unit_limit.png" class="max-h-5 flex items-center justify-center" alt="Units">
+      <span class="text-sm font-medium text-white">
+        {{ unitsRatio }}
+      </span>
+      <AppTooltip label="Crew limit" position="bottom" class="!mt-3" />
     </div>
 
     <!-- total resources -->
-    <div class="relative group flex flex-col gap-1 items-center"
-        v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense', 'energy'].includes(attr.name))"
-        :key="attribute.name">
-        <img :src="`/storage/attributes/${attribute.name}.png`" class="h-7" alt="">
-        <span class="text-sm font-medium text-white">
-            {{ attribute.amount }}
-        </span>
-        <AppTooltip :label="attribute.label" position="bottom" class="!mt-3" />
+    <div class="relative group flex gap-2 items-center p-2 bg-[hsl(263,45%,7%)] border-base border rounded-md cursor-pointer"
+      v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense', 'energy'].includes(attr.name))"
+      :key="attribute.name">
+      <img :src="`/storage/attributes/${attribute.name}.png`" class="max-h-5 flex items-center justify-center" alt="">
+      <span class="text-sm font-medium text-white">
+        {{ attribute.amount }}
+      </span>
+      <AppTooltip :label="attribute.label" position="bottom" class="!mt-3" />
     </div>
+  </div>
+
 </template>

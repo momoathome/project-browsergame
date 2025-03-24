@@ -5,7 +5,7 @@ import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
 import { timeFormat } from '@/Utils/format';

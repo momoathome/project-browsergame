@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
-import AppInput from '@/Components/AppInput.vue';
+import AppInput from '@/Modules/Shared/AppInput.vue';
 
 type Role = "attacker" | "defender";
 

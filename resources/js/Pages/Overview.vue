@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import type { Building, Spacecraft, RawQueueItem } from '@/types/types';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import SectionHeader from '@/Components/SectionHeader.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
 

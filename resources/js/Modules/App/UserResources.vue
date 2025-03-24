@@ -2,7 +2,7 @@
 import { usePage, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 
 const page = usePage();
 const form = useForm({
@@ -33,10 +33,12 @@ function addResource(resourceId) {
 </script>
 
 <template>
-  <div class="grid gap-4 grid-cols-12 w-max">
-    <div class="relative group flex flex-col gap-1 items-center" v-for="resource in formattedResources" :key="resource.name">
-      <span @click="addResource(resource.resource_id)">
-        <img :src="resource.image" class="max-h-6 cursor-pointer" />
+  <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12 gap-1 w-max rounded-sm">
+    <div
+      class="relative group grid grid-cols-2 gap-2 items-center p-2 bg-[hsl(263,45%,7%)] border-base border rounded-md cursor-pointer"
+      v-for="resource in formattedResources" :key="resource.name" @click="addResource(resource.resource_id)">
+      <span class="flex items-center justify-center">
+        <img :src="resource.image" class="max-h-5" />
       </span>
       <span class="text-sm font-medium text-white">
         {{ resource.amount }}
@@ -46,9 +48,3 @@ function addResource(resourceId) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.grid {
-  grid-template-columns: repeat(13, minmax(0, 1fr));
-}
-</style>

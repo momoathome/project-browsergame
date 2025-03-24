@@ -36,7 +36,8 @@ export default {
                 base: {
                     DEFAULT: '#1E2D3B',
                     light: '#3A4E63',
-                    dark: '#0F1A26'
+                    dark: '#0F1A26',
+                    darker: '#0A141C'
                 },
                 gray: {
                     DEFAULT: '#878A8E'

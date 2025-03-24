@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Link } from '@inertiajs/vue3';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 
 const NavigationLinks = [
   { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },

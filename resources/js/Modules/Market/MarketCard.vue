@@ -5,8 +5,8 @@ import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
-import AppInput from '@/Components/AppInput.vue';
-import AppTooltip from '@/Components/AppTooltip.vue';
+import AppInput from '@/Modules/Shared/AppInput.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import type { formattedMarketResource } from '@/types/types';
 
 const props = defineProps<{

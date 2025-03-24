@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import AppCardTimer from '@/Components/AppCardTimer.vue';
+import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import type { Building } from '@/types/types';
 
 const props = defineProps<{

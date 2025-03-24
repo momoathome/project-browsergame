@@ -29,4 +29,27 @@ readonly class UserResourceRepository
         $userResource->amount = $amount;
         $userResource->save();
     }
+
+    public function addResourceAmount(int $userId, int $resourceId, int $amount)
+    {
+        $userResource = $this->getSpecificUserResource($userId, $resourceId);
+        $userResource->amount += $amount;
+        $userResource->save();
+    }
+
+    public function subtractResourceAmount(int $userId, int $resourceId, int $amount)
+    {
+        $userResource = $this->getSpecificUserResource($userId, $resourceId);
+        $userResource->amount -= $amount;
+        $userResource->save();
+    }
+
+    public function createUserResource(int $userId, int $resourceId, int $amount)
+    {
+        UserResource::create([
+            'user_id' => $userId,
+            'resource_id' => $resourceId,
+            'amount' => $amount,
+        ]);
+    }
 }

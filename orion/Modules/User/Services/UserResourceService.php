@@ -27,15 +27,16 @@ class UserResourceService
 
     public function addResourceAmount(int $userId, int $resourceId, int $amount)
     {
-        $userResource = $this->getSpecificUserResource($userId, $resourceId);
-        $userResource->amount += $amount;
-        $userResource->save();
+        return $this->userResourceRepository->addResourceAmount($userId, $resourceId, $amount);
     }
 
     public function subtractResourceAmount(int $userId, int $resourceId, int $amount)
     {
-        $userResource = $this->getSpecificUserResource($userId, $resourceId);
-        $userResource->amount -= $amount;
-        $userResource->save();
+        return $this->userResourceRepository->subtractResourceAmount($userId, $resourceId, $amount);
+    }
+
+    public function createUserResource(int $userId, int $resourceId, int $amount)
+    {
+        return $this->userResourceRepository->createUserResource($userId, $resourceId, $amount);
     }
 }

@@ -5,23 +5,17 @@ namespace Orion\Modules\Asteroid\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Asteroid\Models\Asteroid;
-use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\Asteroid\Services\AsteroidSearch;
-use Orion\Modules\Actionqueue\Services\QueueService;
-use Orion\Modules\Asteroid\Services\AsteroidExplorer;
+use Orion\Modules\Asteroid\Services\AsteroidService;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
-
 
 class AsteroidController extends Controller
 {
     public function __construct(
-        private readonly AsteroidExplorer $asteroidExplorer,
+        private readonly AsteroidService $asteroidService,
         private readonly AsteroidSearch $asteroidSearch,
-        private readonly QueueService $queueService,
         private readonly AuthManager $authManager
     ){
     }
@@ -34,20 +28,21 @@ class AsteroidController extends Controller
     public function update(AsteroidExploreRequest $request)
     {
         $user = $this->authManager->user();
-        $this->asteroidExplorer->exploreWithRequest($user, $request);
+        $this->asteroidService->asteroidMining($user, $request);
 
         return $this->renderAsteroidMap();
     }
 
-    public function completeAsteroidMining($asteroidId, $userId, $details)
+    public function completeAsteroidMining(int $asteroidId, int $userId, array $details)
     {
-        return $this->asteroidExplorer->completeAsteroidMining($asteroidId, $userId, $details);
+        return $this->asteroidService->completeAsteroidMining($asteroidId, $userId, $details);
     }
 
     public function search(Request $request)
     {
         $request->validate(['query' => 'nullable|string']);
         $query = $request->input('query');
+        
         if (empty($query)) {
             return $this->renderAsteroidMap();
         }
@@ -57,7 +52,26 @@ class AsteroidController extends Controller
         return $this->renderAsteroidMap($searchedAsteroids, $searchedStations, null);
     }
 
+    public function getAsteroidResources(Asteroid $asteroid)
+    {
+        $asteroid = $this->asteroidService->loadAsteroidWithResources($asteroid);
+        
+        return $this->renderAsteroidMap([], [], $asteroid);
+    }
+
     private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
+    {
+        $viewData = $this->asteroidService->getAsteroidMapData(
+            auth()->user(),
+            $searchedAsteroids,
+            $searchedStations,
+            $selectedAsteroid
+        );
+
+        return Inertia::render('AsteroidMap', $viewData);
+    }
+
+/*     private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
     {
         // $asteroids = Asteroid::with('resources')->get();
 
@@ -77,13 +91,5 @@ class AsteroidController extends Controller
             'stations' => $stations,
             'selected_asteroid' => $selectedAsteroid ?? null,
         ]);
-    }
-
-    public function getAsteroidResources(Asteroid $asteroid)
-    {
-        $asteroid->load(['resources']);
-
-        return $this->renderAsteroidMap([], [], $asteroid);
-    }
+    } */
 }
-

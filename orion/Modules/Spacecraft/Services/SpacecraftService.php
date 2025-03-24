@@ -2,9 +2,11 @@
 
 namespace Orion\Modules\Spacecraft\Services;
 
-use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use App\Models\User;
+use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 
 readonly class SpacecraftService
 {
@@ -21,12 +23,12 @@ readonly class SpacecraftService
         return $this->spacecraftRepository->getAllSpacecraftsByUserId($userId);
     }
 
-    public function getAllSpacecraftsByUserIdWithDetails(int $userId)
+    public function getAllSpacecraftsByUserIdWithDetails(int $userId, ?Collection $filteredNames = null): Collection
     {
-        return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetails($userId);
+        return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetails($userId, $filteredNames);
     }
     
-    public function getAllSpacecraftsByUserIdWithDetailsAndResources(int $userId)
+    public function getAllSpacecraftsByUserIdWithDetailsAndResources(int $userId): Collection
     {
         return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
     }
@@ -54,5 +56,26 @@ readonly class SpacecraftService
         });
         
         return $spacecrafts;
+    }
+
+    public function filterSpacecrafts($spaceCrafts): Collection
+    {
+        $collection = $spaceCrafts instanceof Collection
+            ? $spaceCrafts
+            : collect($spaceCrafts);
+            
+        return $collection->filter(function ($count) {
+            return $count > 0;
+        });
+    }
+
+    public function lockSpacecrafts(User $user, Collection $filteredSpacecrafts): bool
+    {
+        return $this->spacecraftRepository->lockSpacecrafts($user, $filteredSpacecrafts);
+    }
+
+    public function freeSpacecrafts(User $user, Collection $filteredSpacecrafts): bool
+    {
+        return $this->spacecraftRepository->freeSpacecrafts($user, $filteredSpacecrafts);
     }
 }

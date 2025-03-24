@@ -4,13 +4,8 @@ namespace Orion\Modules\Market\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Orion\Modules\Market\Services\MarketService;
-use Orion\Modules\Market\Models\Market;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use App\Models\UserResource;
-use App\Models\Resource;
 
 
 class MarketController extends Controller
@@ -20,25 +15,15 @@ class MarketController extends Controller
     ) {
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // Hole alle Marktdaten
-        $market = Market::with('resource')
-            ->orderBy('id', 'asc')
-            ->get();
+        $market = $this->marketService->getMarketData();
 
-        // Übergibt die Marktdaten an die Inertia-Seite
         return Inertia::render('Market', [
             'market' => $market,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request)
     {
         //

@@ -24,9 +24,14 @@ class MarketController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'cost' => 'required|integer|min:1',
+            'stock' => 'required|integer|min:1',
+        ]);
+
+        $this->marketService->updateResourceAmount($id, $validated['stock'], $validated['cost']);
     }
 
     public function buy(Request $request)

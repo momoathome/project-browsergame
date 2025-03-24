@@ -26,6 +26,11 @@ readonly class MarketService
         return $this->marketRepository->getMarketData();
     }
 
+    public function updateResourceAmount($resourceId, $stock, $cost)
+    {
+        $this->marketRepository->updateResourceAmount($resourceId, $stock, $cost);
+    }
+
     public function buyResource($resourceId, $quantity)
     {
         $user = $this->authManager->user();

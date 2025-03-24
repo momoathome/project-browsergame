@@ -7,8 +7,9 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Controllers\Controller;
-use Orion\Modules\Building\Services\BuildingService;
+use Orion\Modules\Market\Services\MarketService;
 use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
@@ -24,7 +25,8 @@ class AdminController extends Controller
         private readonly StationService $stationService,
         private readonly SpacecraftService $spacecraftService,
         private readonly UserResourceService $userResourceService,
-        private readonly UserAttributeService $userAttributeService
+        private readonly UserAttributeService $userAttributeService,
+        private readonly MarketService $marketService,
     ) {
     }
 
@@ -32,9 +34,11 @@ class AdminController extends Controller
     {
         // get all users with their stations and spacecrafts
         $users = $this->userService->findAll();
+        $market = $this->marketService->getMarketData();
 
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
+            'market' => $market,
         ]);
     }
 

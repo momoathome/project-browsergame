@@ -19,6 +19,16 @@ readonly class MarketRepository
         return Market::findOrFail($id);
     }
 
+    public function updateResourceAmount($id, $stock, $cost)
+    {
+        $marketItem = $this->getMarketItem($id);
+        $marketItem->stock = $stock;
+        $marketItem->cost = $cost;
+        $marketItem->save();
+        
+        return $marketItem;
+    }
+
     public function decreaseStock(int $marketItemId, int $quantity)
     {
         $marketItem = $this->getMarketItem($marketItemId);

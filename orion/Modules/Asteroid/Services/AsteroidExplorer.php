@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Resource\Services\ResourceService;
+use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Station\Services\StationService;
 
 class AsteroidExplorer
@@ -32,7 +33,7 @@ class AsteroidExplorer
         return [$totalCargoCapacity, $hasMiner];
     }
     
-    public function getSpacecraftsWithDetails(User $user, Collection $filteredSpacecrafts): Collection
+    public function getSpacecraftsWithDetails($user, Collection $filteredSpacecrafts): Collection
     {
         return $user->spacecrafts()
             ->with('details')
@@ -44,8 +45,8 @@ class AsteroidExplorer
     
     public function calculateTravelDuration(
         Collection $spacecrafts, 
-        User $user, 
-        Asteroid $asteroid, 
+        $user, 
+        Asteroid | Station $asteroid, 
         ?string $actionType = null, 
         ?int $minerCount = null
     ): int {
@@ -71,7 +72,7 @@ class AsteroidExplorer
         return $calculatedDuration;
     }
     
-    private function calculateDistanceToAsteroid(User $user, Asteroid $asteroid): int
+    private function calculateDistanceToAsteroid(User $user, Asteroid | Station $asteroid): int
     {
         $station = $this->stationService->findStationByUserId($user->id);
         

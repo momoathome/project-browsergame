@@ -3,13 +3,17 @@
 namespace Orion\Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Orion\Modules\User\Models\UserResource;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Orion\Modules\User\Services\UserResourceService;
 
 class UserResourceController extends Controller
 {
+    public function __construct(
+        private readonly UserResourceService $userResourceService
+    ) {
+    }
+
     public function index()
     {
         //
@@ -27,19 +31,12 @@ class UserResourceController extends Controller
         $resourceId = $request->input('resource_id');
         $amount = $request->input('amount');
 
-        $userResource = UserResource::where('user_id', $user->id)
-            ->where('resource_id', $resourceId)
-            ->first();
+        $userResource = $this->userResourceService->getSpecificUserResource($user->id, $resourceId);
 
         if ($userResource) {
-            $userResource->amount += $amount;
-            $userResource->save();
+            $this->userResourceService->addResourceAmount($user->id, $resourceId, $amount);
         } else {
-            UserResource::create([
-                'user_id' => $user->id,
-                'resource_id' => $resourceId,
-                'amount' => $amount,
-            ]);
+            $this->userResourceService->createUserResource($user->id, $resourceId, $amount);
         }
     }
 
@@ -50,15 +47,14 @@ class UserResourceController extends Controller
             'user_id' => 'required|exists:users,id',
         ]);
 
-        $userResource = UserResource::where('user_id', $request->user_id)
-            ->where('resource_id', $id)
-            ->first();
+        $userResource = $this->userResourceService->getSpecificUserResource($request->user_id, $id);
 
         if ($userResource) {
-            $userResource->amount = $request->amount;
-            $userResource->save();
+            $this->userResourceService->updateResourceAmount($request->user_id, $id, $request->amount);
+        } else {
+            return redirect()->back()->with('error', 'User resource not found');
         }
         
-        return redirect()->back()->with('message', 'Resource added successfully');
+        return redirect()->back()->with('message', 'Resource updated successfully');
     }
 }

@@ -8,6 +8,12 @@ use Orion\Modules\Spacecraft\Models\Spacecraft;
 
 readonly class SpacecraftRepository
 {
+
+    public function findSpacecraftById(int $id)
+    {
+        return Spacecraft::find($id);
+    }
+    
     public function getAllSpacecraftsByUserId(int $userId)
     {
         return Spacecraft::where('user_id', $userId)->get();

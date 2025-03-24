@@ -5,35 +5,29 @@ namespace Orion\Modules\Admin\Http\Controllers;
 use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use App\Services\UserService;
 use App\Http\Controllers\Controller;
-use Orion\Modules\Station\Models\Station;
-use Orion\Modules\Spacecraft\Models\Spacecraft;
+use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 
 class AdminController extends Controller
 {
 
     public function __construct(
-        private readonly BuildingUpgradeService $buildingUpgradeService
+        private readonly BuildingUpgradeService $buildingUpgradeService,
+        private readonly UserService $userService,
+        private readonly StationService $stationService,
+        private readonly SpacecraftService $spacecraftService,
     ) {
     }
 
     public function index()
     {
-        /*         $resources = Asteroid::with('resources')
-                    ->get()
-                    ->pluck('resources')
-                    ->flatten()
-                    ->groupBy('resource_type')
-                    ->map(function ($resources) {
-                        return [$resources->sum('amount')];
-                    }); */
-
         // get all users with their stations and spacecrafts
-        $users = User::all();
+        $users = $this->userService->findAll();
 
         return Inertia::render('Admin/Dashboard', [
-            // 'universeResources' => $resources,
             'users' => $users,
         ]);
     }
@@ -88,7 +82,7 @@ class AdminController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $station = Station::find($id);
+        $station = $this->stationService->findStationById($id);
         $station->update([
             'x' => $request->x,
             'y' => $request->y,
@@ -121,7 +115,7 @@ class AdminController extends Controller
             'user_id' => 'required|integer',
         ]);
 
-        $spacecraft = Spacecraft::find($request->id);
+        $spacecraft = $this->spacecraftService->findSpacecraftById($request->spacecraft_id);
         $spacecraft->update([
             'count' => $request->count,
             'user_id' => $request->user_id,

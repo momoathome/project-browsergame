@@ -29,4 +29,9 @@ class CombatResult
             ], $this->defenderLosses)
         ];
     }
+
+    public function wasSuccessful(): bool
+    {
+        return in_array($this->winner, ['attacker', 'defender']);
+    }
 }

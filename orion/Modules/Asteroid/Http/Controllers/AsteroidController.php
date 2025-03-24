@@ -33,11 +33,6 @@ class AsteroidController extends Controller
         return $this->renderAsteroidMap();
     }
 
-    public function completeAsteroidMining(int $asteroidId, int $userId, array $details)
-    {
-        return $this->asteroidService->completeAsteroidMining($asteroidId, $userId, $details);
-    }
-
     public function search(Request $request)
     {
         $request->validate(['query' => 'nullable|string']);

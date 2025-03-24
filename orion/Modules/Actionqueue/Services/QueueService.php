@@ -66,7 +66,7 @@ class QueueService
             ActionQueue::ACTION_TYPE_BUILDING => App::make(BuildingUpgradeHandler::class),
             ActionQueue::ACTION_TYPE_PRODUCE => App::make(SpacecraftProductionHandler::class),
             ActionQueue::ACTION_TYPE_MINING => App::make(AsteroidMiningHandler::class),            
-            // ActionQueue::ACTION_TYPE_COMBAT => App::make(CombatHandler::class),
+            ActionQueue::ACTION_TYPE_COMBAT => App::make(CombatHandler::class),
             default => null
         };
 

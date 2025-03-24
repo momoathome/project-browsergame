@@ -14,8 +14,12 @@ readonly class SpacecraftService
     public function __construct(
         private SpacecraftRepository $spacecraftRepository,
         private QueueService $queueService
-        
     ) {
+    }
+
+    public function findSpacecraftById(int $id)
+    {
+        return $this->spacecraftRepository->findSpacecraftById($id);
     }
 
     public function getAllSpacecraftsByUserId(int $userId)
@@ -69,12 +73,12 @@ readonly class SpacecraftService
         });
     }
 
-    public function lockSpacecrafts(User $user, Collection $filteredSpacecrafts): bool
+    public function lockSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
         return $this->spacecraftRepository->lockSpacecrafts($user, $filteredSpacecrafts);
     }
 
-    public function freeSpacecrafts(User $user, Collection $filteredSpacecrafts): bool
+    public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
         return $this->spacecraftRepository->freeSpacecrafts($user, $filteredSpacecrafts);
     }

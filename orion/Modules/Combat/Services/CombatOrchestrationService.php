@@ -1,0 +1,108 @@
+<?php
+
+namespace Orion\Modules\Combat\Services;
+
+use App\Models\User;
+use App\Services\UserService;
+use Orion\Modules\Combat\Dto\CombatRequest;
+use Orion\Modules\Combat\Dto\CombatPlanRequest;
+use Orion\Modules\Combat\Dto\CombatResult;
+use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Asteroid\Services\AsteroidExplorer;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Station\Models\Station;
+
+readonly class CombatOrchestrationService
+{
+    public function __construct(
+        private readonly CombatService $combatService,
+        private readonly QueueService $queueService,
+        private readonly UserService $userService,
+        private readonly SpacecraftService $spacecraftService,
+        private readonly AsteroidExplorer $asteroidExplorer,
+        private readonly CombatPlunderService $combatPlunderService
+    ) {
+    }
+
+    /**
+     * Plant und sendet einen Kampf in die Warteschlange
+     */
+    public function planAndQueueCombat($attacker, int $defenderId, array $spacecrafts, Station $defenderStation): void
+    {
+        $defender = $this->userService->find($defenderId);
+        $defenderSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($defenderId);
+        
+        // Erstelle einen Kampfplan mit allen notwendigen Informationen
+        $combatPlanRequest = CombatPlanRequest::fromRequest(
+            $attacker,
+            $defenderId,
+            $defender->name,
+            $spacecrafts,
+            $defenderSpacecrafts
+        );
+        
+        // Formatiere und bereite den Kampf vor
+        $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
+        
+        // Formatiere die Raumschiffe für die Sperre
+        $filteredSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
+        $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($attacker, $filteredSpacecrafts);
+        
+        // Berechne die Reisedauer
+        $duration = $this->asteroidExplorer->calculateTravelDuration(
+            $spacecraftsWithDetails,
+            $attacker,
+            $defenderStation,
+            ActionQueue::ACTION_TYPE_COMBAT
+        );
+        
+        // Sperre die Raumschiffe für andere Aktionen
+        $this->spacecraftService->lockSpacecrafts($attacker, $filteredSpacecrafts);
+        
+        // Füge den Kampf zur Warteschlange hinzu
+        $this->queueService->addToQueue(
+            $attacker->id,
+            ActionQueue::ACTION_TYPE_COMBAT,
+            $defenderId,
+            $duration,
+            $combatRequest->toArray()
+        );
+    }
+    
+    /**
+     * Führt einen geplanten Kampf durch
+     */
+    public function completeCombat(int $attackerId, int $defenderId, array $details): CombatResult
+    {
+        $combatRequest = CombatRequest::fromArray([
+            'attacker_id' => $attackerId,
+            'defender_id' => $defenderId,
+            'attacker_formatted' => $details['attacker_formatted'],
+            'defender_formatted' => $details['defender_formatted'],
+            'attacker_name' => $details['attacker_name'],
+            'defender_name' => $details['defender_name']
+        ]);
+
+        $attacker = $this->userService->find($attackerId);
+        $defender = $this->userService->find($defenderId);
+        
+        // Simuliere den Kampf und speichere das Ergebnis
+        $result = $this->combatService->executeCombat($combatRequest, $attacker, $defender);
+        
+        // Gib Raumschiffe frei
+        $formattedSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
+        $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
+        
+        // Plündere Ressourcen, wenn der Angreifer gewonnen hat
+        if ($result->winner === 'attacker') {
+            $this->combatPlunderService->plunderResources(
+                $attacker,
+                $defender,
+                $combatRequest->attackerSpacecrafts
+            );
+        }
+        
+        return $result;
+    }
+}

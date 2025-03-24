@@ -58,7 +58,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::put('/admin/buildings/{id}', [AdminController::class, 'updateBuilding'])->name('admin.buildings.update');
     Route::put('/admin/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
     Route::put('/admin/spacecrafts/{id}', [AdminController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
+    Route::post('/admin/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
     Route::put('/admin/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
+
     Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);

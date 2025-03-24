@@ -9,6 +9,8 @@ use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\User\Enums\UserAttributeType;
+
 
 class SpacecraftProductionService
 {
@@ -34,7 +36,7 @@ class SpacecraftProductionService
         $totalCosts = $this->getSpacecraftsUpgradeCosts($spacecraft, $quantity);
     
         // Prüfen, ob genug Crew-Kapazität vorhanden ist
-        $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, 'crew_limit');
+        $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
     
         // Prüfen, ob genug Ressourcen vorhanden sind
         foreach ($totalCosts as $resourceId => $requiredResource) {
@@ -107,7 +109,7 @@ class SpacecraftProductionService
      */
     public function unlockSpacecraft(int $userId, Spacecraft $spacecraft): array
     {
-        $researchPointsAttribute = $this->userAttributeService->getSpecificUserAttribute($userId, 'research_points');
+        $researchPointsAttribute = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::RESEARCH_POINTS);
 
         if (!$researchPointsAttribute || $researchPointsAttribute->attribute_value < $spacecraft->research_cost) {
             return [
@@ -118,7 +120,7 @@ class SpacecraftProductionService
 
         try {
             DB::transaction(function () use ($userId, $spacecraft) {
-                $this->userAttributeService->subtractAttributeAmount($userId, 'research_points', $spacecraft->research_cost);
+                $this->userAttributeService->subtractAttributeAmount($userId, UserAttributeType::RESEARCH_POINTS, $spacecraft->research_cost);
                 $spacecraft->unlocked = true;
                 $spacecraft->save();
             });
@@ -133,6 +135,28 @@ class SpacecraftProductionService
                 'message' => 'Error during unlocking: ' . $e->getMessage()
             ];
         }
+    }
+
+    public function adminUnlockSpacecraft(int $userId, int $spacecraftId): array
+    {
+        $spacecraft = $this->spacecraftRepository->findSpacecraftById($spacecraftId, $userId);
+
+        if (!$spacecraft) {
+            return [
+                'success' => false,
+                'message' => 'Spacecraft not found'
+            ];
+        }
+
+        DB::transaction(function () use ($userId, $spacecraft) {
+            $spacecraft->unlocked = true;
+            $spacecraft->save();
+        });
+
+        return [
+            'success' => true,
+            'message' => 'Spacecraft unlocked successfully'
+        ];
     }
 
     /**

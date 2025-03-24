@@ -10,6 +10,7 @@ use Orion\Modules\Market\Exceptions\InsufficientStorageException;
 use Orion\Modules\Market\Repositories\MarketRepository;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\User\Enums\UserAttributeType;
 
 readonly class MarketService
 {
@@ -41,7 +42,7 @@ readonly class MarketService
                 $totalCost = $marketItem->cost * $quantity;
 
                 // Validate user can afford the purchase
-                $userCreditsAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, 'credits');
+                $userCreditsAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::CREDITS);
                 if (!$userCreditsAttribute || $userCreditsAttribute->attribute_value < $totalCost) {
                     throw new InsufficientCreditsException();
                 }
@@ -52,7 +53,7 @@ readonly class MarketService
                 }
 
                 // Validate user has enough storage
-                $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, 'storage');
+                $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::STORAGE);
                 if ($userStorageAttribute->attribute_value < $quantity) {
                     throw new InsufficientStorageException();
                 }
@@ -61,7 +62,7 @@ readonly class MarketService
                 $this->marketRepository->decreaseStock($resourceId, $quantity);
 
                 // Update user credits
-                $this->userAttributeService->subtractAttributeAmount($user->id, 'credits', $totalCost);
+                $this->userAttributeService->subtractAttributeAmount($user->id, UserAttributeType::CREDITS, $totalCost);
 
                 // Add resources to user inventory
                 $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketItem->resource_id);
@@ -107,7 +108,7 @@ readonly class MarketService
                 $this->marketRepository->increaseStock($resourceId, $quantity);
 
                 // Add credits to user
-                $this->userAttributeService->addAttributeAmount($user->id, 'credits', $totalEarnings);
+                $this->userAttributeService->addAttributeAmount($user->id, UserAttributeType::CREDITS, $totalEarnings);
             });
 
             return redirect()->route('market')->banner('Resource sold successfully');

@@ -4,14 +4,15 @@ namespace Orion\Modules\Combat\Services;
 
 use App\Models\User;
 use App\Services\UserService;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
-use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
-use Orion\Modules\Station\Models\Station;
 
 readonly class CombatOrchestrationService
 {
@@ -89,9 +90,26 @@ readonly class CombatOrchestrationService
         
         // Simuliere den Kampf und speichere das Ergebnis
         $result = $this->combatService->executeCombat($combatRequest, $attacker, $defender);
-        
-        // Gib Raumschiffe frei
-        $formattedSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
+
+        $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
+        $defenderSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($defenderId);
+
+        // calculate new spacecrafts count
+        $attackerSpacecraftsCount = $this->combatService->calculateNewSpacecraftsCount(
+            $attackerSpacecrafts, 
+            $result->getLossesCollection('attacker')
+        );
+        $defenderSpacecraftsCount = $this->combatService->calculateNewSpacecraftsCount(
+            $defenderSpacecrafts,
+            $result->getLossesCollection('defender')
+        );
+
+        // Update spacecrafts count in database
+        $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
+        $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
+
+        // Free spacecrafts from locked_count
+        $formattedSpacecrafts = $this->combatService->formatModelsForLocking($attackerSpacecrafts);
         $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
         
         // Plündere Ressourcen, wenn der Angreifer gewonnen hat
@@ -99,7 +117,7 @@ readonly class CombatOrchestrationService
             $this->combatPlunderService->plunderResources(
                 $attacker,
                 $defender,
-                $combatRequest->attackerSpacecrafts
+                $attackerSpacecraftsCount
             );
         }
         

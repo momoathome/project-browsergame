@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\User\Services\UserResourceService;
@@ -180,7 +181,7 @@ class AsteroidService
     {
         $storageAttribute = $this->userAttributeService->getSpecificUserAttribute(
             $user->id, 
-            'storage'
+            UserAttributeType::STORAGE
         );
         
         $storageCapacity = $storageAttribute->attribute_value;

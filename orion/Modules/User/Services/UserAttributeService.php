@@ -4,6 +4,8 @@ namespace Orion\Modules\User\Services;
 
 use Orion\Modules\User\Repositories\UserAttributeRepository;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\User\Enums\UserAttributeType;
+
 
 class UserAttributeService
 {
@@ -32,7 +34,7 @@ class UserAttributeService
         return $userAttributes;
     }
 
-    public function getSpecificUserAttribute($userId, $attributeName)
+    public function getSpecificUserAttribute($userId, UserAttributeType $attributeName)
     {
         return $this->userAttributeRepository->getSpecificUserAttribute($userId, $attributeName);
     }
@@ -63,14 +65,14 @@ class UserAttributeService
         return null;
     }
 
-    public function addAttributeAmount(int $userId, string $attributeName, int $amount)
+    public function addAttributeAmount(int $userId, UserAttributeType $attributeName, int $amount)
     {
         $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
         $userAttribute->attribute_value += $amount;
         $userAttribute->save();
     }
 
-    public function subtractAttributeAmount(int $userId, string $attributeName, int $amount)
+    public function subtractAttributeAmount(int $userId, UserAttributeType $attributeName, int $amount)
     {
         $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
         $userAttribute->attribute_value -= $amount;

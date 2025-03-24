@@ -3,7 +3,7 @@
 namespace Orion\Modules\Combat\Dto;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 
 class CombatPlanRequest
 {
@@ -15,7 +15,7 @@ class CombatPlanRequest
         public readonly Collection $defenderSpacecrafts
     ) {
     }
-    
+
     public static function fromRequest(User $attacker, int $defenderId, string $defenderName, array $spacecrafts, Collection $defenderSpacecrafts): self
     {
         return new self(

@@ -25,7 +25,7 @@ const finishQueue = () => {
 
 <template>
     <AppLayout title="User Details">
-        <div class="mx-8 my-8 text-light">
+        <div class="ps-8 py-8 me-20 text-light">
             <div class="flex flex-col mb-6">
                 <!-- breadcrumb with back button -->
                 <div class="flex items">
@@ -36,7 +36,7 @@ const finishQueue = () => {
                 </div>
             </div>
 
-            <Section class="flex gap-8 w-2/3">
+            <section class="flex gap-8 w-2/3">
                 <!-- Benutzer-Basisinformationen -->
                 <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
                     <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">
@@ -64,20 +64,20 @@ const finishQueue = () => {
                         </button>
                     </div>
                 </div>
-            </Section>
+            </section>
 
-            <Section class="flex gap-8 mt-8">
+            <section class="flex gap-8 mt-8">
                 <!-- Buildings -->
                 <UserDetailBuilding :buildings="buildings" :user="user" />
-            </Section>
+            </section>
 
-            <Section class="flex gap-8 mt-8">
+            <section class="flex gap-8 mt-8">
                 <!-- Spacecrafts -->
                 <UserDetailSpacecraft :spacecrafts="spacecrafts" :user="user" />
 
                 <!-- Ressourcen -->
                 <UserDetailResource :resources="resources" :attributes="attributes" :user="user" />
-            </Section>
+            </section>
         </div>
     </AppLayout>
 </template>

@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Controllers\Controller;
+use Log;
 use Orion\Modules\Market\Services\MarketService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Building\Services\BuildingService;
@@ -14,6 +15,7 @@ use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
+use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
 
 class AdminController extends Controller
 {
@@ -27,6 +29,7 @@ class AdminController extends Controller
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
         private readonly MarketService $marketService,
+        private readonly SpacecraftProductionService $spacecraftProductionService,
     ) {
     }
 
@@ -120,20 +123,33 @@ class AdminController extends Controller
         }
     }
 
-    public function updateSpacecraft(Request $request)
+    public function updateSpacecraft(Request $request, $id)
     {
         $request->validate([
             'count' => 'required|integer',
             'user_id' => 'required|integer',
         ]);
 
-        $spacecraft = $this->spacecraftService->findSpacecraftById($request->spacecraft_id);
+        $spacecraft = $this->spacecraftService->findSpacecraftById($id, $request->user_id);
         $spacecraft->update([
             'count' => $request->count,
             'user_id' => $request->user_id,
         ]);
 
         return redirect()->back()->with('message', 'Raumschiff erfolgreich aktualisiert');
+    }
+
+    public function adminUnlock(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer',
+            'spacecraft_id' => 'required|integer',
+        ]);
+
+        $userId = $validated['user_id'];
+        $spacecraftId = $validated['spacecraft_id'];
+
+        return $this->spacecraftProductionService->adminUnlockSpacecraft($userId, $spacecraftId);
     }
 
     /**

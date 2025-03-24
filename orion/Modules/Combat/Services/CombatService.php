@@ -3,14 +3,15 @@
 namespace Orion\Modules\Combat\Services;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Combat\Dto\Losses;
 use Orion\Modules\Combat\Dto\Spacecraft;
-use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatResult;
+use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
-use Illuminate\Support\Collection;
-use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Combat\Repositories\CombatRepository;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
 readonly class CombatService
 {
@@ -60,8 +61,7 @@ readonly class CombatService
     {
         return collect($spacecrafts)
             ->map(function ($count, $name) use ($user) {
-                // Hier ist der Fehler - wir wandeln den String in eine Collection um
-                $nameCollection = collect([$name]);
+                $nameCollection = collect([$name => $count]);
                 $spacecraft = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id, $nameCollection)->first();
 
                 return [
@@ -82,19 +82,25 @@ readonly class CombatService
      */
     public function formatDefenderSpacecrafts($defender_spacecrafts): array
     {
-        return $defender_spacecrafts->map(function ($spacecraft) {
-            return [
-                'name' => $spacecraft->details->name,
-                'combat' => $spacecraft->combat,
-                'count' => $spacecraft->count,
-            ];
-        })->toArray();
+        return $defender_spacecrafts
+            ->filter(function ($spacecraft) {
+                return $spacecraft->count > 0;
+            })
+            ->map(function ($spacecraft) {
+                return [
+                    'name' => $spacecraft->details->name,
+                    'combat' => $spacecraft->combat,
+                    'count' => $spacecraft->count,
+                ];
+            })
+            ->values()
+            ->toArray();
     }
 
     /**
      * Formatiert Raumschiffe für die Sperr-/Freigabe-Operationen
      */
-    public function formatSpacecraftsForLocking($spacecrafts)
+    public function formatSpacecraftsForLocking($spacecrafts): Collection
     {
         $formatted = [];
         foreach ($spacecrafts as $spacecraft) {
@@ -102,6 +108,16 @@ readonly class CombatService
         }
 
         return collect($formatted);
+    }
+
+    /**
+     * Formatiert Spacecraft-Modelle für die Sperr-/Freigabe-Operationen
+     */
+    public function formatModelsForLocking(Collection $spacecrafts): Collection
+    {
+        return $spacecrafts->mapWithKeys(function ($spacecraft) {
+            return [$spacecraft->details->name => $spacecraft->count];
+        });
     }
 
     /**
@@ -216,5 +232,23 @@ readonly class CombatService
             'attacker' => $calculateLosses($attacker, $winner === 'attacker'),
             'defender' => $calculateLosses($defender, $winner === 'defender'),
         ];
+    }
+
+    /**
+     * Berechnet die neuen Raumschiffbestände nach einem Kampf
+     */
+    public function calculateNewSpacecraftsCount(Collection $spacecrafts, Collection $lossesCollection): Collection
+    {
+        return $spacecrafts
+            ->map(function ($spacecraft) use ($lossesCollection) {
+                $spacecraftName = $spacecraft->details->name;
+                $loss = $lossesCollection->get($spacecraftName);
+                $lostCount = $loss ? $loss->losses : 0;
+
+                $updatedSpacecraft = clone $spacecraft;
+                $updatedSpacecraft->count = max(0, $spacecraft->count - $lostCount);
+
+                return $updatedSpacecraft;
+            });
     }
 }

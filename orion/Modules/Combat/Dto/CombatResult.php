@@ -2,6 +2,8 @@
 
 namespace Orion\Modules\Combat\Dto;
 
+use Illuminate\Support\Collection;
+
 class CombatResult
 {
     public $attackerName;
@@ -13,21 +15,17 @@ class CombatResult
         public readonly array $defenderLosses
     ) {}
 
-    public function toArray(): array
+    /**
+     * Gibt Verluste als Collection zurück, mit Schiffsnamen als Schlüssel
+     */
+    public function getLossesCollection(string $type = 'attacker'): Collection
     {
-        return [
-            'winner' => $this->winner,
-            'attackerLosses' => array_map(fn($loss) => [
-                'name' => $loss->name,
-                'count' => $loss->count,
-                'losses' => $loss->losses
-            ], $this->attackerLosses),
-            'defenderLosses' => array_map(fn($loss) => [
-                'name' => $loss->name,
-                'count' => $loss->count,
-                'losses' => $loss->losses
-            ], $this->defenderLosses)
-        ];
+        $losses = $type === 'attacker' ? $this->attackerLosses : $this->defenderLosses;
+        
+        // Konvertiert die Losses-Objekte in eine Collection, die nach Namen indiziert ist
+        return collect($losses)->keyBy(function($loss) {
+            return $loss->name;
+        });
     }
 
     public function wasSuccessful(): bool

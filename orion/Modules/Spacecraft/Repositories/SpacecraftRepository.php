@@ -9,17 +9,19 @@ use Orion\Modules\Spacecraft\Models\Spacecraft;
 readonly class SpacecraftRepository
 {
 
-    public function findSpacecraftById(int $id)
+    public function findSpacecraftById(int $id, int $userId)
     {
-        return Spacecraft::find($id);
+        return Spacecraft::where('user_id', $userId)
+            ->where('id', $id)
+            ->first();
     }
     
-    public function getAllSpacecraftsByUserId(int $userId)
+    public function getAllSpacecraftsByUserId(int $userId): Collection
     {
         return Spacecraft::where('user_id', $userId)->get();
     }
 
-    public function getAllSpacecraftsByUserIdWithDetails(int $userId, ?Collection $filteredNames = null)
+    public function getAllSpacecraftsByUserIdWithDetails(int $userId, ?Collection $filteredNames = null): Collection
     {
         $query = Spacecraft::with('details')
             ->where('user_id', $userId);
@@ -33,7 +35,7 @@ readonly class SpacecraftRepository
         return $query->orderBy('id', 'asc')->get();
     }
 
-    public function getAllSpacecraftsByUserIdWithDetailsAndResources(int $userId)
+    public function getAllSpacecraftsByUserIdWithDetailsAndResources(int $userId): Collection
     {
         return Spacecraft::with('details', 'resources')
             ->where('user_id', $userId)
@@ -41,17 +43,28 @@ readonly class SpacecraftRepository
             ->get();
     }
 
+    public function updateSpacecraftsCount(int $userId, Collection $spacecrafts): void
+    {
+        DB::transaction(function () use ($userId, $spacecrafts) {
+            $spacecrafts->each(function ($spacecraft) use ($userId) {
+                $this->findSpacecraftById($spacecraft->id, $userId)->update([
+                    'count' => $spacecraft->count
+                ]);
+            });
+        });
+    }
+
     public function lockSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
-        return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, false);
+        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, false);
     }
     
     public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
-        return $this->updateSpacecraftCount($user->id, $filteredSpacecrafts, true);
+        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, true);
     }
     
-    private function updateSpacecraftCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
+    private function updateSpacecraftLockedCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
     {
         return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
             $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId, $filteredSpacecrafts);

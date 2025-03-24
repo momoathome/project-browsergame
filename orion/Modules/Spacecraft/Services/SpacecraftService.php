@@ -16,12 +16,12 @@ readonly class SpacecraftService
     ) {
     }
 
-    public function findSpacecraftById(int $id)
+    public function findSpacecraftById(int $id, int $userId)
     {
-        return $this->spacecraftRepository->findSpacecraftById($id);
+        return $this->spacecraftRepository->findSpacecraftById($id, $userId);
     }
 
-    public function getAllSpacecraftsByUserId(int $userId)
+    public function getAllSpacecraftsByUserId(int $userId): Collection
     {
         return $this->spacecraftRepository->getAllSpacecraftsByUserId($userId);
     }
@@ -36,12 +36,12 @@ readonly class SpacecraftService
         return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
     }
 
-    public function getAllSpacecraftsByUserIdWithQueueInformation(int $userId)
+    public function getAllSpacecraftsByUserIdWithQueueInformation(int $userId): Collection
     {
         return $this->addQueueInformationToSpacecrafts($userId);
     }
 
-    public function addQueueInformationToSpacecrafts(int $userId)
+    public function addQueueInformationToSpacecrafts(int $userId): Collection
     {
         $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
         $spacecraftQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, QueueActionType::ACTION_TYPE_PRODUCE);
@@ -80,5 +80,10 @@ readonly class SpacecraftService
     public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
         return $this->spacecraftRepository->freeSpacecrafts($user, $filteredSpacecrafts);
+    }
+
+    public function updateSpacecraftsCount($userId, Collection $spacecrafts): void
+    {
+        $this->spacecraftRepository->updateSpacecraftsCount($userId, $spacecrafts);
     }
 }

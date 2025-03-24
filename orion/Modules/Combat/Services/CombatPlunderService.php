@@ -3,11 +3,13 @@
 namespace Orion\Modules\Combat\Services;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\User\Models\UserResource;
-use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\Asteroid\Services\AsteroidExplorer;
+use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\User\Enums\UserAttributeType;
 
 class CombatPlunderService
 {
@@ -21,110 +23,99 @@ class CombatPlunderService
     /**
      * Führt die Plünderung von Ressourcen nach einem gewonnenen Kampf durch
      */
-    public function plunderResources(User $attacker, User $defender, array $attackerSpacecrafts): array
+    public function plunderResources(User $attacker, User $defender, Collection $attackerSpacecrafts): Collection
     {
         $formattedSpacecrafts = $this->formatSpacecraftsForCalculation($attackerSpacecrafts);
         $totalCargoCapacity = $this->calculateTotalCargoCapacity($attacker, $formattedSpacecrafts);
         $defenderResources = $this->userResourceService->getAllUserResourcesByUserId($defender->id);
-        
+
         // Berechne verfügbare Ressourcen und Restressourcen
-        $resourcesAvailable = [];
-        $remainingResources = [];
-        
-        foreach ($defenderResources as $userResource) {
+        $resourcesAvailable = collect();
+        $remainingResources = collect();
+
+        $defenderResources->each(function ($userResource) use ($resourcesAvailable, $remainingResources) {
             if ($userResource->amount > 0) {
                 $maxPlunder = floor($userResource->amount * 0.8); // 80% können geplündert werden
-                $resourcesAvailable[$userResource->resource_id] = $maxPlunder;
-                $remainingResources[$userResource->resource_id] = $userResource->amount - $maxPlunder;
+                $resourcesAvailable->put($userResource->resource_id, $maxPlunder);
+                $remainingResources->put($userResource->resource_id, $userResource->amount - $maxPlunder);
             }
-        }
-        
+        });
+
         // Prüfe, ob die Gesamtmenge die Ladekapazität übersteigt
-        $totalAvailable = array_sum($resourcesAvailable);
+        $totalAvailable = $resourcesAvailable->sum();
         $extractionRatio = $totalAvailable > $totalCargoCapacity ? $totalCargoCapacity / $totalAvailable : 1;
-        
+
         // Berechne die tatsächlich zu transferierenden Ressourcen
-        $resourcesExtracted = [];
-        foreach ($resourcesAvailable as $resourceId => $amount) {
+        $resourcesExtracted = collect();
+        $resourcesAvailable->each(function ($amount, $resourceId) use ($defenderResources, $extractionRatio, $resourcesExtracted, $remainingResources) {
             $extractedAmount = floor($amount * $extractionRatio);
             if ($extractedAmount > 0) {
-                $resourcesExtracted[$resourceId] = $extractedAmount;
+                $resourcesExtracted->put($resourceId, $extractedAmount);
                 // Aktualisiere die verbleibenden Ressourcen des Verteidigers
-                $remainingResources[$resourceId] = $defenderResources->firstWhere('resource_id', $resourceId)->amount - $extractedAmount;
+                $remainingResources->put($resourceId, $defenderResources->firstWhere('resource_id', $resourceId)->amount - $extractedAmount);
             }
-        }
-        
+        });
+
         // Transaktionale Durchführung der Ressourcenänderungen
         DB::transaction(function () use ($attacker, $defender, $resourcesExtracted, $remainingResources) {
             $this->updateAttackerResources($attacker, $resourcesExtracted);
             $this->updateDefenderResources($defender, $remainingResources);
         });
-        
+
         return $resourcesExtracted;
     }
-    
-    private function formatSpacecraftsForCalculation(array $spacecrafts): array
+
+    private function formatSpacecraftsForCalculation(Collection $spacecrafts): Collection
     {
-        $formatted = [];
-        foreach ($spacecrafts as $spacecraft) {
-            $formatted[$spacecraft['name']] = $spacecraft['count'];
-        }
-        
-        return $formatted;
+        return $spacecrafts->mapWithKeys(function ($spacecraft) {
+            return [$spacecraft->details->name => $spacecraft->count];
+        });
     }
-    
+
     /**
      * Berechnet die Gesamtladekapazität der Raumschiffe
      */
-    private function calculateTotalCargoCapacity(User $user, array $spacecrafts): int
+    private function calculateTotalCargoCapacity(User $user, Collection $spacecrafts): int
     {
-        $totalCargoCapacity = 0;
-        $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($user, collect($spacecrafts));
-        
-        foreach ($spacecraftsWithDetails as $spacecraft) {
-            $amountOfSpacecrafts = $spacecrafts[$spacecraft->details->name];
-            $totalCargoCapacity += $amountOfSpacecrafts * $spacecraft->cargo;
-        }
-        
-        return $totalCargoCapacity;
+        $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($user, $spacecrafts);
+
+        return $spacecraftsWithDetails->reduce(function ($totalCargoCapacity, $spacecraft) use ($spacecrafts) {
+            $amountOfSpacecrafts = $spacecrafts->get($spacecraft->details->name);
+            return $totalCargoCapacity + ($amountOfSpacecrafts * $spacecraft->cargo);
+        }, 0);
     }
-    
+
     /**
      * Aktualisiert die Ressourcen des Angreifers nach dem Plündern
      */
-    private function updateAttackerResources(User $attacker, array $resourcesExtracted): void
+    private function updateAttackerResources(User $attacker, Collection $resourcesExtracted): void
     {
-        $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($attacker->id, 'storage_capacity');
+        $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($attacker->id, UserAttributeType::STORAGE);
         $storageCapacity = $userStorageAttribute->attribute_value;
-        
-        foreach ($resourcesExtracted as $resourceId => $extractedAmount) {
-            $userResource = UserResource::firstOrNew([
-                'user_id' => $attacker->id,
-                'resource_id' => $resourceId,
-            ]);
-            
+
+        $resourcesExtracted->each(function ($extractedAmount, $resourceId) use ($attacker, $storageCapacity) {
+            $userResource = $this->userResourceService->getSpecificUserResource($attacker->id, $resourceId);
+
             $availableStorage = $storageCapacity - $userResource->amount;
             $amountToAdd = min($extractedAmount, $availableStorage);
-            
+
             $userResource->amount += $amountToAdd;
             $userResource->save();
-        }
+        });
     }
-    
+
     /**
      * Aktualisiert die Ressourcen des Verteidigers nach dem Plündern
      */
-    private function updateDefenderResources(User $defender, array $remainingResources): void
+    private function updateDefenderResources(User $defender, Collection $remainingResources): void
     {
-        foreach ($remainingResources as $resourceId => $remainingAmount) {
-            $userResource = UserResource::where('user_id', $defender->id)
-                ->where('resource_id', $resourceId)
-                ->first();
-            
+        $remainingResources->each(function ($remainingAmount, $resourceId) use ($defender) {
+            $userResource = $this->userResourceService->getSpecificUserResource($defender->id, $resourceId);
+
             if ($userResource) {
-                $userResource->amount = $remainingAmount;
+                $userResource->amount = max(0, $remainingAmount);
                 $userResource->save();
             }
-        }
+        });
     }
 }

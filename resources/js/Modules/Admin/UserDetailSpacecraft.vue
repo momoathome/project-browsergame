@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import type { UserResources, UserAttributes, Spacecraft } from '@/types/types';
+import type { Spacecraft } from '@/types/types';
+import TertiaryButton from '@/Components/TertiaryButton.vue';
 
 const props = defineProps<{
     spacecrafts: Spacecraft[];
@@ -28,6 +29,13 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
         }
     });
 };
+
+const unlockSpacecraft = (spacecraftId: number) => {
+    router.post(route('admin.spacecrafts.unlock', { spacecraft_id: spacecraftId, user_id: props.user.id }), {
+        preserveState: true,
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -39,7 +47,9 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
             <thead class="text-gray-400 border-b border-primary">
                 <tr>
                     <th class="text-left p-2">Name</th>
+                    <th class="text-left p-2">Research</th>
                     <th class="text-left p-2">Anzahl</th>
+                    <th class="text-left p-2">Locked</th>
                     <th class="text-left p-2">Aktion</th>
                 </tr>
             </thead>
@@ -47,10 +57,21 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                 <tr v-for="(spacecraft, index) in spacecrafts" :key="spacecraft.id">
                     <td class="p-2">{{ spacecraft.details.name }}</td>
                     <td class="p-2">
+                        <template v-if="spacecraft.unlocked">
+                            <span class="text-green-500">Unlocked</span>
+                        </template>
+                        <template v-else>
+                            <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft(spacecraft.id)">
+                                Unlock
+                            </TertiaryButton>
+                        </template>
+                    </td>
+                    <td class="p-2">
                         <span v-if="editingSpacecraft !== index">{{ spacecraft.count }}</span>
                         <input v-else v-model="spacecraftForms[index].count" type="number" min="0"
                             class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
                     </td>
+                    <td class="p-2">{{ spacecraft.locked_count }}</td>
                     <td class="p-2">
                         <button v-if="editingSpacecraft !== index" @click="toggleEditSpacecraft(index)"
                             class="text-primary-light hover:text-secondary">
@@ -74,10 +95,14 @@ const updateSpacecraftCount = (index: number, spacecraftId: number) => {
                     <td class="px-2 py-3">
                         Spacecrafts total:
                     </td>
+                    <td class="px-2 py-3"></td>
                     <td class="px-2 py-3">
                         {{spacecrafts.reduce((sum, spacecraft) => sum + spacecraft.count, 0)}}
                     </td>
-                    <td></td>
+                    <td class="px-2 py-3">
+                        {{spacecrafts.reduce((sum, spacecraft) => sum + spacecraft.locked_count, 0)}}
+                    </td>
+                    <td class="px-2 py-3"></td>
                 </tr>
             </tfoot>
         </table>

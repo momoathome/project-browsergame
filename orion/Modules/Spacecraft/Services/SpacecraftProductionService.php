@@ -2,14 +2,18 @@
 
 namespace Orion\Modules\Spacecraft\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Orion\Modules\Spacecraft\Models\Spacecraft;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
-use Orion\Modules\Spacecraft\Models\Spacecraft;
-use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
-use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
-use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
+use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
+use Orion\Modules\Spacecraft\Exceptions\InsufficientCrewCapacityException;
 
 
 class SpacecraftProductionService
@@ -18,7 +22,8 @@ class SpacecraftProductionService
         private readonly QueueService $queueService,
         private readonly SpacecraftRepository $spacecraftRepository,
         private readonly UserAttributeService $userAttributeService,
-        private readonly UserResourceService $userResourceService
+        private readonly UserResourceService $userResourceService,
+        private readonly ResourceService $resourceService
     ) {
     }
 
@@ -32,39 +37,48 @@ class SpacecraftProductionService
      */
     public function startSpacecraftProduction(int $userId, Spacecraft $spacecraft, int $quantity): array
     {
-        // Kosten berechnen
-        $totalCosts = $this->getSpacecraftsUpgradeCosts($spacecraft, $quantity);
-    
-        // Prüfen, ob genug Crew-Kapazität vorhanden ist
-        $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
-    
-        // Prüfen, ob genug Ressourcen vorhanden sind
-        foreach ($totalCosts as $resourceId => $requiredResource) {
-            $userResource = $this->userResourceService->getSpecificUserResource($userId, $resourceId);
-            
-            if (!$userResource || $userResource->amount < $requiredResource) {
-                return [
-                    'success' => false,
-                    'message' => 'Nicht genügend Ressourcen vorhanden'
-                ];
-            }
-        }
-    
         try {
+            // Kosten berechnen
+            $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
+
+            // Prüfen, ob genug Crew-Kapazität vorhanden ist
+            $this->validateCrewCapacity($userId, $quantity);
+
+            // Prüfen, ob genug Ressourcen vorhanden sind
+            $this->userResourceService->validateUserHasEnoughResources($userId, $totalCosts);
+
             // Ressourcen abziehen und Produktion zur Queue hinzufügen
             DB::transaction(function () use ($userId, $quantity, $totalCosts, $spacecraft) {
                 // Ressourcen abziehen
-                $this->decrementResourcesFromUser($userId, $totalCosts);
-    
+                $this->userResourceService->decrementUserResources($userId, $totalCosts);
+
                 // Produktion zur Queue hinzufügen
                 $this->addSpacecraftUpgradeToQueue($userId, $spacecraft, $quantity);
             });
-            
+
             return [
                 'success' => true,
                 'message' => "Produktion von {$quantity} {$spacecraft->details->name} wurde gestartet"
             ];
+        } catch (InsufficientCrewCapacityException $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (InsufficientResourceException $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         } catch (\Exception $e) {
+            \Log::error("Fehler bei der Raumschiffproduktion:", [
+                'user_id' => $userId,
+                'spacecraft_id' => $spacecraft->id,
+                'quantity' => $quantity,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return [
                 'success' => false,
                 'message' => 'Fehler bei der Produktion: ' . $e->getMessage()
@@ -72,17 +86,30 @@ class SpacecraftProductionService
         }
     }
 
-    private function getSpacecraftsUpgradeCosts(Spacecraft $spacecraft, int $quantity): array
+    private function getSpacecraftsProductionCosts(Spacecraft $spacecraft, int $quantity): Collection
     {
-        return $spacecraft->resources->mapWithKeys(function ($resource) use ($quantity) {
-            return [$resource->id => $resource->pivot->amount * $quantity];
-        })->toArray();
+        return $spacecraft->resources->map(function ($resource) use ($quantity) {
+            return [
+                'id' => $resource->id,
+                'name' => $resource->name,
+                'amount' => $resource->pivot->amount * $quantity
+            ];
+        })->keyBy('id');
     }
 
-    private function decrementResourcesFromUser(int $userId, array $totalCosts): void
+    /**
+     * Prüft, ob der Benutzer genügend Crew-Kapazität hat
+     * 
+     * @param int $userId ID des Benutzers
+     * @param int $requiredCapacity Benötigte Kapazität
+     * @throws InsufficientCrewCapacityException wenn nicht genügend Crew-Kapazität vorhanden ist
+     */
+    private function validateCrewCapacity(int $userId, int $requiredCapacity): void
     {
-        foreach ($totalCosts as $resourceId => $resource) {
-            $this->userResourceService->subtractResourceAmount($userId, $resourceId, $resource);
+        $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
+
+        if (!$crewLimit || $crewLimit->attribute_value < $requiredCapacity) {
+            throw new InsufficientCrewCapacityException();
         }
     }
 
@@ -169,9 +196,7 @@ class SpacecraftProductionService
      */
     public function completeProduction(int $spacecraftId, int $userId, $details): bool
     {
-        $spacecraft = Spacecraft::where('id', $spacecraftId)
-            ->where('user_id', $userId)
-            ->first();
+        $spacecraft = $this->spacecraftRepository->findSpacecraftById($spacecraftId, $userId);
 
         if (!$spacecraft) {
             return false;
@@ -183,7 +208,6 @@ class SpacecraftProductionService
                     $details = json_decode($details, true);
                 }
                 $quantity = $details['quantity'];
-
                 $spacecraft->count += $quantity;
                 $spacecraft->save();
 

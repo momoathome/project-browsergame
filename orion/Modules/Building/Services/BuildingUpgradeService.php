@@ -16,6 +16,7 @@ use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
 use Orion\Modules\Building\Services\BuildingEffectCalculator;
+use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
 
 class BuildingUpgradeService
 {
@@ -37,21 +38,45 @@ class BuildingUpgradeService
      * @param Building $building
      * @throws \Exception wenn Ressourcen nicht ausreichen
      */
-    public function startBuildingUpgrade(int $userId, Building $building): void
+    public function startBuildingUpgrade(int $userId, Building $building): array
     {
-        $currentCosts = $this->getBuildingUpgradeCosts($building);
+        try {
+            $currentCosts = $this->getBuildingUpgradeCosts($building);
 
-        // Prüfe, ob der User genügend Ressourcen hat
-        $this->validateUserHasEnoughResources($userId, $currentCosts);
+            // Prüfe, ob der User genügend Ressourcen hat
+            $this->userResourceService->validateUserHasEnoughResources($userId, $currentCosts);
 
-        // Führe das Upgrade in einer Transaktion durch
-        DB::transaction(function () use ($userId, $building, $currentCosts) {
-            // Ressourcen abziehen
-            $this->decrementResourcesFromUser($userId, $currentCosts);
+            // Führe das Upgrade in einer Transaktion durch
+            DB::transaction(function () use ($userId, $building, $currentCosts) {
+                // Ressourcen abziehen
+                $this->userResourceService->decrementUserResources($userId, $currentCosts);
 
-            // Upgrade zur Queue hinzufügen
-            $this->addBuildingUpgradeToQueue($userId, $building);
-        });
+                // Upgrade zur Queue hinzufügen
+                $this->addBuildingUpgradeToQueue($userId, $building);
+            });
+            
+            return [
+                'success' => true,
+                'message' => "Upgrade von {$building->details->name} wurde gestartet"
+            ];
+        } catch (InsufficientResourceException $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        } catch (\Exception $e) {
+            \Log::error("Fehler beim Gebäude-Upgrade:", [
+                'user_id' => $userId,
+                'building_id' => $building->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Fehler beim Upgrade: ' . $e->getMessage()
+            ];
+        }
     }
 
     private function getBuildingUpgradeCosts(Building $building): Collection
@@ -63,29 +88,6 @@ class BuildingUpgradeService
                 'amount' => $resource->pivot->amount
             ];
         })->keyBy('id');
-    }
-
-    private function validateUserHasEnoughResources(int $userId, Collection $requiredResources): void
-    {
-        $userResources = $this->userResourceService->getAllUserResourcesByUserId($userId)
-            ->keyBy('resource_id');
-
-        $requiredResources->each(function ($resourceCost, $resourceId) use ($userResources) {
-            $userResource = $userResources->get($resourceId);
-            $requiredAmount = $resourceCost['amount'];
-
-            if (!$userResource || $userResource->amount < $requiredAmount) {
-                $resourceName = $resourceCost['name'] ?? 'Resource #' . $resourceId;
-                throw new \Exception("Not enough {$resourceName}");
-            }
-        });
-    }
-
-    private function decrementResourcesFromUser(int $userId, Collection $requiredResources): void
-    {
-        $requiredResources->each(function ($resource, $resourceId) use ($userId) {
-            $this->userResourceService->subtractResourceAmount($userId, $resourceId, $resource['amount']);
-        });
     }
 
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void

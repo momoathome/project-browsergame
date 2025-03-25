@@ -55,7 +55,7 @@ class SpacecraftController extends Controller
         ]);
 
         $quantity = $validated['amount'];
-        $user = auth()->user();
+        $user = $this->authManager->user();
 
         $result = $this->spacecraftProductionService->startSpacecraftProduction($user->id, $spacecraft, $quantity);
 

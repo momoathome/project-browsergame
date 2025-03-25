@@ -5,6 +5,7 @@ namespace Orion\Modules\Building\Services;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Resource\Models\Resource;
 use Orion\Modules\Building\Enums\BuildingType;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Building\Models\BuildingResourceCost;
@@ -67,8 +68,19 @@ class SetupInitialBuildings
             $effectConfig = $buildingType->getEffectConfiguration();
             $baseValue = $effectConfig['base_value'] ?? 0;
             
-            foreach ($effectAttributeNames as $attributeName) {
-                // Setze für jedes Attribut einfach den base_value aus der Konfiguration
+            foreach ($effectAttributeNames as $attributeNameStr) {
+                // String zu UserAttributeType Enum konvertieren
+                $attributeName = UserAttributeType::tryFrom($attributeNameStr);
+                
+                // Falls die Umwandlung fehlschlägt, überspringen
+                if ($attributeName === null) {
+                    \Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
+                        'user_id' => $userId,
+                        'building_id' => $building->id
+                    ]);
+                    continue;
+                }
+                
                 $this->userAttributeService->updateUserAttribute(
                     $userId,
                     $attributeName,

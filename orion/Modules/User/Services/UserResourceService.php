@@ -2,6 +2,7 @@
 
 namespace Orion\Modules\User\Services;
 
+use Illuminate\Support\Collection;
 use Orion\Modules\User\Repositories\UserResourceRepository;
 
 class UserResourceService
@@ -10,7 +11,7 @@ class UserResourceService
         private readonly UserResourceRepository $userResourceRepository
     ) {
     }
-    public function getAllUserResourcesByUserId(int $userId)
+    public function getAllUserResourcesByUserId(int $userId): Collection
     {
         return $this->userResourceRepository->getAllUserResourcesByUserId($userId);
     }

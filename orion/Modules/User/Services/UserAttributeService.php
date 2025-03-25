@@ -2,9 +2,10 @@
 
 namespace Orion\Modules\User\Services;
 
-use Orion\Modules\User\Repositories\UserAttributeRepository;
-use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Illuminate\Support\Collection;
 use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\User\Repositories\UserAttributeRepository;
 
 
 class UserAttributeService
@@ -14,23 +15,38 @@ class UserAttributeService
         private readonly SpacecraftService $spacecraftService
     ) {
     }
-    public function getAllUserAttributesByUserId($userId)
+    public function getAllUserAttributesByUserId($userId): Collection
     {
+        // Holen der Attribute
         $userAttributes = $this->userAttributeRepository->getAllUserAttributesByUserId($userId);
-
+    
+        // Debug-Ausgabe hinzufügen, um die ursprünglichen Werte zu sehen
+        \Log::debug("Original user attributes", [
+            'user_id' => $userId,
+            'attributes' => $userAttributes->toArray()
+        ]);
+    
+        // Raumschiffe für TOTAL_UNITS berechnen
         $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserId($userId);
-
-        // fill total units attribute
+    
+        // Berechnung der Crew-Kapazität
         $totalCrewLimit = $spacecrafts->sum(function ($spacecraft) {
             $totalCount = $spacecraft->count;
             return $totalCount > 0 ? $spacecraft->crew_limit * $totalCount : 0;
         });
-
-        $totalUnitsAttribute = $userAttributes->where('attribute_name', 'total_units')->first();
+    
+        // Nur TOTAL_UNITS aktualisieren, keine anderen Attribute ändern
+        $totalUnitsAttribute = $userAttributes->where('attribute_name', UserAttributeType::TOTAL_UNITS->value)->first();
         if ($totalUnitsAttribute) {
             $totalUnitsAttribute->attribute_value = $totalCrewLimit;
         }
-
+    
+        // Debug-Ausgabe für die endgültigen Werte
+        \Log::debug("Final user attributes", [
+            'user_id' => $userId,
+            'attributes' => $userAttributes->toArray()
+        ]);
+    
         return $userAttributes;
     }
 

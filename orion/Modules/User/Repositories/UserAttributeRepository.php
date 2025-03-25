@@ -2,13 +2,14 @@
 
 namespace Orion\Modules\User\Repositories;
 
+use Illuminate\Support\Collection;
 use Orion\Modules\User\Models\UserAttribute;
 use Orion\Modules\User\Enums\UserAttributeType;
 
 readonly class UserAttributeRepository
 {
     // Add repository logic here
-    public function getAllUserAttributesByUserId(int $userId)
+    public function getAllUserAttributesByUserId(int $userId): Collection
     {
         return UserAttribute::where('user_id', $userId)
             ->orderBy('id', 'asc')

@@ -2,15 +2,16 @@
 
 namespace Orion\Modules\Actionqueue\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
+use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
-use Orion\Modules\Actionqueue\Handlers\BuildingUpgradeHandler;
-use Orion\Modules\Actionqueue\Handlers\SpacecraftProductionHandler;
-use Orion\Modules\Actionqueue\Handlers\AsteroidMiningHandler;
 use Orion\Modules\Actionqueue\Handlers\CombatHandler;
+use Orion\Modules\Actionqueue\Handlers\AsteroidMiningHandler;
+use Orion\Modules\Actionqueue\Handlers\BuildingUpgradeHandler;
 use Orion\Modules\Actionqueue\Repositories\ActionqueueRepository;
+use Orion\Modules\Actionqueue\Handlers\SpacecraftProductionHandler;
 
 class QueueService
 {
@@ -18,7 +19,7 @@ class QueueService
         private readonly ActionqueueRepository $actionqueueRepository,
     ) {
     }
-    public function getUserQueue($userId)
+    public function getUserQueue($userId): Collection
     {
         return $this->actionqueueRepository->getUserQueue($userId);
     }
@@ -28,12 +29,12 @@ class QueueService
         return $this->actionqueueRepository->addToQueue($userId, $actionType, $targetId, $duration, $details);
     }
 
-    public function getInProgressQueuesFromUserByType($userId, $actionType)
+    public function getInProgressQueuesFromUserByType($userId, $actionType): Collection
     {
         return $this->actionqueueRepository->getInProgressQueuesFromUserByType($userId, $actionType);
     }
 
-    public function processQueue()
+    public function processQueue(): void
     {
         $completedActions = $this->actionqueueRepository->processQueue();
 
@@ -42,7 +43,7 @@ class QueueService
         }
     }
 
-    public function processQueueForUser($userId)
+    public function processQueueForUser($userId): void
     {
         $completedActions = $this->actionqueueRepository->processQueueForUser($userId);
 
@@ -51,7 +52,7 @@ class QueueService
         }
     }
 
-    public function processQueueForUserInstant($userId)
+    public function processQueueForUserInstant($userId): void
     {
         // check for admin role
         $completedActions = $this->actionqueueRepository->processQueueForUserInstant($userId);
@@ -61,7 +62,7 @@ class QueueService
         }
     }
 
-    private function completeAction(ActionQueue $action)
+    private function completeAction(ActionQueue $action): void
     {
         // Aktionstyp normalisieren - falls als String statt Enum
         $actionType = $action->action_type;

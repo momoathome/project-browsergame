@@ -2,6 +2,7 @@
 
 namespace Orion\Modules\Building\Services;
 
+use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
@@ -18,17 +19,17 @@ class BuildingService
     ) {
     }
     
-    public function getAllBuildingsByUserId(int $userId)
+    public function getAllBuildingsByUserId(int $userId): Collection
     {
         return $this->buildingRepository->getAllBuildingsByUserId($userId);
     }
 
-    public function getAllBuildingsByUserIdWithDetailsAndResources(int $userId)
+    public function getAllBuildingsByUserIdWithDetailsAndResources(int $userId): Collection
     {
         return $this->buildingRepository->getAllBuildingsByUserIdWithDetailsAndResources($userId);
     }
 
-    public function getAllBuildingsByUserIdWithQueueInformation(int $userId)
+    public function getAllBuildingsByUserIdWithQueueInformation(int $userId): Collection
     {
         return $this->addQueueInformationToBuildings($userId);
     }
@@ -38,19 +39,19 @@ class BuildingService
         return $this->buildingRepository->getOneBuildingByUserId($buildingId, $userId);
     }
 
-    public function addQueueInformationToBuildings(int $userId)
+    public function addQueueInformationToBuildings(int $userId): Collection
     {
         $buildings = $this->getAllBuildingsByUserIdWithDetailsAndResources($userId);
         $buildingQueues = $this->queueService->getInProgressQueuesFromUserByType($userId, QueueActionType::ACTION_TYPE_BUILDING);
-
+    
         return $buildings->map(function ($building) use ($buildingQueues) {
-            $isUpgrading = isset($buildingQueues[$building->id]);
-            $building->is_upgrading = $isUpgrading;
-
-            if ($isUpgrading) {
-                $building->end_time = $buildingQueues[$building->id]->end_time;
+            $queueInfo = $buildingQueues->get($building->id);
+            $building->is_upgrading = $queueInfo !== null;
+            
+            if ($building->is_upgrading) {
+                $building->end_time = $queueInfo->end_time;
             }
-
+    
             return $building;
         });
     }

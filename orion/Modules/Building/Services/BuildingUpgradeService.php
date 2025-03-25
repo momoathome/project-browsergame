@@ -2,18 +2,20 @@
 
 namespace Orion\Modules\Building\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Building\Enums\BuildingEffectType;
+use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
 use Orion\Modules\Building\Services\BuildingEffectCalculator;
-use Orion\Modules\Building\Enums\BuildingEffectType;
 
 class BuildingUpgradeService
 {
@@ -52,24 +54,23 @@ class BuildingUpgradeService
         });
     }
 
-    private function getBuildingUpgradeCosts(Building $building): array
+    private function getBuildingUpgradeCosts(Building $building): Collection
     {
         return $building->resources()->get()->map(function ($resource) {
-            // Statt Objekt ein einfaches Array zurückgeben
             return [
                 'id' => $resource->id,
                 'name' => $resource->name,
                 'amount' => $resource->pivot->amount
             ];
-        })->keyBy('id')->toArray();
+        })->keyBy('id');
     }
 
-    private function validateUserHasEnoughResources(int $userId, array $requiredResources): void
+    private function validateUserHasEnoughResources(int $userId, Collection $requiredResources): void
     {
-        $userResources = collect($this->userResourceService->getAllUserResourcesByUserId($userId))
+        $userResources = $this->userResourceService->getAllUserResourcesByUserId($userId)
             ->keyBy('resource_id');
 
-        foreach ($requiredResources as $resourceId => $resourceCost) {
+        $requiredResources->each(function ($resourceCost, $resourceId) use ($userResources) {
             $userResource = $userResources->get($resourceId);
             $requiredAmount = $resourceCost['amount'];
 
@@ -77,14 +78,14 @@ class BuildingUpgradeService
                 $resourceName = $resourceCost['name'] ?? 'Resource #' . $resourceId;
                 throw new \Exception("Not enough {$resourceName}");
             }
-        }
+        });
     }
 
-    private function decrementResourcesFromUser(int $userId, array $requiredResources): void
+    private function decrementResourcesFromUser(int $userId, Collection $requiredResources): void
     {
-        foreach ($requiredResources as $resourceId => $resource) {
+        $requiredResources->each(function ($resource, $resourceId) use ($userId) {
             $this->userResourceService->subtractResourceAmount($userId, $resourceId, $resource['amount']);
-        }
+        });
     }
 
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void
@@ -100,11 +101,6 @@ class BuildingUpgradeService
                 'next_level' => $building->level + 1,
             ]
         );
-    }
-
-    public function calculateUpgradeCosts(Building $building): array
-    {
-        return $this->costCalculator->calculateUpgradeCost($building) ?? [];
     }
 
     public function upgradeBuilding(Building $building)
@@ -125,34 +121,40 @@ class BuildingUpgradeService
         });
     }
 
+    public function calculateUpgradeCosts(Building $building): Collection
+    {
+        $costs = $this->costCalculator->calculateUpgradeCost($building) ?? [];
+        return collect($costs);
+    }
+
     private function calculateNewEffectValue(Building $building): float
     {
         return $this->effectCalculator->calculateEffectValue($building);
     }
 
-    private function calculateBuildTime(Building $building)
+    private function calculateBuildTime(Building $building): float
     {
         // Bauzeit je nach Level erhöhen
         return floor(60 * pow(1.2, $building->level - 1));
     }
 
-    private function updateBuildingCosts(Building $building, $costs)
+    private function updateBuildingCosts(Building $building, Collection $costs): void
     {
         // Bestehende Verknüpfungen löschen
         $building->resources()->detach();
 
         $resources = $this->resourceService->getResourceIdMapping();
-        $resourceData = [];
+        $resourceData = collect();
 
-        foreach ($costs as $cost) {
+        $costs->each(function ($cost) use ($resources, &$resourceData) {
             if (isset($resources[$cost['resource_name']])) {
                 $resourceId = $resources[$cost['resource_name']];
-                $resourceData[$resourceId] = ['amount' => $cost['amount']];
+                $resourceData->put($resourceId, ['amount' => $cost['amount']]);
             }
-        }
+        });
 
         // Neue Verknüpfungen mit Pivot-Daten erstellen
-        $building->resources()->attach($resourceData);
+        $building->resources()->attach($resourceData->toArray());
     }
 
     /**
@@ -166,45 +168,40 @@ class BuildingUpgradeService
     {
         // Gebäude abrufen mit Validierung
         $building = $this->buildingService->getOneBuildingByUserId($buildingId, $userId);
-        
+
         if (!$building) {
             return [
-                'success' => false, 
+                'success' => false,
                 'message' => 'Gebäude nicht gefunden oder gehört nicht diesem Benutzer'
             ];
         }
-        
+
         try {
             $result = DB::transaction(function () use ($building, $userId) {
                 // 1. Upgrade durchführen
                 $upgradedBuilding = $this->upgradeBuilding($building);
-                
+
                 if (!$upgradedBuilding) {
                     throw new \Exception("Fehler beim Upgrade des Gebäudes");
                 }
-                
+
                 // 2. BuildingType bestimmen
                 $buildingType = BuildingType::tryFrom($upgradedBuilding->details->name);
-                
+
                 if (!$buildingType) {
                     throw new \Exception("Ungültiger Gebäudetyp: " . $upgradedBuilding->details->name);
                 }
-                
+
                 // 3. Benutzerattribute aktualisieren
                 $attributeUpdates = $this->updateUserAttributesForBuilding($userId, $upgradedBuilding, $buildingType);
-                
-                if (empty($attributeUpdates)) {
-                    // Kein Fehler, aber keine Attribute wurden aktualisiert
-                    \Log::info("Keine Attribute für Gebäudetyp {$buildingType->value} aktualisiert");
-                }
-                
+
                 return [
                     'success' => true,
                     'building' => $upgradedBuilding,
                     'updated_attributes' => $attributeUpdates
                 ];
             });
-            
+
             return [
                 'success' => true,
                 'message' => 'Gebäude-Upgrade erfolgreich abgeschlossen',
@@ -216,86 +213,84 @@ class BuildingUpgradeService
                 'user_id' => $userId,
                 'exception' => $e
             ]);
-            
+
             return [
                 'success' => false,
                 'message' => 'Fehler beim Abschließen des Upgrades: ' . $e->getMessage()
             ];
         }
     }
-    
-    /**
+
+       /**
      * Aktualisiert die Benutzerattribute basierend auf den Gebäudeeffekten
      * 
      * @param int $userId Die ID des Benutzers
      * @param Building $building Das aktualisierte Gebäude
      * @param BuildingType $buildingType Der Gebäudetyp
-     * @return array Liste der aktualisierten Attribute
+     * @return Collection Liste der aktualisierten Attribute
      */
-    private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): array
+    private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): Collection
     {
         $effectAttributeNames = $buildingType->getEffectAttributes();
         $effectConfig = $buildingType->getEffectConfiguration();
-        $effectType = $effectConfig['type'] ?? BuildingEffectType::MULTIPLICATIVE;
-        $updatedAttributes = [];
-        
+        $effectType = $effectConfig['type'] ?? BuildingEffectType::ADDITIVE;
+        $updatedAttributes = collect();
+    
+        // Debug-Informationen hinzufügen
+        \Log::debug("Updating user attributes for building", [
+            'user_id' => $userId,
+            'building_id' => $building->id,
+            'building_name' => $building->details->name,
+            'building_level' => $building->level,
+            'effect_value' => $building->effect_value
+        ]);
+    
         // Wenn keine Attribute definiert sind, frühzeitig beenden
         if (empty($effectAttributeNames)) {
             return $updatedAttributes;
         }
-        
-        foreach ($effectAttributeNames as $attributeName) {
-            // Parameter basierend auf dem Effekttyp bestimmen
-            $multiply = false;
-            $replace = false;
+    
+        collect($effectAttributeNames)->each(function ($attributeNameStr) use ($userId, $building, $effectType, &$updatedAttributes) {
+            $attributeName = UserAttributeType::tryFrom($attributeNameStr);
+    
+            // Falls die Umwandlung fehlschlägt, überspringen
+            if ($attributeName === null) {
+                \Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
+                    'user_id' => $userId,
+                    'building_id' => $building->id
+                ]);
+                return;
+            }
+    
+            // Den vorberechneten effect_value direkt übernehmen
             $valueToApply = $building->effect_value;
             
-            switch ($effectType) {
-                case BuildingEffectType::ADDITIVE:
-                    // Additive Effekte - nur die Steigerung hinzufügen
-                    $increment = $effectConfig['increment'] ?? 0.1;
-                    $valueToApply = $increment; 
-                    break;
-                    
-                case BuildingEffectType::MULTIPLICATIVE:
-                    // Multiplikative Effekte verwenden den Wert als Faktor
-                    $multiply = true;
-                    $replace = false;
-                    break;
-                    
-                case BuildingEffectType::EXPONENTIAL:
-                case BuildingEffectType::LOGARITHMIC:
-                    // Diese komplexen Typen ersetzen den Wert komplett
-                    $multiply = false;
-                    $replace = true;
-                    break;
-            }
-            
+            // Attribut aktualisieren - replace=true, damit der Wert ersetzt und nicht addiert wird
             $updatedAttribute = $this->userAttributeService->updateUserAttribute(
                 $userId,
                 $attributeName,
                 $valueToApply,
-                $multiply,
-                $replace
+                false,  // nicht multiplizieren
+                true    // ersetzen
             );
-            
+    
             if ($updatedAttribute) {
-                $updatedAttributes[$attributeName] = [
-                    'name' => $attributeName,
+                $updatedAttributes->put($attributeNameStr, [
+                    'name' => $attributeNameStr,
                     'new_value' => $updatedAttribute->attribute_value,
                     'effect_applied' => $valueToApply,
                     'effect_type' => $effectType->value
-                ];
+                ]);
             } else {
-                \Log::warning("Attribut {$attributeName} konnte nicht aktualisiert werden", [
+                \Log::warning("Attribut {$attributeNameStr} konnte nicht aktualisiert werden", [
                     'user_id' => $userId,
                     'building_id' => $building->id,
                     'effect_value' => $valueToApply
                 ]);
             }
-        }
-        
+        });
+    
         return $updatedAttributes;
     }
-    
+
 }

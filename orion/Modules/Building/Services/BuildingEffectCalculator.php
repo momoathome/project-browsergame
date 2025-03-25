@@ -67,23 +67,8 @@ class BuildingEffectCalculator
         return $baseValue * (1 + log($level) * $increment);
     }
 
-    /**
-     * Gibt eine menschenlesbare Beschreibung des Effekts zurück
-     */
-    public function getEffectDescription(Building $building): string
-    {
-        $buildingType = BuildingType::tryFrom($building->details->name);
-
-        if (!$buildingType) {
-            return "Verbessert die Effizienz des Gebäudes um 10% pro Level";
-        }
-
-        $config = $buildingType->getEffectConfiguration();
-        return $config['description'] ?? "Verbessert die Effizienz des Gebäudes";
-    }
-
     // Methode zum Anzeigen von Gebäudeeffekten
-    public function getEffectPreview(Building $building, $nextLevel = false): array
+    public function getEffectPreview(Building $building, bool $nextLevel = false): array
     {
         $buildingType = BuildingType::tryFrom($building->details->name);
         if (!$buildingType) {

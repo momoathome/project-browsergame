@@ -11,4 +11,5 @@ enum UserAttributeType: string
     case SCAN_RANGE = 'scan_range';
     case BASE_DEFENSE = 'base_defense';
     case CREDITS = 'credits';
+    case TOTAL_UNITS = 'total_units';
 }

@@ -2,12 +2,13 @@
 
 namespace Orion\Modules\User\Repositories;
 
+use Illuminate\Support\Collection;
 use Orion\Modules\User\Models\UserResource;
 
 readonly class UserResourceRepository
 {
     // Add repository logic here
-    public function getAllUserResourcesByUserId(int $userId)
+    public function getAllUserResourcesByUserId(int $userId): Collection
     {
         return UserResource::with('resource')
             ->where('user_id', $userId)
@@ -15,7 +16,7 @@ readonly class UserResourceRepository
             ->get();
     }
 
-    public function getSpecificUserResource(int $userId, int $resourceId) 
+    public function getSpecificUserResource(int $userId, int $resourceId): UserResource|null 
     {
         return UserResource::with('resource')
             ->where('user_id', $userId)

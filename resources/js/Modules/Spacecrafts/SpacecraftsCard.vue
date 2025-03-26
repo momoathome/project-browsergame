@@ -166,7 +166,7 @@ function unlockSpacecraft() {
 </script>
 
 <template>
-  <div class="flex relative min-h-[517px]">
+  <div class="flex relative">
     <div class="flex flex-col rounded-3xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
       <div class="image relative">
         <img :src="spacecraft.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
@@ -209,7 +209,7 @@ function unlockSpacecraft() {
 
         <div class="grid grid-cols-4 gap-4 items-center">
           <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
-            <img :src="resource.image" class="h-7" alt="resource" />
+            <img :src="resource.image" class="h-6" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">{{ resource.amount }}</p>
             <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>

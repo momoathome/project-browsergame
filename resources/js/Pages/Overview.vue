@@ -111,7 +111,7 @@ onUnmounted(() => {
 
 <template>
   <AppLayout title="overview">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-8">
 
       <!-- Buildings -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
@@ -192,7 +192,7 @@ onUnmounted(() => {
               <td class="p-2">
                 {{ fleetSummary.totalCount }}
               </td>
-              <td class="p-2">
+              <td class="p-2 text-nowrap">
                 {{ fleetSummary.totalCrew }} / {{ crewLimit }}
               </td>
               <td class="p-2">

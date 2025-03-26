@@ -47,19 +47,23 @@ const unitsRatio = computed(() => {
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-1 rounded-sm">
-    <div class="relative group flex gap-2 items-center p-2 border-base border rounded-md cursor-pointer">
-      <img src="/storage/attributes/unit_limit.png" class="max-h-5 flex items-center justify-center" alt="Units">
-      <span class="text-sm font-medium text-white">
+    <div class="relative group flex gap-1 items-center p-2 border-base border rounded-md">
+      <span class="flex items-center justify-center">
+        <img src="/storage/attributes/unit_limit.png" class="max-h-5" alt="Units">
+      </span>
+      <span class="text-sm font-medium text-white text-nowrap">
         {{ unitsRatio }}
       </span>
       <AppTooltip label="Crew limit" position="bottom" class="!mt-3" />
     </div>
 
     <!-- total resources -->
-    <div class="relative group flex gap-2 items-center p-2 border-base border rounded-md cursor-pointer"
+    <div class="relative group flex gap-1 items-center p-2 border-base border rounded-md"
       v-for="attribute in formattedAttributes.filter(attr => !['total_units', 'crew_limit', 'scan_range', 'production_speed', 'base_defense', 'energy'].includes(attr.name))"
       :key="attribute.name">
-      <img :src="`/storage/attributes/${attribute.name}.png`" class="max-h-5 flex items-center justify-center" alt="">
+      <span class="flex items-center justify-center">
+        <img :src="`/storage/attributes/${attribute.name}.png`" class="max-h-5" alt="">
+      </span>
       <span class="text-sm font-medium text-white">
         {{ attribute.amount }}
       </span>

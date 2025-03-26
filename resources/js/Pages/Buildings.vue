@@ -12,7 +12,7 @@ const props = defineProps<{
 
 <template>
   <AppLayout title="buildings">
-    <div class="grid gap-4 lg:gap-8 px-4 py-8">
+    <div class="grid gap-4 lg:gap-8">
       <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" />
     </div>
   </AppLayout>

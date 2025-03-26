@@ -15,7 +15,7 @@ const props = defineProps<{
 
 <template>
     <AppLayout title="dashboard">
-        <div class="mx-8 my-8">
+        <div>
             <h1 class="text-3xl mb-4 font-bold text-light">
                 Dashboard
             </h1>

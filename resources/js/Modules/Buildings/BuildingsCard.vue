@@ -114,7 +114,7 @@ function handleUpgradeComplete() {
 
       <div class="grid grid-cols-4 gap-4 items-center">
         <div class="flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
-          <img :src="resource.image" class="h-7" alt="resource" />
+          <img :src="resource.image" class="h-6" alt="resource" />
           <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id)}">{{ resource.amount }}</p>
         </div>
       </div>

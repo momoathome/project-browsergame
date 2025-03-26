@@ -241,7 +241,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex items-center gap-2 min-h-10">
+  <div class="flex items-center gap-2">
     <div v-if="processedQueueItems.length === 0" class="queue-empty text-gray-400 text-xs px-1">
       <span>no active items in queue</span>
     </div>

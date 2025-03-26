@@ -8,18 +8,14 @@ import Divider from '@/Components/Divider.vue';
 
 <template>
     <header class="bg-root flex flex-col gap-2 py-2 px-2">
-        <div class="flex justify-between gap-1 items-center">
-
+        <div class="flex justify-between gap-1 items-center min-h-10">
             <UserResources />
 
-            <div class="flex gap-2 2xl:gap-4 items-center">
-                <UserAttributes />
-
-            </div>
+            <UserAttributes />
         </div>
 
         <!-- <Divider class="bg-primary/50" /> -->
 
-        <UserQueue />
+        <UserQueue class="min-h-10" />
     </header>
 </template>

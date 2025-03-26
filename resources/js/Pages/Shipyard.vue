@@ -18,7 +18,7 @@ const formattedSpacecrafts = computed(() => {
 
 <template>
   <AppLayout title="spacecrafts">
-    <div class="grid gap-4 lg:gap-8 px-4 py-8">
+    <div class="grid gap-4 lg:gap-x-8">
       <SpacecraftsCard v-for="spacecraft in formattedSpacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
     </div>
   </AppLayout>
@@ -26,13 +26,15 @@ const formattedSpacecrafts = computed(() => {
 
 <style scoped>
 .grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  --grid-min-col-size: 280px;
+
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }
 
 @media (min-width: 2600px) {
   .grid {
     grid-template-columns: repeat(6, 1fr);
-    max-width: 2600px; 
+    max-width: 2600px;
     margin-left: auto;
     margin-right: auto;
   }

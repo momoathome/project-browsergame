@@ -46,7 +46,7 @@ const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
-    canvasRef.value.height = window.innerHeight - 70;
+    canvasRef.value.height = window.innerHeight - 72;
     drawScene();
   }
 }

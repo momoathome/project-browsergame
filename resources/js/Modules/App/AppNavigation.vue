@@ -15,23 +15,23 @@ const NavigationLinks = [
 </script>
 
 <template>
-  <div class="w-fit rounded-e-lg">
-    <nav class="flex flex-col items-center">
+  <div>
+    <nav class="flex flex-col">
       <Link v-for="link in NavigationLinks" :key="link.name" :href="route(link.name)"
         :class="[route().current(link.name) ? 'border-opacity-100 ' : '']"
-        class="relative group inline-flex items-center w-full p-2 2xl:px-4 2xl:py-3 hover:border-opacity-100 transition border-l-2 border-opacity-0 border-l-[#bfbfbf]">
-      <img :src="link.image" class="w-6 h-6 2xl:w-8 2xl:h-8" alt="" />
+        class="relative group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition border-l-2 border-opacity-0 border-l-[#bfbfbf]">
+      <img :src="link.image" class="w-8 h-8" alt="" />
 
       <AppTooltip :label="link.label" position="right" />
       </Link>
 
       <!-- Admin Dashboard -->
       <Link
-        class="group inline-flex items-center p-2 2xl:px-4 2xl:py-3 hover:border-opacity-100 transition active:border-opacity-100 border-l-2 border-opacity-0 border-l-[#bfbfbf]"
+        class="group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition active:border-opacity-100 border-l-2 border-opacity-0 border-l-[#bfbfbf]"
         :href="route('admin.dashboard')"
         :class="[route().current('admin.dashboard') ? 'border-opacity-100 ' : '']">
-      <img src="/storage/navigation/dashboard.png" class="w-6 h-6 2xl:w-8 2xl:h-8" alt="Dashboard" />
-
+      <img src="/storage/navigation/dashboard.png" class="w-8 h-8" alt="Dashboard" />
+      
       <AppTooltip :label="'Dashboard'" position="right" />
       </Link>
     </nav>

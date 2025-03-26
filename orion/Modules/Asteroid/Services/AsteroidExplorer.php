@@ -66,7 +66,7 @@ class AsteroidExplorer
         
         $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor));
         
-        if ($actionType === 'mining' && $minerCount !== null && $minerCount > 0) {
+        if ($actionType === QueueActionType::ACTION_TYPE_MINING && $minerCount !== null && $minerCount > 0) {
             $calculatedDuration = max(10, (int) ($calculatedDuration / $minerCount));
         }
         

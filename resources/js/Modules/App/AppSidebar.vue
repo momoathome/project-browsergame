@@ -42,7 +42,7 @@ onBeforeUnmount(() => {
 <template>
     <aside class="bg-root flex flex-col justify-between">
 
-        <AppNavigation class="mt-6" />
+        <AppNavigation class="mt-4" />
 
         <div class="flex flex-col items-center mt-auto">
             <Divider class="!w-[calc(100%-1rem)] bg-primary/50" />

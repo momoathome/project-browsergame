@@ -11,8 +11,8 @@ readonly class SpacecraftService
 {
 
     public function __construct(
-        private SpacecraftRepository $spacecraftRepository,
-        private QueueService $queueService
+        private readonly SpacecraftRepository $spacecraftRepository,
+        private readonly QueueService $queueService,
     ) {
     }
 
@@ -30,7 +30,7 @@ readonly class SpacecraftService
     {
         return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetails($userId, $filteredNames);
     }
-    
+
     public function getAllSpacecraftsByUserIdWithDetailsAndResources(int $userId): Collection
     {
         return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
@@ -57,7 +57,7 @@ readonly class SpacecraftService
 
             return $spacecraft;
         });
-        
+
         return $spacecrafts;
     }
 
@@ -66,7 +66,7 @@ readonly class SpacecraftService
         $collection = $spaceCrafts instanceof Collection
             ? $spaceCrafts
             : collect($spaceCrafts);
-            
+
         return $collection->filter(function ($count) {
             return $count > 0;
         });
@@ -85,5 +85,59 @@ readonly class SpacecraftService
     public function updateSpacecraftsCount($userId, Collection $spacecrafts): void
     {
         $this->spacecraftRepository->updateSpacecraftsCount($userId, $spacecrafts);
+    }
+
+    /**
+     * Formatiert Raumschiffe für die Anzeige
+     * 
+     * @param int $userId Die ID des Benutzers
+     * @return array Formatierte Raumschiffdaten
+     */
+    public function formatSpacecraftsForDisplay(int $userId): array
+    {
+        $spacecrafts = $this->getAllSpacecraftsByUserIdWithQueueInformation($userId);
+        $formattedSpacecrafts = [];
+
+        foreach ($spacecrafts as $spacecraft) {
+            // Basisinformationen
+            $formattedSpacecraft = [
+                'id' => $spacecraft->id,
+                'image' => $spacecraft->details->image,
+                'name' => $spacecraft->details->name,
+                'description' => $spacecraft->details->description,
+                'type' => $spacecraft->details->type,
+                'combat' => $spacecraft->combat,
+                'count' => $spacecraft->count,
+                'locked_count' => $spacecraft->locked_count,
+                'cargo' => $spacecraft->cargo,
+                'speed' => $spacecraft->speed,
+                'build_time' => $spacecraft->build_time,
+                'crew_limit' => $spacecraft->crew_limit,
+                'unlocked' => $spacecraft->unlocked,
+                'research_cost' => $spacecraft->research_cost,
+                'is_producing' => $spacecraft->is_producing ?? false,
+                'resources' => []
+            ];
+
+            // Füge Endzeit und aktuell produzierende Anzahl hinzu, wenn produzierend
+            if ($spacecraft->is_producing ?? false) {
+                $formattedSpacecraft['end_time'] = $spacecraft->end_time;
+                $formattedSpacecraft['currently_producing'] = $spacecraft->currently_producing;
+            }
+
+            // Ressourcen formatieren
+            foreach ($spacecraft->resources as $resource) {
+                $formattedSpacecraft['resources'][] = [
+                    'id' => $resource->id,
+                    'name' => $resource->name,
+                    'image' => $resource->image,
+                    'amount' => $resource->pivot->amount
+                ];
+            }
+
+            $formattedSpacecrafts[] = $formattedSpacecraft;
+        }
+
+        return $formattedSpacecrafts;
     }
 }

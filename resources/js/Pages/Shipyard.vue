@@ -3,23 +3,16 @@ import { computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import type { Spacecraft } from '@/types/types';
-import { useSpacecraftFormatting } from '@/Composables/useSpacecraftFormatting';
 
 const props = defineProps<{
   spacecrafts: Spacecraft[]
 }>()
-
-const { formatSpacecraft } = useSpacecraftFormatting();
-
-const formattedSpacecrafts = computed(() => {
-  return props.spacecrafts.map(formatSpacecraft);
-});
 </script>
 
 <template>
   <AppLayout title="spacecrafts">
     <div class="grid gap-4 lg:gap-x-8">
-      <SpacecraftsCard v-for="spacecraft in formattedSpacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
+      <SpacecraftsCard v-for="spacecraft in spacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
     </div>
   </AppLayout>
 </template>

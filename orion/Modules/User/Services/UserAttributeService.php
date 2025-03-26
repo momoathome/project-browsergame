@@ -4,17 +4,17 @@ namespace Orion\Modules\User\Services;
 
 use Illuminate\Support\Collection;
 use Orion\Modules\User\Enums\UserAttributeType;
-use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\User\Handlers\UserAttributeHandler;
 use Orion\Modules\User\Repositories\UserAttributeRepository;
-
 
 class UserAttributeService
 {
     public function __construct(
         private readonly UserAttributeRepository $userAttributeRepository,
-        private readonly SpacecraftService $spacecraftService
+        private readonly UserAttributeHandler $userAttributeHandler
     ) {
     }
+    
     public function getAllUserAttributesByUserId($userId): Collection
     {
         // Holen der Attribute
@@ -26,20 +26,8 @@ class UserAttributeService
             'attributes' => $userAttributes->toArray()
         ]);
     
-        // Raumschiffe für TOTAL_UNITS berechnen
-        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserId($userId);
-    
-        // Berechnung der Crew-Kapazität
-        $totalCrewLimit = $spacecrafts->sum(function ($spacecraft) {
-            $totalCount = $spacecraft->count;
-            return $totalCount > 0 ? $spacecraft->crew_limit * $totalCount : 0;
-        });
-    
-        // Nur TOTAL_UNITS aktualisieren, keine anderen Attribute ändern
-        $totalUnitsAttribute = $userAttributes->where('attribute_name', UserAttributeType::TOTAL_UNITS->value)->first();
-        if ($totalUnitsAttribute) {
-            $totalUnitsAttribute->attribute_value = $totalCrewLimit;
-        }
+        // Verwende den Handler, um TOTAL_UNITS zu berechnen und zu aktualisieren
+        $userAttributes = $this->userAttributeHandler->updateTotalUnitsAttribute($userId, $userAttributes);
     
         // Debug-Ausgabe für die endgültigen Werte
         \Log::debug("Final user attributes", [

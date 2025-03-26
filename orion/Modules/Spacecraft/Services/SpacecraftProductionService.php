@@ -115,12 +115,16 @@ class SpacecraftProductionService
 
     private function addSpacecraftUpgradeToQueue(int $userId, Spacecraft $spacecraft, int $quantity): void
     {
+        $shipyard_production_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::PRODUCTION_SPEED);
         $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
+
+        $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
+
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
-            ($spacecraft->build_time * $quantity) / $spacecraft_produce_speed,
+           floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed),
             [
                 'spacecraft_name' => $spacecraft->details->name,
                 'quantity' => $quantity,

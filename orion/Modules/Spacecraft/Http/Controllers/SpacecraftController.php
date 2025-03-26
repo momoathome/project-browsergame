@@ -22,7 +22,7 @@ class SpacecraftController extends Controller
     public function index()
     {
         $user = $this->authManager->user();
-        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithQueueInformation($user->id);
+        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
 
         return Inertia::render('Shipyard', [
             'spacecrafts' => $spacecrafts,

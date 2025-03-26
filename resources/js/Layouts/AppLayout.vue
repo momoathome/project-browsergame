@@ -31,7 +31,7 @@ const props = defineProps<{
 
     </div>
 
-    <!-- <pre>{{ $page.props }}</pre> -->
+    <pre>{{ $page.props }}</pre>
 
   </div>
 </template>

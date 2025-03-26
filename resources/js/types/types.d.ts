@@ -24,6 +24,32 @@ export interface BuildingEffect {
   display: string;
 }
 
+export interface Spacecraft {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  type: string;
+  combat: number;
+  cargo: number;
+  speed: number;
+  count: number;
+  locked_count: number;
+  build_time: number;
+  crew_limit: number;
+  unlocked: boolean;
+  research_cost: number;
+  is_producing: boolean;
+  end_time: string;
+  currently_producing: number;
+  resources: Array<{
+    id: number;
+    name: string;
+    image: string;
+    amount: number;
+  }>;
+}
+
 export interface ResourcePivot {
   resource_id: number;
   amount: number;
@@ -62,32 +88,6 @@ export interface UserAttributes {
   attribute_value: number;
   created_at: string;
   updated_at: string;
-}
-
-export interface SpacecraftDetails {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  type: string;
-}
-
-export interface Spacecraft {
-  id: number;
-  details: SpacecraftDetails;
-  combat: number;
-  cargo: number;
-  speed: number;
-  count: number;
-  locked_count: number;
-  build_time: number;
-  crew_limit: number;
-  unlocked: boolean;
-  research_cost: number;
-  is_producing: boolean;
-  end_time: string;
-  currently_producing: number;
-  resources: Resource[];
 }
 
 export interface SimpleResource {

@@ -67,7 +67,7 @@ function setMaxAmount() {
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-light content_card px-4 py-6 gap-4">
+  <div class="rounded-3xl flex flex-col bg-base text-light content_card px-4 py-4 gap-4">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>
@@ -82,7 +82,7 @@ function setMaxAmount() {
       </div>
     </div>
 
-    <div class="relative flex justify-center items-center py-2">
+    <div class="relative flex justify-center items-center py-4">
       <div class="group relative">
         <img :src="marketData.image" class="h-[56px] cursor-pointer" @click="setUserResourcesInput" @click.shift="setMaxAmount" alt="resource" />
         <AppTooltip class="py-2 px-3" label="click to add all sellable resources<br>shift click to add all buyable resources" position="bottom" />

@@ -5,12 +5,12 @@ import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
-import type { FormattedSpacecraft } from '@/types/types';
+import type { Spacecraft } from '@/types/types';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
 
 const props = defineProps<{
-  spacecraft: FormattedSpacecraft
+  spacecraft: Spacecraft
 }>();
 
 const isProducing = computed(() => props.spacecraft.is_producing || false);
@@ -18,7 +18,7 @@ const productionEndTime = computed(() => props.spacecraft.end_time || null);
 
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
-const formattedBuildTime = computed(() => timeFormat(props.spacecraft.build_time));
+const formattedBuildTime = computed(() => timeFormat(Math.floor(props.spacecraft.build_time / (usePage().props.userAttributes.find(attr => attr.attribute_name === 'production_speed')?.attribute_value || 1))));
 
 const form = useForm({
   amount: 0
@@ -49,10 +49,11 @@ function handleProduceComplete() {
 }
 
 const actualBuildTime = computed(() => {
+  const trueBuildTime = Math.floor(props.spacecraft.build_time / (usePage().props.userAttributes.find(attr => attr.attribute_name === 'production_speed')?.attribute_value || 1));
   if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
-    return props.spacecraft.build_time * props.spacecraft.currently_producing;
+    return trueBuildTime * props.spacecraft.currently_producing;
   }
-  return props.spacecraft.build_time * form.amount;
+  return trueBuildTime * form.amount;
 });
 
 const activeProduction = computed(() => {
@@ -209,7 +210,7 @@ function unlockSpacecraft() {
 
         <div class="grid grid-cols-4 gap-4 items-center">
           <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
-            <img :src="resource.image" class="h-6" alt="resource" />
+            <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">{{ resource.amount }}</p>
             <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>

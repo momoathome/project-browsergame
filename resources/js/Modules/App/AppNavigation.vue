@@ -15,24 +15,24 @@ const NavigationLinks = [
 </script>
 
 <template>
-  <div class="fixed top-[25vh] right-0 z-50 w-fit bg-base rounded-s-lg">
+  <div class="w-fit rounded-e-lg">
     <nav class="flex flex-col items-center">
       <Link v-for="link in NavigationLinks" :key="link.name" :href="route(link.name)"
-        :class="[route().current(link.name) ? 'border-opacity-100 bg-primary-dark' : '']"
-        class="relative group inline-flex items-center w-full p-2 2xl:p-3 hover:bg-primary-dark transition border-r-2 border-opacity-0 border-r-[#bfbfbf] first-of-type:rounded-tl-lg last-of-type:rounded-bl-lg">
+        :class="[route().current(link.name) ? 'border-opacity-100 ' : '']"
+        class="relative group inline-flex items-center w-full p-2 2xl:px-4 2xl:py-3 hover:border-opacity-100 transition border-l-2 border-opacity-0 border-l-[#bfbfbf]">
       <img :src="link.image" class="w-6 h-6 2xl:w-8 2xl:h-8" alt="" />
 
-      <AppTooltip :label="link.label" position="left" />
+      <AppTooltip :label="link.label" position="right" />
       </Link>
 
       <!-- Admin Dashboard -->
       <Link
-        class="group inline-flex items-center p-2 2xl:p-3 hover:bg-primary-dark transition active:border-opacity-100 border-r border-opacity-0 border-primary-light rounded-bl-lg"
+        class="group inline-flex items-center p-2 2xl:px-4 2xl:py-3 hover:border-opacity-100 transition active:border-opacity-100 border-l-2 border-opacity-0 border-l-[#bfbfbf]"
         :href="route('admin.dashboard')"
-        :class="[route().current('admin.dashboard') ? 'border-opacity-100 bg-primary-dark' : '']">
+        :class="[route().current('admin.dashboard') ? 'border-opacity-100 ' : '']">
       <img src="/storage/navigation/dashboard.png" class="w-6 h-6 2xl:w-8 2xl:h-8" alt="Dashboard" />
 
-      <AppTooltip :label="'Dashboard'" position="left" />
+      <AppTooltip :label="'Dashboard'" position="right" />
       </Link>
     </nav>
   </div>

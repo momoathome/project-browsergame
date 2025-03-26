@@ -2,7 +2,7 @@
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import AppHeader from '@/Modules/App/AppHeader.vue';
-import AppNavigation from '@/Modules/App/AppNavigation.vue';
+import AppSidebar from '@/Modules/App/AppSidebar.vue';
 
 const props = defineProps<{
   title: string
@@ -18,15 +18,14 @@ const props = defineProps<{
 
     <Banner />
 
-    <AppNavigation />
-
-    <div class="min-h-screen background">
+    <div class="min-h-screen">
 
       <!-- Page Heading -->
       <AppHeader class="sticky top-0 z-50" />
+      <AppSidebar />
 
       <!-- Page Content -->
-      <main>
+      <main class="ms-16 background h-[calc(100vh-102px)]">
         <slot />
       </main>
 
@@ -39,6 +38,7 @@ const props = defineProps<{
 
 <style>
 .background {
-  background: linear-gradient(30deg, #1e2530, #1d242e, #1c222c, #1b212b, #1a1f29, #181e27, #171d25, #161b24, #151a22, #141920, #13171f, #12161d);
+  background: radial-gradient(circle at 50% 70%, #1c222c, #1b202a, #191f28, #181d26, #161c24, #151a22, #141920, #12171e, #11161c);
+  /* background: #151a22; */
 }
 </style>

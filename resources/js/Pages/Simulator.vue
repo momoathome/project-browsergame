@@ -75,7 +75,7 @@ const isResultEmpty = computed(() => {
 
 <template>
   <AppLayout title="simulator">
-    <div class="flex flex-col gap-12 p-4 text-light me-20">
+    <div class="flex flex-col gap-12 p-4 text-light">
       <div>
         <div class="mb-4">
           <h1 class="text-4xl font-black">Battle Simulator</h1>

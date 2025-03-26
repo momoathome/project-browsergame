@@ -42,7 +42,7 @@ function selectAsteroid(asteroid: Asteroid) {
 
     <AsteroidMapCanvas :asteroids="asteroids" :stations="stations" @click="onMouseClick" />
 
-    <div class="absolute top-0 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
+    <div class="absolute top-0 left-0 z-100 flex gap-2 ms-4 bg-root">
       <AsteroidMapSearch v-model="searchForm.query" @clear="clearSearch" @search="performSearch" />
     </div>
 

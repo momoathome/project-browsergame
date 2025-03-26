@@ -34,10 +34,14 @@ export default {
                     dark: '#1E131F'
                 },
                 base: {
-                    DEFAULT: '#1E2D3B',
+                    DEFAULT: 'hsl(209,33%,17%)',
                     light: '#3A4E63',
-                    dark: '#0F1A26',
-                    darker: '#0A141C'
+                    dark: 'hsl(209,33%,15%)',
+                    darker: 'hsl(209,33%,10%)'
+                },
+                root: {
+                    DEFAULT: 'hsl(217,24%,9%)',
+                    light: 'hsl(217,24%,12%)',
                 },
                 gray: {
                     DEFAULT: '#878A8E'

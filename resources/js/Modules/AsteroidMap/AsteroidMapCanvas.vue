@@ -334,6 +334,6 @@ function onClick(event: MouseEvent) {
 </script>
 
 <template>
-  <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel"
+  <canvas ref="canvasRef" class="block w-full bg-root" @mousedown="onMouseDown" @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel"
     @click="onClick"></canvas>
 </template>

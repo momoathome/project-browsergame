@@ -242,13 +242,13 @@ onUnmounted(() => {
 
 <template>
   <div class="flex items-center gap-2 min-h-10">
-    <div v-if="processedQueueItems.length === 0" class="queue-empty text-gray-400 text-xs p-1">
+    <div v-if="processedQueueItems.length === 0" class="queue-empty text-gray-400 text-xs px-1">
       <span>no active items in queue</span>
     </div>
 
     <div v-for="item in processedQueueItems" :key="item.id">
       <div @click="toggleInfo(item)"
-        class="flex items-center h-10 gap-2 p-1.5 bg-slate-900 rounded-xl cursor-pointer hover:bg-slate-800 transition"
+        class="flex items-center h-10 gap-2 p-1.5 bg-base-dark rounded-lg cursor-pointer hover:bg-base transition"
         :class="{ 'fade-in': item.isNew }">
         <img :src="item.image" width="24px" height="24px" alt="Item icon" class="w-6 h-6" />
         <transition name="expand">

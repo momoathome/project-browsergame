@@ -18,7 +18,7 @@ const formattedSpacecrafts = computed(() => {
 
 <template>
   <AppLayout title="spacecrafts">
-    <div class="grid gap-4 lg:gap-8 ps-4 py-8 me-20">
+    <div class="grid gap-4 lg:gap-8 px-4 py-8">
       <SpacecraftsCard v-for="spacecraft in formattedSpacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
     </div>
   </AppLayout>

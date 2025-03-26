@@ -38,7 +38,7 @@ onUnmounted(() => {
 <template>
   <div class="dropdown-container">
     <button @click="toggleDropdown"
-      class="bg-[hsl(263,45%,7%)] flex items-center justify-between text-light text-start text-nowrap ps-3 pe-1 py-2 w-full rounded-md ring-[#bfbfbf] border border-[#6b7280]">
+      class="bg-root flex items-center justify-between text-light text-start text-nowrap ps-3 pe-1 py-2 w-full rounded-md ring-[#bfbfbf] border border-[#6b7280]">
       {{ selectedAsteroid ? selectedAsteroid.name : searchedAsteroids[0].name }}
       <span>
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ onUnmounted(() => {
       </span>
     </button>
     <ul v-if="isDropdownOpen"
-      class="absolute top-full left-0 mt-1 max-h-48 w-full overflow-y-auto bg-[hsl(263,45%,7%)] rounded-md py-2 no-scrollbar list-none ring-[#bfbfbf] border border-[#6b7280]">
+      class="absolute top-full left-0 mt-1 max-h-48 w-full overflow-y-auto bg-root rounded-md py-2 no-scrollbar list-none ring-[#bfbfbf] border border-[#6b7280]">
       <li v-for="asteroid in searchedAsteroids" @click="selectAsteroid(asteroid)" :key="asteroid.name"
         class="py-1 px-3 cursor-pointer text-light text-sm text-nowrap hover:bg-slate-900">
         <span>

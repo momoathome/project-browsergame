@@ -48,7 +48,7 @@
 
         <div class="relative h-dvh">
             <!-- Background with stars effect -->
-            <div class="stars-container absolute inset-0 bg-[hsl(263,45%,7%)]">
+            <div class="stars-container absolute inset-0 bg-root">
                 <div id="stars"></div>
                 <div id="stars2"></div>
                 <div id="stars3"></div>

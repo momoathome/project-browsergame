@@ -53,8 +53,9 @@ readonly class MarketService
                 }
 
                 // Validate user has enough storage
+                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketItem->resource_id);
                 $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::STORAGE);
-                if ($userStorageAttribute->attribute_value < $quantity) {
+                if ($userResource && $userStorageAttribute && $userResource->amount + $quantity > $userStorageAttribute->attribute_value) {
                     throw new InsufficientStorageException();
                 }
 
@@ -63,9 +64,6 @@ readonly class MarketService
 
                 // Update user credits
                 $this->userAttributeService->subtractAttributeAmount($user->id, UserAttributeType::CREDITS, $totalCost);
-
-                // Add resources to user inventory
-                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketItem->resource_id);
 
                 if ($userResource) {
                     $this->userResourceService->addResourceAmount($user->id, $marketItem->resource_id, $quantity);

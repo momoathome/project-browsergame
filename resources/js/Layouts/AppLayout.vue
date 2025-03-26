@@ -16,7 +16,7 @@ const props = defineProps<{
 
     <Head :title="title" />
 
-    <Banner />
+    <Banner class="absolute bottom-0 right-0 z-50" />
 
     <div class="layout-grid min-h-screen">
 

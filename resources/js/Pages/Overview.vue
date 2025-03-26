@@ -26,6 +26,8 @@ const getTypeIcon = (type) => {
   }
 };
 
+const unlockedSpacecrafts = computed(() => props.spacecrafts.filter(spacecraft => spacecraft.unlocked));
+
 const currentTime = ref(new Date().getTime());
 
 const getRemainingTime = (item: RawQueueItem): number => {
@@ -163,12 +165,12 @@ onUnmounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="spacecraft in spacecrafts" :key="spacecraft.id">
-              <td class="p-2">{{ spacecraft.details.name }}</td>
+            <tr v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.id">
+              <td class="p-2">{{ spacecraft.name }}</td>
               <td class="p-2">
                 <div class="relative group flex">
-                  <img :src="getTypeIcon(spacecraft.details.type)" alt="Type Icon" class="w-6 h-6">
-                  <AppTooltip :label="spacecraft.details.type" position="left" />
+                  <img :src="getTypeIcon(spacecraft.type)" alt="Type Icon" class="w-6 h-6">
+                  <AppTooltip :label="spacecraft.type" position="left" />
                 </div>
               </td>
               <td class="p-2">{{ spacecraft.count }}</td>

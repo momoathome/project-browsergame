@@ -16,7 +16,7 @@ watchEffect(async () => {
 
 <template>
     <div>
-        <div v-if="show && message" :class="{ 'bg-green-700': style == 'success', 'bg-red-700': style == 'danger' }">
+        <div v-if="show && message" class="rounded-tl-lg" :class="{ 'bg-green-700': style == 'success', 'bg-red-700': style == 'danger' }">
             <div class="w-full p-1 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between flex-wrap">
                     <div class="w-0 flex-1 flex items-center min-w-0">

@@ -29,7 +29,7 @@ enum BuildingType: string
             self::SHIPYARD => [
                 'type' => BuildingEffectType::MULTIPLICATIVE,
                 'base_value' => 1,
-                'increment' => 0.10,
+                'increment' => 0.05,
             ],
             self::HANGAR => [
                 'type' => BuildingEffectType::ADDITIVE,
@@ -54,7 +54,7 @@ enum BuildingType: string
             self::SHIELD => [
                 'type' => BuildingEffectType::MULTIPLICATIVE,
                 'base_value' => 1.0,
-                'increment' => 0.1,
+                'increment' => 0.05,
             ],
         };
     }

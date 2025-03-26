@@ -95,7 +95,7 @@ class BuildingEffectCalculator
         $results = [];
     
         foreach ($attributes as $attributeName) {
-            $formattedValue = number_format($effectValue, 1, ',', '.');
+            $formattedValue = number_format($effectValue, 2, ',', '.');
             $formattedValueNoDecimals = number_format($effectValue, 0, ',', '.');
             $displayText = match ($attributeName) {
                 'production_speed' => "x{$formattedValue} Production speed",

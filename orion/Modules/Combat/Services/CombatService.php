@@ -10,6 +10,8 @@ use Orion\Modules\Combat\Dto\Spacecraft;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
+use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Combat\Repositories\CombatRepository;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
@@ -17,19 +19,20 @@ readonly class CombatService
 {
     public function __construct(
         private readonly CombatRepository $combatRepository,
-        private readonly SpacecraftService $spacecraftService
+        private readonly SpacecraftService $spacecraftService,
+        private readonly UserAttributeService $userAttributeService
     ) {
     }
 
     /**
      * Simuliert einen Kampf zwischen zwei Flotten
      */
-    public function simulateBattle(array $attacker, array $defender): CombatResult
+    public function simulateBattle(array $attacker, array $defender, $userId): CombatResult
     {
         $attackerShips = $this->convertToShipCollection($attacker);
         $defenderShips = $this->convertToShipCollection($defender);
 
-        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips);
+        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips, $userId);
         $winner = $this->defineWinner($totalCombatPower['attacker'], $totalCombatPower['defender']);
         $losses = $this->calculateLosses($attackerShips, $defenderShips, $totalCombatPower['attacker'], $totalCombatPower['defender']);
 
@@ -127,7 +130,8 @@ readonly class CombatService
     {
         $result = $this->simulateBattle(
             $combatRequest->attackerSpacecrafts,
-            $combatRequest->defenderSpacecrafts
+            $combatRequest->defenderSpacecrafts,
+            $attacker->id
         );
 
         $result->attackerName = $combatRequest->attackerName;
@@ -150,13 +154,16 @@ readonly class CombatService
         });
     }
 
-    private function calculateTotalCombatPower(Collection $attacker, Collection $defender): array
+    private function calculateTotalCombatPower(Collection $attacker, Collection $defender, $userId): array
     {
         $calculateCombatPower = fn($ships) => $ships->sum(fn($ship) => $ship->combat * $ship->count);
+        $shield_base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
+
+        $defense_multiplier = $shield_base_defense ? $shield_base_defense->attribute_value : 1;
 
         return [
             'attacker' => $calculateCombatPower($attacker),
-            'defender' => $calculateCombatPower($defender),
+            'defender' => $calculateCombatPower($defender) * $defense_multiplier,
         ];
     }
 

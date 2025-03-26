@@ -17,6 +17,7 @@ const props = defineProps<{
   searched_asteroids: Asteroid[];
   searched_stations: Station[];
   selected_asteroid: Asteroid | null;
+  search_query?: string;
 }>();
 
 const stationImageSrc = '/storage/space-station.png';
@@ -79,6 +80,10 @@ onMounted(() => {
       const userId = usePage().props.auth.user.id;
       focusUserStationOnInitialLoad(userId);
     };
+  }
+
+  if (props.search_query) {
+    searchForm.query = props.search_query;
   }
 
   window.addEventListener('resize', adjustCanvasSize);
@@ -443,7 +448,6 @@ function closeModal() {
       preserveState: true
     });
   }
-
 
   isModalOpen.value = false;
   setTimeout(() => {

@@ -187,6 +187,8 @@ export interface QueueItemDetails {
   spacecrafts?: Record<string, number>;
   attacker_name?: string;
   defender_name?: string;
+  attacker_id?: number;
+  defender_id?: number;
   attacker_formatted?: array;
   defender_formatted?: array;
 }

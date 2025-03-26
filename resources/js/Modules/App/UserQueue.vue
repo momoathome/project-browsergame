@@ -223,6 +223,10 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
   }, 3000);
 }
 
+const isDefendCombatAction = (item: RawQueueItem): boolean => {
+  return item.action_type === 'combat' && item.details?.defender_id === page.props.auth.user.id
+}
+
 let timerInterval: number | undefined
 onMounted(() => {
   processQueueData()
@@ -249,7 +253,7 @@ onUnmounted(() => {
     <div v-for="item in processedQueueItems" :key="item.id">
       <div @click="toggleInfo(item)"
         class="flex items-center h-10 gap-2 p-1.5 bg-base-dark rounded-lg cursor-pointer hover:bg-base transition"
-        :class="{ 'fade-in': item.isNew }">
+        :class="{ 'fade-in': item.isNew, 'bg-red-900 hover:bg-red-800': isDefendCombatAction(item.rawData) }">
         <img :src="item.image" width="24px" height="24px" alt="Item icon" class="w-6 h-6" />
         <transition name="expand">
           <div class="flex">

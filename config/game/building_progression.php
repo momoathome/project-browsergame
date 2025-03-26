@@ -1,11 +1,13 @@
 <?php
 
 $build_time_multiplier = 1.35;
-$additional_resource_base_value = 100;
+$additional_resource_base_value = 150;
+$additional_resources_multiplier = 5;
 
 return [
     'build_time_multiplier' => $build_time_multiplier,
     'additional_resource_base_value' => $additional_resource_base_value,
+    'additional_resources_multiplier' => $additional_resources_multiplier,
 
     'growth_factors' => [
         'Shipyard' => 1.30,

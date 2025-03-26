@@ -44,7 +44,7 @@ class AsteroidController extends Controller
 
         [$searchedAsteroids, $searchedStations] = $this->asteroidSearch->search($query);
 
-        return $this->renderAsteroidMap($searchedAsteroids, $searchedStations, null);
+        return $this->renderAsteroidMap($searchedAsteroids, $searchedStations, null, $query);
     }
 
     public function getAsteroidResources(Asteroid $asteroid)
@@ -54,7 +54,7 @@ class AsteroidController extends Controller
         return $this->renderAsteroidMap([], [], $asteroid);
     }
 
-    private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
+    private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null, $query = null)
     {
         $viewData = $this->asteroidService->getAsteroidMapData(
             auth()->user(),
@@ -62,6 +62,10 @@ class AsteroidController extends Controller
             $searchedStations,
             $selectedAsteroid
         );
+
+        if ($query) {
+            $viewData['search_query'] = $query;
+        }
 
         return Inertia::render('AsteroidMap', $viewData);
     }

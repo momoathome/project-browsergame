@@ -95,6 +95,7 @@ sail artisan db:seed --class=AsteroidSeeder
 sail artisan game:generate-test-stations
 sail artisan game:cleanup-test-stations --all
 sail artisan test:station-spawns 100 --refresh --debug
+sail artisan make:extended ModelNamen --m --c --r --s
 ```
 
 ## Authors

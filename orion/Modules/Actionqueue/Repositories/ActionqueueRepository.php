@@ -11,9 +11,16 @@ readonly class ActionqueueRepository
 {
     public function getUserQueue(int $userId): Collection
     {
-        return ActionQueue::where('user_id', $userId)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
-            ->get();
+        $userQueue = ActionQueue::query()
+            ->where('user_id', $userId)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS);
+
+        $defendQueue = ActionQueue::query()
+            ->where('target_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_COMBAT)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS);
+
+        return $userQueue->union($defendQueue)->get();
     }
 
     public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
@@ -27,6 +34,12 @@ readonly class ActionqueueRepository
             'status' => QueueStatusType::STATUS_IN_PROGRESS,
             'details' => $details,
         ]);
+    }
+
+    public function deleteFromQueue($id)
+    {
+        return ActionQueue::where('id', $id)
+            ->delete();
     }
 
     public function getInProgressQueuesFromUserByType(int $userId, QueueActionType $actionType): Collection

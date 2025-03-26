@@ -96,7 +96,8 @@ class BuildingCostCalculator
                     // Grundmenge für neue Ressource berechnen
                     // Die Formel kann angepasst werden, um den Schwierigkeitsgrad zu steuern
                     $baseValue = config('game.building_progression.additional_resource_base_value');
-                    $baseAmount = $baseValue + ($level - $levelThreshold) * 5;
+                    $additionalResourcesMultiplier = config('game.building_progression.additional_resources_multiplier', 5);
+                    $baseAmount = $baseValue + ($level - $levelThreshold) * $additionalResourcesMultiplier;
                     
                     // Wert der Ressource berücksichtigen
                     $resourceValue = $this->getResourceValue($resourceName);

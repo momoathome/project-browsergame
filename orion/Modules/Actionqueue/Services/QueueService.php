@@ -2,6 +2,7 @@
 
 namespace Orion\Modules\Actionqueue\Services;
 
+use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
@@ -12,11 +13,13 @@ use Orion\Modules\Actionqueue\Handlers\AsteroidMiningHandler;
 use Orion\Modules\Actionqueue\Handlers\BuildingUpgradeHandler;
 use Orion\Modules\Actionqueue\Repositories\ActionqueueRepository;
 use Orion\Modules\Actionqueue\Handlers\SpacecraftProductionHandler;
+use Orion\Modules\ActionQueueArchive\Services\ActionQueueArchiveService;
 
 class QueueService
 {
     public function __construct(
         private readonly ActionqueueRepository $actionqueueRepository,
+        private readonly ActionQueueArchiveService $actionQueueArchiveService
     ) {
     }
     public function getUserQueue($userId): Collection
@@ -116,7 +119,7 @@ class QueueService
 
             \Log::info("Aktionsverarbeitung abgeschlossen", [
                 'action_id' => $action->id,
-                'action_type' => $action_type = $action->action_type,
+                'action_type' => $action->action_type,
                 'success' => $success
             ]);
 
@@ -125,6 +128,9 @@ class QueueService
             } else {
                 $action->status = QueueStatusType::STATUS_FAILED;
             }
+            
+            $this->archiveCompletedQueue($action);
+
         } catch (\Exception $e) {
             \Log::error("Fehler bei der Aktionsverarbeitung", [
                 'action_id' => $action->id,
@@ -136,6 +142,23 @@ class QueueService
         }
 
         $action->save();
+    }
+
+    private function archiveCompletedQueue(ActionQueue $action)
+    {
+        if (
+            $action->status === QueueStatusType::STATUS_COMPLETED ||
+            $action->status === QueueStatusType::STATUS_FAILED
+        ) {
+            // Kopiere in Archive-Tabelle und lösche original
+            $this->actionQueueArchiveService->createArchiveEntry($action);
+            $this->deleteFromQueue($action->id);
+        }
+    }
+
+    public function deleteFromQueue(int $id)
+    {
+        return $this->actionqueueRepository->deleteFromQueue($id);
     }
 
 }

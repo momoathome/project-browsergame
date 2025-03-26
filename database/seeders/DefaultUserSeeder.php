@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-
+use Spatie\Permission\Models\Role;
 
 class DefaultUserSeeder extends Seeder
 {
@@ -15,26 +15,26 @@ class DefaultUserSeeder extends Seeder
      */
     public function run(): void
     {
+        $roleAdmin = Role::create(['name' => 'admin']);
+        $roleUser = Role::create(['name' => 'user']);
+
         DB::table(table: 'users')->truncate();
 
-        User::create([
+        $admin = User::create([
             'name' => 'admin',
             'email' => 'admin@browsergame.de',
             'password' => Hash::make('password')
         ]);
 
+        $admin->assignRole($roleAdmin);
+
         // tester
-        User::create([
+        $user = User::create([
             'name' => 'tester',
             'email' => 'tester@browsergame.de',
             'password' => Hash::make('password')
         ]);
 
-        User::create([
-            'name' => 'user1',
-            'email' => 'user1@browsergame.de',
-            'password' => Hash::make('password')
-        ]);
-
+        $user->assignRole($roleUser);
     }
 }

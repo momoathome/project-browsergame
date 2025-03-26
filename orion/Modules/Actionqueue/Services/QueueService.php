@@ -26,7 +26,13 @@ class QueueService
 
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)
     {
-        return $this->actionqueueRepository->addToQueue($userId, $actionType, $targetId, $duration, $details);
+        return $this->actionqueueRepository->addToQueue(
+            $userId,
+            $actionType,
+            $targetId,
+            $duration,
+            $details
+        );
     }
 
     public function getInProgressQueuesFromUserByType($userId, $actionType): Collection
@@ -66,7 +72,7 @@ class QueueService
     {
         // Aktionstyp normalisieren - falls als String statt Enum
         $actionType = $action->action_type;
-        
+
         if (is_string($actionType)) {
             // Versuche, den String in den entsprechenden Enum-Wert zu konvertieren
             try {
@@ -82,7 +88,7 @@ class QueueService
                 return;
             }
         }
-        
+
         // Handlerklassen für verschiedene Aktionstypen
         $handlerClass = match ($actionType) {
             QueueActionType::ACTION_TYPE_BUILDING => BuildingUpgradeHandler::class,
@@ -91,7 +97,7 @@ class QueueService
             QueueActionType::ACTION_TYPE_COMBAT => CombatHandler::class,
             default => null
         };
-        
+
         if (!$handlerClass) {
             \Log::error("Kein Handler für Aktionstyp gefunden", [
                 'action_id' => $action->id,
@@ -102,18 +108,18 @@ class QueueService
             $action->save();
             return;
         }
-        
+
         $handler = App::make($handlerClass);
-        
+
         try {
             $success = $handler->handle($action);
-            
+
             \Log::info("Aktionsverarbeitung abgeschlossen", [
                 'action_id' => $action->id,
                 'action_type' => $action_type = $action->action_type,
                 'success' => $success
             ]);
-            
+
             if ($success) {
                 $action->status = QueueStatusType::STATUS_COMPLETED;
             } else {
@@ -128,7 +134,7 @@ class QueueService
             ]);
             $action->status = QueueStatusType::STATUS_FAILED;
         }
-        
+
         $action->save();
     }
 

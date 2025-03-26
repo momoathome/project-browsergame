@@ -1,13 +1,19 @@
 <?php
 
+$build_time_multiplier = 1.35;
+$additional_resource_base_value = 100;
+
 return [
+    'build_time_multiplier' => $build_time_multiplier,
+    'additional_resource_base_value' => $additional_resource_base_value,
+
     'growth_factors' => [
-        'Shipyard' => 1.40,
-        'Hangar' => 1.32,
-        'Laboratory' => 1.45,
-        'Warehouse' => 1.30,
-        'Scanner' => 1.38,
-        'Shield' => 1.42,
+        'Shipyard' => 1.30,
+        'Hangar' => 1.25,
+        'Laboratory' => 1.40,
+        'Warehouse' => 1.25,
+        'Scanner' => 1.35,
+        'Shield' => 1.40,
         // Weitere Gebäude...
     ],
 
@@ -19,18 +25,6 @@ return [
         20 => 1.8,  // Level 20: 80% extra
         25 => 2.0,  // Level 25: 100% extra
         30 => 2.5,  // Level 30: 150% extra
-    ],
-
-    // Ab welchem Level werden neue Ressourcen benötigt
-    'resource_thresholds' => [
-        'Cobalt' => 5,
-        'Iridium' => 10,
-        'Uraninite' => 15,
-        'Thorium' => 20,
-        'Astatine' => 25,
-        'Hyperdiamond' => 30,
-        'Dilithium' => 35,
-        'Deuterium' => 40,
     ],
 
     // Ressourcenanforderungen nach Gebäudetyp
@@ -51,6 +45,33 @@ return [
             'level_15' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_25' => ['Dilithium', 'Deuterium'],
+        ],
+        'Hangar' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_5' => ['Cobalt'],
+            'level_10' => ['Iridium'],
+            'level_15' => ['Uraninite'],
+            'level_20' => ['Thorium'],
+            'level_25' => ['Hyperdiamond'],
+            'level_30' => ['Dilithium'],
+        ],
+        'Warehouse' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_5' => ['Cobalt'],
+            'level_10' => ['Iridium'],
+            'level_15' => ['Uraninite'],
+            'level_20' => ['Thorium'],
+            'level_25' => ['Hyperdiamond'],
+            'level_30' => ['Dilithium'],
+        ],
+        'Scanner' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_5' => ['Cobalt'],
+            'level_10' => ['Iridium'],
+            'level_15' => ['Uraninite'],
+            'level_20' => ['Thorium'],
+            'level_25' => ['Hyperdiamond'],
+            'level_30' => ['Dilithium'],
         ],
         // Weitere Gebäude mit spezifischen Ressourcenanforderungen...
     ],

@@ -39,6 +39,7 @@ class CreateNewUser implements CreatesNewUsers
         ]);
 
         $this->setupInitialUserData->setupInitialData($user);
+        $user->assignRole('user');
 
         return $user;
     }

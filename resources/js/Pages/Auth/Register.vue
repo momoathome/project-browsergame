@@ -30,7 +30,7 @@ const submit = () => {
     <AuthenticationCard>
         <template #logo>
             <div>
-                <h1 class="text-4xl text-light">Orion's Frontier</h1>
+                <h1 class="text-5xl text-secondary font-semibold font-serif">Orion's Frontier</h1>
             </div>
         </template>
 

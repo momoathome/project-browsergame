@@ -3,11 +3,12 @@ import { usePage, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { numberFormat } from '@/Utils/format';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import { is, can } from 'laravel-permission-to-vuejs'
 
 const page = usePage();
 const form = useForm({
   resource_id: null,
-  amount: 500
+  amount: 1000
 });
 
 const formattedResources = computed(() => {
@@ -23,6 +24,9 @@ const formattedResources = computed(() => {
 });
 
 function addResource(resourceId) {
+  if (!is('admin')) {
+    return;
+  }
   form.resource_id = resourceId;
   form.post('/resources/add', {
     onSuccess: () => {

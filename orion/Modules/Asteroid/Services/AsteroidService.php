@@ -97,15 +97,15 @@ class AsteroidService
             
             $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
             
+            $spacecraft_flight_speed = config('game.core.spacecraft_flight_speed');
             $this->queueService->addToQueue(
                 $user->id,
                 QueueActionType::ACTION_TYPE_MINING,
                 $asteroidId,
-                $duration,
+                $duration / $spacecraft_flight_speed,
                 [
                     'asteroid_name' => $asteroid->name,
                     'spacecrafts' => $filteredSpacecrafts,
-                    'duration' => $duration,
                     'miner_count' => $minerCount
                 ]
             );

@@ -92,11 +92,12 @@ class BuildingUpgradeService
 
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void
     {
+        $building_produce_speed = config('game.core.building_produce_speed');
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_BUILDING,
             $building->id,
-            $building->build_time,
+            $building->build_time / $building_produce_speed,
             [
                 'building_name' => $building->details->name,
                 'current_level' => $building->level,
@@ -137,7 +138,8 @@ class BuildingUpgradeService
     private function calculateBuildTime(Building $building): float
     {
         // Bauzeit je nach Level erhöhen
-        return floor(60 * pow(1.2, $building->level - 1));
+        $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.35);
+        return floor(60 * pow($buildTimeMultiplier, $building->level - 1));
     }
 
     private function updateBuildingCosts(Building $building, Collection $costs): void

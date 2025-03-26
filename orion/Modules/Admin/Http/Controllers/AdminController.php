@@ -3,11 +3,11 @@
 namespace Orion\Modules\Admin\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Controllers\Controller;
-use Log;
 use Orion\Modules\Market\Services\MarketService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Building\Services\BuildingService;
@@ -30,7 +30,11 @@ class AdminController extends Controller
         private readonly UserAttributeService $userAttributeService,
         private readonly MarketService $marketService,
         private readonly SpacecraftProductionService $spacecraftProductionService,
+        private readonly AuthManager $authManager
     ) {
+        if (!$this->authManager->user()->hasRole('admin')) {
+            return redirect()->route('overview');
+        }
     }
 
     public function index()
@@ -43,22 +47,6 @@ class AdminController extends Controller
             'users' => $users,
             'market' => $market,
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
     }
 
     /**
@@ -85,17 +73,9 @@ class AdminController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function updateStation(Request $request, string $id)
     {
         $station = $this->stationService->findStationById($id);
         $station->update([
@@ -149,7 +129,13 @@ class AdminController extends Controller
         $userId = $validated['user_id'];
         $spacecraftId = $validated['spacecraft_id'];
 
-        return $this->spacecraftProductionService->adminUnlockSpacecraft($userId, $spacecraftId);
+        $result = $this->spacecraftProductionService->adminUnlockSpacecraft($userId, $spacecraftId);
+
+        if ($result) {
+            return redirect()->back()->with('message', 'Raumschiff erfolgreich freigeschaltet');
+        } else {
+            return redirect()->back()->with('error', 'Fehler beim Freischalten des Raumschiffs');
+        }
     }
 
     /**

@@ -2,16 +2,18 @@
 
 namespace Orion\Modules\Market\Http\Controllers;
 
+use Inertia\Inertia;
+use Illuminate\Http\Request;
+use Illuminate\Auth\AuthManager;
 use App\Http\Controllers\Controller;
 use Orion\Modules\Market\Services\MarketService;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 
 class MarketController extends Controller
 {
     public function __construct(
-        private readonly MarketService $marketService
+        private readonly MarketService $marketService,
+        private readonly AuthManager $authManager
     ) {
     }
 
@@ -26,6 +28,10 @@ class MarketController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!$this->authManager->user()->hasRole('admin')) {
+            return redirect()->route('dashboard');
+        }
+
         $validated = $request->validate([
             'cost' => 'required|integer|min:1',
             'stock' => 'required|integer|min:1',

@@ -38,32 +38,41 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/market/buy', [MarketController::class, 'buy'])->name('market.buy');
     Route::post('/market/sell', [MarketController::class, 'sell'])->name('market.sell');
 
-    Route::get('/logbook', function () {return Inertia::render('Logbook');})->name('logbook');
-    Route::get('/research', function () {return Inertia::render('Research');})->name('research');
+    Route::get('/logbook', function () {
+        return Inertia::render('Logbook'); })->name('logbook');
+    Route::get('/research', function () {
+        return Inertia::render('Research'); })->name('research');
 
-    Route::get('/asteroidMap', [AsteroidController::class, 'index'])->name('asteroidMap');
-    Route::post('/asteroidMap/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
-    Route::post('/asteroidMap/combat', [CombatController::class, 'combat'])->name('asteroidMap.combat');
-    Route::get('/asteroidMap/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
-    Route::get('/asteroidMap/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
+    Route::group([
+        'prefix' => 'asteroidMap'
+    ], function(){
+        Route::get('/', [AsteroidController::class, 'index'])->name('asteroidMap');
+        Route::post('/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
+        Route::post('/combat', [CombatController::class, 'combat'])->name('asteroidMap.combat');
+        Route::get('/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
+        Route::get('/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
+    });    
 
     Route::get('/simulator', [CombatController::class, 'index'])->name('simulator');
     Route::post('/simulator', [CombatController::class, 'simulate'])->name('simulator.simulate');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
-    Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-    Route::get('/admin/user/{id}', [AdminController::class, 'show'])->name('admin.user.show');
-    Route::put('/admin/stations/{id}', [AdminController::class, 'update'])->name('admin.stations.update');
-    Route::put('/admin/buildings/{id}', [AdminController::class, 'updateBuilding'])->name('admin.buildings.update');
-    Route::put('/admin/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
-    Route::put('/admin/spacecrafts/{id}', [AdminController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
-    Route::post('/admin/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
-    Route::put('/admin/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
-
-    Route::post('/admin/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
+    Route::group([
+        'middleware' => ['role:admin'],
+        'prefix' => 'admin'
+    ], function () {
+        Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+        Route::get('/user/{id}', [AdminController::class, 'show'])->name('admin.user.show');
+        Route::put('/stations/{id}', [AdminController::class, 'updateStation'])->name('admin.stations.update');
+        Route::put('/buildings/{id}', [AdminController::class, 'updateBuilding'])->name('admin.buildings.update');
+        Route::put('/resources/{id}', [UserResourceController::class, 'updateResourceAmount'])->name('admin.resources.update');
+        Route::put('/spacecrafts/{id}', [AdminController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
+        Route::post('/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
+        Route::put('/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
+        Route::post('/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
+    });
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
-    
 
 });

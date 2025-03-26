@@ -60,7 +60,8 @@ function setUserResourcesInput() {
 
 function setMaxAmount() {
   const userCredits = usePage().props.userAttributes.find((attribute) => attribute.attribute_name === 'credits')?.attribute_value || 0;
-  const maxAmount = Math.floor(userCredits / props.marketData.cost);
+  const userStorage = usePage().props.userAttributes.find((attribute) => attribute.attribute_name === 'storage')?.attribute_value || 0;
+  const maxAmount = Math.min(Math.floor(userCredits / props.marketData.cost), userStorage);
   form.amount = maxAmount;
 }
 </script>

@@ -124,7 +124,7 @@ const totalCombatPower = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    const combat = props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.combat;
+    const combat = props.spacecrafts.find((s: Spacecraft) => s.name === spacecraft)?.combat;
     if (combat !== undefined) {
       total += combat * form.spacecrafts[spacecraft];
     }
@@ -137,7 +137,7 @@ const totalCargoCapacity = computed(() => {
   let total = 0;
 
   for (const spacecraft in form.spacecrafts) {
-    const cargo = props.spacecrafts.find((s: Spacecraft) => s.details.name === spacecraft)?.cargo;
+    const cargo = props.spacecrafts.find((s: Spacecraft) => s.name === spacecraft)?.cargo;
     if (cargo !== undefined) {
       total += cargo * form.spacecrafts[spacecraft];
     }
@@ -160,12 +160,13 @@ const calculateMiningDuration = () => {
   const anySpacecraftSelected = Object.values(form.spacecrafts).some(value => value > 0);
   if (!anySpacecraftSelected) return '00:00';
   
+  // Niedrigste Geschwindigkeit finden
   let lowestSpeed = 0;
   
   for (const spacecraftName in form.spacecrafts) {
     const count = form.spacecrafts[spacecraftName];
     if (count > 0) {
-      const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
+      const spacecraft = props.spacecrafts.find(s => s.name === spacecraftName);
       if (spacecraft && spacecraft.speed > 0 && (lowestSpeed === 0 || spacecraft.speed < lowestSpeed)) {
         lowestSpeed = spacecraft.speed;
       }
@@ -182,42 +183,76 @@ const calculateMiningDuration = () => {
     Math.pow(userStation.y - asteroid.value.y, 2)
   );
   
-  const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
+  // Grundlegende Reisedauer berechnen - exakt wie im Backend
   const travelFactor = 1;
-  let calculatedDuration = Math.floor(Math.max(
+  const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
+  let calculatedDuration = Math.max(
     baseDuration, 
-    distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor
-  ));
+    Math.floor(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor)
+  );
   
-  // Mining-Dauer reduzieren basierend auf der Anzahl der Miner
-  // Dies sollte nur für Asteroidenexploration gelten
+  // Aktionsspezifische Zeitberechnung für Mining
   if (props.content?.type === 'asteroid') {
-    let minerCount = 0;
+    // Gesamte Mining-Geschwindigkeit berechnen - Stellen wir sicher, dass die Werte korrekt sind
+    let totalMiningSpeed = 0;
+    
+    // Debug-Ausgabe zur Prüfung
+    console.log("Ausgewählte Raumschiffe:");
+    
     for (const spacecraftName in form.spacecrafts) {
       const count = form.spacecrafts[spacecraftName];
       if (count > 0) {
-        const spacecraft = props.spacecrafts.find(s => s.details.name === spacecraftName);
-        if (spacecraft && spacecraft.details.type === 'Miner') {
-          minerCount += count;
+        const spacecraft = props.spacecrafts.find(s => s.name === spacecraftName);
+        
+        if (spacecraft && spacecraft.type === 'Miner') {
+          // Stellen wir sicher, dass operation_speed einen korrekten Wert hat
+          const opSpeed = spacecraft.operation_speed || 1;
+          console.log(`${spacecraftName}: ${count}x, operation_speed: ${opSpeed}`);
+          totalMiningSpeed += count * opSpeed;
         }
       }
     }
     
-    if (minerCount > 0) {
-      calculatedDuration = Math.max(10, Math.floor(calculatedDuration / minerCount));
+    console.log("Total mining speed:", totalMiningSpeed);
+    
+    // Diminishing returns auf die Operationsgeschwindigkeit anwenden
+    const effectiveOperationSpeed = applyDiminishingReturns(totalMiningSpeed);
+    console.log("Effective operation speed:", effectiveOperationSpeed);
+    
+    // Dauer basierend auf der effektiven Operationsgeschwindigkeit berechnen - exakt wie im Backend
+    if (totalMiningSpeed > 0) {
+      calculatedDuration = Math.max(10, Math.floor(calculatedDuration / (effectiveOperationSpeed / 5)));
     }
+    
+    console.log("Calculated duration:", calculatedDuration);
   }
   
   return timeFormat(calculatedDuration);
+};
+
+// Hilfsfunktion für abnehmende Rückgabewerte (diminishing returns) - identisch mit Backend
+const applyDiminishingReturns = (speed) => {
+  // Basis-Geschwindigkeit (erster Miner hat vollen Effekt)
+  const baseValue = Math.min(1, speed);
+  
+  // Restliche Geschwindigkeit mit abnehmendem Rückgabewert
+  let remainingValue = 0;
+  if (speed > 1) {
+    // Logarithmische Funktion für abnehmende Rückgabewerte
+    remainingValue = 0.85 * (Math.log10(speed) + 1);
+  }
+  
+  // Kombiniere Basis- und abnehmenden Wert, aber nie unter 1
+  return Math.max(1, baseValue + remainingValue);
 };
 
 const setMaxAvailableUnits = () => {
   const MaxAvailableUnits = {};
 
   props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    if (spacecraft.details.type !== "Miner") {
+    if (spacecraft.type !== "Miner") {
       // Berücksichtige nur die verfügbaren Schiffe (count - locked_count)
-      MaxAvailableUnits[spacecraft.details.name] = spacecraft.count - (spacecraft.locked_count || 0);
+      MaxAvailableUnits[spacecraft.name] = spacecraft.count - (spacecraft.locked_count || 0);
     }
   });
 
@@ -233,16 +268,16 @@ const setMinNeededUnits = () => {
   const processSpacecraftType = (type: string) => {
     props.spacecrafts.forEach((spacecraft: Spacecraft) => {
       if (remainingResources <= 0) {
-        MinNeededUnits[spacecraft.details.name] = MinNeededUnits[spacecraft.details.name] || 0;
+        MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
         return;
       }
 
-      if (spacecraft.details.type === type) {
+      if (spacecraft.type === type) {
         const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
         const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
         const usedUnits = Math.min(neededUnits, availableCount);
 
-        MinNeededUnits[spacecraft.details.name] = usedUnits;
+        MinNeededUnits[spacecraft.name] = usedUnits;
         remainingResources -= usedUnits * spacecraft.cargo;
       }
     });
@@ -255,16 +290,16 @@ const setMinNeededUnits = () => {
   // Schließlich alle anderen Raumschifftypen
   props.spacecrafts.forEach((spacecraft: Spacecraft) => {
     if (remainingResources <= 0) {
-      MinNeededUnits[spacecraft.details.name] = MinNeededUnits[spacecraft.details.name] || 0;
+      MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
       return;
     }
 
-    if (spacecraft.details.type !== "Miner" && spacecraft.details.type !== "Transporter") {
+    if (spacecraft.type !== "Miner" && spacecraft.type !== "Transporter") {
       const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
       const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
       const usedUnits = Math.min(neededUnits, availableCount);
 
-      MinNeededUnits[spacecraft.details.name] = usedUnits;
+      MinNeededUnits[spacecraft.name] = usedUnits;
       remainingResources -= usedUnits * spacecraft.cargo;
     }
   });

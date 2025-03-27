@@ -52,14 +52,14 @@ const setCount = () => {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light text-base select-none">
     <div class="image relative">
-      <img :src="spacecraft.details.image" class="rounded-t-3xl h-[65px]" alt="" />
+      <img :src="spacecraft.image" class="rounded-t-3xl h-[65px]" alt="" />
     </div>
     <div class="px-4 pt-0 pb-4 flex flex-col gap-2">
       <div class="flex flex-col gap-2">
         <div class="flex justify-between">
           <div class="flex flex-col">
-            <p class="font-semibold text-lg -mb-2">{{ spacecraft.details.name }}</p>
-            <p class="text-[10px] font-medium text-gray">{{ spacecraft.details.type }}</p>
+            <p class="font-semibold text-lg -mb-2">{{ spacecraft.name }}</p>
+            <p class="text-[10px] font-medium text-gray">{{ spacecraft.type }}</p>
           </div>
           <div class="flex h-min">
             <span class="text-sm font-medium mt-2 me-1 text-secondary"></span>

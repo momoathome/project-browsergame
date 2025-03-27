@@ -33,6 +33,7 @@ export interface Spacecraft {
   combat: number;
   cargo: number;
   speed: number;
+  operation_speed: number;
   count: number;
   locked_count: number;
   build_time: number;

@@ -32,12 +32,12 @@ class AsteroidService
         private readonly UserAttributeService $userAttributeService
     ) {
     }
-    
+
     public function loadAsteroidWithResources(Asteroid $asteroid): Asteroid
     {
         return $this->asteroidRepository->loadWithResources($asteroid);
     }
-    
+
     public function getAsteroidMapData(
         $user,
         array|Collection $searchedAsteroids = [],
@@ -46,7 +46,7 @@ class AsteroidService
     ): array {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
-        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
 
         return [
             'asteroids' => $asteroids,
@@ -57,7 +57,7 @@ class AsteroidService
             'selected_asteroid' => $selectedAsteroid ?? null,
         ];
     }
-    
+
     public function asteroidMining($user, AsteroidExploreRequest $request): bool
     {
         if (!$request->validated()) {
@@ -70,34 +70,32 @@ class AsteroidService
             $request->collect('spacecrafts')
         );
     }
-    
+
     private function processMiningOperation(User $user, int $asteroidId, Collection $spaceCrafts): bool
     {
         return DB::transaction(function () use ($user, $asteroidId, $spaceCrafts) {
             $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spaceCrafts);
             $asteroid = $this->asteroidRepository->find($asteroidId);
-            
+
             if (!$asteroid) {
                 return false;
             }
-            
+
             $spacecraftsWithDetails = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails(
                 $user->id,
                 $filteredSpacecrafts
             );
-            
-            $minerCount = $this->calculateMinerCount($spacecraftsWithDetails, $filteredSpacecrafts);
-            
+
             $duration = $this->asteroidExplorer->calculateTravelDuration(
                 $spacecraftsWithDetails,
                 $user,
                 $asteroid,
                 QueueActionType::ACTION_TYPE_MINING,
-                $minerCount
+                $filteredSpacecrafts
             );
-            
+
             $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
-            
+
             $spacecraft_flight_speed = config('game.core.spacecraft_flight_speed');
             $this->queueService->addToQueue(
                 $user->id,
@@ -106,56 +104,55 @@ class AsteroidService
                 $duration / $spacecraft_flight_speed,
                 [
                     'asteroid_name' => $asteroid->name,
-                    'spacecrafts' => $filteredSpacecrafts,
-                    'miner_count' => $minerCount
+                    'spacecrafts' => $filteredSpacecrafts
                 ]
             );
-            
+
             return true;
         });
     }
-    
+
     public function completeAsteroidMining(int $asteroidId, int $userId, array $details)
     {
         $user = $this->userService->find($userId);
         if (!$user) {
             return false;
         }
-        
+
         $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($details['spacecrafts']);
-        
+
         list($totalCargoCapacity, $hasMiner) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
-            $user, 
+            $user,
             $filteredSpacecrafts
         );
-        
+
         $asteroid = $this->asteroidRepository->find($asteroidId);
         if (!$asteroid) {
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }
-        
+
         $asteroidResources = $this->asteroidRepository->getAsteroidResources($asteroid);
-        
+
         list($resourcesExtracted, $remainingResources) = $this->asteroidExplorer->calculateResourceExtraction(
-            $asteroidResources, 
-            $totalCargoCapacity, 
+            $asteroidResources,
+            $totalCargoCapacity,
             $hasMiner
         );
-        
+
         $transactionResult = DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $filteredSpacecrafts) {
             $this->updateUserResources($user, $resourcesExtracted);
             $this->asteroidRepository->updateAsteroidResources($asteroid, $remainingResources);
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
-            
+
             return true;
         });
-        
+
         if (!$transactionResult) {
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }
-        
+
         return new ExplorationResult(
             $resourcesExtracted,
             $totalCargoCapacity,
@@ -163,40 +160,26 @@ class AsteroidService
             $hasMiner
         );
     }
-    
-    private function calculateMinerCount(Collection $spacecraftsWithDetails, Collection $filteredSpacecrafts): int
-    {
-        $minerCount = 0;
-        
-        foreach ($spacecraftsWithDetails as $spacecraft) {
-            if ($spacecraft->details->type === 'Miner') {
-                $count = $filteredSpacecrafts->get($spacecraft->details->name);
-                $minerCount += $count;
-            }
-        }
-        
-        return $minerCount;
-    }
 
     public function updateUserResources(User $user, array $resourcesExtracted): void
     {
         $storageAttribute = $this->userAttributeService->getSpecificUserAttribute(
-            $user->id, 
+            $user->id,
             UserAttributeType::STORAGE
         );
-        
+
         $storageCapacity = $storageAttribute->attribute_value;
-        
+
         foreach ($resourcesExtracted as $resourceId => $extractedAmount) {
             $userResource = $this->userResourceService->getSpecificUserResource(
                 $user->id,
                 $resourceId
             );
-            
+
             $currentAmount = $userResource ? $userResource->amount : 0;
             $availableStorage = $storageCapacity - $currentAmount;
             $amountToAdd = min($extractedAmount, $availableStorage);
-            
+
             if ($userResource) {
                 $this->userResourceService->addResourceAmount($user->id, $resourceId, $amountToAdd);
             } else {

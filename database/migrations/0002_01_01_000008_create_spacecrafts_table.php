@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('combat')->default(0);
             $table->integer('cargo')->default(0);
             $table->integer('speed')->default(0);
+            $table->integer('operation_speed')->default(0);
             $table->integer('count')->default(0);
             $table->integer('locked_count')->default(0);
             $table->integer('build_time')->nullable();

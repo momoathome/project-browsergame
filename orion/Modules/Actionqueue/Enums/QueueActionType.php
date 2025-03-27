@@ -10,4 +10,5 @@ enum QueueActionType: string
     case ACTION_TYPE_TRADE = 'trade';
     case ACTION_TYPE_COMBAT = 'combat';
     case ACTION_TYPE_RESEARCH = 'research';
+    case ACTION_TYPE_SALVAGING = 'salvaging';
 }

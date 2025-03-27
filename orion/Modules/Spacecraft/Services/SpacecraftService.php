@@ -111,6 +111,7 @@ readonly class SpacecraftService
                 'locked_count' => $spacecraft->locked_count,
                 'cargo' => $spacecraft->cargo,
                 'speed' => $spacecraft->speed,
+                'operation_speed' => $spacecraft->operation_speed,
                 'build_time' => $spacecraft->build_time,
                 'crew_limit' => $spacecraft->crew_limit,
                 'unlocked' => $spacecraft->unlocked,

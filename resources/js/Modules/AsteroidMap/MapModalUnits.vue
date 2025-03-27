@@ -21,8 +21,8 @@ const gridColumnsCount = computed(() => {
 
 <template>
   <div class="gap-4 dynamic-grid" :style="{ '--grid-cols': gridColumnsCount }">
-    <div v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.details.name">
-      <MapModalUnitCard :spacecraft="spacecraft" v-model="form[spacecraft.details.name]" />
+    <div v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.name">
+      <MapModalUnitCard :spacecraft="spacecraft" v-model="form[spacecraft.name]" />
     </div>
   </div>
 </template>

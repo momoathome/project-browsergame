@@ -267,7 +267,7 @@ class BuildingUpgradeService
             }
     
             // Den vorberechneten effect_value direkt übernehmen
-            $valueToApply = $building->effect_value;
+            $valueToApply = ceil($building->effect_value);
             
             // Attribut aktualisieren - replace=true, damit der Wert ersetzt und nicht addiert wird
             $updatedAttribute = $this->userAttributeService->updateUserAttribute(

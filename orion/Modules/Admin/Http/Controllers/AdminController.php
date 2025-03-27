@@ -49,6 +49,61 @@ class AdminController extends Controller
         ]);
     }
 
+    public function progression()
+    {
+        // Gebäudetypen aus Enum sammeln
+        $buildingTypes = [];
+        foreach (\Orion\Modules\Building\Enums\BuildingType::cases() as $buildingType) {
+            $effectConfig = $buildingType->getEffectConfiguration();
+            $buildingTypes[] = [
+                'name' => $buildingType->value,
+                'effect' => $buildingType->getEffectAttributes()[0] ?? null,
+                'effectType' => $effectConfig['type']->value ?? 'MULTIPLICATIVE',
+            ];
+        }
+
+        // Holen der Konfigurationsdaten aus den PHP-Config-Files
+        $progressionData = [
+            'buildTimeMultiplier' => config('game.building_progression.build_time_multiplier'),
+            'growthFactors' => config('game.building_progression.growth_factors'),
+            'milestoneMultipliers' => config('game.building_progression.milestone_multipliers'),
+            'buildingConfigs' => [],
+            'baseCosts' => [],
+        ];
+
+        // Building-Konfigurationen aus BuildingType-Enum übernehmen
+        foreach (\Orion\Modules\Building\Enums\BuildingType::cases() as $buildingType) {
+            $effectConfig = $buildingType->getEffectConfiguration();
+            $progressionData['buildingConfigs'][$buildingType->value] = [
+                'baseValue' => $effectConfig['base_value'],
+                'increment' => $effectConfig['increment'],
+                'type' => $effectConfig['type']->value,
+            ];
+        }
+
+        // Basis-Kosten aus der buildings.php-Konfiguration laden
+        $buildings = config('game.buildings.buildings');
+        foreach ($buildings as $building) {
+            $costs = collect($building['costs'])->map(function ($cost) {
+                return [
+                    'resource' => $cost['resource_name'],
+                    'amount' => $cost['amount'],
+                ];
+            })->toArray();
+
+            $progressionData['baseCosts'][$building['name']] = $costs;
+        }
+
+        // Ressourcenanforderungen nach Level laden
+        $resourceRequirements = config('game.building_progression.building_resources');
+
+        return Inertia::render('Admin/BuildingProgression', [
+            'buildingTypes' => $buildingTypes,
+            'progressionData' => $progressionData,
+            'resourceRequirements' => $resourceRequirements,
+        ]);
+    }
+
     /**
      * Display the specified resource.
      */

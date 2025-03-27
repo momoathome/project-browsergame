@@ -33,11 +33,11 @@ class BuildingController extends Controller
     {
         $user = $this->authManager->user();
         
-        try {
-            $this->buildingUpgradeService->startBuildingUpgrade($user->id, $building);
-            return redirect()->route('buildings')->banner('Building upgrade started');
-        } catch (\Exception $e) {
-            return redirect()->route('buildings')->dangerBanner($e->getMessage());
+        $result = $this->buildingUpgradeService->startBuildingUpgrade($user->id, $building);
+        if ($result['success']) {
+            return redirect()->route('buildings')->banner($result['message']);
+        } else {
+            return redirect()->route('buildings')->dangerBanner($result['message']);
         }
     }
 }

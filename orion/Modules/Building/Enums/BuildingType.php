@@ -32,14 +32,14 @@ enum BuildingType: string
                 'increment' => 0.05,
             ],
             self::HANGAR => [
-                'type' => BuildingEffectType::ADDITIVE,
+                'type' => BuildingEffectType::EXPONENTIAL,
                 'base_value' => 10,
-                'increment' => 10,
+                'increment' => 1.325,
             ],
             self::WAREHOUSE => [
-                'type' => BuildingEffectType::MULTIPLICATIVE,
+                'type' => BuildingEffectType::EXPONENTIAL,
                 'base_value' => 1_500,
-                'increment' => 0.5,
+                'increment' => 1.285,
             ],
             self::LABORATORY => [
                 'type' => BuildingEffectType::ADDITIVE,

@@ -1,21 +1,23 @@
 <?php
 
 $build_time_multiplier = 1.35;
-$additional_resource_base_value = 150;
-$additional_resources_multiplier = 5;
+$additional_resource_base_value = 100;
+$additional_resources_multiplier = 1;
+$additional_resource_referenz = 1000;
 
 return [
     'build_time_multiplier' => $build_time_multiplier,
     'additional_resource_base_value' => $additional_resource_base_value,
     'additional_resources_multiplier' => $additional_resources_multiplier,
+    'additional_resource_referenz' => $additional_resource_referenz,
 
     'growth_factors' => [
-        'Shipyard' => 1.30,
-        'Hangar' => 1.25,
-        'Laboratory' => 1.40,
-        'Warehouse' => 1.25,
-        'Scanner' => 1.35,
-        'Shield' => 1.40,
+        'Shipyard' => 1.35,
+        'Hangar' => 1.275,
+        'Laboratory' => 1.375,
+        'Warehouse' => 1.30,
+        'Scanner' => 1.325,
+        'Shield' => 1.375,
         // Weitere Gebäude...
     ],
 
@@ -40,14 +42,6 @@ return [
             'level_25' => ['Hyperdiamond'],
             'level_30' => ['Dilithium'],
         ],
-        'Laboratory' => [
-            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_10' => ['Iridium', 'Uraninite'],
-            'level_15' => ['Astatine'],
-            'level_20' => ['Hyperdiamond'],
-            'level_25' => ['Dilithium', 'Deuterium'],
-        ],
         'Hangar' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
             'level_5' => ['Cobalt'],
@@ -56,6 +50,14 @@ return [
             'level_20' => ['Thorium'],
             'level_25' => ['Hyperdiamond'],
             'level_30' => ['Dilithium'],
+        ],
+        'Laboratory' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_5' => ['Cobalt'],
+            'level_10' => ['Iridium', 'Uraninite'],
+            'level_15' => ['Astatine'],
+            'level_20' => ['Hyperdiamond'],
+            'level_25' => ['Dilithium', 'Deuterium'],
         ],
         'Warehouse' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -67,6 +69,15 @@ return [
             'level_30' => ['Dilithium'],
         ],
         'Scanner' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_5' => ['Cobalt'],
+            'level_10' => ['Iridium'],
+            'level_15' => ['Uraninite'],
+            'level_20' => ['Thorium'],
+            'level_25' => ['Hyperdiamond'],
+            'level_30' => ['Dilithium'],
+        ],
+        'Shield' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
             'level_5' => ['Cobalt'],
             'level_10' => ['Iridium'],

@@ -71,6 +71,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
         Route::put('/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
         Route::post('/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
+
+        Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);

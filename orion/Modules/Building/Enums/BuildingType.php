@@ -49,7 +49,7 @@ enum BuildingType: string
             self::SCANNER => [
                 'type' => BuildingEffectType::ADDITIVE,
                 'base_value' => 4_000,
-                'increment' => 4_000,
+                'increment' => 2_000,
             ],
             self::SHIELD => [
                 'type' => BuildingEffectType::MULTIPLICATIVE,

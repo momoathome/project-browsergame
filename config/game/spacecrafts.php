@@ -208,7 +208,7 @@ return [
             'count' => 0,
             'lockedCount' => 0,
             'cargo' => 500,
-            'speed' => 100,
+            'speed' => 25,
             'crewLimit' => 1,
             'buildTime' => 10,
             'researchCost' => 1,

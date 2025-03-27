@@ -25,32 +25,27 @@ class TestStationSpawns extends Command
         $progressBar = $this->output->createProgressBar($count);
         $progressBar->start();
 
-        $lastValidationResults = [];
+        $lastValidationResults = [
+            'attempts' => 0,
+            'currentPosition' => null,
+            'validationResults' => [
+                'station' => false,
+                'asteroid' => false,
+                'resource' => false
+            ]
+        ];
 
         $callback = function ($current, $data = null) use ($progressBar, &$lastValidationResults, $debug) {
             // Fortschrittsbalken aktualisieren
             $progressBar->setProgress($current);
 
-            // Debug-Informationen speichern und ggf. anzeigen
-            if ($data) {
-                $lastValidationResults = $data;
+            // Debug-Informationen speichern
+            $lastValidationResults = $data;
 
-                if ($debug) {
-                    $this->newLine();
-                    if (isset($data['message'])) {
-                        $this->info($data['message']);
-                    }
-                    if (isset($data['attempts'])) {
-                        $this->line("Versuche: {$data['attempts']}, Gefunden: {$current}");
-                    }
-                    if (isset($data['validationResults'])) {
-                        $results = $data['validationResults'];
-                        $this->line("Position: " . json_encode($data['currentPosition'] ?? 'unbekannt'));
-                        $this->line("Validierung: Stationen " . ($results['station'] ? '✓' : '✗') .
-                            ", Asteroiden " . ($results['asteroid'] ? '✓' : '✗') .
-                            ", Ressourcen " . ($results['resource'] ? '✓' : '✗'));
-                    }
-                }
+            // Debug-Ausgabe anzeigen
+            if ($debug) {
+                $this->newLine();
+                $this->line("Fortschritt: {$current} von {$progressBar->getMaxSteps()}");
             }
         };
 
@@ -67,6 +62,23 @@ class TestStationSpawns extends Command
 
         $duration = microtime(true) - $startTime;
         $this->info("Gefunden: " . count($spawns) . " potenzielle Standorte in {$duration} Sekunden");
+
+        if (count($spawns) > 0) {
+            $this->info("Gefundene Standorte:");
+        
+            $positions = [];
+            foreach ($spawns as $index => $spawn) {
+                // Direkte Zuordnung der x/y Koordinaten
+                $positions[] = [
+                    '#' => $index + 1, 
+                    'X' => $spawn['x'], 
+                    'Y' => $spawn['y']
+                ];
+            }
+        
+            // Ausgabe als Tabelle
+            $this->table(['#', 'X', 'Y'], $positions);
+        }
 
         if (count($spawns) === 0) {
             // Konfigurationsdetails anzeigen bei 0 Treffern

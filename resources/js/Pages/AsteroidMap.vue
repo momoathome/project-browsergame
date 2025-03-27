@@ -159,7 +159,7 @@ const scale = computed(() => {
   const minZoom = config.maxOuterZoomLevel;
   const maxZoom = config.maxInnerZoomLevel;
   const normalizedZoom = (zoomLevel.value - minZoom) / (maxZoom - minZoom);
-  return 1 + Math.pow(1 - normalizedZoom, 2) * 1.5;
+  return 1 + Math.pow(1 - normalizedZoom, 2) * 1;
 });
 
 function drawStation(x: number, y: number, name: string, id: number) {
@@ -217,7 +217,7 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
 function drawHighlight(x: number, y: number, scaledSize: number, type: 'station' | 'asteroid' = 'asteroid') {
   if (!ctx.value) return;
 
-  const padding = 15 * scale.value;
+  const padding = 10 * scale.value;
   const adjustedRadius = scaledSize + padding;
 
   // Typ-spezifische Anpassungen
@@ -227,7 +227,7 @@ function drawHighlight(x: number, y: number, scaledSize: number, type: 'station'
     ctx.value.strokeStyle = 'yellow';
   }
 
-  ctx.value.lineWidth = 5 * scale.value;
+  ctx.value.lineWidth = 3 * scale.value;
   ctx.value.beginPath();
   ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
   ctx.value.stroke();

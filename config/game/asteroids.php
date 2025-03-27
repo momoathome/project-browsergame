@@ -1,10 +1,10 @@
 <?php
 
-$asteroid_count = 12000;
-$asteroid_density = 35; // kleinere Zahl = dichter besiedelt
-$asteroid_to_asteroid_distance = 2000;
-$asteroid_to_station_distance = 1000;
-$station_to_station_distance = 10000;
+$asteroid_count = 8000;
+$asteroid_density = 15; // kleinere Zahl = dichter besiedelt
+$asteroid_to_asteroid_distance = 175;
+$asteroid_to_station_distance = 400;
+$station_to_station_distance = 8000;
 $universe_size = $asteroid_count * $asteroid_density;
 
 return [
@@ -14,7 +14,7 @@ return [
     'asteroid_to_station_distance' => $asteroid_to_station_distance,
     'station_to_station_distance' => $station_to_station_distance,
     'universe_size' => $universe_size,
-    
+
     // Koordinatenbereich, in dem Asteroiden generiert werden können
     'spawn_area' => [
         'min_x' => 0,
@@ -23,26 +23,11 @@ return [
         'max_y' => $universe_size,
     ],
 
-    // Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
-    'station_safety_distance' => [
-        'base' => 1000,
-        'small_asteroid' => 1.0,
-        'medium_asteroid' => 4.0,
-        'large_asteroid' => 15.0,
-        'extreme_asteroid' => 20.0,
-    ],
-
     'asteroid_img_size' => [
         'small' => 1,
         'medium' => 2,
         'large' => 4,
         'extreme' => 8,
-    ],
-
-    /* base amount */
-    'asteroid_faktor' => [
-        'min' => 80,
-        'max' => 125,
     ],
 
     /* chance to generate of asteroid sizes */
@@ -53,6 +38,13 @@ return [
         'extreme' => 10,
     ],
 
+    /* base amount */
+    'asteroid_faktor' => [
+        'min' => 80,
+        'max' => 125,
+    ],
+
+    /* base multiplier */
     'asteroid_faktor_multiplier' => [
         'small' => ['min' => 5, 'max' => 8],
         'medium' => ['min' => 13, 'max' => 21],
@@ -60,11 +52,20 @@ return [
         'extreme' => ['min' => 89, 'max' => 144],
     ],
 
+    // Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
+    'station_safety_distance' => [
+        'base' => $asteroid_to_station_distance,
+        'small_asteroid' => 1.0,
+        'medium_asteroid' => 4.0,
+        'large_asteroid' => 10.0,
+        'extreme_asteroid' => 15.0,
+    ],
+
     'resource_min_distances' => [
         'low_value' => 1 * $asteroid_to_station_distance,
-        'medium_value' => 8 * $asteroid_to_station_distance,
-        'high_value' => 15 * $asteroid_to_station_distance,
-        'extreme_value' => 25 * $asteroid_to_station_distance,
+        'medium_value' => 5 * $asteroid_to_station_distance,
+        'high_value' => 12 * $asteroid_to_station_distance,
+        'extreme_value' => 20 * $asteroid_to_station_distance,
     ],
 
     'resource_pools' => [

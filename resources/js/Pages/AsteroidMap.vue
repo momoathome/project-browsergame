@@ -41,6 +41,7 @@ const pointX = ref(0);
 const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
+const moveSpeed = ref(10);
 
 const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
@@ -87,10 +88,12 @@ onMounted(() => {
   }
 
   window.addEventListener('resize', adjustCanvasSize);
+  window.addEventListener('keydown', onKeyDown);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
+  window.removeEventListener('keydown', onKeyDown);
 });
 
 function drawScene() {
@@ -330,6 +333,46 @@ function onWheel(e: WheelEvent) {
 
       requestAnimationFrame(drawScene);
     }
+  }
+}
+
+// Funktion zum Verschieben der Karte mit den Pfeiltasten
+function onKeyDown(e: KeyboardEvent) {
+  // Keine Aktion, wenn in Eingabefeldern oder Modals
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+    return;
+  }
+
+  if (isModalOpen.value) {
+    return;
+  }
+  if (!canvasRef.value || !ctx.value) return;
+
+  // Geschwindigkeit vom Zoomlevel abhängig machen
+  const speedFactor = 2 / zoomLevel.value;
+  const currentSpeed = moveSpeed.value * speedFactor;
+
+  switch (e.key) {
+    case 'ArrowUp':
+      pointY.value += currentSpeed;
+      e.preventDefault();
+      break;
+    case 'ArrowDown':
+      pointY.value -= currentSpeed;
+      e.preventDefault();
+      break;
+    case 'ArrowLeft':
+      pointX.value += currentSpeed;
+      e.preventDefault();
+      break;
+    case 'ArrowRight':
+      pointX.value -= currentSpeed;
+      e.preventDefault();
+      break;
+  }
+
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+    requestAnimationFrame(drawScene);
   }
 }
 

@@ -15,7 +15,8 @@ const unlockedSpacecrafts = computed(() => {
 });
 
 const gridColumnsCount = computed(() => {
-  return Math.min(unlockedSpacecrafts.value.length, 5);
+  const count = Math.max(unlockedSpacecrafts.value.length, 3);
+  return Math.min(count, 5);
 });
 </script>
 

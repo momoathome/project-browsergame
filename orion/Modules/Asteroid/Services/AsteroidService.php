@@ -121,16 +121,17 @@ class AsteroidService
 
         $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($details['spacecrafts']);
 
-        list($totalCargoCapacity, $hasMiner) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
-            $user,
-            $filteredSpacecrafts
-        );
-
+        // if asteroid is not found, free spacecrafts and return false
         $asteroid = $this->asteroidRepository->find($asteroidId);
         if (!$asteroid) {
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }
+
+        list($totalCargoCapacity, $hasMiner) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
+            $user,
+            $filteredSpacecrafts
+        );
 
         $asteroidResources = $this->asteroidRepository->getAsteroidResources($asteroid);
 
@@ -191,5 +192,10 @@ class AsteroidService
     public function find(int $id): ?Asteroid
     {
         return $this->asteroidRepository->find($id);
+    }
+
+    public function getAllAsteroids(): Collection
+    {
+        return $this->asteroidRepository->getAllAsteroids();
     }
 }

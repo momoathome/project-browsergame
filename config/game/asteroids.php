@@ -1,28 +1,9 @@
 <?php
 
-$asteroid_count = 8000;
-$asteroid_density = 15; // kleinere Zahl = dichter besiedelt
-$asteroid_to_asteroid_distance = 175;
-$asteroid_to_station_distance = 400;
-$station_to_station_distance = 8000;
-$universe_size = $asteroid_count * $asteroid_density;
+$config = config('game.core');
+$asteroid_to_station_distance = $config['asteroid_to_station_distance'] ?? 300;
 
 return [
-    'asteroid_count' => $asteroid_count,
-    'asteroid_density' => $asteroid_density,
-    'min_distance_between_asteroids' => $asteroid_to_asteroid_distance,
-    'asteroid_to_station_distance' => $asteroid_to_station_distance,
-    'station_to_station_distance' => $station_to_station_distance,
-    'universe_size' => $universe_size,
-
-    // Koordinatenbereich, in dem Asteroiden generiert werden können
-    'spawn_area' => [
-        'min_x' => 0,
-        'min_y' => 0,
-        'max_x' => $universe_size,
-        'max_y' => $universe_size,
-    ],
-
     'asteroid_img_size' => [
         'small' => 1,
         'medium' => 2,
@@ -57,15 +38,15 @@ return [
         'base' => $asteroid_to_station_distance,
         'small_asteroid' => 1.0,
         'medium_asteroid' => 4.0,
-        'large_asteroid' => 10.0,
-        'extreme_asteroid' => 15.0,
+        'large_asteroid' => 20.0,
+        'extreme_asteroid' => 35.0,
     ],
 
     'resource_min_distances' => [
         'low_value' => 1 * $asteroid_to_station_distance,
-        'medium_value' => 5 * $asteroid_to_station_distance,
-        'high_value' => 12 * $asteroid_to_station_distance,
-        'extreme_value' => 20 * $asteroid_to_station_distance,
+        'medium_value' => 15 * $asteroid_to_station_distance,
+        'high_value' => 30 * $asteroid_to_station_distance,
+        'extreme_value' => 40 * $asteroid_to_station_distance,
     ],
 
     'resource_pools' => [

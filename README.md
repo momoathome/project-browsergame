@@ -92,9 +92,10 @@ sail artisan meilisearch:configure
 
 ``` bash
 sail artisan db:seed --class=AsteroidSeeder
-sail artisan game:generate-test-stations
+sail artisan game:generate-test-stations --count=25 --use-regions
 sail artisan game:cleanup-test-stations --all
-sail artisan test:station-spawns 100 --refresh --debug
+sail artisan universe:reserve-regions 50 --refresh
+sail artisan test:station-spawns 50 --refresh --debug --clear-cache --reserve-regions=0 --test-reserved --show-all
 sail artisan make:extended ModelNamen --m --c --r --s
 ```
 

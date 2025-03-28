@@ -15,9 +15,6 @@ class AppServiceProvider extends ServiceProvider
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('Debugbar', \Barryvdh\Debugbar\Facades\Debugbar::class);
 
-        $this->app->singleton(AsteroidGenerator::class, function () {
-            return new AsteroidGenerator();
-        });
     }
 
     /**

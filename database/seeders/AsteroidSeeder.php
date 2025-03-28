@@ -4,25 +4,46 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
+use Orion\Modules\Asteroid\Services\UniverseService;
 use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 class AsteroidSeeder extends Seeder
 {
-  protected $config;
-
-  public function __construct()
-  {
-    $this->config = config('game.asteroids');
+  public function __construct(
+    private readonly UniverseService $universeService,
+    private readonly AsteroidGenerator $asteroidGenerator
+  ) {
+    $this->initialize();
   }
+
+  private array $config = [];
+
+  private function initialize(): void
+  {
+    $this->config = config('game.core');
+  }
+
   public function run()
   {
     $startTime = microtime(true);
+    Cache::forget('universe:reserved-station-regions');
+    
+    DB::table('asteroids')->truncate();
+    DB::table('asteroid_resources')->truncate();
 
-    DB::table(table: 'asteroids')->truncate();
-    $asteroidGenerator = app(AsteroidGenerator::class);
+    $reservedRegions = $this->universeService->reserveStationRegions(25, true);
+    $this->command->info("Successfully " . count($reservedRegions) . " regions reserved.");
+
+    // Vor der Asteroid-Generierung validieren wir, dass alle Regionen frei von Kollisionen sind
+    $validRegions = $this->universeService->validateReservedRegions($reservedRegions);
+    $this->command->info("Validation: " . count($validRegions) . " of " . count($reservedRegions) . " regions are valid.");
+
+    // Dann Asteroiden generieren
     $count = $this->config['asteroid_count'];
-    $asteroidGenerator->generateAsteroids($count);
+    $this->command->info("Generate {$count} Asteroids...");
+    $this->asteroidGenerator->generateAsteroids($count);
 
     $endTime = microtime(true);
     $executionTime = $endTime - $startTime;
@@ -39,9 +60,9 @@ class AsteroidSeeder extends Seeder
     $executionTime = $endTime - $startTime;
     $this->command->info("Asteroids imported and indexed in " . number_format($executionTime, 2) . " seconds.");
 
-    $this->command->info("Konfiguriere Meilisearch für optimale Suche...");
+    $this->command->info("Configure Meilisearch for optimal search...");
     Artisan::call('meilisearch:configure');
-    $this->command->info("Meilisearch-Konfiguration abgeschlossen.");
+    $this->command->info("Meilisearch configuration completed.");
   }
 }
 

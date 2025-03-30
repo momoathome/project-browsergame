@@ -8,3 +8,5 @@ export const maxInnerZoomLevel = 1;
 export const baseZoomLevel = 0.50;
 export const zoomDelta = 0.025; // 5% = 0.025
 export const initialZoom = 0.50;
+
+export const size = 140_000;

@@ -8,6 +8,7 @@ import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
+import { Quadtree } from '@/Utils/quadTree';
 import * as config from '@/config';
 
 const props = defineProps<{
@@ -32,6 +33,9 @@ const stationBaseSize = config.stationImageBaseSize;
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
+const asteroidsQuadtree = ref<Quadtree | null>(null);
+const stationsQuadtree = ref<Quadtree | null>(null);
+
 // config
 const maxOuterZoomLevel = ref(config.maxOuterZoomLevel);
 const maxInnerZoomLevel = ref(config.maxInnerZoomLevel);
@@ -42,6 +46,7 @@ const pointY = ref(0);
 const startDrag = { x: 0, y: 0 };
 const isDragging = ref(false);
 const moveSpeed = ref(10);
+const pendingDraw = ref(false);
 
 const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
@@ -87,6 +92,19 @@ onMounted(() => {
     searchForm.query = props.search_query;
   }
 
+  const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size / 2, height: config.size / 2 };
+  asteroidsQuadtree.value = new Quadtree(universeBounds);
+  stationsQuadtree.value = new Quadtree(universeBounds);
+
+  // Füge Asteroiden und Stationen zum Quadtree hinzu
+  props.asteroids.forEach(asteroid => {
+    asteroidsQuadtree.value?.insert({ x: asteroid.x, y: asteroid.y, data: asteroid });
+  });
+
+  props.stations.forEach(station => {
+    stationsQuadtree.value?.insert({ x: station.x, y: station.y, data: station });
+  });
+
   window.addEventListener('resize', adjustCanvasSize);
   window.addEventListener('keydown', onKeyDown);
 });
@@ -119,6 +137,16 @@ function drawScene() {
   ctx.value.restore();
 }
 
+function scheduleDraw() {
+  if (!pendingDraw.value) {
+    pendingDraw.value = true;
+    requestAnimationFrame(() => {
+      drawScene();
+      pendingDraw.value = false;
+    });
+  }
+}
+
 const userScanRange = computed(() => {
   const scanRangeAttribute = usePage().props.userAttributes.find(
     (attr) => attr.attribute_name === 'scan_range'
@@ -137,21 +165,45 @@ function drawUserScanRange() {
   }
 }
 
-function isObjectVisible(object: { x: number; y: number }, visibleArea: { left: number; top: number; right: number; bottom: number }) {
-  return object.x >= visibleArea.left &&
-    object.x <= visibleArea.right &&
-    object.y >= visibleArea.top &&
-    object.y <= visibleArea.bottom;
+function isObjectVisible(object: { x: number; y: number; pixel_size?: number }, visibleArea: { left: number; top: number; right: number; bottom: number }) {
+  // Berechne den Abstand zum sichtbaren Bereich basierend auf der Pixelgröße
+  const buffer = object.pixel_size ? object.pixel_size * asteroidBaseSize * scale.value : 100;
+
+  if (object.x < visibleArea.left - buffer ||
+    object.x > visibleArea.right + buffer ||
+    object.y < visibleArea.top - buffer ||
+    object.y > visibleArea.bottom + buffer) {
+    return false;
+  }
+
+  return true;
 }
 
 function drawStationsAndAsteroids(visibleArea: { left: number; top: number; right: number; bottom: number }) {
-  props.stations.forEach(station => {
+  if (!asteroidsQuadtree.value || !stationsQuadtree.value) return;
+  
+  const queryRange = {
+    x: (visibleArea.left + visibleArea.right) / 2,
+    y: (visibleArea.top + visibleArea.bottom) / 2,
+    width: (visibleArea.right - visibleArea.left) / 2,
+    height: (visibleArea.bottom - visibleArea.top) / 2
+  };
+
+  // Nur sichtbare Stationen rendern
+  const potentiallyVisibleStations = stationsQuadtree.value.query(queryRange);
+  potentiallyVisibleStations.forEach(item => {
+    const station = item.data;
+    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
     if (isObjectVisible(station, visibleArea)) {
       drawStation(station.x, station.y, station.name, station.id);
     }
   });
 
-  props.asteroids.forEach(asteroid => {
+  // Nur sichtbare Asteroiden rendern
+  const potentiallyVisibleAsteroids = asteroidsQuadtree.value.query(queryRange);
+  potentiallyVisibleAsteroids.forEach(item => {
+    const asteroid = item.data;
+    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
     if (isObjectVisible(asteroid, visibleArea)) {
       drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
     }
@@ -253,7 +305,7 @@ function onMouseMove(e: MouseEvent) {
   if (isDragging.value) {
     pointX.value = e.clientX - startDrag.x;
     pointY.value = e.clientY - startDrag.y;
-    requestAnimationFrame(drawScene);
+    scheduleDraw();
   }
 }
 

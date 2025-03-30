@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useForm, usePage, router } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -8,7 +8,8 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
-import { timeFormat } from '@/Utils/format';
+import { useAsteroidMining } from '@/Composables/useAsteroidMining';
+import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 
 interface Content {
   data: Asteroid | Station;
@@ -26,50 +27,100 @@ const props = defineProps<{
   userScanRange: number,
 }>();
 
-const asteroid = computed<Asteroid>(() => props.content?.data);
-const station = computed<Station>(() => props.content?.data);
-const formattedDuration = computed(() => calculateMiningDuration());
+// Computed properties für Asteroid und Station
+const asteroid = computed<Asteroid>(() => props.content?.data as Asteroid);
+const station = computed<Station>(() => props.content?.data as Station);
 
+// Dialog Ref
+const dialog = ref();
+
+// Formular Initialisierung
 const form = useForm({
   asteroid_id: null as number | null,
   station_user_id: null as number | null,
   spacecrafts: {
     Merlin: 0,
-    Comet: 0,
+    Comet: 0, 
     Javelin: 0,
-    Sentinel: 0,
+    Sentinel: 0, 
     Probe: 0,
-    Ares: 0,
-    Nova: 0,
-    Horus: 0,
-    Reaper: 0,
+    Ares: 0, 
+    Nova: 0, 
+    Horus: 0, 
+    Reaper: 0, 
     Mole: 0,
-    Titan: 0,
-    Nomad: 0,
+    Titan: 0, 
+    Nomad: 0, 
     Hercules: 0,
   }
 });
 
+const contentComputed = computed(() => props.content);
+// Spacecraft utilities importieren
+const {
+  setMaxAvailableUnits,
+  setMinNeededUnits,
+  calculateTotalCombatPower,
+  calculateTotalCargoCapacity
+} = useSpacecraftUtils(props.spacecrafts, form.spacecrafts, contentComputed);
+
+
+const { miningDuration } = useAsteroidMining(asteroid, form.spacecrafts, props.spacecrafts);
+
+// Computed Properties
+const totalCombatPower = computed(() => calculateTotalCombatPower());
+const totalCargoCapacity = computed(() => calculateTotalCargoCapacity());
+const formattedDuration = miningDuration;
+
+const calculateCargoPercentage = computed(() => {
+  if (!asteroid.value || !asteroid.value.resources) return 0;
+  const totalResources = asteroid.value.resources.reduce((total, resource) => total + resource.amount, 0);
+  return Math.round((totalCargoCapacity.value / totalResources) * 100);
+});
+
+// Berechnung der Distanz zum Asteroid
+const userStation = usePage().props.stations.find(station =>
+  station.user_id === usePage().props.auth.user.id
+);
+
+const distance = computed(() => {
+  if (asteroid.value) {
+    const userX = userStation.x;
+    const userY = userStation.y;
+    const asteroidX = asteroid.value.x;
+    const asteroidY = asteroid.value.y;
+    return Math.round(Math.sqrt(Math.pow(userX - asteroidX, 2) + Math.pow(userY - asteroidY, 2)));
+  }
+  return 0;
+});
+
+const canScanAsteroid = computed(() => {
+  if (asteroid.value && distance.value) {
+    return distance.value <= props.userScanRange;
+  }
+  return false;
+});
+
+// Aktionsfunktionen
 function exploreAsteroid() {
   if (asteroid.value) {
     form.asteroid_id = asteroid.value.id;
   }
 
-  // if form spacecrafts are all 0, return
+  // Wenn keine Raumschiffe ausgewählt sind, abbrechen
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
-  if (noSpacecraftSelected) {
-    return;
-  }
+  if (noSpacecraftSelected) return;
 
   form.post(route('asteroidMap.update'), {
-    onSuccess: () => {
-      close();
-    },
+    onSuccess: () => close()
   });
 }
 
 function fastExploreAsteroid() {
-  setMinNeededUnits();
+  const minUnits = setMinNeededUnits();
+  Object.keys(form.spacecrafts).forEach(key => {
+    form.spacecrafts[key] = minUnits[key] || 0;
+  });
   exploreAsteroid();
 }
 
@@ -78,26 +129,43 @@ function attackUser() {
     form.station_user_id = station.value.user_id;
   }
 
-  // if form spacecrafts are all 0, return
+  // Wenn keine Raumschiffe ausgewählt sind, abbrechen
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
-  if (noSpacecraftSelected) {
-    return;
-  }
+  if (noSpacecraftSelected) return;
 
   form.post(route('asteroidMap.combat'), {
-    onSuccess: () => {
-      close();
-    },
+    onSuccess: () => close()
   });
 }
 
+// Modal schließen
 const close = () => {
-  form.reset();
+  // Reset jedes Feldes einzeln statt form.reset() zu verwenden
+  Object.keys(form.spacecrafts).forEach(key => {
+    form.spacecrafts[key] = 0;
+  });
+  form.asteroid_id = null;
+  form.station_user_id = null;
+
   emit('close');
 };
 
-const dialog = ref();
+// UI Aktionen
+function setMaxUnits() {
+  const maxUnits = setMaxAvailableUnits();
+  Object.keys(maxUnits).forEach(key => {
+    form.spacecrafts[key] = maxUnits[key];
+  });
+}
 
+function setMinUnits() {
+  const minUnits = setMinNeededUnits();
+  Object.keys(form.spacecrafts).forEach(key => {
+    form.spacecrafts[key] = minUnits[key] || 0;
+  });
+}
+
+// Modal Anzeige/Verbergen Logik
 watch(() => props.show, () => {
   if (props.show) {
     document.body.style.overflow = 'hidden';
@@ -110,230 +178,21 @@ watch(() => props.show, () => {
   }
 });
 
+// Escape-Taste zum Schließen
 const closeOnEscape = (e) => {
   if (e.key === 'Escape') {
     e.preventDefault();
-
-    if (props.show) {
-      close();
-    }
+    if (props.show) close();
   }
 };
 
-const totalCombatPower = computed(() => {
-  let total = 0;
-
-  for (const spacecraft in form.spacecrafts) {
-    const combat = props.spacecrafts.find((s: Spacecraft) => s.name === spacecraft)?.combat;
-    if (combat !== undefined) {
-      total += combat * form.spacecrafts[spacecraft];
-    }
-  }
-
-  return total;
-});
-
-const totalCargoCapacity = computed(() => {
-  let total = 0;
-
-  for (const spacecraft in form.spacecrafts) {
-    const cargo = props.spacecrafts.find((s: Spacecraft) => s.name === spacecraft)?.cargo;
-    if (cargo !== undefined) {
-      total += cargo * form.spacecrafts[spacecraft];
-    }
-  }
-
-  return total;
-});
-
-const calculateCargoPercentage = computed(() => {
-  if (!asteroid.value) return 0;
-
-  const totalResources = asteroid.value.resources.reduce((total, resource) => total + resource.amount, 0);
-  
-  return Math.round((totalCargoCapacity.value / totalResources) * 100);
-});
-
-const calculateMiningDuration = () => {
-  if (!asteroid.value) return '00:00';
-  
-  const anySpacecraftSelected = Object.values(form.spacecrafts).some(value => value > 0);
-  if (!anySpacecraftSelected) return '00:00';
-  
-  // Niedrigste Geschwindigkeit finden
-  let lowestSpeed = 0;
-  
-  for (const spacecraftName in form.spacecrafts) {
-    const count = form.spacecrafts[spacecraftName];
-    if (count > 0) {
-      const spacecraft = props.spacecrafts.find(s => s.name === spacecraftName);
-      if (spacecraft && spacecraft.speed > 0 && (lowestSpeed === 0 || spacecraft.speed < lowestSpeed)) {
-        lowestSpeed = spacecraft.speed;
-      }
-    }
-  }
-  
-  const userStation = usePage().props.stations.find(station => 
-    station.user_id === usePage().props.auth.user.id
-  );
-  
-  // Distanz berechnen
-  const distance = Math.sqrt(
-    Math.pow(userStation.x - asteroid.value.x, 2) + 
-    Math.pow(userStation.y - asteroid.value.y, 2)
-  );
-  
-  // Grundlegende Reisedauer berechnen - exakt wie im Backend
-  const travelFactor = 1;
-  const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
-  let calculatedDuration = Math.max(
-    baseDuration, 
-    Math.floor(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor)
-  );
-  
-  // Aktionsspezifische Zeitberechnung für Mining
-  if (props.content?.type === 'asteroid') {
-    // Gesamte Mining-Geschwindigkeit berechnen - Stellen wir sicher, dass die Werte korrekt sind
-    let totalMiningSpeed = 0;
-    
-    // Debug-Ausgabe zur Prüfung
-    console.log("Ausgewählte Raumschiffe:");
-    
-    for (const spacecraftName in form.spacecrafts) {
-      const count = form.spacecrafts[spacecraftName];
-      if (count > 0) {
-        const spacecraft = props.spacecrafts.find(s => s.name === spacecraftName);
-        
-        if (spacecraft && spacecraft.type === 'Miner') {
-          // Stellen wir sicher, dass operation_speed einen korrekten Wert hat
-          const opSpeed = spacecraft.operation_speed || 1;
-          console.log(`${spacecraftName}: ${count}x, operation_speed: ${opSpeed}`);
-          totalMiningSpeed += count * opSpeed;
-        }
-      }
-    }
-    
-    console.log("Total mining speed:", totalMiningSpeed);
-    
-    // Diminishing returns auf die Operationsgeschwindigkeit anwenden
-    const effectiveOperationSpeed = applyDiminishingReturns(totalMiningSpeed);
-    console.log("Effective operation speed:", effectiveOperationSpeed);
-    
-    // Dauer basierend auf der effektiven Operationsgeschwindigkeit berechnen - exakt wie im Backend
-    if (totalMiningSpeed > 0) {
-      calculatedDuration = Math.max(10, Math.floor(calculatedDuration / (effectiveOperationSpeed / 5)));
-    }
-    
-    console.log("Calculated duration:", calculatedDuration);
-  }
-  
-  return timeFormat(calculatedDuration);
-};
-
-// Hilfsfunktion für abnehmende Rückgabewerte (diminishing returns) - identisch mit Backend
-const applyDiminishingReturns = (speed) => {
-  // Basis-Geschwindigkeit (erster Miner hat vollen Effekt)
-  const baseValue = Math.min(1, speed);
-  
-  // Restliche Geschwindigkeit mit abnehmendem Rückgabewert
-  let remainingValue = 0;
-  if (speed > 1) {
-    // Logarithmische Funktion für abnehmende Rückgabewerte
-    remainingValue = 0.85 * (Math.log10(speed) + 1);
-  }
-  
-  // Kombiniere Basis- und abnehmenden Wert, aber nie unter 1
-  return Math.max(1, baseValue + remainingValue);
-};
-
-const setMaxAvailableUnits = () => {
-  const MaxAvailableUnits = {};
-
-  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    if (spacecraft.type !== "Miner") {
-      // Berücksichtige nur die verfügbaren Schiffe (count - locked_count)
-      MaxAvailableUnits[spacecraft.name] = spacecraft.count - (spacecraft.locked_count || 0);
-    }
-  });
-
-  form.spacecrafts = MaxAvailableUnits;
-}
-
-const setMinNeededUnits = () => {
-  const MinNeededUnits = {};
-  const totalAsteroidResources = props.content!.data.resources.reduce((total, resource) => total + resource.amount, 0);
-  let remainingResources = totalAsteroidResources;
-
-  // Funktion zum Verarbeiten von Raumschiffen eines bestimmten Typs
-  const processSpacecraftType = (type: string) => {
-    props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-      if (remainingResources <= 0) {
-        MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
-        return;
-      }
-
-      if (spacecraft.type === type) {
-        const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
-        const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
-        const usedUnits = Math.min(neededUnits, availableCount);
-
-        MinNeededUnits[spacecraft.name] = usedUnits;
-        remainingResources -= usedUnits * spacecraft.cargo;
-      }
-    });
-  };
-
-  // Verarbeite zuerst Miner und transporter
-  processSpacecraftType("Miner");
-  processSpacecraftType("Transporter");
-
-  // Schließlich alle anderen Raumschifftypen
-  props.spacecrafts.forEach((spacecraft: Spacecraft) => {
-    if (remainingResources <= 0) {
-      MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
-      return;
-    }
-
-    if (spacecraft.type !== "Miner" && spacecraft.type !== "Transporter") {
-      const availableCount = spacecraft.count - (spacecraft.locked_count || 0);
-      const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
-      const usedUnits = Math.min(neededUnits, availableCount);
-
-      MinNeededUnits[spacecraft.name] = usedUnits;
-      remainingResources -= usedUnits * spacecraft.cargo;
-    }
-  });
-
-  form.spacecrafts = MinNeededUnits;
-}
-
+// Lifecycle Hooks
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
 
 onUnmounted(() => {
   document.removeEventListener('keydown', closeOnEscape);
   document.body.style.overflow = 'visible';
 });
-
-const userStation = usePage().props.stations.find(station => station.user_id === usePage().props.auth.user.id);
-
-// calculate the distance between the userstation x,y and the asteroid x,y if asteroid is not undefined
-const distance = computed(() => {
-  if (asteroid.value) {
-    const userX = userStation.x;
-    const userY = userStation.y;
-    const asteroidX = asteroid.value.x;
-    const asteroidY = asteroid.value.y;
-    return Math.round(Math.sqrt(Math.pow(userX - asteroidX, 2) + Math.pow(userY - asteroidY, 2)));
-  }
-});
-
-const canScanAsteroid = computed(() => {
-  if (asteroid.value && distance.value) {
-    return distance.value <= props.userScanRange;
-  }
-});
-
-// const canAttackUser = computed(() => userStation && distance.value <= props.userScanRange);
 </script>
 
 <template>
@@ -353,6 +212,7 @@ const canScanAsteroid = computed(() => {
         leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-80">
         <div v-show="show" class="flex h-full items-center justify-around gap-24">
 
+          <!-- Asteroid Image with resource svg -->
           <div v-if="content?.type === 'asteroid'" class="flex flex-col justify-center relative">
             <div class="flex flex-col items-center">
               <h1 class="text-2xl flex justify-center mb-20 text-white relative z-10">{{ title }}</h1>
@@ -373,6 +233,7 @@ const canScanAsteroid = computed(() => {
             </div>
           </div>
 
+          <!-- Station Image -->
           <div v-if="content?.type === 'station'" class="flex flex-col justify-center relative">
             <div class="flex flex-col items-center gap-12">
 
@@ -384,6 +245,7 @@ const canScanAsteroid = computed(() => {
             </div>
           </div>
 
+          <!-- Units, Unit Information and action Buttons  -->
           <div class="px-12 py-12 flex flex-col gap-4 bg-gray-800 rounded-3xl text-white relative">
             <button class="absolute top-3 right-3 p-2" @click="close">X</button>
             <div class="bg-base rounded-lg px-4 pt-4 pb-2 flex flex-col gap-2">
@@ -392,20 +254,21 @@ const canScanAsteroid = computed(() => {
                   <p class="text-secondary">Combat: <span class="text-white">{{ numberFormat(totalCombatPower) }}</span>
                   </p>
                   <p class="text-secondary">Cargo: <span class="text-white">
-                    {{ numberFormat(totalCargoCapacity) }} <span v-if="canScanAsteroid">({{ calculateCargoPercentage }}%)</span> 
-                  </span>
+                      {{ numberFormat(totalCargoCapacity) }} 
+                      <span v-if="canScanAsteroid">({{ calculateCargoPercentage }}%)</span>
+                    </span>
                   </p>
                   <p class="text-secondary">Travel Time: <span class="text-white">{{ formattedDuration }}</span></p>
                 </div>
                 <div class="flex gap-2">
                   <div class="relative group z-10" v-if="content?.type === 'asteroid' && canScanAsteroid">
-                    <SecondaryButton @click="setMinNeededUnits">Min</SecondaryButton>
-                    <AppTooltip label="set the minimum needed Spacecrafts to mine all resources" position="bottom"
+                    <SecondaryButton @click="setMinUnits">Min</SecondaryButton>
+                    <AppTooltip label="set minimum needed Miners and Cargo" position="bottom"
                       class="!mt-2 text-pretty w-40" />
                   </div>
                   <div class="relative group z-10" v-if="content?.type === 'station'">
-                    <SecondaryButton @click="setMaxAvailableUnits">Max</SecondaryButton>
-                    <AppTooltip label="set all available Spacecrafts" position="bottom" class="!mt-3" />
+                    <SecondaryButton @click="setMaxUnits">Max</SecondaryButton>
+                    <AppTooltip label="set all available Fighters" position="bottom" class="!mt-3" />
                   </div>
                   <div class="relative group z-10" v-if="content?.type === 'asteroid'">
                     <PrimaryButton v-if="content?.type === 'asteroid'" @click="exploreAsteroid"

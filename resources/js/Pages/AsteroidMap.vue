@@ -3,7 +3,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { usePage, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
-import Search from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
+import AsteroidMapSearch from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
@@ -566,7 +566,7 @@ function selectAsteroid(asteroid: Asteroid) {
       </canvas>
 
       <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
-        <Search v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
+        <AsteroidMapSearch v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
       </div>
 
       <AsteroidMapDropdown v-if="searched_asteroids && searched_asteroids.length > 0"

@@ -34,19 +34,20 @@ return [
     ],
 
     // Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
-    'station_safety_distance' => [
+    'size_min_distance' => [
         'base' => $asteroid_to_station_distance,
         'small_asteroid' => 1.0,
         'medium_asteroid' => 4.0,
         'large_asteroid' => 20.0,
-        'extreme_asteroid' => 35.0,
+        'extreme_asteroid' => 40.0,
     ],
 
     'resource_min_distances' => [
-        'low_value' => 1 * $asteroid_to_station_distance,
-        'medium_value' => 15 * $asteroid_to_station_distance,
-        'high_value' => 30 * $asteroid_to_station_distance,
-        'extreme_value' => 40 * $asteroid_to_station_distance,
+        'base' => $asteroid_to_station_distance,
+        'low_value' => 1.0,
+        'medium_value' => 15.0,
+        'high_value' => 30.0,
+        'extreme_value' => 40.0,
     ],
 
     'resource_pools' => [

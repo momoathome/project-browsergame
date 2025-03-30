@@ -101,10 +101,6 @@ class AsteroidGenerator
       $reservedRegions = $this->universeService->reserveStationRegions(25);
     }
 
-/*     $strategicAsteroids = $this->config['strategic_asteroid_count'] ?? 20;
-    // Zuerst strategische Asteroiden um Stationsstandorte platzieren
-    $this->placeStrategicAsteroids($strategicAsteroids); */
-
     $asteroids = [];
     $maxFailures = $count * 0.1;
     $failures = 0;
@@ -229,8 +225,8 @@ class AsteroidGenerator
 
   private function calculateMinStationDistance(string $size, array $resources): int
   {
-    $baseDistance = $this->asteroidConfig['station_safety_distance']['base'];
-    $sizeModifier = $this->asteroidConfig['station_safety_distance']["{$size}_asteroid"];
+    $baseDistance = $this->asteroidConfig['size_min_distance']['base'];
+    $sizeModifier = $this->asteroidConfig['size_min_distance']["{$size}_asteroid"];
     $distance = $baseDistance * $sizeModifier;
 
     $resourceDistance = $this->getResourceMinDistance($resources);
@@ -240,23 +236,24 @@ class AsteroidGenerator
 
   private function getResourceMinDistance(array $resources): int
   {
-    if (empty($resources)) {
-      return 0;
-    }
-
-    $maxDistance = 0;
-
-    foreach ($resources as $resourceType => $amount) {
-      foreach ($this->asteroidConfig['resource_pools'] as $poolName => $pool) {
-        if (in_array($resourceType, $pool['resources'])) {
-          $distance = $this->asteroidConfig['resource_min_distances'][$poolName] ?? 0;
-          $maxDistance = max($maxDistance, $distance);
-          break;
-        }
+      if (empty($resources)) {
+          return 0;
       }
-    }
-
-    return $maxDistance;
+  
+      $baseDistance = $this->asteroidConfig['resource_min_distances']['base'];
+      $maxModifier = 0;
+  
+      foreach ($resources as $resourceType => $amount) {
+          foreach ($this->asteroidConfig['resource_pools'] as $poolName => $pool) {
+              if (in_array($resourceType, $pool['resources'])) {
+                  $modifier = $this->asteroidConfig['resource_min_distances'][$poolName] ?? 1.0;
+                  $maxModifier = max($maxModifier, $modifier);
+                  break;
+              }
+          }
+      }
+  
+      return $baseDistance * $maxModifier;
   }
 
   private function generateAsteroidCoordinate(int $minStationDistance, array $resources = []): array
@@ -586,128 +583,5 @@ class AsteroidGenerator
     }
 
     return $highestLevel;
-  }
-
-  public function placeStrategicAsteroids(int $asteroidsPerStation = 12): array
-  {
-    $reservedRegions = $this->getReservedStationRegions();
-    if (empty($reservedRegions)) {
-      \Log::warning("Keine reservierten Stationsstandorte gefunden. Überspringe strategische Asteroiden-Platzierung.");
-      return [];
-    }
-
-    $createdAsteroids = [];
-    $strategicAsteroidBatch = [];
-    $strategicResourcesBatch = [];
-
-    foreach ($reservedRegions as $region) {
-      $stationX = $region['station_x'];
-      $stationY = $region['station_y'];
-      $innerRadius = $region['inner_radius'];
-      $outerRadius = $region['outer_radius'];
-
-      // Erstelle eine Asteroiden-Verteilung um die Station
-      for ($i = 0; $i < $asteroidsPerStation; $i++) {
-        // Zufällige Position im Ring zwischen innerem und äußerem Radius
-        $angle = rand(0, 360) * M_PI / 180;
-
-        // Wurzelfunktion für gleichmäßigere Flächenverteilung
-        $randomFactor = sqrt(rand(1, 10000) / 10000);
-        $distance = $innerRadius + $randomFactor * ($outerRadius - $innerRadius);
-
-        $x = (int) ($stationX + $distance * cos($angle));
-        $y = (int) ($stationY + $distance * sin($angle));
-
-        // Sicherstellen, dass wir innerhalb des Universums sind
-        $universeSize = $this->config['size'];
-        $borderDistance = $this->config['border_distance'] ?? ($universeSize / 10);
-
-        $x = max($borderDistance, min($universeSize - $borderDistance, $x));
-        $y = max($borderDistance, min($universeSize - $borderDistance, $y));
-
-        // Prüfen, ob genug Abstand zu anderen Asteroiden eingehalten wird
-        $minDistance = $this->config['asteroid_distance'];
-        if ($this->isCollidingWithAsteroid($x, $y, $minDistance)) {
-          continue; // Überspringen, wenn zu nahe an anderen Asteroiden
-        }
-
-        // Je nach Entfernung unterschiedliche Größe wählen
-        $distanceFactor = ($distance - $innerRadius) / ($outerRadius - $innerRadius);
-
-        // Wahrscheinlichkeit für kleine und mittlere Asteroiden
-        $sizeWeights = [
-          'small' => 80 * $distanceFactor,
-          'medium' => 20 * $distanceFactor,
-          'large' => 0, // Keine großen Asteroiden in der Nähe von Stationen
-          'extreme' => 0, // Keine extremen Asteroiden in der Nähe von Stationen
-        ];
-
-        // Zufällige Größe basierend auf den Gewichtungen wählen
-        $totalWeight = array_sum($sizeWeights);
-        $random = rand(0, $totalWeight - 1);
-        $size = 'small'; // Standardgröße
-
-        $cumulative = 0;
-        foreach ($sizeWeights as $sizeType => $weight) {
-          $cumulative += $weight;
-          if ($random < $cumulative) {
-            $size = $sizeType;
-            break;
-          }
-        }
-
-        // Erstelle nur Asteroiden mit Low-Value-Ressourcen
-        $numResources = rand($this->asteroidConfig['num_resource_range'][0], $this->asteroidConfig['num_resource_range'][1]);
-        $lowValuePool = $this->asteroidConfig['resource_pools']['low_value']['resources'];
-
-        $resourceMap = [];
-        for ($j = 0; $j < $numResources; $j++) {
-          $resourceType = $lowValuePool[array_rand($lowValuePool)];
-          $resourceRatio = rand($this->asteroidConfig['resource_ratio_range'][0], $this->asteroidConfig['resource_ratio_range'][1]);
-
-          if (!isset($resourceMap[$resourceType])) {
-            $resourceMap[$resourceType] = 0;
-          }
-          $resourceMap[$resourceType] += $resourceRatio;
-        }
-
-        $asteroidBaseFaktor = $this->generateAsteroidBaseFaktor(
-          $this->asteroidConfig['asteroid_faktor']['min'],
-          $this->asteroidConfig['asteroid_faktor']['max']
-        );
-        $asteroidFaktorMultiplier = $this->generateAsteroidFaktorMultiplier($size);
-        $asteroidBaseMultiplier = $this->generateAsteroidBaseMultiplier($asteroidFaktorMultiplier);
-        $asteroidValue = $this->generateAsteroidValue($asteroidBaseFaktor, $asteroidBaseMultiplier);
-        $asteroidName = $this->generateAsteroidName($size, $asteroidValue, $asteroidBaseMultiplier);
-
-        $asteroid = [
-          'name' => $asteroidName,
-          'size' => $size,
-          'base' => $asteroidBaseFaktor,
-          'multiplier' => $asteroidBaseMultiplier,
-          'value' => $asteroidValue,
-          'x' => $x,
-          'y' => $y,
-          'pixel_size' => $this->transformAsteroidImgSize($size),
-        ];
-
-        $strategicAsteroidBatch[] = $asteroid;
-        $strategicResourcesBatch[] = $resourceMap;
-
-        // Zum räumlichen Index temporär hinzufügen
-        $this->addToSpatialIndex($x, $y, 'strategic-' . $region['id'] . '-' . $i);
-      }
-    }
-
-    // Speichere die strategischen Asteroiden in der Datenbank
-    if (!empty($strategicAsteroidBatch)) {
-      $created = $this->saveBatchedAsteroids($strategicAsteroidBatch);
-      $this->saveBatchedResources($created, $strategicResourcesBatch);
-      $createdAsteroids = $created;
-    }
-
-    \Log::info("Erfolgreich " . count($createdAsteroids) . " strategische Asteroiden um reservierte Stationsstandorte platziert");
-
-    return $createdAsteroids;
   }
 }

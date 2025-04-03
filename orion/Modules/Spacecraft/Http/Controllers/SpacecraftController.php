@@ -53,11 +53,14 @@ class SpacecraftController extends Controller
         $validated = $request->validate([
             'amount' => 'required|integer|min:1',
         ]);
-
         $quantity = $validated['amount'];
-        $user = $this->authManager->user();
 
-        $result = $this->spacecraftProductionService->startSpacecraftProduction($user->id, $spacecraft, $quantity);
+        $user = $this->authManager->user();
+        if (!$user instanceof \App\Models\User) {
+            throw new \LogicException('Authenticated user is not of type App\Models\User');
+        }
+
+        $result = $this->spacecraftProductionService->startSpacecraftProduction($user, $spacecraft, $quantity);
 
         if ($result['success']) {
             return redirect()->route('shipyard')->banner($result['message']);

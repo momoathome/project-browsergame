@@ -4,7 +4,7 @@ namespace Orion\Modules\Building\Services;
 
 use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
 use Orion\Modules\Building\Services\BuildingCostCalculator;
 use Orion\Modules\Building\Services\BuildingEffectCalculator;
@@ -14,7 +14,7 @@ class BuildingService
     public function __construct(
         private readonly BuildingRepository $buildingRepository,
         private readonly BuildingCostCalculator $buildingCostCalculator,
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly BuildingEffectCalculator $buildingEffectCalculator
     ) {
     }

@@ -29,7 +29,7 @@ class MarketController extends Controller
     public function update(Request $request, $id)
     {
         if (!$this->authManager->user()->hasRole('admin')) {
-            return redirect()->route('dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
         $validated = $request->validate([
@@ -46,8 +46,12 @@ class MarketController extends Controller
             'resource_id' => 'required|exists:markets,id',
             'amount' => 'required|integer|min:1',
         ]);
+        $user = $this->authManager->user();
+        if (!$user instanceof \App\Models\User) {
+            throw new \LogicException('Authenticated user is not of type App\Models\User');
+        }
 
-        $this->marketService->buyResource($validated['resource_id'], $validated['amount']);
+        $this->marketService->buyResource($user, $validated['resource_id'], $validated['amount']);
     }
 
     public function sell(Request $request)
@@ -56,7 +60,11 @@ class MarketController extends Controller
             'resource_id' => 'required|exists:markets,id',
             'amount' => 'required|integer|min:1',
         ]);
+        $user = $this->authManager->user();
+        if (!$user instanceof \App\Models\User) {
+            throw new \LogicException('Authenticated user is not of type App\Models\User');
+        }
 
-        $this->marketService->sellResource($validated['resource_id'], $validated['amount']);
+        $this->marketService->sellResource($user, $validated['resource_id'], $validated['amount']);
     }
 }

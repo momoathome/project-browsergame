@@ -3,14 +3,14 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 
 class ProcessQueue extends Command
 {
     protected $signature = 'queue:process';
     protected $description = 'Process the game action queue';
 
-    public function handle(QueueService $queueService)
+    public function handle(ActionQueueService $queueService)
     {
         $this->info('Processing game action queue...');
         $queueService->processQueue();

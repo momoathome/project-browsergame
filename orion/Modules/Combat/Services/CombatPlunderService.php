@@ -5,11 +5,12 @@ namespace Orion\Modules\Combat\Services;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Events\UpdateUserResources;
 use Orion\Modules\User\Models\UserResource;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\User\Enums\UserAttributeType;
 
 class CombatPlunderService
 {
@@ -102,6 +103,8 @@ class CombatPlunderService
             $userResource->amount += $amountToAdd;
             $userResource->save();
         });
+
+        broadcast(new UpdateUserResources($attacker));
     }
 
     /**
@@ -117,5 +120,7 @@ class CombatPlunderService
                 $userResource->save();
             }
         });
+
+        broadcast(new UpdateUserResources($defender));
     }
 }

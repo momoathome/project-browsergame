@@ -30,7 +30,10 @@ const saveQueueItemStates = (itemStates: Map<number, SavedQueueItemState>): void
 
 const queueItemStates = ref<Map<number, SavedQueueItemState>>(loadQueueItemStates())
 const page = usePage()
-const rawQueueData = computed<RawQueueItem[]>(() => page.props.queue || [])
+const localQueueData = ref<RawQueueItem[]>([])
+const rawQueueData = computed<RawQueueItem[]>(() => {
+  return [...(page.props.queue || []), ...localQueueData.value]
+})
 
 const processedQueueItems = ref<ProcessedQueueItem[]>([])
 
@@ -218,10 +221,19 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
   queueItemStates.value.delete(item.id);
   saveQueueItemStates(queueItemStates.value);
 
-  router.patch(route('queue.process'), {
-    preserveState: true,
-    preserveScroll: true,
-  })
+  /* attacker */
+  if (item.rawData.target_id !== page.props.auth.user.id) {
+    router.patch(route('queue.process'), {
+      preserveState: true,
+      preserveScroll: true,
+    })
+  } else {
+    /* defender */
+    localQueueData.value = localQueueData.value.filter(i => i.id !== item.rawData.id)
+    setTimeout(() => {
+      router.reload()
+    }, 1000)
+  }
 }
 
 const isDefendCombatAction = (item: RawQueueItem): boolean => {
@@ -232,6 +244,26 @@ let timerInterval: number | undefined
 onMounted(() => {
   processQueueData()
   timerInterval = setInterval(updateTimers, 1000)
+
+  window.Echo.private(`user.combat.${page.props.auth.user.id}`)
+    .listen('.user.attacked', (data) => {
+      console.log('Angriff erkannt:', data);
+
+      if (data.attackData) {
+        // Prüfe ob der Angriff bereits in einer der Queues ist
+        const existingInServerQueue = page.props.queue?.some(
+          item => item.id === data.attackData.id
+        );
+        const existingInLocalQueue = localQueueData.value.some(
+          item => item.id === data.attackData.id
+        );
+
+        if (!existingInServerQueue && !existingInLocalQueue) {
+          // Nur hinzufügen wenn noch nicht vorhanden
+          localQueueData.value = [...localQueueData.value, data.attackData];
+        }
+      }
+    });
 })
 
 watch(() => rawQueueData.value, () => {

@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Inertia\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 
@@ -13,7 +13,7 @@ use Orion\Modules\User\Services\UserAttributeService;
 class HandleInertiaRequests extends Middleware
 {
     public function __construct(
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly UserAttributeService $userAttributeService,
         private readonly UserResourceService $userResourceService
     ) {

@@ -34,7 +34,7 @@ class UserResourceController extends Controller
         $userResource = $this->userResourceService->getSpecificUserResource($user->id, $resourceId);
 
         if ($userResource) {
-            $this->userResourceService->addResourceAmount($user->id, $resourceId, $amount);
+            $this->userResourceService->addResourceAmount($user, $resourceId, $amount);
         } else {
             $this->userResourceService->createUserResource($user->id, $resourceId, $amount);
         }

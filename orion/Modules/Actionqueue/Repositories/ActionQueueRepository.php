@@ -7,7 +7,7 @@ use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 
-readonly class ActionqueueRepository
+readonly class ActionQueueRepository
 {
     public function getUserQueue(int $userId): Collection
     {

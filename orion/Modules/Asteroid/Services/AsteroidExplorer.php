@@ -55,10 +55,12 @@ class AsteroidExplorer
         $lowestSpeed = $this->findLowestSpeedOfSpacecrafts($spacecrafts);
         $distance = $this->calculateDistanceToAsteroid($user, $asteroid);
 
+        $spacecraft_flight_speed = config('game.core.spacecraft_flight_speed');
+
         // Grundlegende Reisedauer berechnen
         $travelFactor = 1;
         $baseDuration = max(10, round($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1)));
-        $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor));
+        $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor))  / $spacecraft_flight_speed;
 
         // Aktionstyp-spezifische Zeitberechnung
         if ($actionType !== null) {

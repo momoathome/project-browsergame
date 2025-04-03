@@ -32,8 +32,11 @@ class BuildingController extends Controller
     public function update(Building $building)
     {
         $user = $this->authManager->user();
+        if (!$user instanceof \App\Models\User) {
+            throw new \LogicException('Authenticated user is not of type App\Models\User');
+        }
         
-        $result = $this->buildingUpgradeService->startBuildingUpgrade($user->id, $building);
+        $result = $this->buildingUpgradeService->startBuildingUpgrade($user, $building);
         if ($result['success']) {
             return redirect()->route('buildings')->banner($result['message']);
         } else {

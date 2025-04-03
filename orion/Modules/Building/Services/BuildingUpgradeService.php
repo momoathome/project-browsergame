@@ -2,13 +2,15 @@
 
 namespace Orion\Modules\Building\Services;
 
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Events\UpdateUserResources;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Resource\Services\ResourceService;
@@ -26,7 +28,7 @@ class BuildingUpgradeService
         private readonly BuildingEffectCalculator $effectCalculator,
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly ResourceService $resourceService
     ) {
     }
@@ -34,27 +36,27 @@ class BuildingUpgradeService
     /**
      * Startet ein Gebäude-Upgrade, wenn alle Voraussetzungen erfüllt sind
      * 
-     * @param int $userId
+     * @param User $user
      * @param Building $building
      * @throws \Exception wenn Ressourcen nicht ausreichen
      */
-    public function startBuildingUpgrade(int $userId, Building $building): array
+    public function startBuildingUpgrade(User $user, Building $building): array
     {
         try {
             $currentCosts = $this->getBuildingUpgradeCosts($building);
 
             // Prüfe, ob der User genügend Ressourcen hat
-            $this->userResourceService->validateUserHasEnoughResources($userId, $currentCosts);
+            $this->userResourceService->validateUserHasEnoughResources($user->id, $currentCosts);
 
-            // Führe das Upgrade in einer Transaktion durch
-            DB::transaction(function () use ($userId, $building, $currentCosts) {
+            // Führe das Upgrade durch
+            DB::transaction(function () use ($user, $building, $currentCosts) {
                 // Ressourcen abziehen
-                $this->userResourceService->decrementUserResources($userId, $currentCosts);
+                $this->userResourceService->decrementUserResources($user, $currentCosts);
 
                 // Upgrade zur Queue hinzufügen
-                $this->addBuildingUpgradeToQueue($userId, $building);
+                $this->addBuildingUpgradeToQueue($user->id, $building);
             });
-            
+
             return [
                 'success' => true,
                 'message' => "Upgrade von {$building->details->name} wurde gestartet"
@@ -66,12 +68,12 @@ class BuildingUpgradeService
             ];
         } catch (\Exception $e) {
             \Log::error("Fehler beim Gebäude-Upgrade:", [
-                'user_id' => $userId,
+                'user_id' => $user->id,
                 'building_id' => $building->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
                 'success' => false,
                 'message' => 'Fehler beim Upgrade: ' . $e->getMessage()
@@ -225,7 +227,7 @@ class BuildingUpgradeService
         }
     }
 
-       /**
+    /**
      * Aktualisiert die Benutzerattribute basierend auf den Gebäudeeffekten
      * 
      * @param int $userId Die ID des Benutzers
@@ -239,7 +241,7 @@ class BuildingUpgradeService
         $effectConfig = $buildingType->getEffectConfiguration();
         $effectType = $effectConfig['type'] ?? BuildingEffectType::ADDITIVE;
         $updatedAttributes = collect();
-    
+
         // Debug-Informationen hinzufügen
         \Log::debug("Updating user attributes for building", [
             'user_id' => $userId,
@@ -248,15 +250,15 @@ class BuildingUpgradeService
             'building_level' => $building->level,
             'effect_value' => $building->effect_value
         ]);
-    
+
         // Wenn keine Attribute definiert sind, frühzeitig beenden
         if (empty($effectAttributeNames)) {
             return $updatedAttributes;
         }
-    
+
         collect($effectAttributeNames)->each(function ($attributeNameStr) use ($userId, $building, $effectType, &$updatedAttributes) {
             $attributeName = UserAttributeType::tryFrom($attributeNameStr);
-    
+
             // Falls die Umwandlung fehlschlägt, überspringen
             if ($attributeName === null) {
                 \Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
@@ -265,10 +267,10 @@ class BuildingUpgradeService
                 ]);
                 return;
             }
-    
+
             // Den vorberechneten effect_value direkt übernehmen
             $valueToApply = ceil($building->effect_value);
-            
+
             // Attribut aktualisieren - replace=true, damit der Wert ersetzt und nicht addiert wird
             $updatedAttribute = $this->userAttributeService->updateUserAttribute(
                 $userId,
@@ -277,7 +279,7 @@ class BuildingUpgradeService
                 false,  // nicht multiplizieren
                 true    // ersetzen
             );
-    
+
             if ($updatedAttribute) {
                 $updatedAttributes->put($attributeNameStr, [
                     'name' => $attributeNameStr,
@@ -293,7 +295,7 @@ class BuildingUpgradeService
                 ]);
             }
         });
-    
+
         return $updatedAttributes;
     }
 

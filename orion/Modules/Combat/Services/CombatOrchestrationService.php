@@ -10,7 +10,7 @@ use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
@@ -18,7 +18,7 @@ readonly class CombatOrchestrationService
 {
     public function __construct(
         private readonly CombatService $combatService,
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly UserService $userService,
         private readonly SpacecraftService $spacecraftService,
         private readonly AsteroidExplorer $asteroidExplorer,

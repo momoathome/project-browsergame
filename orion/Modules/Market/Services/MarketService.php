@@ -4,13 +4,14 @@ namespace Orion\Modules\Market\Services;
 
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\DB;
-use Orion\Modules\Market\Exceptions\InsufficientCreditsException;
-use Orion\Modules\Market\Exceptions\InsufficientResourceException;
-use Orion\Modules\Market\Exceptions\InsufficientStorageException;
-use Orion\Modules\Market\Repositories\MarketRepository;
-use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\User\Services\UserResourceService;
+use App\Events\UpdateUserResources;
 use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Market\Repositories\MarketRepository;
+use Orion\Modules\Market\Exceptions\InsufficientCreditsException;
+use Orion\Modules\Market\Exceptions\InsufficientStorageException;
+use Orion\Modules\Market\Exceptions\InsufficientResourceException;
 
 readonly class MarketService
 {
@@ -32,10 +33,8 @@ readonly class MarketService
         $this->marketRepository->updateResourceAmount($resourceId, $stock, $cost);
     }
 
-    public function buyResource($resourceId, $quantity)
+    public function buyResource($user, $resourceId, $quantity)
     {
-        $user = $this->authManager->user();
-
         try {
             DB::transaction(function () use ($resourceId, $quantity, $user) {
                 $marketItem = $this->marketRepository->getMarketItem($resourceId);
@@ -66,7 +65,7 @@ readonly class MarketService
                 $this->userAttributeService->subtractAttributeAmount($user->id, UserAttributeType::CREDITS, $totalCost);
 
                 if ($userResource) {
-                    $this->userResourceService->addResourceAmount($user->id, $marketItem->resource_id, $quantity);
+                    $this->userResourceService->addResourceAmount($user, $marketItem->resource_id, $quantity);
                 } else {
                     $this->userResourceService->createUserResource($user->id, $marketItem->resource_id, $quantity);
                 }
@@ -84,10 +83,8 @@ readonly class MarketService
         }
     }
 
-    public function sellResource($resourceId, $quantity)
+    public function sellResource($user, $resourceId, $quantity)
     {
-        $user = $this->authManager->user();
-
         try {
             DB::transaction(function () use ($resourceId, $quantity, $user) {
                 $marketItem = $this->marketRepository->getMarketItem($resourceId);
@@ -100,7 +97,7 @@ readonly class MarketService
                 }
 
                 // Subtract resources from user
-                $this->userResourceService->subtractResourceAmount($user->id, $marketItem->resource_id, $quantity);
+                $this->userResourceService->subtractResourceAmount($user, $marketItem->resource_id, $quantity);
 
                 // Update market stock
                 $this->marketRepository->increaseStock($resourceId, $quantity);

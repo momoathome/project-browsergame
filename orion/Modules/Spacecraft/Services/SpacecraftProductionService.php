@@ -2,12 +2,15 @@
 
 namespace Orion\Modules\Spacecraft\Services;
 
+use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Events\UpdateUserResources;
 use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
@@ -19,41 +22,36 @@ use Orion\Modules\Spacecraft\Exceptions\InsufficientCrewCapacityException;
 class SpacecraftProductionService
 {
     public function __construct(
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly SpacecraftRepository $spacecraftRepository,
         private readonly UserAttributeService $userAttributeService,
         private readonly UserResourceService $userResourceService,
-        private readonly ResourceService $resourceService
+        private readonly ResourceService $resourceService,
+        private readonly UserService $userService
     ) {
     }
 
     /**
      * Versucht, ein Raumschiff zu produzieren
      * 
-     * @param int $userId ID des Benutzers
+     * @param User $user
      * @param Spacecraft $spacecraft Das zu produzierende Raumschiff
      * @param int $quantity Die gewünschte Anzahl
      * @return array ['success' => bool, 'message' => string]
      */
-    public function startSpacecraftProduction(int $userId, Spacecraft $spacecraft, int $quantity): array
+    public function startSpacecraftProduction(User $user, Spacecraft $spacecraft, int $quantity): array
     {
         try {
-            // Kosten berechnen
-            $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
+            DB::transaction(function () use ($user, $spacecraft, $quantity) {
+                $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
 
-            // Prüfen, ob genug Crew-Kapazität vorhanden ist
-            $this->validateCrewCapacity($userId, $quantity);
+                $this->validateCrewCapacity($user->id, $quantity);
 
-            // Prüfen, ob genug Ressourcen vorhanden sind
-            $this->userResourceService->validateUserHasEnoughResources($userId, $totalCosts);
+                $this->userResourceService->validateUserHasEnoughResources($user->id, $totalCosts);
 
-            // Ressourcen abziehen und Produktion zur Queue hinzufügen
-            DB::transaction(function () use ($userId, $quantity, $totalCosts, $spacecraft) {
-                // Ressourcen abziehen
-                $this->userResourceService->decrementUserResources($userId, $totalCosts);
+                $this->userResourceService->decrementUserResources($user, $totalCosts);
 
-                // Produktion zur Queue hinzufügen
-                $this->addSpacecraftUpgradeToQueue($userId, $spacecraft, $quantity);
+                $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity);
             });
 
             return [
@@ -72,7 +70,7 @@ class SpacecraftProductionService
             ];
         } catch (\Exception $e) {
             \Log::error("Fehler bei der Raumschiffproduktion:", [
-                'user_id' => $userId,
+                'user_id' => $user->id,
                 'spacecraft_id' => $spacecraft->id,
                 'quantity' => $quantity,
                 'error' => $e->getMessage(),
@@ -124,7 +122,7 @@ class SpacecraftProductionService
             $userId,
             QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
-           floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed),
+            floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed),
             [
                 'spacecraft_name' => $spacecraft->details->name,
                 'quantity' => $quantity,

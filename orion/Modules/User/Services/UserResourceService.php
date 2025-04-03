@@ -2,7 +2,9 @@
 
 namespace Orion\Modules\User\Services;
 
+use App\Models\User;
 use Illuminate\Support\Collection;
+use App\Events\UpdateUserResources;
 use Orion\Modules\User\Repositories\UserResourceRepository;
 use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
 
@@ -27,14 +29,16 @@ class UserResourceService
         return $this->userResourceRepository->updateResourceAmount($userId, $resourceId, $amount);
     }
 
-    public function addResourceAmount(int $userId, int $resourceId, int $amount)
+    public function addResourceAmount(User $user, int $resourceId, int $amount): void
     {
-        return $this->userResourceRepository->addResourceAmount($userId, $resourceId, $amount);
+        $this->userResourceRepository->addResourceAmount($user->id, $resourceId, $amount);
+        broadcast(new UpdateUserResources($user));
     }
 
-    public function subtractResourceAmount(int $userId, int $resourceId, int $amount)
+    public function subtractResourceAmount(User $user, int $resourceId, int $amount): void
     {
-        return $this->userResourceRepository->subtractResourceAmount($userId, $resourceId, $amount);
+        $this->userResourceRepository->subtractResourceAmount($user->id, $resourceId, $amount);
+        broadcast(new UpdateUserResources($user));
     }
 
     public function createUserResource(int $userId, int $resourceId, int $amount)
@@ -65,16 +69,10 @@ class UserResourceService
         });
     }
 
-    /**
-     * Zieht die benötigten Ressourcen vom Benutzer ab
-     * 
-     * @param int $userId ID des Benutzers
-     * @param Collection $requiredResources Collection von Ressourcen mit ['id', 'name', 'amount']
-     */
-    public function decrementUserResources(int $userId, Collection $requiredResources): void
+    public function decrementUserResources(User $user, Collection $requiredResources): void
     {
-        $requiredResources->each(function ($resource, $resourceId) use ($userId) {
-            $this->subtractResourceAmount($userId, $resourceId, $resource['amount']);
+        $requiredResources->each(function ($resource, $resourceId) use ($user): void {
+            $this->subtractResourceAmount($user, $resourceId, $resource['amount']);
         });
     }
 }

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Link } from '@inertiajs/vue3';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import { is, can } from 'laravel-permission-to-vuejs'
 
 const NavigationLinks = [
   { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
@@ -26,13 +27,13 @@ const NavigationLinks = [
       </Link>
 
       <!-- Admin Dashboard -->
-      <Link
+      <Link v-if="is('admin')"
         class="group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition active:border-opacity-100 border-l-2 border-opacity-0 border-l-[#bfbfbf]"
-        :href="route('admin.dashboard')"
+        :href="route('admin.dashboard')" 
         :class="[route().current('admin.dashboard') ? 'border-opacity-100 ' : '']">
-      <img src="/storage/navigation/dashboard.png" class="w-8 h-8" alt="Dashboard" />
-      
-      <AppTooltip :label="'Dashboard'" position="right" />
+        <img src="/storage/navigation/dashboard.png" class="w-8 h-8" alt="Dashboard" />
+
+        <AppTooltip :label="'Dashboard'" position="right" />
       </Link>
     </nav>
   </div>

@@ -14,7 +14,7 @@ use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
@@ -26,7 +26,7 @@ class AsteroidService
     public function __construct(
         private readonly AsteroidRepository $asteroidRepository,
         private readonly AsteroidExplorer $asteroidExplorer,
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
         private readonly SpacecraftService $spacecraftService,
         private readonly StationService $stationService,
         private readonly UserService $userService,
@@ -98,12 +98,11 @@ class AsteroidService
 
             $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
 
-            $spacecraft_flight_speed = config('game.core.spacecraft_flight_speed');
             $this->queueService->addToQueue(
                 $user->id,
                 QueueActionType::ACTION_TYPE_MINING,
                 $asteroidId,
-                $duration / $spacecraft_flight_speed,
+                $duration,
                 [
                     'asteroid_name' => $asteroid->name,
                     'spacecrafts' => $filteredSpacecrafts
@@ -186,7 +185,7 @@ class AsteroidService
             $amountToAdd = min($extractedAmount, $availableStorage);
 
             if ($userResource) {
-                $this->userResourceService->addResourceAmount($user->id, $resourceId, $amountToAdd);
+                $this->userResourceService->addResourceAmount($user, $resourceId, $amountToAdd);
             } else {
                 $this->userResourceService->createUserResource($user->id, $resourceId, $amountToAdd);
             }

@@ -4,7 +4,7 @@ namespace Orion\Modules\Spacecraft\Services;
 
 use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 
 readonly class SpacecraftService
@@ -12,7 +12,7 @@ readonly class SpacecraftService
 
     public function __construct(
         private readonly SpacecraftRepository $spacecraftRepository,
-        private readonly QueueService $queueService,
+        private readonly ActionQueueService $queueService,
     ) {
     }
 

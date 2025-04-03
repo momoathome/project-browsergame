@@ -5,12 +5,12 @@ namespace Orion\Modules\Actionqueue\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 
 class ActionQueueController extends Controller
 {
     public function __construct(
-        private readonly QueueService $queueService
+        private readonly ActionQueueService $queueService
     ) {
     }
     /**

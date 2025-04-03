@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
 use App\Http\Middleware\HandleExceptionsForJetstream;
-use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Actionqueue\Http\Controllers\ActionQueueController;
 use Orion\Modules\Admin\Http\Controllers\AdminController;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
@@ -72,7 +72,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::put('/spacecrafts/{id}', [AdminController::class, 'updateSpacecraft'])->name('admin.spacecrafts.update');
         Route::post('/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
         Route::put('/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
-        Route::post('/queue/finish/{userId}', [QueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
+        Route::post('/queue/finish/{userId}', [ActionQueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
 
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });

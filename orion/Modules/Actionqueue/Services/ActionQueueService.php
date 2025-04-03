@@ -2,6 +2,8 @@
 
 namespace Orion\Modules\Actionqueue\Services;
 
+use App\Services\UserService;
+use App\Events\GettingAttacked;
 use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
@@ -11,15 +13,16 @@ use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Handlers\CombatHandler;
 use Orion\Modules\Actionqueue\Handlers\AsteroidMiningHandler;
 use Orion\Modules\Actionqueue\Handlers\BuildingUpgradeHandler;
-use Orion\Modules\Actionqueue\Repositories\ActionqueueRepository;
+use Orion\Modules\Actionqueue\Repositories\ActionQueueRepository;
 use Orion\Modules\Actionqueue\Handlers\SpacecraftProductionHandler;
 use Orion\Modules\ActionQueueArchive\Services\ActionQueueArchiveService;
 
-class QueueService
+class ActionQueueService
 {
     public function __construct(
-        private readonly ActionqueueRepository $actionqueueRepository,
-        private readonly ActionQueueArchiveService $actionQueueArchiveService
+        private readonly ActionQueueRepository $actionqueueRepository,
+        private readonly ActionQueueArchiveService $actionQueueArchiveService,
+        private readonly UserService $userService
     ) {
     }
     public function getUserQueue($userId): Collection
@@ -29,13 +32,34 @@ class QueueService
 
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)
     {
-        return $this->actionqueueRepository->addToQueue(
+        $queueEntry = $this->actionqueueRepository->addToQueue(
             $userId,
             $actionType,
             $targetId,
             $duration,
             $details
         );
+
+        // Wenn es sich um einen Kampf handelt, informiere den Verteidiger
+        if ($actionType === QueueActionType::ACTION_TYPE_COMBAT) {
+            $defender = $this->userService->find($targetId);
+            $attacker = $this->userService->find($userId);
+
+            if ($defender) {
+                $attackData = [
+                    'queue_id' => $queueEntry->id,
+                    'user_id' => $userId,
+                    'action_type' => $actionType,
+                    'target_id' => $targetId,
+                    'start_time' => now(),
+                    'end_time' => now()->addSeconds($duration),
+                    'attacker_name' => $attacker->name,
+                ];
+                event(new GettingAttacked($defender, $attackData));
+            }
+        }
+
+        return $queueEntry;
     }
 
     public function getInProgressQueuesFromUserByType($userId, $actionType): Collection
@@ -128,7 +152,7 @@ class QueueService
             } else {
                 $action->status = QueueStatusType::STATUS_FAILED;
             }
-            
+
             $this->archiveCompletedQueue($action);
 
         } catch (\Exception $e) {

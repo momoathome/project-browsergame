@@ -56,14 +56,14 @@ const form = useForm({
 });
 
 const contentComputed = computed(() => props.content);
+const spacecraftsComputed = computed(() => props.spacecrafts);
 // Spacecraft utilities importieren
 const {
   setMaxAvailableUnits,
   setMinNeededUnits,
   calculateTotalCombatPower,
   calculateTotalCargoCapacity
-} = useSpacecraftUtils(props.spacecrafts, form.spacecrafts, contentComputed);
-
+} = useSpacecraftUtils(spacecraftsComputed, form.spacecrafts, contentComputed);
 
 const { miningDuration } = useAsteroidMining(asteroid, form.spacecrafts, props.spacecrafts);
 

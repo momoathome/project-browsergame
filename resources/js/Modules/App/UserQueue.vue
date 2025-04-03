@@ -218,9 +218,10 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
   queueItemStates.value.delete(item.id);
   saveQueueItemStates(queueItemStates.value);
 
-  setTimeout(() => {
-    router.reload();
-  }, 3000);
+  router.patch(route('queue.process'), {
+    preserveState: true,
+    preserveScroll: true,
+  })
 }
 
 const isDefendCombatAction = (item: RawQueueItem): boolean => {

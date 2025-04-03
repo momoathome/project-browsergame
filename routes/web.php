@@ -1,11 +1,13 @@
 <?php
 
+use App\Events\ReloadFrontendCanvas;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
 use App\Http\Middleware\HandleExceptionsForJetstream;
 use Orion\Modules\Actionqueue\Services\QueueService;
+use Orion\Modules\Actionqueue\Http\Controllers\ActionQueueController;
 use Orion\Modules\Admin\Http\Controllers\AdminController;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
 use Orion\Modules\Market\Http\Controllers\MarketController;
@@ -74,6 +76,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });
+
+    Route::patch('/queueProcess', [ActionQueueController::class, 'index'])->name('queue.process');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
 

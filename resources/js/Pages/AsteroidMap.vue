@@ -50,14 +50,6 @@ const pendingDraw = ref(false);
 
 const selectedObject = ref<{ type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } | null>(null);
 
-function adjustCanvasSize() {
-  if (canvasRef.value && ctx.value) {
-    canvasRef.value.width = window.innerWidth;
-    canvasRef.value.height = window.innerHeight - 72;
-    drawScene();
-  }
-}
-
 const {
   searchForm,
   performSearch,
@@ -107,12 +99,31 @@ onMounted(() => {
 
   window.addEventListener('resize', adjustCanvasSize);
   window.addEventListener('keydown', onKeyDown);
+
+  window.Echo.channel('canvas')
+    .listen('.reload.canvas', (data) => {
+      const asteroidData = data.asteroid
+      if (asteroidData.resources.length === 0) {
+        // delete from asteroidsQuadtree
+        asteroidsQuadtree.value?.remove({ x: asteroidData.x, y: asteroidData.y });
+      }
+      console.log(data.asteroid);
+      drawScene();
+    })
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
   window.removeEventListener('keydown', onKeyDown);
 });
+
+function adjustCanvasSize() {
+  if (canvasRef.value && ctx.value) {
+    canvasRef.value.width = window.innerWidth;
+    canvasRef.value.height = window.innerHeight - 72;
+    drawScene();
+  }
+}
 
 function drawScene() {
   if (!ctx.value || !canvasRef.value) return;
@@ -181,7 +192,7 @@ function isObjectVisible(object: { x: number; y: number; pixel_size?: number }, 
 
 function drawStationsAndAsteroids(visibleArea: { left: number; top: number; right: number; bottom: number }) {
   if (!asteroidsQuadtree.value || !stationsQuadtree.value) return;
-  
+
   const queryRange = {
     x: (visibleArea.left + visibleArea.right) / 2,
     y: (visibleArea.top + visibleArea.bottom) / 2,

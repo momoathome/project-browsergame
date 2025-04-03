@@ -55,6 +55,26 @@ export class Quadtree {
     );
   }
 
+  remove(point: { x: number; y: number }) {
+    if (!this.contains(point)) {
+      return false;
+    }
+    const index = this.points.findIndex((p) => p.x === point.x && p.y === point.y);
+    if (index !== -1) {
+      this.points.splice(index, 1);
+      return true;
+    }
+    if (this.divided) {
+      return (
+        this.northeast!.remove(point) ||
+        this.northwest!.remove(point) ||
+        this.southeast!.remove(point) ||
+        this.southwest!.remove(point)
+      );
+    }
+    return false;
+  }
+
   query(range: { x: number; y: number; width: number; height: number }, found: Array<{ x: number; y: number; data: any }> = []) {
     if (!this.intersects(range)) {
       return found;

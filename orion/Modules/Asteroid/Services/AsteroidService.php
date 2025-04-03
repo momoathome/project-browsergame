@@ -2,11 +2,13 @@
 
 namespace Orion\Modules\Asteroid\Services;
 
+use App\Events\UpdateUserResources;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Events\ReloadFrontendCanvas;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
@@ -154,6 +156,8 @@ class AsteroidService
             return false;
         }
 
+        broadcast(new ReloadFrontendCanvas($asteroid));
+
         return new ExplorationResult(
             $resourcesExtracted,
             $totalCargoCapacity,
@@ -187,6 +191,8 @@ class AsteroidService
                 $this->userResourceService->createUserResource($user->id, $resourceId, $amountToAdd);
             }
         }
+
+        broadcast(new UpdateUserResources($user));
     }
 
     public function find(int $id): ?Asteroid

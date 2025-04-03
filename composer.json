@@ -19,6 +19,7 @@
         "laravel/scout": "^10.13.1",
         "laravel/tinker": "^2.10.1",
         "meilisearch/meilisearch-php": "^1.10",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.16",
         "tightenco/ziggy": "^2.5.2"
     },

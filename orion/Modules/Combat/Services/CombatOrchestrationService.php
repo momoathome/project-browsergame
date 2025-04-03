@@ -46,7 +46,7 @@ readonly class CombatOrchestrationService
         // Formatiere und bereite den Kampf vor
         $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
         
-        // Formatiere die Raumschiffe für die Sperre
+        // Formatiere die Raumschiffe des Angreifers für die Sperre
         $filteredSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
         $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($attacker, $filteredSpacecrafts);
         

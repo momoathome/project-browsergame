@@ -27,12 +27,12 @@ readonly class CombatService
     /**
      * Simuliert einen Kampf zwischen zwei Flotten
      */
-    public function simulateBattle(array $attacker, array $defender, $userId): CombatResult
+    public function simulateBattle(array $attacker, array $defender, $defenderUserId): CombatResult
     {
         $attackerShips = $this->convertToShipCollection($attacker);
         $defenderShips = $this->convertToShipCollection($defender);
 
-        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips, $userId);
+        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips, $defenderUserId);
         $winner = $this->defineWinner($totalCombatPower['attacker'], $totalCombatPower['defender']);
         $losses = $this->calculateLosses($attackerShips, $defenderShips, $totalCombatPower['attacker'], $totalCombatPower['defender']);
 
@@ -86,16 +86,12 @@ readonly class CombatService
     public function formatDefenderSpacecrafts($defender_spacecrafts): array
     {
         return $defender_spacecrafts
-            ->filter(function ($spacecraft) {
-                return $spacecraft->count > 0;
-            })
-            ->map(function ($spacecraft) {
-                return [
-                    'name' => $spacecraft->details->name,
-                    'combat' => $spacecraft->combat,
-                    'count' => $spacecraft->count,
-                ];
-            })
+            ->filter(fn($spacecraft) => $spacecraft->count > 0)
+            ->map(fn($spacecraft) => [
+                'name' => $spacecraft->details->name,
+                'combat' => $spacecraft->combat,
+                'count' => $spacecraft->count,
+            ])
             ->values()
             ->toArray();
     }
@@ -157,9 +153,14 @@ readonly class CombatService
     private function calculateTotalCombatPower(Collection $attacker, Collection $defender, $userId): array
     {
         $calculateCombatPower = fn($ships) => $ships->sum(fn($ship) => $ship->combat * $ship->count);
-        $shield_base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
 
-        $defense_multiplier = $shield_base_defense ? $shield_base_defense->attribute_value : 1;
+        /* check if simulation or real fight */
+        if ($userId) {
+            $shield_base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
+            $defense_multiplier = $shield_base_defense ? $shield_base_defense->attribute_value : 1;
+        } else {
+            $defense_multiplier = 1;
+        }
 
         return [
             'attacker' => $calculateCombatPower($attacker),

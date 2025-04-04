@@ -3,6 +3,7 @@
 namespace Orion\Modules\Actionqueue\Repositories;
 
 use Illuminate\Support\Collection;
+use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
@@ -20,7 +21,10 @@ readonly class ActionQueueRepository
             ->where('action_type', QueueActionType::ACTION_TYPE_COMBAT)
             ->where('status', QueueStatusType::STATUS_IN_PROGRESS);
 
-        return $userQueue->union($defendQueue)->get();
+        $result = $userQueue->union($defendQueue)->get();
+        $returnObject = $result->map(fn($item) => ActionQueueDTO::fromModel($item));
+        
+        return $returnObject;
     }
 
     public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)

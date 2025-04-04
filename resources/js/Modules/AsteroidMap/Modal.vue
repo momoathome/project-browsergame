@@ -7,32 +7,35 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
-import type { Station, Spacecraft, Asteroid } from '@/types/types';
+import type { Station, SpacecraftSimple, Asteroid } from '@/types/types';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 
-interface Content {
+export type ModalContent = {
+  type: 'asteroid' | 'station' | 'undefined';
   data: Asteroid | Station;
   imageSrc: string;
-  type: 'asteroid' | 'station' | undefined | null;
 }
-
-const emit = defineEmits(['close']);
 
 const props = defineProps<{
   show: boolean,
-  title: string | undefined,
-  content: Content | undefined,
-  spacecrafts: Spacecraft[],
+  title?: string,
+  content: ModalContent,
+  spacecrafts: SpacecraftSimple[],
   userScanRange: number,
 }>();
 
-// Computed properties für Asteroid und Station
-const asteroid = computed<Asteroid>(() => props.content?.data as Asteroid);
-const station = computed<Station>(() => props.content?.data as Station);
+const emit = defineEmits(['close']);
 
-// Dialog Ref
+
 const dialog = ref();
+const userStation = usePage().props.stations.find(station =>
+  station.user_id === usePage().props.auth.user.id
+);
+
+// Computed properties für Asteroid und Station
+const asteroid = computed<Asteroid>(() => props.content.data as Asteroid);
+const station = computed<Station>(() => props.content.data as Station);
 
 // Formular Initialisierung
 const form = useForm({
@@ -55,19 +58,18 @@ const form = useForm({
   }
 });
 
-const contentComputed = computed(() => props.content);
-const spacecraftsComputed = computed(() => props.spacecrafts);
-// Spacecraft utilities importieren
 const {
   setMaxAvailableUnits,
-  setMinNeededUnits,
+  setMinNeededUnits, 
   calculateTotalCombatPower,
   calculateTotalCargoCapacity
-} = useSpacecraftUtils(spacecraftsComputed, form.spacecrafts, contentComputed);
+} = useSpacecraftUtils(
+  computed(() => props.spacecrafts),
+  form.spacecrafts,
+  computed(() => props.content)
+);
 
 const { miningDuration } = useAsteroidMining(asteroid, form.spacecrafts, props.spacecrafts);
-
-// Computed Properties
 const totalCombatPower = computed(() => calculateTotalCombatPower());
 const totalCargoCapacity = computed(() => calculateTotalCargoCapacity());
 const formattedDuration = miningDuration;
@@ -79,10 +81,6 @@ const calculateCargoPercentage = computed(() => {
 });
 
 // Berechnung der Distanz zum Asteroid
-const userStation = usePage().props.stations.find(station =>
-  station.user_id === usePage().props.auth.user.id
-);
-
 const distance = computed(() => {
   if (asteroid.value) {
     const userX = userStation.x;

@@ -1,15 +1,15 @@
 import { computed } from 'vue';
-import type { Spacecraft, Asteroid, Station } from '@/types/types';
+import type { SpacecraftSimple, Asteroid, Station } from '@/types/types';
 import type { ComputedRef } from 'vue';
 
-export function useSpacecraftUtils(spacecrafts: ComputedRef<Spacecraft[]>, formSpacecrafts: any, content: ComputedRef<any>) {
+export function useSpacecraftUtils(spacecrafts: ComputedRef<SpacecraftSimple[]>, formSpacecrafts: any, content: ComputedRef<any>) {
   /**
    * Setzt die maximal verfügbaren Einheiten für alle Raumschiffe
    */
   const setMaxAvailableUnits = () => {
     const MaxAvailableUnits = {};
 
-    spacecrafts.value.forEach((spacecraft: Spacecraft) => {
+    spacecrafts.value.forEach((spacecraft: SpacecraftSimple) => {
       if (spacecraft.type !== "Miner") {
         // Berücksichtige nur die verfügbaren Schiffe (count - locked_count)
         MaxAvailableUnits[spacecraft.name] = spacecraft.count - (spacecraft.locked_count || 0);
@@ -32,10 +32,10 @@ export function useSpacecraftUtils(spacecrafts: ComputedRef<Spacecraft[]>, formS
     const asteroid = content.value.data;
     let remainingResources = asteroid.resources.reduce((total, resource) => total + resource.amount, 0);
   
-    const processSpacecrafts = (filterFn: (spacecraft: Spacecraft) => boolean) => {
+    const processSpacecrafts = (filterFn: (spacecraft: SpacecraftSimple) => boolean) => {
       spacecrafts.value
         .filter(filterFn)
-        .forEach((spacecraft: Spacecraft) => {
+        .forEach((spacecraft: SpacecraftSimple) => {
           if (remainingResources <= 0) {
             MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
             return;
@@ -52,8 +52,6 @@ export function useSpacecraftUtils(spacecrafts: ComputedRef<Spacecraft[]>, formS
   
           MinNeededUnits[spacecraft.name] = usedUnits;
 
-          console.log(`Spacecraft: ${spacecraft.name}, Available: ${availableCount}, Needed: ${neededUnits}, Used: ${usedUnits}, MinNeeded ${MinNeededUnits}`);
-          
           // Aktualisieren der verbleibenden Ressourcen
           remainingResources -= usedUnits * spacecraft.cargo;
         });
@@ -75,7 +73,7 @@ export function useSpacecraftUtils(spacecrafts: ComputedRef<Spacecraft[]>, formS
     let total = 0;
 
     for (const spacecraft in formSpacecrafts) {
-      const combat = spacecrafts.value.find((s: Spacecraft) => s.name === spacecraft)?.combat;
+      const combat = spacecrafts.value.find((s: SpacecraftSimple) => s.name === spacecraft)?.combat;
       if (combat !== undefined) {
         total += combat * formSpacecrafts[spacecraft];
       }
@@ -91,7 +89,7 @@ export function useSpacecraftUtils(spacecrafts: ComputedRef<Spacecraft[]>, formS
     let total = 0;
 
     for (const spacecraft in formSpacecrafts) {
-      const cargo = spacecrafts.value.find((s: Spacecraft) => s.name === spacecraft)?.cargo;
+      const cargo = spacecrafts.value.find((s: SpacecraftSimple) => s.name === spacecraft)?.cargo;
       if (cargo !== undefined) {
         total += cargo * formSpacecrafts[spacecraft];
       }

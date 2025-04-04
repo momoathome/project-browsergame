@@ -48,7 +48,7 @@ class ActionQueueService
 
             if ($defender) {
                 $attackDTO = ActionQueueDTO::fromModel($queueEntry, $attacker->name);
-                event(new GettingAttacked($defender, $attackDTO->toArray()));
+                event(new GettingAttacked($defender, $attackDTO));
             }
         }
 

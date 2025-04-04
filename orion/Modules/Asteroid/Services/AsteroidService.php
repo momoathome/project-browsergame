@@ -40,23 +40,15 @@ class AsteroidService
         return $this->asteroidRepository->loadWithResources($asteroid);
     }
 
-    public function getAsteroidMapData(
-        $user,
-        array|Collection $searchedAsteroids = [],
-        array|Collection $searchedStations = [],
-        ?Asteroid $selectedAsteroid = null
-    ): array {
+    public function getAsteroidMapData($user): array {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
-        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
+        $spacecrafts = $this->spacecraftService->formatSpacecraftsSimple($user->id);
 
         return [
             'asteroids' => $asteroids,
-            'searched_asteroids' => $searchedAsteroids,
-            'searched_stations' => $searchedStations,
             'spacecrafts' => $spacecrafts,
             'stations' => $stations,
-            'selected_asteroid' => $selectedAsteroid ?? null,
         ];
     }
 

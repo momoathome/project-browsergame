@@ -3,10 +3,10 @@ import { computed, ref } from 'vue';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
-import type { Spacecraft } from '@/types/types';
+import type { SpacecraftSimple } from '@/types/types';
 
 const props = defineProps<{
-  spacecraft: Spacecraft;
+  spacecraft: SpacecraftSimple;
 }>();
 
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));

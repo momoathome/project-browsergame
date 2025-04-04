@@ -2,8 +2,13 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import type { Asteroid } from '@/types/types';
 
+interface SimpleAsteroid {
+  id: number;
+  name: string;
+}
+
 const props = defineProps<{
-  searchedAsteroids: Asteroid[]
+  searchedAsteroids: SimpleAsteroid[]
   selectedAsteroid?: Asteroid 
 }>()
 

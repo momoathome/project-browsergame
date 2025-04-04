@@ -1,13 +1,13 @@
 import { usePage } from '@inertiajs/vue3';
 import { timeFormat } from '@/Utils/format';
-import type { Asteroid, Spacecraft } from '@/types/types';
+import type { Asteroid, SpacecraftSimple } from '@/types/types';
 import type { Ref, ComputedRef } from 'vue';
 import { computed, watch, toRef, toRefs } from 'vue';
 
 export function useAsteroidMining(
   asteroid: Ref<Asteroid> | ComputedRef<Asteroid>,
   spacecraftsForm: any,
-  spacecrafts: Spacecraft[]
+  spacecrafts: SpacecraftSimple[]
 ) {
   // Diminishing returns Funktion - identisch mit Backend
   const applyDiminishingReturns = (speed) => {

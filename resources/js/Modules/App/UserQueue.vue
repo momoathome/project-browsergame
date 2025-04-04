@@ -89,9 +89,9 @@ const getDetailsByActionType = (actionType: string, details: QueueItemDetails | 
 }
 
 const getRemainingTime = (item: RawQueueItem): number => {
-  if (!item.end_time) return 0
+  if (!item.endTime) return 0
 
-  const endTime = new Date(item.end_time).getTime()
+  const endTime = new Date(item.endTime).getTime()
   const currentTime = new Date().getTime()
 
   return Math.max(0, endTime - currentTime)
@@ -128,16 +128,16 @@ const processQueueData = (): void => {
 
     const processedItem: ProcessedQueueItem = {
       id: item.id,
-      name: getNameByActionType(item.action_type, item.details),
-      image: getImageByActionType(item.action_type),
-      details: getDetailsByActionType(item.action_type, item.details),
+      name: getNameByActionType(item.actionType, item.details),
+      image: getImageByActionType(item.actionType),
+      details: getDetailsByActionType(item.actionType, item.details),
       showInfos: itemState.showInfos,
       isNew: isItemNew,
       rawData: item,
       completed: false
     }
 
-    if (item.end_time) {
+    if (item.endTime) {
       const remainingTimeMs = getRemainingTime(item)
       processedItem.remainingTime = remainingTimeMs
       processedItem.formattedTime = timeFormat(Math.floor(remainingTimeMs / 1000))
@@ -186,8 +186,8 @@ const updateTimers = (): void => {
   if (!processedQueueItems.value.length) return
 
   processedQueueItems.value.forEach(item => {
-    if (item.rawData.end_time && !item.completed) {
-      const endTime = new Date(item.rawData.end_time).getTime();
+    if (item.rawData.endTime && !item.completed) {
+      const endTime = new Date(item.rawData.endTime).getTime();
       const currentTime = new Date().getTime();
       const diff = endTime - currentTime;
 
@@ -222,7 +222,7 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
   saveQueueItemStates(queueItemStates.value);
 
   /* attacker */
-  if (item.rawData.target_id !== page.props.auth.user.id) {
+  if (item.rawData.targetId !== page.props.auth.user.id) {
     router.patch(route('queue.process'), {
       preserveState: true,
       preserveScroll: true,
@@ -237,7 +237,7 @@ function handleTimerComplete(item: ProcessedQueueItem): void {
 }
 
 const isDefendCombatAction = (item: RawQueueItem): boolean => {
-  return item.action_type === 'combat' && item.details?.defender_id === page.props.auth.user.id
+  return item.actionType === 'combat' && item.details?.defender_id === page.props.auth.user.id
 }
 
 let timerInterval: number | undefined
@@ -293,11 +293,11 @@ onUnmounted(() => {
             <div v-if="item.showInfos" class="flex flex-col justify-center">
               <h3 class="text-xs font-medium text-white whitespace-nowrap">{{ item.name }}</h3>
               <p class="text-xs text-gray-400 whitespace-nowrap">
-                <span v-if="item.rawData.action_type === 'building'">upgrade to lv. {{ item.details }}</span>
-                <span v-else-if="item.rawData.action_type === 'produce'">
+                <span v-if="item.rawData.actionType === 'building'">upgrade to lv. {{ item.details }}</span>
+                <span v-else-if="item.rawData.actionType === 'produce'">
                   <span>quantity: {{ item.details }}</span>
                 </span>
-                <span v-else-if="item.rawData.action_type === 'mining'" class="flex justify-between w-full">
+                <span v-else-if="item.rawData.actionType === 'mining'" class="flex justify-between w-full">
                   <span>{{ item.details }}</span>
                 </span>
                 <span v-else>{{ item.details }}</span>

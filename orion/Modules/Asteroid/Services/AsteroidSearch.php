@@ -47,9 +47,14 @@ class AsteroidSearch
         $asteroid->y
       );
       return $distance <= $scanRange;
-    })->values();
+    })->values()->map(function ($asteroid) {
+      return [
+        'id' => $asteroid->id,
+        'name' => $asteroid->name,
+      ];
+    });
 
-    $searchedStations = Station::search($query)->take(100)->get();
+    $searchedStations = Station::search($query)->take(100)->get()->pluck('id');
 
     return [$filteredAsteroids, $searchedStations];
   }
@@ -76,38 +81,38 @@ class AsteroidSearch
     // Punkte als Leerzeichen behandeln
     $query = str_replace('.', ' ', $query);
     $queryParts = preg_split('/\s+/', $query, -1, PREG_SPLIT_NO_EMPTY);
-    
+
     $sizeFilter = null;
     $resourceFilters = [];
     $hasCombinedResources = false;
     $searchTerms = [];
-    
+
     foreach ($queryParts as $part) {
       // Nach bekannten Größen-Keywords filtern
       if ($this->isSize($part)) {
         $sizeFilter = strtolower($part);
         continue;
       }
-      
+
       // Nach kombinierten Ressourcen suchen (mit Trenner)
       if ($this->isCombinedResource($part)) {
         $hasCombinedResources = true;
         $resourceFilters = array_merge($resourceFilters, $this->splitCombinedResource($part));
         continue;
       }
-      
+
       // Prüfen, ob es ein Ressourcen-Synonym ist
       if ($this->isResourceSynonym($part)) {
         $resourceFilters[] = $part;
         continue;
       }
-      
+
       // Andernfalls als allgemeinen Suchterm behandeln
       $searchTerms[] = $part;
     }
-    
+
     $expandedResourceFilters = $this->expandResources($resourceFilters);
-    
+
     return [
       'sizeFilter' => $sizeFilter,
       'resourceFilters' => $resourceFilters,
@@ -116,7 +121,7 @@ class AsteroidSearch
       'expandedResourceFilters' => $expandedResourceFilters,
     ];
   }
-  
+
   /**
    * Prüft, ob der Begriff eine Größenangabe ist
    */
@@ -124,7 +129,7 @@ class AsteroidSearch
   {
     return in_array(strtolower($part), ['small', 'medium', 'large', 'extreme']);
   }
-  
+
   /**
    * Prüft, ob der Begriff eine kombinierte Ressource ist
    */
@@ -132,7 +137,7 @@ class AsteroidSearch
   {
     return strpos($part, '-') !== false || strpos($part, '_') !== false;
   }
-  
+
   /**
    * Teilt eine kombinierte Ressource in einzelne Teile auf
    */
@@ -140,12 +145,12 @@ class AsteroidSearch
   {
     $separator = strpos($part, '-') !== false ? '-' : '_';
     $resources = explode($separator, $part);
-    
+
     return array_filter($resources, function ($resource) {
       return !empty($resource);
     });
   }
-  
+
   /**
    * Prüft, ob der Begriff ein bekanntes Ressourcen-Synonym ist
    */
@@ -260,10 +265,10 @@ class AsteroidSearch
     if (empty($resourceFilter)) {
       return [];
     }
-  
+
     $expandedResourceFilter = [];
     $synonyms = $this->getResourceSynonyms();
-    
+
     foreach ($resourceFilter as $resource) {
       $resourceLower = strtolower($resource);
       $expandedResourceFilter = array_merge(
@@ -271,7 +276,7 @@ class AsteroidSearch
         $synonyms[$resourceLower] ?? [$resource]
       );
     }
-    
+
     return array_unique($expandedResourceFilter);
   }
 

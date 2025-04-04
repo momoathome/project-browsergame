@@ -51,6 +51,20 @@ export interface Spacecraft {
   }>;
 }
 
+export interface SpacecraftSimple {
+  id: number;
+  name: string;
+  image: string;
+  type: string;
+  combat: number;
+  count: number;
+  locked_count: number;
+  cargo: number;
+  speed: number;
+  operation_speed: number;
+  unlocked: boolean;
+}
+
 export interface ResourcePivot {
   resource_id: number;
   amount: number;
@@ -196,12 +210,12 @@ export interface QueueItemDetails {
 
 export interface RawQueueItem {
   id: number;
-  action_type: 'building' | 'produce' | 'mining' | string;
+  actionType: 'building' | 'produce' | 'mining' | 'combat' | string;
   details: QueueItemDetails;
-  user_id?: number;
-  target_id?: number;
-  start_time?: string;
-  end_time?: string;
+  userId?: number;
+  targetId?: number;
+  startTime?: string;
+  endTime?: string;
   status?: string;
 }
 

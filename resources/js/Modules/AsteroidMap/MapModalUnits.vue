@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import type { Spacecraft } from '@/types/types';
+import type { SpacecraftSimple } from '@/types/types';
 import MapModalUnitCard from './MapModalUnitCard.vue';
 
 const props = defineProps<{
-  spacecrafts: Spacecraft[];
+  spacecrafts: SpacecraftSimple[];
 }>();
 
 const form = defineModel({ required: false, type: Object })

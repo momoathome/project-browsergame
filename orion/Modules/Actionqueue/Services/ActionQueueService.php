@@ -8,6 +8,7 @@ use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Handlers\CombatHandler;
@@ -46,16 +47,8 @@ class ActionQueueService
             $attacker = $this->userService->find($userId);
 
             if ($defender) {
-                $attackData = [
-                    'queue_id' => $queueEntry->id,
-                    'user_id' => $userId,
-                    'action_type' => $actionType,
-                    'target_id' => $targetId,
-                    'start_time' => now(),
-                    'end_time' => now()->addSeconds($duration),
-                    'attacker_name' => $attacker->name,
-                ];
-                event(new GettingAttacked($defender, $attackData));
+                $attackDTO = ActionQueueDTO::fromModel($queueEntry, $attacker->name);
+                event(new GettingAttacked($defender, $attackDTO->toArray()));
             }
         }
 

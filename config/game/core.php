@@ -9,7 +9,7 @@ return [
     /* Core */
     'building_produce_speed' => 1.0,
     'spacecraft_produce_speed' => 1.0,
-    'spacecraft_flight_speed' => 20.0,
+    'spacecraft_flight_speed' => 10.0,
 
     /* Universe */
     'size' => $universe_size,                           // Größe des Universums
@@ -29,6 +29,5 @@ return [
     /* Asteroid */
     'asteroid_distance' => 600,                         // Minimaler Abstand zwischen Asteroiden
     'strategic_asteroid_count' => 20,                   // Anzahl der strategischen Asteroiden
-
 
 ];

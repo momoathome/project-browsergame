@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -43,8 +44,8 @@ class GettingAttacked implements ShouldBroadcastNow
                 'user_id' => $this->attackData['user_id'],
                 'action_type' => $this->attackData['action_type'],
                 'target_id' => $this->attackData['target_id'],
-                'start_time' => $this->attackData['start_time'],
-                'end_time' => $this->attackData['end_time'],
+                'start_time' => Carbon::parse($this->attackData['start_time'])->toIso8601String(),
+                'end_time' => Carbon::parse($this->attackData['end_time'])->toIso8601String(),
                 'status' => 'in_progress',
                 'details' => [
                     'attacker_id' => $this->attackData['user_id'],
@@ -55,5 +56,5 @@ class GettingAttacked implements ShouldBroadcastNow
             ]
         ];
     }
-    
+
 }

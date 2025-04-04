@@ -10,7 +10,15 @@ use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 class ActionQueue extends Model
 {
     protected $table = 'action_queue';
-    protected $fillable = ['user_id', 'action_type', 'target_id', 'start_time', 'end_time', 'status', 'details'];
+    protected $fillable = [
+        'user_id',
+        'action_type',
+        'target_id',
+        'start_time',
+        'end_time',
+        'status',
+        'details'
+    ];
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',

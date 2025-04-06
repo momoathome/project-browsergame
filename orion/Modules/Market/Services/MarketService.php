@@ -71,6 +71,9 @@ readonly class MarketService
                 }
             });
 
+
+            broadcast(new UpdateUserResources($user));
+
             return redirect()->route('market')->banner('Resource purchased successfully');
         } catch (InsufficientCreditsException $e) {
             return redirect()->route('market')->dangerBanner('Not enough credits');
@@ -106,6 +109,7 @@ readonly class MarketService
                 $this->userAttributeService->addAttributeAmount($user->id, UserAttributeType::CREDITS, $totalEarnings);
             });
 
+            broadcast(new UpdateUserResources($user));
             return redirect()->route('market')->banner('Resource sold successfully');
         } catch (InsufficientResourceException $e) {
             return redirect()->route('market')->dangerBanner('Not enough resources');

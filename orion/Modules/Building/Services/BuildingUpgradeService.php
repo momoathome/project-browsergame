@@ -33,13 +33,6 @@ class BuildingUpgradeService
     ) {
     }
 
-    /**
-     * Startet ein Gebäude-Upgrade, wenn alle Voraussetzungen erfüllt sind
-     * 
-     * @param User $user
-     * @param Building $building
-     * @throws \Exception wenn Ressourcen nicht ausreichen
-     */
     public function startBuildingUpgrade(User $user, Building $building): array
     {
         try {
@@ -57,6 +50,8 @@ class BuildingUpgradeService
                 $this->addBuildingUpgradeToQueue($user->id, $building);
             });
 
+
+            broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
                 'message' => "Upgrade von {$building->details->name} wurde gestartet"
@@ -163,13 +158,6 @@ class BuildingUpgradeService
         $building->resources()->attach($resourceData->toArray());
     }
 
-    /**
-     * Schließt ein Gebäude-Upgrade ab und wendet die Effekte an
-     * 
-     * @param int $buildingId Die ID des zu aktualisierenden Gebäudes
-     * @param int $userId Der Benutzer, dem das Gebäude gehört
-     * @return array Statusmeldung mit Erfolg/Misserfolg und Details
-     */
     public function completeUpgrade(int $buildingId, int $userId): array
     {
         // Gebäude abrufen mit Validierung
@@ -227,14 +215,6 @@ class BuildingUpgradeService
         }
     }
 
-    /**
-     * Aktualisiert die Benutzerattribute basierend auf den Gebäudeeffekten
-     * 
-     * @param int $userId Die ID des Benutzers
-     * @param Building $building Das aktualisierte Gebäude
-     * @param BuildingType $buildingType Der Gebäudetyp
-     * @return Collection Liste der aktualisierten Attribute
-     */
     private function updateUserAttributesForBuilding(int $userId, Building $building, BuildingType $buildingType): Collection
     {
         $effectAttributeNames = $buildingType->getEffectAttributes();

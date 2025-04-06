@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3';
+import { api } from '@/Services/api';
 
 interface SimpleAsteroid {
   id: number;
@@ -15,25 +16,16 @@ const useAsteroidSearch = (drawScene: () => void) => {
   const highlightedStations = ref<number[]>([]);
 
   const performSearch = async (onSearchComplete = () => { }) => {
-    const response = await fetch(route('asteroidMap.search'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-      },
-      body: JSON.stringify({ query: searchForm.query })
-    })
+    const { data, error } = await api.asteroids.search(searchForm.query);
 
-    const result = await response.json();
-
-    if (response.ok) {
-      highlightedAsteroids.value = result.searched_asteroids
-      highlightedStations.value = result.searched_stations
+    if (!error) {
+      highlightedAsteroids.value = data.searched_asteroids
+      highlightedStations.value = data.searched_stations
 
       // Callback aufrufen, wenn die Suche abgeschlossen ist
       onSearchComplete();
     } else {
-      console.error('Error during search:', result);
+      console.error('Error during search:', error);
       onSearchComplete();
     }
   };

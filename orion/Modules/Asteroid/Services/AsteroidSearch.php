@@ -47,12 +47,16 @@ class AsteroidSearch
         $asteroid->y
       );
       return $distance <= $scanRange;
-    })->values()->map(function ($asteroid) {
-      return [
-        'id' => $asteroid->id,
-        'name' => $asteroid->name,
-      ];
-    });
+    })
+      ->sortBy('multiplier')  // Sortiert nach multiplier in aufsteigender Reihenfolge
+      ->values()
+      ->map(function ($asteroid) {
+        return [
+          'id' => $asteroid->id,
+          'name' => $asteroid->name,
+          'multiplier' => $asteroid->multiplier, // Füge multiplier zum Return-Array hinzu
+        ];
+      });
 
     $searchedStations = Station::search($query)->take(100)->get()->pluck('id');
 

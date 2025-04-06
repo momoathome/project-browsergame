@@ -29,25 +29,6 @@ class SpacecraftController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Spacecraft $spacecraft)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Spacecraft $spacecraft)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Spacecraft $spacecraft)
     {
         $validated = $request->validate([

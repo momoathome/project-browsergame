@@ -24,9 +24,9 @@ class UserResourceService
         return $this->userResourceRepository->getSpecificUserResource($userId, $resourceId);
     }
 
-    public function updateResourceAmount(int $userId, int $resourceId, int $amount)
+    public function updateResourceAmount(int $userId, int $resourceId, int $amount): void
     {
-        return $this->userResourceRepository->updateResourceAmount($userId, $resourceId, $amount);
+        $this->userResourceRepository->updateResourceAmount($userId, $resourceId, $amount);
     }
 
     public function addResourceAmount(User $user, int $resourceId, int $amount): void
@@ -38,7 +38,6 @@ class UserResourceService
     public function subtractResourceAmount(User $user, int $resourceId, int $amount): void
     {
         $this->userResourceRepository->subtractResourceAmount($user->id, $resourceId, $amount);
-        broadcast(new UpdateUserResources($user));
     }
 
     public function createUserResource(int $userId, int $resourceId, int $amount)
@@ -46,13 +45,6 @@ class UserResourceService
         return $this->userResourceRepository->createUserResource($userId, $resourceId, $amount);
     }
 
-    /**
-     * Prüft, ob der Benutzer genügend Ressourcen hat
-     * 
-     * @param int $userId ID des Benutzers
-     * @param Collection $requiredResources
-     * @throws \Exception wenn nicht genügend Ressourcen vorhanden sind
-     */
     public function validateUserHasEnoughResources(int $userId, Collection $requiredResources): void
     {
         $userResources = $this->getAllUserResourcesByUserId($userId)

@@ -7,6 +7,7 @@ import AsteroidMapSearch from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
+import { api } from '@/Services/api';
 import type { Asteroid, Station, Spacecraft } from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
 import * as config from '@/config';
@@ -69,19 +70,7 @@ onMounted(() => {
     };
   }
 
-  const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size / 2, height: config.size / 2 };
-  asteroidsQuadtree.value = new Quadtree(universeBounds);
-  stationsQuadtree.value = new Quadtree(universeBounds);
-
-  // Füge Asteroiden und Stationen zum Quadtree hinzu
-  props.asteroids.forEach(asteroid => {
-    asteroidsQuadtree.value?.insert({ x: asteroid.x, y: asteroid.y, data: asteroid });
-  });
-
-  props.stations.forEach(station => {
-    stationsQuadtree.value?.insert({ x: station.x, y: station.y, data: station });
-  });
-
+  initQuadtree();
   window.addEventListener('resize', adjustCanvasSize);
   window.addEventListener('keydown', onKeyDown);
 
@@ -100,6 +89,30 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
   window.removeEventListener('keydown', onKeyDown);
 });
+
+function initQuadtree() {
+  const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size / 2, height: config.size / 2 };
+  asteroidsQuadtree.value = new Quadtree(universeBounds);
+  stationsQuadtree.value = new Quadtree(universeBounds);
+
+  // Füge Asteroiden und Stationen zum Quadtree hinzu
+  props.asteroids.forEach(asteroid => {
+    asteroidsQuadtree.value?.insert({ x: asteroid.x, y: asteroid.y, data: asteroid });
+  });
+
+  props.stations.forEach(station => {
+    stationsQuadtree.value?.insert({ x: station.x, y: station.y, data: station });
+  });
+}
+
+function focusUserStationOnInitialLoad(userId: number) {
+  const userStation = props.stations.find(station => station.user_id === userId);
+  if (!userStation || !canvasRef.value) return;
+
+  pointX.value = -(userStation.x * config.initialZoom - canvasRef.value.width / 2);
+  pointY.value = -(userStation.y * config.initialZoom - canvasRef.value.height / 2);
+  zoomLevel.value = config.initialZoom;
+}
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
@@ -304,9 +317,14 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-function onMouseClick(e: MouseEvent) {
+interface ClickCoordinates {
+  x: number;
+  y: number;
+}
+
+function getClickCoordinates(e: MouseEvent): ClickCoordinates | null {
   const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect || !ctx.value || !canvasRef.value) return;
+  if (!rect || !ctx.value || !canvasRef.value) return null;
 
   const scaleX = canvasRef.value.width / rect.width;
   const scaleY = canvasRef.value.height / rect.height;
@@ -314,50 +332,63 @@ function onMouseClick(e: MouseEvent) {
   const x = (e.clientX - rect.left) * scaleX;
   const y = (e.clientY - rect.top) * scaleY;
 
-  const zoomedX = (x - pointX.value) / zoomLevel.value;
-  const zoomedY = (y - pointY.value) / zoomLevel.value;
+  return {
+    x: (x - pointX.value) / zoomLevel.value,
+    y: (y - pointY.value) / zoomLevel.value
+  };
+}
 
-  // Strg+Linksklick zur Anzeige von Koordinaten
-  if (e.ctrlKey) {
-    console.log(`Koordinaten: x=${Math.round(zoomedX)}, y=${Math.round(zoomedY)}`);
-    // showCoordinatesOverlay(zoomedX, zoomedY);
-    e.stopPropagation();
+function handleCoordinateDisplay(coords: ClickCoordinates, e: MouseEvent) {
+  console.log(`Koordinaten: x=${Math.round(coords.x)}, y=${Math.round(coords.y)}`);
+  // showCoordinatesOverlay(coords.x, coords.y);
+  e.stopPropagation();
+  return true;
+}
+
+function findClickedStation(coords: ClickCoordinates) {
+  return props.stations.find(station => 
+    Math.abs(coords.x - station.x) < stationBaseSize * scale.value / 2 &&
+    Math.abs(coords.y - station.y) < stationBaseSize * scale.value / 2
+  );
+}
+
+function findClickedAsteroid(coords: ClickCoordinates) {
+  return props.asteroids.find(asteroid => {
+    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
+    return Math.abs(coords.x - asteroid.x) < scaledSize / 2 &&
+           Math.abs(coords.y - asteroid.y) < scaledSize / 2;
+  });
+}
+
+function handleClickedObject(clickedObject: { type: 'station' | 'asteroid'; data: Station | Asteroid }) {
+  const isOtherUserStation = clickedObject.type === 'station' &&
+    'user_id' in clickedObject.data &&
+    clickedObject.data.user_id !== usePage().props.auth.user.id;
+
+  if (isOtherUserStation) {
+    selectedObject.value = clickedObject;
+    isModalOpen.value = true;
+  } else if (clickedObject.type === 'asteroid') {
+    getAsteroidResources(clickedObject.data as Asteroid);
+  }
+}
+
+function onMouseClick(e: MouseEvent) {
+  const coords = getClickCoordinates(e);
+  if (!coords) return;
+
+  if (e.ctrlKey && handleCoordinateDisplay(coords, e)) return;
+
+  const clickedStation = findClickedStation(coords);
+  if (clickedStation) {
+    handleClickedObject({ type: 'station', data: clickedStation });
     return;
   }
 
-  let clickedObject: { type: 'station' | 'asteroid' | null; data: Asteroid | Station | undefined | null } = { type: null, data: null };
-
-  for (const station of props.stations) {
-    if (Math.abs(zoomedX - station.x) < stationBaseSize * scale.value / 2 &&
-      Math.abs(zoomedY - station.y) < stationBaseSize * scale.value / 2) {
-      clickedObject = { type: 'station', data: station };
-      break;
-    }
-  }
-
-  for (const asteroid of props.asteroids) {
-    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
-
-    if (Math.abs(zoomedX - asteroid.x) < scaledSize / 2 &&
-      Math.abs(zoomedY - asteroid.y) < scaledSize / 2) {
-      clickedObject = { type: 'asteroid', data: asteroid };
-      break;
-    }
-  }
-
-  if (clickedObject.data) {
-    const isOtherUserStation = clickedObject.type === 'station' &&
-      'user_id' in clickedObject.data &&
-      clickedObject.data.user_id !== usePage().props.auth.user.id;
-
-    if (isOtherUserStation) {
-      selectedObject.value = clickedObject;
-      isModalOpen.value = true;
-    } else if (clickedObject.type === 'asteroid') {
-      if (clickedObject.type === 'asteroid' && clickedObject.data) {
-        getAsteroidResources(clickedObject.data as Asteroid);
-      }
-    }
+  const clickedAsteroid = findClickedAsteroid(coords);
+  if (clickedAsteroid) {
+    handleClickedObject({ type: 'asteroid', data: clickedAsteroid });
+    return;
   }
 }
 
@@ -455,25 +486,16 @@ function onKeyDown(e: KeyboardEvent) {
 } */
 
 async function getAsteroidResources(asteroid: Asteroid) {
-  const response = await fetch(route('asteroidMap.asteroid', { asteroid: asteroid.id }), {
-    method: 'POST',
-    headers: {
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-      'Content-Type': 'application/json',
-    },
+  const { data, error } = await api.asteroids.getResources(asteroid.id);
 
-  });
-
-  const result = await response.json();
-
-  if (response.ok) {
+  if (!error) {
     selectedObject.value = {
-      data: result.asteroid,
+      data: data.asteroid,
       type: 'asteroid',
     }
     isModalOpen.value = true;
   } else {
-    console.error('Fehler beim Abrufen der Asteroidenressourcen:', result);
+    console.error('Fehler beim Abrufen der Asteroidenressourcen:', error);
   }
 }
 
@@ -492,15 +514,6 @@ function focusOnObject(object: Station | Asteroid, userId?: number) {
   const targetZoomLevel = zoomLevel.value;
 
   animateView(targetX, targetY, targetZoomLevel);
-}
-
-function focusUserStationOnInitialLoad(userId: number) {
-  const userStation = props.stations.find(station => station.user_id === userId);
-  if (!userStation || !canvasRef.value) return;
-
-  pointX.value = -(userStation.x * config.initialZoom - canvasRef.value.width / 2);
-  pointY.value = -(userStation.y * config.initialZoom - canvasRef.value.height / 2);
-  zoomLevel.value = config.initialZoom;
 }
 
 function searchAndFocus() {

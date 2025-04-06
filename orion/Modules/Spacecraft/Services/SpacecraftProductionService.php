@@ -31,14 +31,6 @@ class SpacecraftProductionService
     ) {
     }
 
-    /**
-     * Versucht, ein Raumschiff zu produzieren
-     * 
-     * @param User $user
-     * @param Spacecraft $spacecraft Das zu produzierende Raumschiff
-     * @param int $quantity Die gewünschte Anzahl
-     * @return array ['success' => bool, 'message' => string]
-     */
     public function startSpacecraftProduction(User $user, Spacecraft $spacecraft, int $quantity): array
     {
         try {
@@ -54,6 +46,7 @@ class SpacecraftProductionService
                 $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity);
             });
 
+            broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
                 'message' => "Produktion von {$quantity} {$spacecraft->details->name} wurde gestartet"
@@ -95,13 +88,6 @@ class SpacecraftProductionService
         })->keyBy('id');
     }
 
-    /**
-     * Prüft, ob der Benutzer genügend Crew-Kapazität hat
-     * 
-     * @param int $userId ID des Benutzers
-     * @param int $requiredCapacity Benötigte Kapazität
-     * @throws InsufficientCrewCapacityException wenn nicht genügend Crew-Kapazität vorhanden ist
-     */
     private function validateCrewCapacity(int $userId, int $requiredCapacity): void
     {
         $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
@@ -130,13 +116,6 @@ class SpacecraftProductionService
         );
     }
 
-    /**
-     * Entsperrt ein Raumschiff für den Nutzer
-     * 
-     * @param int $userId ID des Benutzers
-     * @param Spacecraft $spacecraft Das zu entsperrende Raumschiff
-     * @return array ['success' => bool, 'message' => string]
-     */
     public function unlockSpacecraft(int $userId, Spacecraft $spacecraft): array
     {
         $researchPointsAttribute = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::RESEARCH_POINTS);
@@ -189,14 +168,6 @@ class SpacecraftProductionService
         ];
     }
 
-    /**
-     * Schließt die Produktion eines Raumschiffs ab
-     * 
-     * @param int $spacecraftId ID des Raumschiffs
-     * @param int $userId ID des Benutzers
-     * @param mixed $details Details zur Produktion
-     * @return bool
-     */
     public function completeProduction(int $spacecraftId, int $userId, $details): bool
     {
         $spacecraft = $this->spacecraftRepository->findSpacecraftById($spacecraftId, $userId);

@@ -27,7 +27,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-
 const dialog = ref();
 const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id

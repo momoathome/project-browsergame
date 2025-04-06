@@ -40,7 +40,8 @@ class AsteroidService
         return $this->asteroidRepository->loadWithResources($asteroid);
     }
 
-    public function getAsteroidMapData($user): array {
+    public function getAsteroidMapData($user): array
+    {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
         $spacecrafts = $this->spacecraftService->formatSpacecraftsSimple($user->id);
@@ -52,57 +53,85 @@ class AsteroidService
         ];
     }
 
-    public function asteroidMining($user, AsteroidExploreRequest $request): bool
+    public function StartAsteroidMining($user, AsteroidExploreRequest $request): array
     {
-        if (!$request->validated()) {
-            return false;
+        try {
+            $asteroidId = $request->integer('asteroid_id');
+            $spaceCrafts = $request->collect('spacecrafts');
+
+            // Validiere Asteroid und Raumschiffe
+            $asteroid = $this->validateMiningOperation($asteroidId, $user, $spaceCrafts);
+
+            // Führe die Mining-Operation in einer Transaktion durch
+            DB::transaction(function () use ($user, $asteroid, $spaceCrafts) {
+                // Raumschiffe filtern und sperren
+                $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spaceCrafts);
+                $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
+
+                // Reisedauer berechnen
+                $duration = $this->calculateMiningDuration($user, $asteroid, $filteredSpacecrafts);
+
+                // Zur Queue hinzufügen
+                $this->addMiningOperationToQueue($user->id, $asteroid, $duration, $filteredSpacecrafts);
+            });
+
+            return [
+                'success' => true,
+                'message' => "Abbau von Asteroid {$asteroid->name} gestartet.",
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Mining operation failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => "Abbau von Asteroid {$asteroid->name} fehlgeschlagen.",
+            ];
+        }
+    }
+
+    private function validateMiningOperation(int $asteroidId, User $user, Collection $spaceCrafts): Asteroid
+    {
+        $asteroid = $this->find($asteroidId);
+
+        if (!$asteroid) {
+            throw new \Exception("Asteroid nicht gefunden");
         }
 
-        return $this->processMiningOperation(
+        if ($spaceCrafts->isEmpty()) {
+            throw new \Exception("Keine Raumschiffe ausgewählt");
+        }
+
+        return $asteroid;
+    }
+
+    private function calculateMiningDuration(User $user, Asteroid $asteroid, Collection $filteredSpacecrafts): int
+    {
+        $spacecraftsWithDetails = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails(
+            $user->id,
+            $filteredSpacecrafts
+        );
+
+        return $this->asteroidExplorer->calculateTravelDuration(
+            $spacecraftsWithDetails,
             $user,
-            $request->integer('asteroid_id'),
-            $request->collect('spacecrafts')
+            $asteroid,
+            QueueActionType::ACTION_TYPE_MINING,
+            $filteredSpacecrafts
         );
     }
 
-    private function processMiningOperation(User $user, int $asteroidId, Collection $spaceCrafts): bool
+    private function addMiningOperationToQueue(int $userId, Asteroid $asteroid, int $duration, Collection $filteredSpacecrafts): void
     {
-        return DB::transaction(function () use ($user, $asteroidId, $spaceCrafts) {
-            $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spaceCrafts);
-            $asteroid = $this->asteroidRepository->find($asteroidId);
-
-            if (!$asteroid) {
-                return false;
-            }
-
-            $spacecraftsWithDetails = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails(
-                $user->id,
-                $filteredSpacecrafts
-            );
-
-            $duration = $this->asteroidExplorer->calculateTravelDuration(
-                $spacecraftsWithDetails,
-                $user,
-                $asteroid,
-                QueueActionType::ACTION_TYPE_MINING,
-                $filteredSpacecrafts
-            );
-
-            $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
-
-            $this->queueService->addToQueue(
-                $user->id,
-                QueueActionType::ACTION_TYPE_MINING,
-                $asteroidId,
-                $duration,
-                [
-                    'asteroid_name' => $asteroid->name,
-                    'spacecrafts' => $filteredSpacecrafts
-                ]
-            );
-
-            return true;
-        });
+        $this->queueService->addToQueue(
+            $userId,
+            QueueActionType::ACTION_TYPE_MINING,
+            $asteroid->id,
+            $duration,
+            [
+                'asteroid_name' => $asteroid->name,
+                'spacecrafts' => $filteredSpacecrafts
+            ]
+        );
     }
 
     public function completeAsteroidMining(int $asteroidId, int $userId, array $details)
@@ -115,7 +144,7 @@ class AsteroidService
         $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($details['spacecrafts']);
 
         // if asteroid is not found, free spacecrafts and return false
-        $asteroid = $this->asteroidRepository->find($asteroidId);
+        $asteroid = $this->find($asteroidId);
         if (!$asteroid) {
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;

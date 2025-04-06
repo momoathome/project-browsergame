@@ -28,9 +28,13 @@ class AsteroidController extends Controller
     public function update(AsteroidExploreRequest $request)
     {
         $user = $this->authManager->user();
-        $this->asteroidService->asteroidMining($user, request: $request);
+        $result = $this->asteroidService->StartAsteroidMining($user, request: $request);
 
-        return $this->renderAsteroidMap();
+        if ($result['success']) {
+            return redirect()->route('asteroidMap')->banner($result['message']);
+        } else {
+            return redirect()->route('asteroidMap')->dangerBanner($result['message']);
+        }
     }
 
     public function search(Request $request)
@@ -61,26 +65,4 @@ class AsteroidController extends Controller
 
         return Inertia::render('AsteroidMap', $viewData);
     }
-
-/*     private function renderAsteroidMap($searchedAsteroids = [], $searchedStations = [], $selectedAsteroid = null)
-    {
-        // $asteroids = Asteroid::with('resources')->get();
-
-        $asteroids = Asteroid::select('id', 'x', 'y', 'pixel_size')->get();
-        $stations = Station::all();
-        $user = auth()->user();
-        $spacecrafts = Spacecraft::with('details')
-            ->where('user_id', $user->id)
-            ->orderBy('id', 'asc')
-            ->get();
-
-        return Inertia::render('AsteroidMap', [
-            'asteroids' => $asteroids,
-            'searched_asteroids' => $searchedAsteroids,
-            'searched_stations' => $searchedStations,
-            'spacecrafts' => $spacecrafts,
-            'stations' => $stations,
-            'selected_asteroid' => $selectedAsteroid ?? null,
-        ]);
-    } */
 }

@@ -371,25 +371,27 @@ function onMouseMove(e: MouseEvent) {
     scheduleDraw();
   }
 }
-
 function updateShipPool() {
   const queueItems = usePage().props.queue || [];
   const currentTime = new Date().getTime();
   const activeMissionIds = new Set<number>();
 
-  // 1. Aktive Mining-Missionen identifizieren
-  const miningMissions = (queueItems as QueueItem[]).filter(item =>
-    item.actionType === 'mining' && item.details?.asteroid_coordinates !== undefined
+  // 1. Sammle alle relevanten Missionen
+  const missions = queueItems.filter((item: QueueItem) => 
+    (item.actionType === 'mining' || item.actionType === 'combat') && 
+    item.details?.target_coordinates !== undefined
   );
-  // 2. Neue Missionen hinzufügen
-  if (miningMissions.length > 0 && userStation.value) {
-    miningMissions.forEach(mission => {
+
+  // 2. Neue Missionen hinzufügen und bestehende aktualisieren
+  if (missions.length > 0 && userStation.value) {
+    missions.forEach(mission => {
       const missionId = mission.id;
+      const missionType = mission.actionType as 'mining' | 'combat';
       activeMissionIds.add(missionId);
 
       // Nur neue Missionen initialisieren
       if (!shipPool.value.has(missionId)) {
-        initializeNewMission(mission, missionId);
+        initializeNewMission(mission, missionId, missionType);
       }
     });
   }
@@ -397,26 +399,37 @@ function updateShipPool() {
   // 3. Bestehende Missionen aktualisieren oder entfernen
   for (const missionId of shipPool.value.keys()) {
     if (!activeMissionIds.has(missionId)) {
-      // Entferne nicht mehr aktive Missionen
       shipPool.value.delete(missionId);
     } else {
-      // Aktualisiere aktive Missionen
       updateMissionPosition(missionId, currentTime);
     }
   }
 }
 
-// Hilfsfunktion: Neue Mission initialisieren
-function initializeNewMission(mission: QueueItem, missionId: number) {
-  const targetCoords = mission.details.asteroid_coordinates!;
+function initializeNewMission(mission: QueueItem, missionId: number, missionType: 'mining' | 'combat') {
+  const targetCoords = mission.details.target_coordinates;
   const startTime = new Date(mission.startTime).getTime();
   const endTime = new Date(mission.endTime).getTime();
 
-  // Zähle die Gesamtzahl der Schiffe mit korrekter Typisierung
-  const spacecrafts: SpacecraftFleet = mission.details.spacecrafts || {};
-  const totalShips = Object.values(spacecrafts).reduce(
-    (sum, count) => sum + Number(count), 0
-  );
+  // Zähle die Gesamtzahl der Schiffe basierend auf dem Missionstyp
+  let totalShips = 0;
+  
+  if (missionType === 'mining') {
+    const spacecrafts: SpacecraftFleet = mission.details.spacecrafts || {};
+    totalShips = Object.values(spacecrafts).reduce(
+      (sum, count) => sum + Number(count), 0
+    );
+  } else { // combat
+    const attackerSpacecrafts = mission.details.attacker_formatted || [];
+    totalShips = attackerSpacecrafts.reduce(
+      (sum, spacecraft) => sum + Number(spacecraft.count), 0
+    );
+  }
+
+  // Ermittle den Zielnamen je nach Missionstyp
+  const targetName = missionType === 'mining' 
+    ? mission.details.asteroid_name || '' 
+    : mission.details.defender_name || 'Gegner';
 
   // Erstelle neues Objekt im Pool
   shipPool.value.set(missionId, {
@@ -425,16 +438,17 @@ function initializeNewMission(mission: QueueItem, missionId: number) {
     exactX: userStation.value!.x,
     exactY: userStation.value!.y,
     missionId,
-    asteroidName: mission.details.asteroid_name || '',
+    targetName,
     totalShips,
-    targetX: targetCoords.x,
-    targetY: targetCoords.y,
+    targetX: targetCoords!.x,
+    targetY: targetCoords!.y,
     startX: userStation.value!.x,
     startY: userStation.value!.y,
     startTime,
     endTime,
     completed: false,
-    textOffsetY: -25
+    textOffsetY: -25,
+    missionType
   });
 }
 
@@ -473,22 +487,28 @@ function drawFlightPaths() {
 
   const context = ctx.value;
   const queueItems = usePage().props.queue || [];
-  const miningMissions = queueItems.filter(item =>
-    item.actionType === 'mining' &&
-    item.details?.asteroid_coordinates
+  
+  // Sammle alle relevanten Missionen
+  const missions = queueItems.filter(item =>
+    (item.actionType === 'mining' || item.actionType === 'combat') &&
+    item.details?.target_coordinates
   );
 
-  if (miningMissions.length === 0) return;
+  if (missions.length === 0) return;
 
-  // Zeichne NUR die Fluglinien
-  miningMissions.forEach(mission => {
-    const targetCoords = mission.details.asteroid_coordinates;
-
+  context.setLineDash([10 * scale.value * 4, 12 * scale.value * 4]);
+  context.lineWidth = 2 * scale.value;
+  
+  // Zeichne Missionslinien
+  missions.forEach(mission => {
+    const targetCoords = mission.details.target_coordinates;
+    
+    // Setze Farbe je nach Missionstyp
+    context.strokeStyle = mission.actionType === 'combat' 
+      ? 'rgba(0, 255, 255, 0.4)' // cyan für Kampfmissionen
+      : 'rgba(255, 255, 255, 0.4)'; // weiß für Mining-Missionen
+    
     context.beginPath();
-    context.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    context.lineWidth = 2 * scale.value;
-    context.setLineDash([10 * scale.value * 4, 12 * scale.value * 4]);
-
     // Zeichne Linie von Station zum Ziel
     context.moveTo(userStation.value!.x, userStation.value!.y);
     context.lineTo(targetCoords.x, targetCoords.y);
@@ -566,18 +586,38 @@ function drawShip(ctx, ship, currentScale) {
   const displayX = Math.round(ship.shipX);
   const displayY = Math.round(ship.shipY);
 
+  // Schifffarbe basierend auf Missionstyp
+  if (ship.missionType === 'combat') {
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.8)'; // cyan für Kampfmissionen
+  } else {
+    ctx.fillStyle = 'white';
+  }
+
   // Schiff als Kreis darstellen
   ctx.beginPath();
   ctx.arc(displayX, displayY, 10 * currentScale, 0, 2 * Math.PI);
   ctx.fill();
 }
 
+// Angepasste drawShipLabel-Funktion
 function drawShipLabel(ctx, ship, currentScale) {
-  const textWidth = ctx.measureText(ship.asteroidName).width;
+  const labelText = ship.missionType === 'combat' 
+    ? `${ship.targetName} (Angriff)` 
+    : ship.targetName;
+  
+  const textWidth = ctx.measureText(labelText).width;
   // Verwende exactX/Y für glattere Animationen
   const textX = ship.exactX - textWidth / 2;
   const textY = ship.exactY + ship.textOffsetY * currentScale;
-  ctx.fillText(ship.asteroidName, textX, textY);
+  
+  // Kampfmission-Text in Rot darstellen
+  if (ship.missionType === 'combat') {
+    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für Kampfmissionen
+  } else {
+    ctx.fillStyle = 'white';
+  }
+  
+  ctx.fillText(labelText, textX, textY);
 }
 
 interface ClickCoordinates {

@@ -130,7 +130,7 @@ class AsteroidService
             [
                 'asteroid_name' => $asteroid->name,
                 'spacecrafts' => $filteredSpacecrafts,
-                'asteroid_coordinates' => [
+                'target_coordinates' => [
                     'x' => $asteroid->x,
                     'y' => $asteroid->y,
                 ],

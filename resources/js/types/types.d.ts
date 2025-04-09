@@ -69,7 +69,7 @@ export interface ShipRenderObject {
   shipX: number;
   shipY: number;
   missionId: number;
-  asteroidName: string;
+  targetName: string;
   totalShips: number;
   targetX: number;
   targetY: number;
@@ -81,6 +81,7 @@ export interface ShipRenderObject {
   endTime: number;
   completed: boolean;
   textOffsetY: number;
+  missionType: string;
 }
 
 export interface ResourcePivot {
@@ -269,15 +270,21 @@ export interface AsteroidCoordinates {
 
 // Typ für Mining-Mission-Details
 export interface MiningMissionDetails {
-  asteroid_coordinates: AsteroidCoordinates;
+  target_coordinates: AsteroidCoordinates;
   asteroid_name?: string;
   spacecrafts: SpacecraftFleet;
+}
+
+export interface CombatMissionDetails {
+  target_coordinates: AsteroidCoordinates;
+  defender_name?: string;
+  attacker_formatted?: Array<{ name: string; count: number }>;
 }
 
 // Generischer Typ für alle Missionsarten
 export interface MissionDetails {
   [key: string]: any;
-  asteroid_coordinates?: AsteroidCoordinates;
+  target_coordinates?: AsteroidCoordinates;
   asteroid_name?: string;
   spacecrafts?: SpacecraftFleet;
 }

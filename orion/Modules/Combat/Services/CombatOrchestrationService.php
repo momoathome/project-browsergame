@@ -37,8 +37,7 @@ readonly class CombatOrchestrationService
         // Erstelle einen Kampfplan mit allen notwendigen Informationen
         $combatPlanRequest = CombatPlanRequest::fromRequest(
             $attacker,
-            $defenderId,
-            $defender->name,
+            $defender,
             $spacecrafts,
             $defenderSpacecrafts
         );

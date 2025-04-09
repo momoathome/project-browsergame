@@ -10,6 +10,7 @@ use Orion\Modules\Combat\Dto\Spacecraft;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
+use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Combat\Repositories\CombatRepository;
@@ -20,7 +21,8 @@ readonly class CombatService
     public function __construct(
         private readonly CombatRepository $combatRepository,
         private readonly SpacecraftService $spacecraftService,
-        private readonly UserAttributeService $userAttributeService
+        private readonly UserAttributeService $userAttributeService,
+        private readonly StationService $stationService,
     ) {
     }
 
@@ -42,18 +44,23 @@ readonly class CombatService
     /**
      * Bereitet einen Kampfplan vor, mit allen benötigten Informationen
      */
-    public function prepareCombatPlan(CombatPlanRequest $planRequest): CombatRequest
+     public function prepareCombatPlan(CombatPlanRequest $planRequest): CombatRequest
     {
-        $attacker_formatted = $this->formatAttackerSpacecrafts($planRequest->spacecrafts, $planRequest->attacker);
-        $defender_formatted = $this->formatDefenderSpacecrafts($planRequest->defenderSpacecrafts);
-
+        $defenderStation = $this->stationService->findStationByUserId($planRequest->defender->id);
+        $attackerFormatted = $this->formatAttackerSpacecrafts($planRequest->spacecrafts, $planRequest->attacker);
+        $defenderFormatted = $this->formatDefenderSpacecrafts($planRequest->defenderSpacecrafts);
+    
         return new CombatRequest(
             $planRequest->attacker->id,
-            $planRequest->defenderId,
-            $attacker_formatted,
-            $defender_formatted,
+            $planRequest->defender->id,
+            $attackerFormatted,
+            $defenderFormatted,
             $planRequest->attacker->name,
-            $planRequest->defenderName
+            $planRequest->defender->name,
+            [
+                'x' => $defenderStation->x,
+                'y' => $defenderStation->y,
+            ],
         );
     }
 

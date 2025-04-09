@@ -72,7 +72,7 @@ class AsteroidService
                 $duration = $this->calculateMiningDuration($user, $asteroid, $filteredSpacecrafts);
 
                 // Zur Queue hinzufügen
-                $this->addMiningOperationToQueue($user->id, $asteroid, $duration, $filteredSpacecrafts);
+                $this->addMiningOperationToQueue($user, $asteroid, $duration, $filteredSpacecrafts);
             });
 
             return [
@@ -120,16 +120,20 @@ class AsteroidService
         );
     }
 
-    private function addMiningOperationToQueue(int $userId, Asteroid $asteroid, int $duration, Collection $filteredSpacecrafts): void
+    private function addMiningOperationToQueue(User $user, Asteroid $asteroid, int $duration, Collection $filteredSpacecrafts): void
     {
         $this->queueService->addToQueue(
-            $userId,
+            $user->id,
             QueueActionType::ACTION_TYPE_MINING,
             $asteroid->id,
             $duration,
             [
                 'asteroid_name' => $asteroid->name,
-                'spacecrafts' => $filteredSpacecrafts
+                'spacecrafts' => $filteredSpacecrafts,
+                'asteroid_coordinates' => [
+                    'x' => $asteroid->x,
+                    'y' => $asteroid->y,
+                ],
             ]
         );
     }

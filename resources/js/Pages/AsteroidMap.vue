@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { usePage, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
@@ -8,7 +8,7 @@ import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
-import type { Asteroid, Station, Spacecraft } from '@/types/types';
+import type { Asteroid, Station, Spacecraft, ShipRenderObject, QueueItem, SavedQueueItemState, SpacecraftFleet, MiningMissionDetails, MissionDetails } from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
 import * as config from '@/config';
 
@@ -30,6 +30,9 @@ const stationBaseSize = config.stationImageBaseSize;
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 
+const canvasStaticRef = ref<HTMLCanvasElement | null>(null);
+const canvasStaticCtx = ref<CanvasRenderingContext2D | null>(null);
+
 const asteroidsQuadtree = ref<Quadtree | null>(null);
 const stationsQuadtree = ref<Quadtree | null>(null);
 
@@ -45,7 +48,37 @@ const isDragging = ref(false);
 const moveSpeed = ref(10);
 const pendingDraw = ref(false);
 
+// static values
+const userStation = computed(() => {
+  const userId = usePage().props.auth.user.id;
+  return props.stations.find(station => station.user_id === userId);
+});
+
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
+const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
+
+let frameCounter = 0;
+let animationFrameId: number | undefined;
+
+function animateShips() {
+  frameCounter++;
+
+  // Aktualisiere nur jeden zweiten Frame (30 FPS statt 60 FPS)
+  if (frameCounter % 2 === 0) {
+    // Überprüfe, ob Mining-Missionen existieren über den Pool-Status
+    if (shipPool.value.size > 0) {
+      drawMissionLayer();
+    } else {
+      // Pool möglicherweise aktualisieren für neue Missionen
+      updateShipPool();
+      if (shipPool.value.size > 0) {
+        drawMissionLayer();
+      }
+    }
+  }
+
+  animationFrameId = requestAnimationFrame(animateShips);
+}
 
 const {
   searchForm,
@@ -58,7 +91,16 @@ const {
 onMounted(() => {
   if (canvasRef.value) {
     ctx.value = canvasRef.value.getContext('2d');
+
+    // Initialisiere den Schiffs-Canvas
+    if (canvasStaticRef.value) {
+      canvasStaticCtx.value = canvasStaticRef.value.getContext('2d');
+      adjustStaticCanvasSize();
+    }
+
     adjustCanvasSize();
+
+    animationFrameId = requestAnimationFrame(animateShips);
 
     stationImage.src = stationImageSrc;
     asteroidImage.src = asteroidImageSrc;
@@ -88,6 +130,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
   window.removeEventListener('keydown', onKeyDown);
+
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
 });
 
 function initQuadtree() {
@@ -106,19 +152,27 @@ function initQuadtree() {
 }
 
 function focusUserStationOnInitialLoad(userId: number) {
-  const userStation = props.stations.find(station => station.user_id === userId);
-  if (!userStation || !canvasRef.value) return;
+  if (!userStation.value || !canvasRef.value) return;
 
-  pointX.value = -(userStation.x * config.initialZoom - canvasRef.value.width / 2);
-  pointY.value = -(userStation.y * config.initialZoom - canvasRef.value.height / 2);
+  pointX.value = -(userStation.value.x * config.initialZoom - canvasRef.value.width / 2);
+  pointY.value = -(userStation.value.y * config.initialZoom - canvasRef.value.height / 2);
   zoomLevel.value = config.initialZoom;
 }
 
+function adjustStaticCanvasSize() {
+  if (canvasStaticRef.value && canvasStaticCtx.value) {
+    canvasStaticRef.value.width = window.innerWidth;
+    canvasStaticRef.value.height = window.innerHeight - 72;
+  }
+}
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
     canvasRef.value.height = window.innerHeight - 72;
+
+    adjustStaticCanvasSize();
     drawScene();
+    drawMissionLayer();
   }
 }
 
@@ -139,7 +193,8 @@ function drawScene() {
     bottom: (height - pointY.value) / zoomLevel.value,
   };
 
-  drawUserScanRange()
+  drawUserScanRange();
+  drawFlightPaths();
   drawStationsAndAsteroids(visibleArea);
 
   ctx.value.restore();
@@ -150,6 +205,7 @@ function scheduleDraw() {
     pendingDraw.value = true;
     requestAnimationFrame(() => {
       drawScene();
+      drawMissionLayer();
       pendingDraw.value = false;
     });
   }
@@ -163,10 +219,9 @@ const userScanRange = computed(() => {
 });
 
 function drawUserScanRange() {
-  const userStation = props.stations.find(station => station.user_id === usePage().props.auth.user.id);
-  if (userStation && ctx.value) {
+  if (userStation.value && ctx.value) {
     ctx.value.beginPath();
-    ctx.value.arc(userStation.x, userStation.y, userScanRange.value, 0, 2 * Math.PI);
+    ctx.value.arc(userStation.value.x, userStation.value.y, userScanRange.value, 0, 2 * Math.PI);
     ctx.value.fillStyle = 'rgba(36, 36, 36, 0.2)';
     ctx.value.fill();
     ctx.value.stroke();
@@ -317,6 +372,214 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
+function updateShipPool() {
+  const queueItems = usePage().props.queue || [];
+  const currentTime = new Date().getTime();
+  const activeMissionIds = new Set<number>();
+
+  // 1. Aktive Mining-Missionen identifizieren
+  const miningMissions = (queueItems as QueueItem[]).filter(item =>
+    item.actionType === 'mining' && item.details?.asteroid_coordinates !== undefined
+  );
+  // 2. Neue Missionen hinzufügen
+  if (miningMissions.length > 0 && userStation.value) {
+    miningMissions.forEach(mission => {
+      const missionId = mission.id;
+      activeMissionIds.add(missionId);
+
+      // Nur neue Missionen initialisieren
+      if (!shipPool.value.has(missionId)) {
+        initializeNewMission(mission, missionId);
+      }
+    });
+  }
+
+  // 3. Bestehende Missionen aktualisieren oder entfernen
+  for (const missionId of shipPool.value.keys()) {
+    if (!activeMissionIds.has(missionId)) {
+      // Entferne nicht mehr aktive Missionen
+      shipPool.value.delete(missionId);
+    } else {
+      // Aktualisiere aktive Missionen
+      updateMissionPosition(missionId, currentTime);
+    }
+  }
+}
+
+// Hilfsfunktion: Neue Mission initialisieren
+function initializeNewMission(mission: QueueItem, missionId: number) {
+  const targetCoords = mission.details.asteroid_coordinates!;
+  const startTime = new Date(mission.startTime).getTime();
+  const endTime = new Date(mission.endTime).getTime();
+
+  // Zähle die Gesamtzahl der Schiffe mit korrekter Typisierung
+  const spacecrafts: SpacecraftFleet = mission.details.spacecrafts || {};
+  const totalShips = Object.values(spacecrafts).reduce(
+    (sum, count) => sum + Number(count), 0
+  );
+
+  // Erstelle neues Objekt im Pool
+  shipPool.value.set(missionId, {
+    shipX: userStation.value!.x,
+    shipY: userStation.value!.y,
+    exactX: userStation.value!.x,
+    exactY: userStation.value!.y,
+    missionId,
+    asteroidName: mission.details.asteroid_name || '',
+    totalShips,
+    targetX: targetCoords.x,
+    targetY: targetCoords.y,
+    startX: userStation.value!.x,
+    startY: userStation.value!.y,
+    startTime,
+    endTime,
+    completed: false,
+    textOffsetY: -25
+  });
+}
+
+function updateMissionPosition(missionId, currentTime) {
+  const shipObject = shipPool.value.get(missionId);
+  if (!shipObject) return;
+
+  const totalDuration = shipObject.endTime - shipObject.startTime;
+  const elapsedDuration = currentTime - shipObject.startTime;
+  const progressPercent = Math.min(Math.max(elapsedDuration / totalDuration, 0), 1);
+
+  // Wenn die Mission abgeschlossen ist (100% Fortschritt)
+  if (progressPercent >= 1) {
+    if (currentTime >= shipObject.endTime + 1000) {
+      shipPool.value.delete(missionId);
+      return;
+    } else {
+      // Sicherstelle, dass Schiffe exakt am Ziel sind
+      shipObject.exactX = shipObject.targetX;
+      shipObject.exactY = shipObject.targetY;
+      shipObject.shipX = shipObject.targetX;
+      shipObject.shipY = shipObject.targetY;
+      shipObject.completed = true;
+    }
+  } else {
+    // Aktualisiere Position während des Fluges
+    shipObject.exactX = shipObject.startX + (shipObject.targetX - shipObject.startX) * progressPercent;
+    shipObject.exactY = shipObject.startY + (shipObject.targetY - shipObject.startY) * progressPercent;
+    shipObject.shipX = shipObject.exactX;
+    shipObject.shipY = shipObject.exactY;
+  }
+}
+
+function drawFlightPaths() {
+  if (!userStation.value || !ctx.value) return;
+
+  const context = ctx.value;
+  const queueItems = usePage().props.queue || [];
+  const miningMissions = queueItems.filter(item =>
+    item.actionType === 'mining' &&
+    item.details?.asteroid_coordinates
+  );
+
+  if (miningMissions.length === 0) return;
+
+  // Zeichne NUR die Fluglinien
+  miningMissions.forEach(mission => {
+    const targetCoords = mission.details.asteroid_coordinates;
+
+    context.beginPath();
+    context.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    context.lineWidth = 2 * scale.value;
+    context.setLineDash([10 * scale.value * 4, 12 * scale.value * 4]);
+
+    // Zeichne Linie von Station zum Ziel
+    context.moveTo(userStation.value!.x, userStation.value!.y);
+    context.lineTo(targetCoords.x, targetCoords.y);
+    context.stroke();
+  });
+
+  context.setLineDash([]);
+}
+
+function drawMissionLayer() {
+  if (!canvasStaticCtx.value || !canvasStaticRef.value) return;
+
+  updateShipPool();
+
+  if (shipPool.value.size === 0) return;
+
+  const { width, height } = canvasStaticRef.value;
+  const ctx = canvasStaticCtx.value;
+  const currentScale = scale.value;
+
+  // Canvas leeren
+  ctx.clearRect(0, 0, width, height);
+
+  // Transformationen anwenden
+  ctx.save();
+  ctx.translate(pointX.value, pointY.value);
+  ctx.scale(zoomLevel.value, zoomLevel.value);
+
+  // Sichtbaren Bereich berechnen
+  const visibleArea = calculateVisibleArea(width, height);
+
+  // Textformatierung einstellen
+  ctx.fillStyle = 'white';
+  ctx.font = `${20 * currentScale}px Arial`;
+
+  // Nur sichtbare Schiffe rendern
+  renderVisibleShips(ctx, visibleArea, currentScale);
+
+  ctx.restore();
+}
+
+function calculateVisibleArea(width, height) {
+  return {
+    left: -pointX.value / zoomLevel.value,
+    top: -pointY.value / zoomLevel.value,
+    right: (width - pointX.value) / zoomLevel.value,
+    bottom: (height - pointY.value) / zoomLevel.value,
+  };
+}
+
+function renderVisibleShips(ctx, visibleArea, currentScale) {
+  const buffer = 50 * currentScale;
+
+  for (const ship of shipPool.value.values()) {
+    // Prüfe, ob das Schiff im sichtbaren Bereich liegt
+    if (!isShipVisible(ship, visibleArea, buffer)) continue;
+
+    // Nur nicht abgeschlossene Schiffe zeichnen
+    if (!ship.completed) {
+      // Zeichne das Schiff
+      drawShip(ctx, ship, currentScale);
+      drawShipLabel(ctx, ship, currentScale);
+    }
+  }
+}
+
+function isShipVisible(ship, visibleArea, buffer) {
+  return ship.shipX >= visibleArea.left - buffer &&
+    ship.shipX <= visibleArea.right + buffer &&
+    ship.shipY >= visibleArea.top - buffer &&
+    ship.shipY <= visibleArea.bottom + buffer;
+}
+
+function drawShip(ctx, ship, currentScale) {
+  const displayX = Math.round(ship.shipX);
+  const displayY = Math.round(ship.shipY);
+
+  // Schiff als Kreis darstellen
+  ctx.beginPath();
+  ctx.arc(displayX, displayY, 10 * currentScale, 0, 2 * Math.PI);
+  ctx.fill();
+}
+
+function drawShipLabel(ctx, ship, currentScale) {
+  const textWidth = ctx.measureText(ship.asteroidName).width;
+  // Verwende exactX/Y für glattere Animationen
+  const textX = ship.exactX - textWidth / 2;
+  const textY = ship.exactY + ship.textOffsetY * currentScale;
+  ctx.fillText(ship.asteroidName, textX, textY);
+}
+
 interface ClickCoordinates {
   x: number;
   y: number;
@@ -346,7 +609,7 @@ function handleCoordinateDisplay(coords: ClickCoordinates, e: MouseEvent) {
 }
 
 function findClickedStation(coords: ClickCoordinates) {
-  return props.stations.find(station => 
+  return props.stations.find(station =>
     Math.abs(coords.x - station.x) < stationBaseSize * scale.value / 2 &&
     Math.abs(coords.y - station.y) < stationBaseSize * scale.value / 2
   );
@@ -356,7 +619,7 @@ function findClickedAsteroid(coords: ClickCoordinates) {
   return props.asteroids.find(asteroid => {
     const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
     return Math.abs(coords.x - asteroid.x) < scaledSize / 2 &&
-           Math.abs(coords.y - asteroid.y) < scaledSize / 2;
+      Math.abs(coords.y - asteroid.y) < scaledSize / 2;
   });
 }
 
@@ -556,6 +819,11 @@ function selectAsteroid(asteroid: Asteroid) {
   selectedAsteroid.value = asteroid;
 }
 
+watch(() => usePage().props.queue, () => {
+  updateShipPool();
+  scheduleDraw();
+}, { deep: true });
+
 </script>
 
 <template>
@@ -563,6 +831,8 @@ function selectAsteroid(asteroid: Asteroid) {
     <div class="relative" @click.prevent="">
       <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
+      </canvas>
+      <canvas ref="canvasStaticRef" class="block w-full absolute z-10 top-0 left-0 pointer-events-none">
       </canvas>
 
       <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">

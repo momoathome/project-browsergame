@@ -65,6 +65,24 @@ export interface SpacecraftSimple {
   unlocked: boolean;
 }
 
+export interface ShipRenderObject {
+  shipX: number;
+  shipY: number;
+  missionId: number;
+  asteroidName: string;
+  totalShips: number;
+  targetX: number;
+  targetY: number;
+  startX: number;
+  startY: number;
+  exactX: number;
+  exactY: number;
+  startTime: number;
+  endTime: number;
+  completed: boolean;
+  textOffsetY: number;
+}
+
 export interface ResourcePivot {
   resource_id: number;
   amount: number;
@@ -236,4 +254,39 @@ export interface SavedQueueItemState {
   id: number;
   seen: boolean;
   showInfos: boolean;
+}
+
+// Typ für Spacecraft-Flotten in Missionen
+export interface SpacecraftFleet {
+  [spacecraftName: string]: number; // z.B. { "Mole": 1}
+}
+
+// Typ für Asteroid-Koordinaten
+export interface AsteroidCoordinates {
+  x: number;
+  y: number;
+}
+
+// Typ für Mining-Mission-Details
+export interface MiningMissionDetails {
+  asteroid_coordinates: AsteroidCoordinates;
+  asteroid_name?: string;
+  spacecrafts: SpacecraftFleet;
+}
+
+// Generischer Typ für alle Missionsarten
+export interface MissionDetails {
+  [key: string]: any;
+  asteroid_coordinates?: AsteroidCoordinates;
+  asteroid_name?: string;
+  spacecrafts?: SpacecraftFleet;
+}
+
+// Typ für Missionen in der Queue
+export interface QueueItem {
+  id: number;
+  actionType: string;
+  startTime: string;
+  endTime: string;
+  details: MissionDetails;
 }

@@ -20,19 +20,13 @@ docker run --rm \
     composer install --ignore-platform-reqs
 ```
 
-### Step 3: Install Composer Dependencies
-
-``` bash
-sail composer install
-```
-
-### Step 4: Install NPM Packages
+### Step 3: Install NPM Packages
 
 ``` bash
 npm install
 ```
 
-### Step 5: Configure Environment Variables
+### Step 4: Configure Environment Variables
 
 Create a copy of the .env.example file and rename it to .env.
 
@@ -40,12 +34,18 @@ Create a copy of the .env.example file and rename it to .env.
 cp .env.example .env
 ```
 
+### Step 5: Container starten
+
+``` bash
+./vendor/bin/sail up -d
+```
+
 ### Step 6: Generate Application Key
 
 Generate a new application key. This step is crucial for application security.
 
 ``` bash
-sail artisan key:generate   
+./vendor/bin/sail artisan key:generate   
 ```
 
 ### Step 7: Update Environment Settings
@@ -53,8 +53,6 @@ sail artisan key:generate
 Edit the .env file with the following entries
 
 ``` md
-APP_URL=YOR DOMAIN OR IP
-APP_KEY=YOUR APP KEY
 DB_CONNECTION=pgsql
 DB_HOST=pgsql
 DB_PORT=5432
@@ -76,16 +74,21 @@ DEBUGBAR_ENABLED=true
 Perform database migrations with the following command. This will set up your database schema and seed the Database
 
 ``` bash
-sail up
-php artisan migrate:fresh --seed
+./vendor/bin/sail artisan migrate:fresh --seed
 ```
 
 ### Step 9: Index your database for faster search
 
 ``` bash
-sail artisan scout:import "App\Models\Asteroid"
-sail artisan scout:index "App\Models\Asteroid"
-sail artisan meilisearch:configure
+./vendor/bin/sail artisan scout:import "Orion\Modules\Asteroid\Models\Asteroid"
+./vendor/bin/sail artisan scout:index "Orion\Modules\Asteroid\Models\Asteroid"
+./vendor/bin/sail artisan meilisearch:configure
+```
+
+### Step 10: dump-autoload
+
+``` bash
+./vendor/bin/sail composer dump-autoload
 ```
 
 ## Commands

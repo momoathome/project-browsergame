@@ -74,7 +74,7 @@
                     <div class="rounded-lg shadow-2xl">
                         <div class="bg-base p-1 rounded">
                             <div class="aspect-auto rounded overflow-hidden">
-                                <img src="/storage/game-screenshot.webp" alt="Game Screenshot">
+                                <img src="/images/game-screenshot.webp" alt="Game Screenshot">
                             </div>
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                     <!-- Feature 1 -->
                     <div class="bg-base p-6 rounded-lg">
                         <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
-                            <img src="/storage/navigation/asteroidmap.png" alt="Asteroid" class="w-6 h-6">
+                            <img src="/images/navigation/asteroidmap.png" alt="Asteroid" class="w-6 h-6">
                         </div>
                         <h3 class="text-xl font-bold text-secondary mb-2">Mine Asteroids</h3>
                         <p class="text-gray">Harvest valuable resources from asteroid fields to fund your galactic
@@ -101,7 +101,7 @@
                     <!-- Feature 2 -->
                     <div class="bg-base p-6 rounded-lg">
                         <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
-                            <img src="/storage/navigation/simulator.png" alt="Strategic Battles" class="w-6 h-6">
+                            <img src="/images/navigation/simulator.png" alt="Strategic Battles" class="w-6 h-6">
                         </div>
                         <h3 class="text-xl font-bold text-secondary mb-2">Strategic Battles</h3>
                         <p class="text-gray">Command your fleets in tactical warfare against rival empires.</p>
@@ -110,7 +110,7 @@
                     <!-- Feature 3 -->
                     <div class="bg-base p-6 rounded-lg">
                         <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center mb-4">
-                            <img src="/storage/navigation/buildings.png" alt="Space Station" class="w-6 h-6">
+                            <img src="/images/navigation/buildings.png" alt="Space Station" class="w-6 h-6">
                         </div>
                         <h3 class="text-xl font-bold text-secondary mb-2">Build Your Station</h3>
                         <p class="text-gray">Customize and expand your space station with advanced technology and

@@ -40,17 +40,17 @@ const processedQueueItems = ref<ProcessedQueueItem[]>([])
 const getImageByActionType = (actionType: string): string => {
     switch (actionType) {
         case 'building':
-            return '/storage/navigation/buildings.png'
+            return '/images/navigation/buildings.png'
         case 'produce':
-            return '/storage/navigation/shipyard.png'
+            return '/images/navigation/shipyard.png'
         case 'mining':
-            return '/storage/navigation/asteroidmap.png'
+            return '/images/navigation/asteroidmap.png'
         case 'research':
-            return '/storage/navigation/research.png'
+            return '/images/navigation/research.png'
         case 'combat':
-            return '/storage/navigation/simulator.png'
+            return '/images/navigation/simulator.png'
         default:
-            return '/storage/navigation/buildings.png'
+            return '/images/navigation/buildings.png'
     }
 }
 

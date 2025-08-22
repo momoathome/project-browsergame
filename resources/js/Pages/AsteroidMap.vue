@@ -18,8 +18,8 @@ const props = defineProps<{
   spacecrafts: Spacecraft[];
 }>();
 
-const stationImageSrc = '/storage/space-station.png';
-const asteroidImageSrc = '/storage/asteroid-light.webp';
+const stationImageSrc = '/images/space-station.png';
+const asteroidImageSrc = '/images/asteroid.png';
 
 const stationImage = new Image();
 const asteroidImage = new Image();

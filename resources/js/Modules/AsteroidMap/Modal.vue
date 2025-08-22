@@ -222,7 +222,7 @@ onUnmounted(() => {
               <div v-if="canScanAsteroid" class="text-gray-300 flex items-center justify-center mt-8">
                 <div class="flex gap-6">
                   <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
-                    <img :src="`/storage/resources/${resource_type}.png`" class="h-6" alt="" />
+                    <img :src="`/images/resources/${resource_type}.png`" class="h-6" alt="" />
                     {{ amount }}
                   </span>
                 </div>

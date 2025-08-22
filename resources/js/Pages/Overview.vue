@@ -17,11 +17,11 @@ const page = usePage()
 
 const getTypeIcon = (type) => {
   switch (type) {
-    case 'Fighter': return '/storage/navigation/simulator.png';
-    case 'Miner': return '/storage/attributes/storage.png';
-    case 'Transporter': return '/storage/supply-chain_light.png';
-    case 'mining': return '/storage/navigation/asteroidmap.png';
-    case 'combat': return '/storage/navigation/simulator.png';
+    case 'Fighter': return '/images/navigation/simulator.png';
+    case 'Miner': return '/images/attributes/storage.png';
+    case 'Transporter': return '/images/supply-chain_light.png';
+    case 'mining': return '/images/navigation/asteroidmap.png';
+    case 'combat': return '/images/navigation/simulator.png';
     default: return '';
   }
 };
@@ -117,7 +117,7 @@ onUnmounted(() => {
 
       <!-- Buildings -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
-        <SectionHeader title="Buildings" iconSrc="/storage/navigation/buildings.png" :route="route('buildings')"
+        <SectionHeader title="Buildings" iconSrc="/images/navigation/buildings.png" :route="route('buildings')"
           :isPrimary="true" />
         <table class="w-full text-light mt-1">
           <thead class="text-gray-400 border-b border-primary">
@@ -149,7 +149,7 @@ onUnmounted(() => {
       <!-- Rest des Templates bleibt gleich -->
       <!-- Spacecrafts -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
-        <SectionHeader title="Shipyard" iconSrc="/storage/navigation/shipyard.png" :route="route('shipyard')"
+        <SectionHeader title="Shipyard" iconSrc="/images/navigation/shipyard.png" :route="route('shipyard')"
           :isPrimary="true" />
 
         <table class="w-full text-light mt-1">
@@ -211,7 +211,7 @@ onUnmounted(() => {
 
       <!-- AsteroidMap -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
-        <SectionHeader title="Asteroid Map" iconSrc="/storage/navigation/asteroidmap.png" :route="route('asteroidMap')"
+        <SectionHeader title="Asteroid Map" iconSrc="/images/navigation/asteroidmap.png" :route="route('asteroidMap')"
           :isPrimary="true" />
 
         <table class="w-full text-light mt-1">

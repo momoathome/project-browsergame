@@ -170,7 +170,7 @@ function unlockSpacecraft() {
   <div class="flex relative">
     <div class="flex flex-col rounded-3xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
       <div class="image relative">
-        <img :src="spacecraft.image" class="rounded-t-3xl h-[144px]" alt="spacecraft" />
+        <img :src="spacecraft.image" class="rounded-t-3xl h-[144px] w-full" alt="spacecraft" />
       </div>
       <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
         <div class="flex flex-col gap-4">
@@ -260,7 +260,7 @@ function unlockSpacecraft() {
       :disabled="!canUnlockSpacecraft">
       Unlock
       <div class="flex gap-1">
-        <img src="/storage/attributes/research_points.png" class="h-5" alt="research icon">
+        <img src="/images/attributes/research_points.png" class="h-5" alt="research icon">
         <span>{{ spacecraft.research_cost }}</span>
       </div>
     </TertiaryButton>

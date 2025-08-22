@@ -52,7 +52,7 @@ const setCount = () => {
 <template>
   <div class="flex flex-col rounded-3xl bg-base content_card text-light text-base select-none">
     <div class="image relative">
-      <img :src="spacecraft.image" class="rounded-t-3xl h-[65px]" alt="" />
+      <img :src="spacecraft.image" class="rounded-t-3xl h-[65px] w-full" alt="" />
     </div>
     <div class="px-4 pt-0 pb-4 flex flex-col gap-2">
       <div class="flex flex-col gap-2">

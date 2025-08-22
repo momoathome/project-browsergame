@@ -9,10 +9,6 @@ const logout = () => {
     router.post(route('logout'));
 };
 
-const menu = [
-    { name: 'profile.show', label: 'Profile', image: '/storage/navigation/profile.png' },
-]
-
 const isMenuOpen = ref(false);
 
 const toggleMenu = () => {
@@ -48,7 +44,7 @@ onBeforeUnmount(() => {
             <Divider class="!w-[calc(100%-1rem)] bg-primary/50" />
             <!-- Menu  -->
             <div class="relative px-4 py-6">
-                <img id="menu-trigger" src="/storage/navigation/profile.png" alt="Profile Menu"
+                <img id="menu-trigger" src="/images/navigation/profile.png" alt="Profile Menu"
                     class="cursor-pointer w-6 h-6 2xl:w-8 2xl:h-8" @click.stop="toggleMenu" />
 
                 <nav id="dropdown-menu" v-if="isMenuOpen"

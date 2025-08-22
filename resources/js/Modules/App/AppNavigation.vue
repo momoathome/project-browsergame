@@ -4,14 +4,14 @@ import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { is, can } from 'laravel-permission-to-vuejs'
 
 const NavigationLinks = [
-  { name: 'overview', label: 'Overview', image: '/storage/navigation/overview.png' },
-  { name: 'buildings', label: 'Buildings', image: '/storage/navigation/buildings.png' },
-  { name: 'shipyard', label: 'Shipyard', image: '/storage/navigation/shipyard.png' },
-  // { name: 'research', label: 'Research', image: '/storage/navigation/research.png' },
-  { name: 'asteroidMap', label: 'AsteroidMap', image: '/storage/navigation/asteroidmap.png' },
-  { name: 'market', label: 'Market', image: '/storage/navigation/market.png' },
-  // { name: 'logbook', label: 'Logbook', image: '/storage/navigation/logbook.png' },
-  { name: 'simulator', label: 'Simulator', image: '/storage/navigation/simulator.png' },
+  { name: 'overview', label: 'Overview', image: '/images/navigation/overview.png' },
+  { name: 'buildings', label: 'Buildings', image: '/images/navigation/buildings.png' },
+  { name: 'shipyard', label: 'Shipyard', image: '/images/navigation/shipyard.png' },
+  // { name: 'research', label: 'Research', image: '/images/navigation/research.png' },
+  { name: 'asteroidMap', label: 'AsteroidMap', image: '/images/navigation/asteroidmap.png' },
+  { name: 'market', label: 'Market', image: '/images/navigation/market.png' },
+  // { name: 'logbook', label: 'Logbook', image: '/images/navigation/logbook.png' },
+  { name: 'simulator', label: 'Simulator', image: '/images/navigation/simulator.png' },
 ];
 </script>
 
@@ -31,7 +31,7 @@ const NavigationLinks = [
         class="group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition active:border-opacity-100 border-l-2 border-opacity-0 border-l-[#bfbfbf]"
         :href="route('admin.dashboard')" 
         :class="[route().current('admin.dashboard') ? 'border-opacity-100 ' : '']">
-        <img src="/storage/navigation/dashboard.png" class="w-8 h-8" alt="Dashboard" />
+        <img src="/images/navigation/gear.png" class="w-8 h-8" alt="Dashboard" />
 
         <AppTooltip :label="'Dashboard'" position="right" />
       </Link>

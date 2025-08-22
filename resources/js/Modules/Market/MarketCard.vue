@@ -74,7 +74,7 @@ function setMaxAmount() {
         <p class="font-semibold text-xl">{{ marketData.name }}</p>
       </div>
       <div class="flex items-center gap-x-1">
-        <img src="/storage/attributes/credits.png" class="h-6" alt="credits" />
+        <img src="/images/attributes/credits.png" class="h-6" alt="credits" />
         <div class="flex flex-col">
           <span class="text-xs text-secondary">price</span>
           <p class="font-medium">{{ formattedCost }}</p>
@@ -84,7 +84,7 @@ function setMaxAmount() {
 
     <div class="relative flex justify-center items-center py-4">
       <div class="group relative">
-        <img :src="marketData.image" class="h-[56px] cursor-pointer" @click="setUserResourcesInput" @click.shift="setMaxAmount" alt="resource" />
+        <img :src="marketData.image" class="h-[64px] cursor-pointer" @click="setUserResourcesInput" @click.shift="setMaxAmount" alt="resource" />
         <AppTooltip class="py-2 px-3" label="click to add all sellable resources<br>shift click to add all buyable resources" position="bottom" />
       </div>
     </div>
@@ -98,7 +98,7 @@ function setMaxAmount() {
           <p class="font-medium">{{ formattedStock }}</p>
         </div>
         <div class="flex items-center gap-x-1">
-          <img src="/storage/attributes/credits.png" class="h-6" alt="credits" />
+          <img src="/images/attributes/credits.png" class="h-6" alt="credits" />
           <div class="flex flex-col me-1">
             <span class="text-xs text-secondary">total</span>
             <p class="font-medium text-sm">{{ formattedTotalCost }}</p>

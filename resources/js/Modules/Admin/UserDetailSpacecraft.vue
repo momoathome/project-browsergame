@@ -48,9 +48,9 @@ const unlockSpacecraft = (spacecraftId: number) => {
                 <tr>
                     <th class="text-left p-2">Name</th>
                     <th class="text-left p-2">Research</th>
-                    <th class="text-left p-2">Anzahl</th>
+                    <th class="text-left p-2">Amount</th>
                     <th class="text-left p-2">Locked</th>
-                    <th class="text-left p-2">Aktion</th>
+                    <th class="text-left p-2">Action</th>
                 </tr>
             </thead>
             <tbody>

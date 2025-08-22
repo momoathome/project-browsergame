@@ -49,7 +49,7 @@ class AsteroidExplorer
         Collection $spacecrafts,
         $user,
         Asteroid|Station $asteroid,
-        QueueActionType $actionType = null,
+        ?QueueActionType $actionType = null,
         ?Collection $filteredSpacecrafts = null
     ): int {
         $lowestSpeed = $this->findLowestSpeedOfSpacecrafts($spacecrafts);

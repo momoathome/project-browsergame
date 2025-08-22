@@ -36,7 +36,7 @@ const finishQueue = () => {
                 </div>
             </div>
 
-            <section class="flex gap-6 w-2/3">
+            <section class="flex gap-6 w-full">
                 <!-- Benutzer-Basisinformationen -->
                 <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
                     <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">

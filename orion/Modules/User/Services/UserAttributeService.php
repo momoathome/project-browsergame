@@ -20,20 +20,8 @@ class UserAttributeService
         // Holen der Attribute
         $userAttributes = $this->userAttributeRepository->getAllUserAttributesByUserId($userId);
     
-        // Debug-Ausgabe hinzufügen, um die ursprünglichen Werte zu sehen
-        \Log::debug("Original user attributes", [
-            'user_id' => $userId,
-            'attributes' => $userAttributes->toArray()
-        ]);
-    
         // Verwende den Handler, um TOTAL_UNITS zu berechnen und zu aktualisieren
         $userAttributes = $this->userAttributeHandler->updateTotalUnitsAttribute($userId, $userAttributes);
-    
-        // Debug-Ausgabe für die endgültigen Werte
-        \Log::debug("Final user attributes", [
-            'user_id' => $userId,
-            'attributes' => $userAttributes->toArray()
-        ]);
     
         return $userAttributes;
     }

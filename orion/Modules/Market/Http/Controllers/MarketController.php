@@ -6,6 +6,8 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Market\Models\Market;
 use Orion\Modules\Market\Services\MarketService;
 
 
@@ -40,10 +42,10 @@ class MarketController extends Controller
         $this->marketService->updateResourceAmount($id, $validated['stock'], $validated['cost']);
     }
 
-    public function buy(Request $request)
+    public function buy(Request $request, Market $marketRes)
     {
+        $marketRes->load('resource');
         $validated = $request->validate([
-            'resource_id' => 'required|exists:markets,id',
             'amount' => 'required|integer|min:1',
         ]);
         $user = $this->authManager->user();
@@ -51,13 +53,13 @@ class MarketController extends Controller
             throw new \LogicException('Authenticated user is not of type App\Models\User');
         }
 
-        $this->marketService->buyResource($user, $validated['resource_id'], $validated['amount']);
+        $this->marketService->buyResource($user, $marketRes, $validated['amount']);
     }
 
-    public function sell(Request $request)
+    public function sell(Request $request, Market $marketRes)
     {
+        $marketRes->load('resource');
         $validated = $request->validate([
-            'resource_id' => 'required|exists:markets,id',
             'amount' => 'required|integer|min:1',
         ]);
         $user = $this->authManager->user();
@@ -65,6 +67,6 @@ class MarketController extends Controller
             throw new \LogicException('Authenticated user is not of type App\Models\User');
         }
 
-        $this->marketService->sellResource($user, $validated['resource_id'], $validated['amount']);
+        $this->marketService->sellResource($user, $marketRes, $validated['amount']);
     }
 }

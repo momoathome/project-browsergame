@@ -70,7 +70,7 @@
                     </Link>
                 </div>
 
-                <div class="mt-16 relative w-full max-w-6xl">
+                <!-- <div class="mt-16 relative w-full max-w-6xl">
                     <div class="rounded-lg shadow-2xl">
                         <div class="bg-base p-1 rounded">
                             <div class="aspect-auto rounded overflow-hidden">
@@ -78,7 +78,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
 

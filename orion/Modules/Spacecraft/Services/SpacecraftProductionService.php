@@ -49,7 +49,7 @@ class SpacecraftProductionService
             broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
-                'message' => "Produktion von {$quantity} {$spacecraft->details->name} wurde gestartet"
+                'message' => "Production of {$spacecraft->details->name} x{$quantity} successfully started"
             ];
         } catch (InsufficientCrewCapacityException $e) {
             return [
@@ -62,7 +62,7 @@ class SpacecraftProductionService
                 'message' => $e->getMessage()
             ];
         } catch (\Exception $e) {
-            \Log::error("Fehler bei der Raumschiffproduktion:", [
+            \Log::error("Error occurred while starting spacecraft production:", [
                 'user_id' => $user->id,
                 'spacecraft_id' => $spacecraft->id,
                 'quantity' => $quantity,
@@ -72,7 +72,7 @@ class SpacecraftProductionService
 
             return [
                 'success' => false,
-                'message' => 'Fehler bei der Produktion: ' . $e->getMessage()
+                'message' => 'Error occurred while starting spacecraft production: ' . $e->getMessage()
             ];
         }
     }

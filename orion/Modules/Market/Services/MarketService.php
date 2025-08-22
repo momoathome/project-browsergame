@@ -5,6 +5,8 @@ namespace Orion\Modules\Market\Services;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Market\Models\Market;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
@@ -33,12 +35,11 @@ readonly class MarketService
         $this->marketRepository->updateResourceAmount($resourceId, $stock, $cost);
     }
 
-    public function buyResource($user, $resourceId, $quantity)
+    public function buyResource($user, Market $marketRes, $quantity)
     {
         try {
-            DB::transaction(function () use ($resourceId, $quantity, $user) {
-                $marketItem = $this->marketRepository->getMarketItem($resourceId);
-                $totalCost = $marketItem->cost * $quantity;
+            DB::transaction(function () use ($marketRes, $quantity, $user) {
+                $totalCost = $marketRes->cost * $quantity;
 
                 // Validate user can afford the purchase
                 $userCreditsAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::CREDITS);
@@ -47,34 +48,34 @@ readonly class MarketService
                 }
 
                 // Validate market has enough stock
-                if ($marketItem->stock < $quantity) {
+                if ($marketRes->stock < $quantity) {
                     throw new InsufficientResourceException();
                 }
 
                 // Validate user has enough storage
-                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketItem->resource_id);
+                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketRes->resource_id);
                 $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::STORAGE);
                 if ($userResource && $userStorageAttribute && $userResource->amount + $quantity > $userStorageAttribute->attribute_value) {
                     throw new InsufficientStorageException();
                 }
 
                 // Update market stock
-                $this->marketRepository->decreaseStock($resourceId, $quantity);
+                $this->marketRepository->decreaseStock($marketRes->resource_id, $quantity);
 
                 // Update user credits
                 $this->userAttributeService->subtractAttributeAmount($user->id, UserAttributeType::CREDITS, $totalCost);
 
                 if ($userResource) {
-                    $this->userResourceService->addResourceAmount($user, $marketItem->resource_id, $quantity);
+                    $this->userResourceService->addResourceAmount($user, $marketRes->resource_id, $quantity);
                 } else {
-                    $this->userResourceService->createUserResource($user->id, $marketItem->resource_id, $quantity);
+                    $this->userResourceService->createUserResource($user->id, $marketRes->resource_id, $quantity);
                 }
             });
 
 
             broadcast(new UpdateUserResources($user));
 
-            return redirect()->route('market')->banner('Resource purchased successfully');
+            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully");
         } catch (InsufficientCreditsException $e) {
             return redirect()->route('market')->dangerBanner('Not enough credits');
         } catch (InsufficientResourceException $e) {
@@ -86,31 +87,30 @@ readonly class MarketService
         }
     }
 
-    public function sellResource($user, $resourceId, $quantity)
+    public function sellResource($user, $marketRes, $quantity)
     {
         try {
-            DB::transaction(function () use ($resourceId, $quantity, $user) {
-                $marketItem = $this->marketRepository->getMarketItem($resourceId);
-                $totalEarnings = $marketItem->cost * $quantity;
+            DB::transaction(function () use ($marketRes, $quantity, $user) {
+                $totalEarnings = $marketRes->cost * $quantity;
 
                 // Check if user has enough resources
-                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketItem->resource_id);
+                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketRes->resource_id);
                 if (!$userResource || $userResource->amount < $quantity) {
                     throw new InsufficientResourceException();
                 }
 
                 // Subtract resources from user
-                $this->userResourceService->subtractResourceAmount($user, $marketItem->resource_id, $quantity);
+                $this->userResourceService->subtractResourceAmount($user, $marketRes->resource_id, $quantity);
 
                 // Update market stock
-                $this->marketRepository->increaseStock($resourceId, $quantity);
+                $this->marketRepository->increaseStock($marketRes->resource_id, $quantity);
 
                 // Add credits to user
                 $this->userAttributeService->addAttributeAmount($user->id, UserAttributeType::CREDITS, $totalEarnings);
             });
 
             broadcast(new UpdateUserResources($user));
-            return redirect()->route('market')->banner('Resource sold successfully');
+            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} sold successfully");
         } catch (InsufficientResourceException $e) {
             return redirect()->route('market')->dangerBanner('Not enough resources');
         } catch (\Exception $e) {

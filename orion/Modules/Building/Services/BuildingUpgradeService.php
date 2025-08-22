@@ -54,7 +54,7 @@ class BuildingUpgradeService
             broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
-                'message' => "Upgrade von {$building->details->name} wurde gestartet"
+                'message' => "Upgrade of {$building->details->name} successfully started"
             ];
         } catch (InsufficientResourceException $e) {
             return [
@@ -62,7 +62,7 @@ class BuildingUpgradeService
                 'message' => $e->getMessage()
             ];
         } catch (\Exception $e) {
-            \Log::error("Fehler beim Gebäude-Upgrade:", [
+            \Log::error("Error occurred while starting building upgrade:", [
                 'user_id' => $user->id,
                 'building_id' => $building->id,
                 'error' => $e->getMessage(),
@@ -71,7 +71,7 @@ class BuildingUpgradeService
 
             return [
                 'success' => false,
-                'message' => 'Fehler beim Upgrade: ' . $e->getMessage()
+                'message' => 'Error occurred while starting building upgrade: ' . $e->getMessage()
             ];
         }
     }

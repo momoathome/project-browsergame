@@ -77,14 +77,14 @@ class AsteroidService
 
             return [
                 'success' => true,
-                'message' => "Abbau von Asteroid {$asteroid->name} gestartet.",
+                'message' => "Mining operation for asteroid {$asteroid->name} successfully started.",
             ];
 
         } catch (\Exception $e) {
             Log::error('Mining operation failed: ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => "Abbau von Asteroid {$asteroid->name} fehlgeschlagen.",
+                'message' => "Mining operation for asteroid {$asteroid->name} failed.",
             ];
         }
     }
@@ -94,11 +94,11 @@ class AsteroidService
         $asteroid = $this->find($asteroidId);
 
         if (!$asteroid) {
-            throw new \Exception("Asteroid nicht gefunden");
+            throw new \Exception("Asteroid not found");
         }
 
         if ($spaceCrafts->isEmpty()) {
-            throw new \Exception("Keine Raumschiffe ausgewählt");
+            throw new \Exception("No spacecrafts selected");
         }
 
         return $asteroid;

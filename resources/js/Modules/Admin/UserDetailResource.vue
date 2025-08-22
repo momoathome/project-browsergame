@@ -41,8 +41,8 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
             <thead class="text-gray-400 border-b border-primary">
                 <tr>
                     <th class="text-left p-2">Ressource</th>
-                    <th class="text-left p-2">Menge</th>
-                    <th class="text-left p-2">Aktion</th>
+                    <th class="text-left p-2">Amount</th>
+                    <th class="text-left p-2">Action</th>
                 </tr>
             </thead>
             <tbody>

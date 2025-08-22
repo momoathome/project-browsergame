@@ -8,6 +8,7 @@ import AppInput from '@/Modules/Shared/AppInput.vue';
 import type { Spacecraft } from '@/types/types';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 
 const props = defineProps<{
   spacecraft: Spacecraft
@@ -209,11 +210,13 @@ function unlockSpacecraft() {
         <Divider />
 
         <div class="grid grid-cols-4 gap-4 items-center">
-          <div class="flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
+          <div class="relative group flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
             <img :src="resource.image" class="h-7" alt="resource" />
             <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
             <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">{{ resource.amount }}</p>
             <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
+
+            <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
           </div>
         </div>
 

@@ -96,19 +96,21 @@ class BuildingEffectCalculator
     
         foreach ($attributes as $attributeName) {
             $formattedValue = number_format($effectValue, 2, ',', '.');
-            $formattedValueNoDecimals = number_format($effectValue, 0, ',', '.');
+            $formattedValueNoDecimals = "+" . number_format($effectValue, 0, ',', '.');
+            $formattedPercent = "+" . number_format(($effectValue - 1) * 100, 0, ',', '.') . "%";
+
             $displayText = match ($attributeName) {
-                'production_speed' => "x{$formattedValue} Production speed",
-                'storage' => "+{$formattedValueNoDecimals} Resource storage",
-                'scan_range' => "+{$formattedValueNoDecimals} Scanner range",
-                'crew_limit' => "+{$formattedValueNoDecimals} Crew Limit",
-                'research_points' => "+{$formattedValueNoDecimals} Research Points",
-                'base_defense' => "x{$formattedValue} Defense",
+                'production_speed' => "{$formattedPercent} Production speed",
+                'base_defense' => "{$formattedPercent} Defense",
+                'storage' => "{$formattedValueNoDecimals} Resource storage",
+                'scan_range' => "{$formattedValueNoDecimals} Scanner range",
+                'crew_limit' => "{$formattedValueNoDecimals} Crew Limit",
+                'research_points' => "{$formattedValueNoDecimals} Research Points",
                 // 'energy_output' => "+{$effectValue} energy output",
                 // 'trade_income' => "+{$effectValue} Trade Limit",
                 default => "+{$effectValue} {$attributeName}"
             };
-    
+
             $results[] = [
                 'attribute' => $attributeName,
                 'value' => $effectValue,

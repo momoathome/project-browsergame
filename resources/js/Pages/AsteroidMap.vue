@@ -648,18 +648,24 @@ function handleCoordinateDisplay(coords: ClickCoordinates, e: MouseEvent) {
   return true;
 }
 
-function findClickedStation(coords: ClickCoordinates) {
-  return props.stations.find(station =>
-    Math.abs(coords.x - station.x) < stationBaseSize * scale.value / 2 &&
-    Math.abs(coords.y - station.y) < stationBaseSize * scale.value / 2
-  );
+function findClickedAsteroid(coords: ClickCoordinates, radius = 120) {
+  return props.asteroids.find(asteroid => {
+    const dx = coords.x - asteroid.x;
+    const dy = coords.y - asteroid.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
+    // Nutze das größere von radius oder halbe Asteroidgröße
+    return distance < Math.max(radius, scaledSize / 2);
+  });
 }
 
-function findClickedAsteroid(coords: ClickCoordinates) {
-  return props.asteroids.find(asteroid => {
-    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
-    return Math.abs(coords.x - asteroid.x) < scaledSize / 2 &&
-      Math.abs(coords.y - asteroid.y) < scaledSize / 2;
+function findClickedStation(coords: ClickCoordinates, radius = 120) {
+  return props.stations.find(station => {
+    const dx = coords.x - station.x;
+    const dy = coords.y - station.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const scaledSize = stationBaseSize * scale.value;
+    return distance < Math.max(radius, scaledSize / 2);
   });
 }
 

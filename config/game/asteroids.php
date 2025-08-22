@@ -5,10 +5,10 @@ $asteroid_to_station_distance = $config['asteroid_to_station_distance'] ?? 300;
 
 return [
     'asteroid_img_size' => [
-        'small' => 1,
-        'medium' => 2,
-        'large' => 4,
-        'extreme' => 8,
+        'small' => 2,
+        'medium' => 4,
+        'large' => 8,
+        'extreme' => 16,
     ],
 
     /* chance to generate of asteroid sizes */

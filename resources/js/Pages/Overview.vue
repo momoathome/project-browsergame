@@ -19,7 +19,7 @@ const getTypeIcon = (type) => {
   switch (type) {
     case 'Fighter': return '/images/navigation/simulator.png';
     case 'Miner': return '/images/attributes/storage.png';
-    case 'Transporter': return '/images/supply-chain_light.png';
+    case 'Transporter': return '/images/cargo.png';
     case 'mining': return '/images/navigation/asteroidmap.png';
     case 'combat': return '/images/navigation/simulator.png';
     default: return '';
@@ -31,9 +31,9 @@ const unlockedSpacecrafts = computed(() => props.spacecrafts.filter(spacecraft =
 const currentTime = ref(new Date().getTime());
 
 const getRemainingTime = (item: RawQueueItem): number => {
-  if (!item.end_time) return 0
+  if (!item.endTime) return 0
 
-  const endTime = new Date(item.end_time).getTime()
+  const endTime = new Date(item.endTime).getTime()
 
   return Math.max(0, endTime - currentTime.value)
 }
@@ -43,17 +43,17 @@ const FormattedTime = (item) => {
   return timeFormat(Math.floor(remainingTimeMs / 1000));
 }
 
-const queueBuildings = computed(() => props.queue.filter(item => item.action_type === 'building'));
-const queueSpacecrafts = computed(() => props.queue.filter(item => item.action_type === 'produce'));
-const queueMining = computed(() => props.queue.filter(item => item.action_type === 'mining'));
-const queueCombat = computed(() => props.queue.filter(item => item.action_type === 'combat'));
+const queueBuildings = computed(() => props.queue.filter(item => item.actionType === 'building'));
+const queueSpacecrafts = computed(() => props.queue.filter(item => item.actionType === 'produce'));
+const queueMining = computed(() => props.queue.filter(item => item.actionType === 'mining'));
+const queueCombat = computed(() => props.queue.filter(item => item.actionType === 'combat'));
 
 const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) => {
-  if (item.action_type === 'combat') {
+  if (item.actionType === 'combat') {
     const totalSpacecrafts = item.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0);
     acc += totalSpacecrafts;
   }
-  if (item.action_type === 'mining') {
+  if (item.actionType === 'mining') {
     const totalSpacecrafts = Object.values(item.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0);
     acc += totalSpacecrafts;
   }
@@ -61,18 +61,18 @@ const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) =>
 }, 0));
 
 const totalMiningOperations = computed(() => props.queue.reduce((acc, item) => {
-  if (item.action_type === 'mining') {
+  if (item.actionType === 'mining') {
     acc++;
   }
   return acc;
 }, 0));
 
 const getBuildingQueueItem = computed(() => (buildingId: number) => {
-  return queueBuildings.value.find(item => item.target_id === buildingId);
+  return queueBuildings.value.find(item => item.targetId === buildingId);
 });
 
 const getSpacecraftsQueueItem = computed(() => (spacecraftId: number) => {
-  return queueSpacecrafts.value.find(item => item.target_id === spacecraftId);
+  return queueSpacecrafts.value.find(item => item.targetId === spacecraftId);
 });
 
 // Neue Funktion zur Anzeige formatierter Effekte
@@ -229,8 +229,8 @@ onUnmounted(() => {
                 <td class="p-2"><span class="text-secondary">attack</span> {{ combat.details.defender_name }}</td>
                 <td class="p-2">
                   <div class="relative group flex">
-                    <img :src="getTypeIcon(combat.action_type)" alt="Type Icon" class="w-6 h-6">
-                    <AppTooltip :label="combat.action_type" position="left" />
+                    <img :src="getTypeIcon(combat.actionType)" alt="Type Icon" class="w-6 h-6">
+                    <AppTooltip :label="combat.actionType" position="left" />
                   </div>
                 </td>
                 <td class="p-2">
@@ -243,8 +243,8 @@ onUnmounted(() => {
                 <td class="p-2">{{ mining.details.asteroid_name }}</td>
                 <td class="p-2">
                   <div class="relative group flex">
-                    <img :src="getTypeIcon(mining.action_type)" alt="Type Icon" class="w-6 h-6">
-                    <AppTooltip :label="mining.action_type" position="left" />
+                    <img :src="getTypeIcon(mining.actionType)" alt="Type Icon" class="w-6 h-6">
+                    <AppTooltip :label="mining.actionType" position="left" />
                   </div>
                 </td>
                 <td class="p-2">

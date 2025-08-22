@@ -304,7 +304,7 @@ onUnmounted(() => {
 
         <div v-for="item in processedQueueItems" :key="item.id">
             <div @click="toggleInfo(item)"
-                class="flex items-center h-10 gap-2 p-1.5 bg-base-dark rounded-lg cursor-pointer hover:bg-base transition"
+                class="flex items-center min-w-24 h-10 gap-2 p-1.5 bg-base-dark rounded-lg cursor-pointer hover:bg-base transition"
                 :class="{ 'fade-in': item.isNew, 'bg-red-900 hover:bg-red-800': isDefendCombatAction(item.rawData) }">
                 <img :src="item.image" width="24px" height="24px" alt="Item icon" class="w-6 h-6" />
                 <transition name="expand">

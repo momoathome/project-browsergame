@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import type { Building } from '@/types/types';
 
 const props = defineProps<{
@@ -113,9 +114,11 @@ function handleUpgradeComplete() {
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
-        <div class="flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
+        <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
           <img :src="resource.image" class="h-7" alt="resource" />
           <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id)}">{{ resource.amount }}</p>
+
+          <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
         </div>
       </div>
       <div class="flex flex-col gap-4 mt-auto">

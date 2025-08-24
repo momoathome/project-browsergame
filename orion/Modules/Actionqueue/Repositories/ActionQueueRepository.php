@@ -14,12 +14,14 @@ readonly class ActionQueueRepository
     {
         $userQueue = ActionQueue::query()
             ->where('user_id', $userId)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS);
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->orderBy('start_time', 'asc');
 
         $defendQueue = ActionQueue::query()
             ->where('target_id', $userId)
             ->where('action_type', QueueActionType::ACTION_TYPE_COMBAT)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS);
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->orderBy('end_time', 'asc');
 
         $result = $userQueue->union($defendQueue)->get();
         $returnObject = $result->map(fn($item) => ActionQueueDTO::fromModel($item));

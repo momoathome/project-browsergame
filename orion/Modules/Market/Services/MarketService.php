@@ -37,9 +37,9 @@ readonly class MarketService
 
     public function buyResource($user, Market $marketRes, $quantity)
     {
+        $totalCost = $marketRes->cost * $quantity;
         try {
-            DB::transaction(function () use ($marketRes, $quantity, $user) {
-                $totalCost = $marketRes->cost * $quantity;
+            DB::transaction(function () use ($marketRes, $quantity, $user, $totalCost) {
 
                 // Validate user can afford the purchase
                 $userCreditsAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::CREDITS);
@@ -74,8 +74,8 @@ readonly class MarketService
 
 
             broadcast(new UpdateUserResources($user));
-
-            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully");
+            $totalCostFormatted = number_format($totalCost, 0, ',', '.');
+            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully for {$totalCostFormatted} credits");
         } catch (InsufficientCreditsException $e) {
             return redirect()->route('market')->dangerBanner('Not enough credits');
         } catch (InsufficientResourceException $e) {
@@ -89,10 +89,10 @@ readonly class MarketService
 
     public function sellResource($user, $marketRes, $quantity)
     {
-        try {
-            DB::transaction(function () use ($marketRes, $quantity, $user) {
-                $totalEarnings = $marketRes->cost * $quantity;
+        $totalEarnings = $marketRes->cost * $quantity;
 
+        try {
+            DB::transaction(function () use ($marketRes, $quantity, $user, $totalEarnings) {
                 // Check if user has enough resources
                 $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketRes->resource_id);
                 if (!$userResource || $userResource->amount < $quantity) {
@@ -110,7 +110,8 @@ readonly class MarketService
             });
 
             broadcast(new UpdateUserResources($user));
-            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} sold successfully");
+            $totalEarningsFormatted = number_format($totalEarnings, 0, ',', '.');
+            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} sold successfully for {$totalEarningsFormatted} credits");
         } catch (InsufficientResourceException $e) {
             return redirect()->route('market')->dangerBanner('Not enough resources');
         } catch (\Exception $e) {

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
@@ -42,6 +42,8 @@ const isSellDisabled = computed(() => {
   return notEnoughToSell.value || Number(form.amount) <= 0;
 });
 
+const localPrefill = ref(props.marketData.prefill);
+
 onMounted(() => {
   if (props.marketData.prefill) {
     form.amount = props.marketData.prefill;
@@ -63,6 +65,7 @@ function buyResource() {
 
     onSuccess: () => {
       form.reset();
+      localPrefill.value = undefined;
     },
   });
 }
@@ -93,12 +96,11 @@ function setMaxAmount() {
   const maxAmount = Math.min(Math.floor(userCredits.value / props.marketData.cost), Math.floor(userStorage.value - userResourceAmount.value));
   form.amount = maxAmount;
 }
-
-
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-light content_card px-4 py-4 gap-4">
+  <div class="rounded-3xl flex flex-col bg-base text-light content_card px-4 py-4 gap-4" 
+        :class="{ '!border-secondary': !!localPrefill }">
     <div class="flex justify-between items-end">
       <div class="flex flex-col">
         <span class="text-xs text-gray">ressource</span>

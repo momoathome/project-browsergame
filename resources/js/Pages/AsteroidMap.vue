@@ -194,6 +194,7 @@ function drawScene() {
   };
 
   drawUserScanRange();
+  drawScanWave();
   drawFlightPaths();
   drawStationsAndAsteroids(visibleArea);
 
@@ -227,6 +228,42 @@ function drawUserScanRange() {
     ctx.value.stroke();
   }
 }
+
+function drawScanWave() {
+  if (scanAnimation.value.active && userStation.value && ctx.value) {
+    ctx.value.beginPath();
+    ctx.value.arc(
+      userStation.value.x,
+      userStation.value.y,
+      scanAnimation.value.radius,
+      0,
+      2 * Math.PI
+    );
+    ctx.value.fillStyle = 'rgba(0,255,255,0.025)';
+    ctx.value.fill();
+    ctx.value.strokeStyle = 'rgba(0,255,255,0.5)';
+    ctx.value.lineWidth = 8;
+    ctx.value.stroke();
+  }
+}
+
+const currentlyHighlightedAsteroidIds = computed(() => {
+  if (scanAnimation.value.active && userStation.value) {
+    // Nur Asteroiden, die von der Welle erreicht wurden
+    return highlightedAsteroids.value
+      .filter(a => {
+        const asteroid = props.asteroids.find(ast => ast.id === a.id);
+        if (!asteroid) return false;
+        const dx = asteroid.x - userStation.value!.x;
+        const dy = asteroid.y - userStation.value!.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        return dist <= scanAnimation.value.radius;
+      })
+      .map(a => a.id);
+  }
+  // Nach der Animation: alle Treffer highlighten
+  return highlightedAsteroids.value.map(a => a.id);
+});
 
 function isObjectVisible(object: { x: number; y: number; pixel_size?: number }, visibleArea: { left: number; top: number; right: number; bottom: number }) {
   // Berechne den Abstand zum sichtbaren Bereich basierend auf der Pixelgröße
@@ -319,12 +356,9 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
     const imageX = x - (scaledSize / 2);
     const imageY = y - (scaledSize / 2);
 
-    if (highlightedAsteroids.value.length > 0) {
-      const highlightedAsteroidIds = new Set(highlightedAsteroids.value.map(a => a.id));
+    if (currentlyHighlightedAsteroidIds.value.includes(id)) {
       const isFocused = selectedAsteroid.value?.id === id;
-      if (highlightedAsteroidIds.has(id)) {
-        drawHighlight(x, y, scaledSize, 'asteroid', isFocused);
-      }
+      drawHighlight(x, y, scaledSize, 'asteroid', isFocused);
     }
 
     ctx.value.drawImage(
@@ -337,18 +371,40 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
   }
 }
 
-function drawHighlight(x: number, y: number, scaledSize: number, type: 'station' | 'asteroid' = 'asteroid', isFocused: boolean = false) {
+function drawHighlight(
+  x: number,
+  y: number,
+  scaledSize: number,
+  type: 'station' | 'asteroid' = 'asteroid',
+  isFocused: boolean = false
+) {
   if (!ctx.value) return;
 
-  const padding = 10 * scale.value;
+  const padding = 8 * scale.value;
   const adjustedRadius = scaledSize + padding;
+  const tintColor = isFocused
+    ? 'rgba(255, 80, 80, 0.15)'
+    : 'rgba(255, 255, 80, 0.15)';
 
-  // Farbe basierend auf Status (fokussiert oder hervorgehoben)
-  ctx.value.strokeStyle = isFocused ? 'red' : 'yellow';
-  ctx.value.lineWidth = 3 * scale.value;
+  // 1. Farb-Tint als gefüllter Kreis
+  ctx.value.save();
+  ctx.value.beginPath();
+  ctx.value.arc(x, y, adjustedRadius - 2, 0, 2 * Math.PI);
+  ctx.value.fillStyle = tintColor;
+  ctx.value.globalAlpha = 1;
+  ctx.value.fill();
+  ctx.value.restore();
+
+  // 2. Weicher Glow (nur Schatten, kein Stroke)
+/*   ctx.value.save();
   ctx.value.beginPath();
   ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
-  ctx.value.stroke();
+  ctx.value.shadowColor = isFocused ? 'rgba(255,0,0,0.45)' : 'rgba(255,255,0,0.33)';
+  ctx.value.shadowBlur = isFocused ? 48 * scale.value : 32 * scale.value;
+  ctx.value.globalAlpha = 0.7;
+  ctx.value.fillStyle = 'rgba(0,0,0,0)';
+  ctx.value.fill();
+  ctx.value.restore(); */
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -825,16 +881,63 @@ function focusOnObject(object: Station | Asteroid, userId?: number) {
   animateView(targetX, targetY, targetZoomLevel);
 }
 
+const scanAnimation = ref({
+  active: false,
+  radius: 0,
+  maxRadius: 0,
+  asteroidsToHighlight: [] as number[],
+  animationFrame: 0,
+  startTime: 0,
+  duration: 1000, 
+});
+
 function searchAndFocus() {
   performSearch(() => {
-    focusOnSingleResult();
-    drawScene();
+    // Prüfe, ob NUR Stationen gefunden wurden (keine Asteroiden)
+    if (highlightedAsteroids.value.length === 0 && highlightedStations.value.length > 0) {
+      focusOnSingleResult();
+      drawScene();
+      return;
+    }
+
+    if (userStation.value) {
+      scanAnimation.value.asteroidsToHighlight = highlightedAsteroids.value.map(a => a.id);
+      scanAnimation.value.active = true;
+      scanAnimation.value.radius = 0;
+      scanAnimation.value.maxRadius = userScanRange.value;
+      scanAnimation.value.animationFrame = 0;
+      scanAnimation.value.startTime = performance.now();
+      animateScanWave();
+    } else {
+      focusOnSingleResult();
+      drawScene();
+    }
   });
 }
 
 function clearSearchAndUpdate() {
   clearSearch();
   drawScene();
+}
+
+function animateScanWave() {
+  if (!scanAnimation.value.active || !userStation.value) return;
+
+  const now = performance.now();
+  const elapsed = now - scanAnimation.value.startTime;
+  const progress = Math.min(elapsed / scanAnimation.value.duration, 1);
+
+  scanAnimation.value.radius = scanAnimation.value.maxRadius * progress;
+
+  drawScene();
+
+  if (progress < 1) {
+    scanAnimation.value.animationFrame = requestAnimationFrame(animateScanWave);
+  } else {
+    scanAnimation.value.active = false;
+    focusOnSingleResult();
+    drawScene();
+  }
 }
 
 const focusOnSingleResult = () => {

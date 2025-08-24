@@ -161,7 +161,7 @@ onUnmounted(() => {
               <th class="text-left p-2">Crew</th>
               <th class="text-left p-2">Combat</th>
               <th class="text-left p-2">Cargo</th>
-              <th class="text-left p-2">Produce</th>
+              <th class="text-left p-2">Production</th>
             </tr>
           </thead>
           <tbody>
@@ -220,7 +220,7 @@ onUnmounted(() => {
               <th class="text-left p-2">Name</th>
               <th class="text-left p-2">Type</th>
               <th class="text-left p-2">Spacecrafts</th>
-              <th class="text-left p-2">End Time</th>
+              <th class="text-left p-2">Duration</th>
             </tr>
           </thead>
           <tbody>
@@ -242,14 +242,20 @@ onUnmounted(() => {
               <tr v-for="mining in queueMining" :key="mining.id">
                 <td class="p-2">{{ mining.details.asteroid_name }}</td>
                 <td class="p-2">
-                  <div class="relative group flex">
+                  <div class="relative group flex items-center">
                     <img :src="getTypeIcon(mining.actionType)" alt="Type Icon" class="w-6 h-6">
                     <AppTooltip :label="mining.actionType" position="left" />
                   </div>
                 </td>
-                <td class="p-2">
-                  {{Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc +
-                    count, 0) }}
+                <td class="p-2 flex group">
+                  <div class="relative w-max flex items-center">
+                    {{ Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0) }}
+                    <AppTooltip class="!ml-2" position="right"
+                      :label="Object.entries(mining.details.spacecrafts as Record<string, number>)
+                        .map(([name, count]) => `${name}: ${count}`)
+                        .join('\n')"
+                    />
+                  </div>
                 </td>
                 <td class="p-2">{{ FormattedTime(mining) }}</td>
               </tr>

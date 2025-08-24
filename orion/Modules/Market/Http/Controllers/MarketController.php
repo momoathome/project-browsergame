@@ -19,12 +19,14 @@ class MarketController extends Controller
     ) {
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $market = $this->marketService->getMarketData();
 
         return Inertia::render('Market', [
             'market' => $market,
+            'prefill_resource_ids' => $request->input('resource_ids'),
+            'prefill_amounts' => $request->input('amounts'),
         ]);
     }
 

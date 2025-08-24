@@ -196,6 +196,7 @@ export interface formattedMarketResource {
   image: string
   cost: number
   stock: number;
+  prefill: number | undefined;
 }
 
 export type BattleResult = {

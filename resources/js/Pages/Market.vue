@@ -5,21 +5,32 @@ import MarketCard from '@/Modules/Market/MarketCard.vue';
 import type { Market, formattedMarketResource } from '@/types/types';
 
 const props = defineProps<{
-  market: Market[]
+  market: Market[],
+  prefill_resource_ids?: string,
+  prefill_amounts?: string
 }>()
 
+const prefillMap = computed(() => {
+  if (!props.prefill_resource_ids || !props.prefill_amounts) return {};
+  const ids = props.prefill_resource_ids.split(',').map(Number);
+  const amounts = props.prefill_amounts.split(',').map(Number);
+  return ids.reduce((acc, id, idx) => {
+    acc[id] = amounts[idx] || 0;
+    return acc;
+  }, {} as Record<number, number>);
+});
+
 const formattedResources = computed(() => {
-  return props.market.map((market: Market): formattedMarketResource => {
-    return {
-      id: market.id,
-      resource_id: market.resource_id,
-      name: market.resource.name,
-      description: market.resource.description,
-      image: market.resource.image,
-      cost: market.cost,
-      stock: market.stock,
-    };
-  });
+  return props.market.map((market: Market): formattedMarketResource => ({
+    id: market.id,
+    resource_id: market.resource_id,
+    name: market.resource.name,
+    description: market.resource.description,
+    image: market.resource.image,
+    cost: market.cost,
+    stock: market.stock,
+    prefill: prefillMap.value[market.resource_id] || undefined,
+  }));
 });
 </script>
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
@@ -16,6 +16,37 @@ const props = defineProps<{
 const formattedCost = computed(() => numberFormat(props.marketData.cost));
 const formattedStock = computed(() => numberFormat(props.marketData.stock));
 const formattedTotalCost = computed(() => numberFormat(props.marketData.cost * form.amount));
+
+const userCredits = computed(() => {
+  return Number(usePage().props.userAttributes.find((a) => a.attribute_name === 'credits')?.attribute_value || 0);
+});
+const userStorage = computed(() => {
+  return Number(usePage().props.userAttributes.find((a) => a.attribute_name === 'storage')?.attribute_value || 0);
+});
+const userResourceAmount = computed(() => {
+  return Number(usePage().props.userResources.find((r) => r.resource_id === props.marketData.resource_id)?.amount || 0);
+});
+const willExceedStorage = computed(() => {
+  return userResourceAmount.value + Number(form.amount) > userStorage.value;
+});
+const notEnoughCredits = computed(() => {
+  return Number(form.amount) * props.marketData.cost > userCredits.value;
+});
+const notEnoughToSell = computed(() => {
+  return Number(form.amount) > userResourceAmount.value;
+});
+const isBuyDisabled = computed(() => {
+  return willExceedStorage.value || notEnoughCredits.value || Number(form.amount) <= 0;
+});
+const isSellDisabled = computed(() => {
+  return notEnoughToSell.value || Number(form.amount) <= 0;
+});
+
+onMounted(() => {
+  if (props.marketData.prefill) {
+    form.amount = props.marketData.prefill;
+  }
+});
 
 const form = useForm({
   resource_id: props.marketData.id,
@@ -59,12 +90,11 @@ function setUserResourcesInput() {
 }
 
 function setMaxAmount() {
-  const userCredits = usePage().props.userAttributes.find((attribute) => attribute.attribute_name === 'credits')?.attribute_value || 0;
-  const userStorage = usePage().props.userAttributes.find((attribute) => attribute.attribute_name === 'storage')?.attribute_value || 0;
-  const userResources = usePage().props.userResources.find((resource) => resource.resource_id === props.marketData.resource_id);
-  const maxAmount = Math.min(Math.floor(userCredits / props.marketData.cost), Math.floor(userStorage - (userResources?.amount || 0)));
+  const maxAmount = Math.min(Math.floor(userCredits.value / props.marketData.cost), Math.floor(userStorage.value - userResourceAmount.value));
   form.amount = maxAmount;
 }
+
+
 </script>
 
 <template>
@@ -102,16 +132,19 @@ function setMaxAmount() {
           <img src="/images/attributes/credits.png" class="h-6" alt="credits" />
           <div class="flex flex-col me-1">
             <span class="text-xs text-secondary">total</span>
-            <p class="font-medium text-sm">{{ formattedTotalCost }}</p>
+            <p class="font-medium text-sm"
+               :class="{ 'text-red-600': notEnoughCredits }">
+              {{ formattedTotalCost }}
+            </p>
           </div>
         </div>
       </div>
       <div class="flex justify-between gap-2">
-        <SecondaryButton @click="sellResource">
+        <SecondaryButton @click="sellResource" :disabled="isSellDisabled">
           Sell
         </SecondaryButton>
         <AppInput :maxlength="5" v-model="form.amount" class="px-1" />
-        <PrimaryButton @click="buyResource">
+        <PrimaryButton @click="buyResource" :disabled="isBuyDisabled">
           Buy
         </PrimaryButton>
       </div>

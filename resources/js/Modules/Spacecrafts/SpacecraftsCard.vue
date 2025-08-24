@@ -134,6 +134,26 @@ const canUnlockSpacecraft = computed(() => {
   return researchPoints >= props.spacecraft.research_cost;
 });
 
+function goToMarketWithMissingResources() {
+  const userResources = usePage().props.userResources;
+  const missing = props.spacecraft.resources
+    .map(resource => {
+      const userResource = userResources.find((ur: any) => ur.resource_id === resource.id);
+      const missingAmount = resource.amount - (userResource?.amount || 0);
+      return missingAmount > 0
+        ? { id: resource.id, amount: missingAmount }
+        : null;
+    })
+    .filter((item): item is { id: number; amount: number } => item !== null);
+
+  if (missing.length === 0) return;
+
+  router.get(route('market', {
+    resource_ids: missing.map(r => r.id).join(','),
+    amounts: missing.map(r => r.amount).join(','),
+  }));
+}
+
 const increment = () => {
   if (form.amount < maxSpacecraftCount.value) {
     form.amount++
@@ -210,12 +230,17 @@ function unlockSpacecraft() {
         <Divider />
 
         <div class="grid grid-cols-4 gap-4 items-center">
-          <div class="relative group flex flex-col gap-1 items-center" v-for="resource in spacecraft.resources" :key="resource.name">
+          <div class="relative group flex flex-col gap-1 items-center"
+               v-for="resource in spacecraft.resources"
+               :key="resource.name"
+               :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
+               @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
+          >
             <img :src="resource.image" class="h-7" alt="resource" />
-            <!-- <span class="text-sm font-medium text-secondary">{{ resource.name }}</span> -->
-            <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">{{ resource.amount }}</p>
+            <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">
+              {{ resource.amount }}
+            </p>
             <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
-
             <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
           </div>
         </div>

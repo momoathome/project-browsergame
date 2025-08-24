@@ -32,7 +32,7 @@ const formattedEffectValue = computed(() => {
   if (!currentEffect.value) {
     return '';
   }
-  
+
   return currentEffect.value.display;
 });
 
@@ -40,20 +40,20 @@ const formattedNextLevelValue = computed(() => {
   if (!nextLevelEffect.value) {
     return '';
   }
-  
+
   return nextLevelEffect.value.display;
 });
 
 const insufficientResources = computed(() => {
   const userResources = usePage().props.userResources;
   const buildingResources = props.building.resources;
-  
+
   return buildingResources.map(resource => {
     const userResource = userResources.find(ur => ur.resource_id === resource.id);
     if (!userResource) return { id: resource.id, sufficient: false };
-    return { 
-      id: resource.id, 
-      sufficient: userResource.amount >= resource.amount 
+    return {
+      id: resource.id,
+      sufficient: userResource.amount >= resource.amount
     };
   });
 });
@@ -61,6 +61,27 @@ const insufficientResources = computed(() => {
 function isResourceSufficient(resourceId: number): boolean {
   const resourceStatus = insufficientResources.value.find(res => res.id === resourceId);
   return resourceStatus ? resourceStatus.sufficient : false;
+}
+
+function goToMarketWithMissingResources() {
+  const userResources = usePage().props.userResources;
+  const missing = props.building.resources
+    .map(resource => {
+      const userResource = userResources.find((ur: any) => ur.resource_id === resource.id);
+      const missingAmount = resource.amount - (userResource?.amount || 0);
+      return missingAmount > 0
+        ? { id: resource.id, amount: missingAmount }
+        : null;
+    })
+    .filter((item): item is { id: number; amount: number } => item !== null);
+
+  if (missing.length === 0) return;
+
+  // Übergib Arrays als Query-Parameter (z.B. resource_ids=1,2&amounts=5,10)
+  router.get(route('market', {
+    resource_ids: missing.map(r => r.id).join(','),
+    amounts: missing.map(r => r.amount).join(','),
+  }));
 }
 
 const canUpgrade = computed(() => {
@@ -114,17 +135,31 @@ function handleUpgradeComplete() {
       <Divider />
 
       <div class="grid grid-cols-4 gap-4 items-center">
-        <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources" :key="resource.name">
+        <div
+          class="relative group flex flex-col gap-1 items-center"
+          v-for="resource in building.resources"
+          :key="resource.name"
+          :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
+          @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()"
+        >
           <img :src="resource.image" class="h-7" alt="resource" />
-          <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id)}">{{ resource.amount }}</p>
-
+          <p class="font-medium text-sm" :class="{ 'text-red-600': !isResourceSufficient(resource.id) }">
+            {{ resource.amount }}
+          </p>
           <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
         </div>
       </div>
       <div class="flex flex-col gap-4 mt-auto">
         <div class="flex justify-center my-2">
           <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade">
-            <span v-if="isUpgrading">Upgrading...</span>
+            <span v-if="isUpgrading" class="flex gap-1 items-center">
+              Upgrading
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                viewBox="0 0 24 24">
+                <path fill="currentColor" d="M6 17.59L7.41 19L12 14.42L16.59 19L18 17.59l-6-6z" />
+                <path fill="currentColor" d="m6 11l1.41 1.41L12 7.83l4.59 4.58L18 11l-6-6z" />
+              </svg>
+            </span>
             <span v-else>Upgrade</span>
           </PrimaryButton>
         </div>

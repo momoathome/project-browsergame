@@ -18,8 +18,6 @@ class UserAttributeSeeder extends Seeder
 
     public function run(): void
     {
-        DB::table('user_attributes')->truncate();
-
         $userIds = [1, 2];
 
         foreach ($userIds as $userId) {

@@ -21,8 +21,6 @@ class UserResourceSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('user_resources')->truncate();
-
         $userIds = [1, 2];
 
         foreach ($userIds as $userId) {

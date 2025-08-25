@@ -29,9 +29,6 @@ class AsteroidSeeder extends Seeder
   {
     $startTime = microtime(true);
     Cache::forget('universe:reserved-station-regions');
-    
-    DB::table('asteroids')->truncate();
-    DB::table('asteroid_resources')->truncate();
 
     $reservedRegions = $this->universeService->reserveStationRegions(25, true);
     $this->command->info("Successfully " . count($reservedRegions) . " regions reserved.");

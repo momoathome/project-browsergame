@@ -18,8 +18,6 @@ class StationSeeder extends Seeder
 
     public function run(): void
     {
-        DB::table(table: 'stations')->truncate();
-
         $users = User::all();
 
         foreach ($users as $user) {

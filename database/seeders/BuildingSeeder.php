@@ -20,8 +20,6 @@ class BuildingSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table(table: 'buildings')->truncate();
-
         $userIds = [1, 2];
 
         foreach ($userIds as $userId) {

@@ -18,8 +18,6 @@ class DefaultUserSeeder extends Seeder
         $roleAdmin = Role::create(['name' => 'admin']);
         $roleUser = Role::create(['name' => 'user']);
 
-        DB::table(table: 'users')->truncate();
-
         $admin = User::create([
             'name' => 'admin',
             'email' => 'admin@browsergame.de',

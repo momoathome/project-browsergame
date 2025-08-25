@@ -20,6 +20,8 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
+use Orion\Modules\Asteroid\Services\asteroidGenerator;
+
 
 class AsteroidService
 {
@@ -31,7 +33,8 @@ class AsteroidService
         private readonly StationService $stationService,
         private readonly UserService $userService,
         private readonly UserResourceService $userResourceService,
-        private readonly UserAttributeService $userAttributeService
+        private readonly UserAttributeService $userAttributeService,
+        private readonly AsteroidGenerator $asteroidGenerator
     ) {
     }
 
@@ -181,6 +184,12 @@ class AsteroidService
         }
 
         broadcast(new ReloadFrontendCanvas($asteroid));
+
+        try {
+            $this->asteroidGenerator->generateAsteroids(rand(1, 3)); // oder eine Zufallszahl
+        } catch (\Exception $e) {
+            Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
+        }
 
         return new ExplorationResult(
             $resourcesExtracted,

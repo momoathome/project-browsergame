@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Cache;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Models\AsteroidResource;
 use Orion\Modules\Asteroid\Services\UniverseService;
-use Orion\Modules\Asteroid\Services\AsteroidService;
+use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 
 class AsteroidGenerator
 {
   public function __construct(
     private readonly UniverseService $universeService,
-    private readonly AsteroidService $asteroidService,
+    private readonly AsteroidRepository $asteroidRepository,
   ) {
     $this->initialize();
   }
@@ -39,7 +39,7 @@ class AsteroidGenerator
 
   private function loadExistingAsteroids()
   {
-    $asteroids = $this->asteroidService->getAllAsteroids();
+    $asteroids = $this->asteroidRepository->getAllAsteroids();
     $this->existingAsteroids = $asteroids->toArray();
 
     foreach ($asteroids as $asteroid) {
@@ -159,6 +159,8 @@ class AsteroidGenerator
         $asteroids[] = $created;
       }
     }
+
+    Log::info("Asteroiden generiert: " . count($asteroids) . " - " . json_encode($asteroids));
 
     return $asteroids;
   }
@@ -360,9 +362,8 @@ class AsteroidGenerator
   public function isCollidingWithStation(int $x, int $y, int $minDistanceFromStation): bool
   {
       // 1. Prüfen auf Kollisionen mit existierenden Stationen über UniverseService
-      $stations = $this->universeService->getStations();
-      
-      foreach ($stations as $station) {
+
+      foreach ($this->stations as $station) {
           $distance = sqrt(pow($station['x'] - $x, 2) + pow($station['y'] - $y, 2));
           if ($distance < $minDistanceFromStation) {
               return true;

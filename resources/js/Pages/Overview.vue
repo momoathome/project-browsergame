@@ -60,6 +60,36 @@ const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) =>
   return acc;
 }, 0));
 
+const spacecraftsInOrbit = computed(() => {
+  const result: Record<string, number> = {};
+  props.spacecrafts.forEach(sc => {
+    result[sc.id] = 0;
+  });
+
+  props.queue.forEach(item => {
+    if (item.actionType === 'combat' && item.details.attacker_formatted) {
+      item.details.attacker_formatted.forEach((sc: any) => {
+        if (result[sc.id] !== undefined) {
+          result[sc.id] += sc.count;
+        } else {
+          result[sc.id] = sc.count;
+        }
+      });
+    }
+    if (item.actionType === 'mining' && item.details.spacecrafts) {
+      Object.entries(item.details.spacecrafts as Record<string, number>).forEach(([name, count]) => {
+        if (result[name] !== undefined) {
+          result[name] += count;
+        } else {
+          result[name] = count;
+        }
+      });
+    }
+  });
+
+  return result;
+});
+
 const totalMiningOperations = computed(() => props.queue.reduce((acc, item) => {
   if (item.actionType === 'mining') {
     acc++;
@@ -146,7 +176,6 @@ onUnmounted(() => {
         </table>
       </div>
 
-      <!-- Rest des Templates bleibt gleich -->
       <!-- Spacecrafts -->
       <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
         <SectionHeader title="Shipyard" iconSrc="/images/navigation/shipyard.png" :route="route('shipyard')"
@@ -157,10 +186,10 @@ onUnmounted(() => {
             <tr>
               <th class="text-left p-2">Name</th>
               <th class="text-left p-2">Type</th>
-              <th class="text-left p-2">Count</th>
+              <th class="text-left p-2">Quantity</th>
               <th class="text-left p-2">Crew</th>
               <th class="text-left p-2">Combat</th>
-              <th class="text-left p-2">Cargo</th>
+              <th class="text-left p-2">In Orbit</th>
               <th class="text-left p-2">Production</th>
             </tr>
           </thead>
@@ -175,8 +204,8 @@ onUnmounted(() => {
               </td>
               <td class="p-2">{{ spacecraft.count }}</td>
               <td class="p-2">{{ spacecraft.crew_limit }}</td>
-              <td class="p-2">{{ spacecraft.combat }}</td>
-              <td class="p-2">{{ spacecraft.cargo }}</td>
+              <td class="p-2">{{ numberFormat(spacecraft.combat) }}</td>
+              <td class="p-2">{{ spacecraftsInOrbit[spacecraft.name] || 0 }}</td>
               <td class="p-2">
                 <template v-if="getSpacecraftsQueueItem(spacecraft.id)">
                   {{ getSpacecraftsQueueItem(spacecraft.id)?.details.quantity }} - {{
@@ -198,10 +227,10 @@ onUnmounted(() => {
                 {{ fleetSummary.totalCrew }} / {{ crewLimit }}
               </td>
               <td class="p-2">
-                {{ fleetSummary.totalCombat }}
+                {{ numberFormat(fleetSummary.totalCombat) }}
               </td>
               <td class="p-2">
-                {{ fleetSummary.totalCargo }}
+                {{ totalSpacecraftsInOrbit }}
               </td>
               <td></td>
             </tr>

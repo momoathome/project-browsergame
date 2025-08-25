@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('action_type');
             $table->unsignedBigInteger('target_id')->nullable();
-            $table->timestamp('start_time');
-            $table->timestamp('end_time');
+            $table->timestamp('start_time')->nullable();
+            $table->timestamp('end_time')->nullable();
             $table->string('status')->default('pending');
             $table->jsonb('details')->nullable();
             $table->timestamps();

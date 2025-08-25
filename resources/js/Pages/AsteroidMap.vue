@@ -114,7 +114,7 @@ onMounted(() => {
 
   initQuadtree();
   window.addEventListener('resize', adjustCanvasSize);
-  window.addEventListener('keydown', onKeyDown);
+/*   window.addEventListener('keydown', onKeyDown); */
 
   window.Echo.channel('canvas')
     .listen('.reload.canvas', (data) => {
@@ -129,7 +129,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
-  window.removeEventListener('keydown', onKeyDown);
+/*   window.removeEventListener('keydown', onKeyDown); */
 
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
@@ -780,7 +780,7 @@ function onWheel(e: WheelEvent) {
 }
 
 // Funktion zum Verschieben der Karte mit den Pfeiltasten
-function onKeyDown(e: KeyboardEvent) {
+/* function onKeyDown(e: KeyboardEvent) {
   // Keine Aktion, wenn in Eingabefeldern oder Modals
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
     return;
@@ -817,7 +817,7 @@ function onKeyDown(e: KeyboardEvent) {
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
     requestAnimationFrame(drawScene);
   }
-}
+} */
 
 /* function showCoordinatesOverlay(x: number, y: number) {
   if (!canvasRef.value) return;

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import type { Asteroid } from '@/types/types';
 
 interface SimpleAsteroid {
@@ -15,6 +15,46 @@ const props = defineProps<{
 const emit = defineEmits(['selectAsteroid']);
 
 const isDropdownOpen = ref(false);
+const highlightedIndex = ref(0);
+const dropdownListRef = ref<HTMLUListElement | null>(null);
+const itemRefs = ref<(HTMLElement | null)[]>([]);
+
+watch(isDropdownOpen, (open) => {
+  if (open) {
+    highlightedIndex.value = 0;
+    // Fokus nach dem nächsten Tick setzen
+    nextTick(() => {
+      dropdownListRef.value?.focus();
+    });
+  }
+});
+
+watch(highlightedIndex, (newIdx) => {
+  nextTick(() => {
+    const el = itemRefs.value[newIdx];
+    if (el) {
+      el.scrollIntoView({ block: "nearest" });
+    }
+  });
+});
+
+function onKeyDown(e: KeyboardEvent) {
+  if (!isDropdownOpen.value) return;
+
+  if (e.key === 'ArrowDown') {
+    highlightedIndex.value = (highlightedIndex.value + 1) % props.searchedAsteroids.length;
+    e.preventDefault();
+  } else if (e.key === 'ArrowUp') {
+    highlightedIndex.value = (highlightedIndex.value - 1 + props.searchedAsteroids.length) % props.searchedAsteroids.length;
+    e.preventDefault();
+  } else if (e.key === 'Enter') {
+    selectAsteroid(props.searchedAsteroids[highlightedIndex.value]);
+    e.preventDefault();
+  } else if (e.key === 'Escape') {
+    isDropdownOpen.value = false;
+    e.preventDefault();
+  }
+}
 
 function toggleDropdown() {
   isDropdownOpen.value = !isDropdownOpen.value;
@@ -38,11 +78,12 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', closeDropdown);
 });
+
 </script>
 
 <template>
   <div class="dropdown-container">
-    <button @click="toggleDropdown"
+    <button @click="toggleDropdown" @keydown="onKeyDown"
       class="bg-root flex items-center justify-between text-light text-start text-nowrap ps-3 pe-1 py-2 w-full rounded-md ring-[#bfbfbf] border border-[#6b7280]">
       {{ selectedAsteroid ? selectedAsteroid.name : searchedAsteroids[0].name }}
       <span>
@@ -53,9 +94,16 @@ onUnmounted(() => {
       </span>
     </button>
     <ul v-if="isDropdownOpen"
+      tabindex="0" 
+      @keydown="onKeyDown"
+      ref="dropdownListRef"
       class="absolute top-full left-0 mt-1 max-h-48 w-full overflow-y-auto bg-root rounded-md py-2 no-scrollbar list-none ring-[#bfbfbf] border border-[#6b7280]">
-      <li v-for="asteroid in searchedAsteroids" @click="selectAsteroid(asteroid)" :key="asteroid.name"
-        class="py-1 px-3 cursor-pointer text-light text-sm text-nowrap hover:bg-slate-900">
+      <li v-for="(asteroid, index) in searchedAsteroids"
+        @click="selectAsteroid(asteroid)" 
+        :key="asteroid.name"
+        :ref="el => itemRefs[index] = el as HTMLElement"
+        class="py-1 px-3 cursor-pointer text-light text-sm text-nowrap hover:bg-slate-900"
+        :class="{'bg-slate-900': highlightedIndex === index}">
         <span>
           {{ asteroid.name }}
         </span>

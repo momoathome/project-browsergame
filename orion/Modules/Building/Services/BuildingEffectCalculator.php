@@ -26,6 +26,11 @@ class BuildingEffectCalculator
         $increment = $config['increment'] ?? 0.1;
         $level = $building->level;
 
+        // Spezialfall Laboratory: immer nur das Inkrement pro Upgrade
+        if ($buildingType === BuildingType::LABORATORY) {
+            return $increment;
+        }
+
         return match ($effectType) {
             BuildingEffectType::ADDITIVE => $this->calculateAdditiveEffect($baseValue, $increment, $level),
             BuildingEffectType::MULTIPLICATIVE => $this->calculateMultiplicativeEffect($baseValue, $increment, $level),
@@ -82,13 +87,16 @@ class BuildingEffectCalculator
         $effectType = $config['type'] ?? BuildingEffectType::MULTIPLICATIVE;
     
         // Aktueller oder zukünftiger Effektwert
-        $effectValue = match ($effectType) {
-            BuildingEffectType::ADDITIVE => $this->calculateAdditiveEffect($baseValue, $increment, $level),
-            BuildingEffectType::MULTIPLICATIVE => $this->calculateMultiplicativeEffect($baseValue, $increment, $level),
-            BuildingEffectType::EXPONENTIAL => $this->calculateExponentialEffect($baseValue, $increment, $level),
-            BuildingEffectType::LOGARITHMIC => $this->calculateLogarithmicEffect($baseValue, $increment, $level),
-            default => $baseValue + ($level - 1) * $increment,
-        };
+        // Spezialfall Laboratory: immer nur das Inkrement pro Upgrade
+        $effectValue = ($buildingType === BuildingType::LABORATORY)
+            ? $increment
+            : match ($effectType) {
+                BuildingEffectType::ADDITIVE => $this->calculateAdditiveEffect($baseValue, $increment, $level),
+                BuildingEffectType::MULTIPLICATIVE => $this->calculateMultiplicativeEffect($baseValue, $increment, $level),
+                BuildingEffectType::EXPONENTIAL => $this->calculateExponentialEffect($baseValue, $increment, $level),
+                BuildingEffectType::LOGARITHMIC => $this->calculateLogarithmicEffect($baseValue, $increment, $level),
+                default => $baseValue + ($level - 1) * $increment,
+            };
     
         // Rückgabe mit formatiertem Wert und Beschreibung
         $attributes = $buildingType->getEffectAttributes();
@@ -96,8 +104,8 @@ class BuildingEffectCalculator
     
         foreach ($attributes as $attributeName) {
             $formattedValue = number_format($effectValue, 2, ',', '.');
-            $formattedValueNoDecimals = "+" . number_format($effectValue, 0, ',', '.');
-            $formattedPercent = "+" . number_format(($effectValue - 1) * 100, 0, ',', '.') . "%";
+            $formattedValueNoDecimals = number_format($effectValue, 0, ',', '.');
+            $formattedPercent = number_format(($effectValue - 1) * 100, 0, ',', '.') . "%";
 
             $displayText = match ($attributeName) {
                 'production_speed' => "{$formattedPercent} Production speed",
@@ -105,7 +113,7 @@ class BuildingEffectCalculator
                 'storage' => "{$formattedValueNoDecimals} Resource storage",
                 'scan_range' => "{$formattedValueNoDecimals} Scanner range",
                 'crew_limit' => "{$formattedValueNoDecimals} Crew Limit",
-                'research_points' => "{$formattedValueNoDecimals} Research Points",
+                'research_points' => "+{$formattedValueNoDecimals} Research Points",
                 // 'energy_output' => "+{$effectValue} energy output",
                 // 'trade_income' => "+{$effectValue} Trade Limit",
                 default => "+{$effectValue} {$attributeName}"

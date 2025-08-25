@@ -106,9 +106,7 @@ class AsteroidExplorer
         if ($actionType === QueueActionType::ACTION_TYPE_MINING) {
             // Anwendung von diminishing returns auf Mining-Geschwindigkeit
             $effectiveOperationSpeed = $this->applyDiminishingReturns($totalMiningSpeed);
-            Log::debug("Mining Speed: {$totalMiningSpeed}, Effective Speed: {$effectiveOperationSpeed}");
             $result = max(10, (int) ($duration / ($effectiveOperationSpeed / 5)));
-            Log::debug("Calculated Mining Duration: {$result}");
             return $result;
         } else if ($actionType === QueueActionType::ACTION_TYPE_SALVAGING) {
             // Anwendung von diminishing returns auf Salvaging-Geschwindigkeit
@@ -150,7 +148,6 @@ class AsteroidExplorer
     ): int {
         $totalSpeed = 0;
 
-        Log::debug('spacecrafts', $spacecrafts->toArray());
         foreach ($spacecrafts as $spacecraft) {
             if (isset($spacecraft->details) && $spacecraft->details->type === $type) {
                 // Anzahl der Raumschiffe aus den filteredSpacecrafts ermitteln

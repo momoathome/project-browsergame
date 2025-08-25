@@ -13,16 +13,16 @@ return [
 
     /* chance to generate of asteroid sizes */
     'asteroid_size' => [
-        'small' => 750, // Gewicht für die Zufallsauswahl
+        'small' => 740, // Gewicht für die Zufallsauswahl sollte gesamt 1000 ergeben
         'medium' => 220,
-        'large' => 20,
-        'extreme' => 10,
+        'large' => 25,
+        'extreme' => 15,
     ],
 
     /* base amount */
     'asteroid_faktor' => [
-        'min' => 80,
-        'max' => 125,
+        'min' => 125,
+        'max' => 150,
     ],
 
     /* base multiplier */
@@ -33,13 +33,13 @@ return [
         'extreme' => ['min' => 89, 'max' => 144],
     ],
 
-    // Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
+    // Multiplikator Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
     'size_min_distance' => [
         'base' => $asteroid_to_station_distance,
         'small_asteroid' => 1.0,
         'medium_asteroid' => 4.0,
         'large_asteroid' => 20.0,
-        'extreme_asteroid' => 40.0,
+        'extreme_asteroid' => 35.0,
     ],
 
     'resource_min_distances' => [
@@ -47,7 +47,7 @@ return [
         'low_value' => 1.0,
         'medium_value' => 15.0,
         'high_value' => 30.0,
-        'extreme_value' => 40.0,
+        'extreme_value' => 45.0,
     ],
 
     'resource_pools' => [

@@ -44,7 +44,7 @@ enum BuildingType: string
             self::LABORATORY => [
                 'type' => BuildingEffectType::ADDITIVE,
                 'base_value' => 0,
-                'increment' => 2,
+                'increment' => 3,
             ],
             self::SCANNER => [
                 'type' => BuildingEffectType::ADDITIVE,

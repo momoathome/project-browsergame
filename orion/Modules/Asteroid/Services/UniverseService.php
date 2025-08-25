@@ -294,7 +294,6 @@ class UniverseService
 
         return Cache::remember($cacheKey, 1800, function () {
             $stations = Station::all(['id', 'name', 'x', 'y'])->toArray();
-            Log::debug("Stations-Cache neu geladen: " . count($stations) . " Stationen gefunden");
             return $stations;
         });
     }

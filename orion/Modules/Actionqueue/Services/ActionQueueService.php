@@ -134,12 +134,6 @@ class ActionQueueService
         try {
             $success = $handler->handle($action);
 
-            \Log::info("Aktionsverarbeitung abgeschlossen", [
-                'action_id' => $action->id,
-                'action_type' => $action->action_type,
-                'success' => $success
-            ]);
-
             if ($success) {
                 $action->status = QueueStatusType::STATUS_COMPLETED;
             } else {

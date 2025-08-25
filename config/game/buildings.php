@@ -33,7 +33,7 @@ return [
         [
             'name' => 'Laboratory',
             'details_id' => 3,
-            'effect_value' => 2,
+            'effect_value' => 3,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,

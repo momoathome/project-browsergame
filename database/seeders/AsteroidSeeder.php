@@ -45,10 +45,10 @@ class AsteroidSeeder extends Seeder
     $endTime = microtime(true);
     $executionTime = $endTime - $startTime;
     $this->command->info("{$count} Asteroids created in " . number_format($executionTime, 2) . " seconds.");
-    $this->command->info("Indexing asteroids... depending on the amount of asteroids, this may take a few minutes.");
+    // $this->command->info("Indexing asteroids... depending on the amount of asteroids, this may take a few minutes.");
 
     // Index the asteroids 
-    $startTime = microtime(true);
+/*     $startTime = microtime(true);
     $asteroidModel = "Orion\\Modules\\Asteroid\\Models\\Asteroid";
     Artisan::call('scout:flush', ['model' => $asteroidModel]);
     Artisan::call('scout:import', ['model' => $asteroidModel]);
@@ -59,7 +59,7 @@ class AsteroidSeeder extends Seeder
 
     $this->command->info("Configure Meilisearch for optimal search...");
     Artisan::call('meilisearch:configure');
-    $this->command->info("Meilisearch configuration completed.");
+    $this->command->info("Meilisearch configuration completed."); */
   }
 }
 

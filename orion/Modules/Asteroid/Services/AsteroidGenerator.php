@@ -161,8 +161,6 @@ class AsteroidGenerator
       }
     }
 
-    Log::info("Asteroiden generiert: " . count($asteroids) . " - " . json_encode($asteroids));
-
     return $asteroids;
   }
 

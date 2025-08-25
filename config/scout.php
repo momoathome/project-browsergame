@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Asteroid;
+use Orion\Modules\Asteroid\Models\Asteroid;
 
 return [
 

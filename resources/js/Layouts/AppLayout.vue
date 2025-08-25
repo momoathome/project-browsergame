@@ -13,7 +13,6 @@ const props = defineProps<{
 
 <template>
   <div>
-
     <Head :title="title" />
 
     <Banner class="absolute bottom-0 right-0 z-50" />
@@ -30,7 +29,6 @@ const props = defineProps<{
       </main>
 
     </div>
-
   </div>
 </template>
 

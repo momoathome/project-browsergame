@@ -189,7 +189,7 @@ onUnmounted(() => {
               <th class="text-left p-2">Quantity</th>
               <th class="text-left p-2">Crew</th>
               <th class="text-left p-2">Combat</th>
-              <th class="text-left p-2">In Orbit</th>
+              <th class="text-left p-2">InOrbit</th>
               <th class="text-left p-2">Production</th>
             </tr>
           </thead>

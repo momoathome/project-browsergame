@@ -12,8 +12,6 @@ class BuildingDetailsSeeder extends Seeder
      */
     public function run(): void
     {
-        BuildingDetails::truncate();
-
         BuildingDetails::create([
             'name' => 'Shipyard',
             'description' => 'Increases spaceship production speed.',

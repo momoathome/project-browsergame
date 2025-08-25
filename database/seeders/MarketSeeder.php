@@ -13,7 +13,6 @@ class MarketSeeder extends Seeder
      */
     public function run(): void
     {
-        Market::truncate();
         $resources = Resource::pluck('id', 'name')->toArray();
         $marketsConfig = config('game.market.markets');
 

@@ -1,21 +1,22 @@
 <?php
 
-use App\Events\ReloadFrontendCanvas;
 use Inertia\Inertia;
+use App\Events\ReloadFrontendCanvas;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
 use App\Http\Middleware\HandleExceptionsForJetstream;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
-use Orion\Modules\Actionqueue\Http\Controllers\ActionQueueController;
 use Orion\Modules\Admin\Http\Controllers\AdminController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
 use Orion\Modules\Market\Http\Controllers\MarketController;
+use Orion\Modules\User\Http\Controllers\OverviewController;
 use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
 use Orion\Modules\Building\Http\Controllers\BuildingController;
-use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
 use Orion\Modules\User\Http\Controllers\UserResourceController;
-use Orion\Modules\User\Http\Controllers\OverviewController;
+use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
+use Orion\Modules\Actionqueue\Http\Controllers\ActionQueueController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -51,7 +52,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/', [AsteroidController::class, 'index'])->name('asteroidMap');
         Route::post('/update', [AsteroidController::class, 'update'])->name('asteroidMap.update');
         Route::post('/combat', [CombatController::class, 'combat'])->name('asteroidMap.combat');
-        Route::post('/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
+        Route::post('/search', [AsteroidController::class, 'search'])->name('asteroidMap.search')->withoutMiddleware(VerifyCsrfToken::class);;
         Route::post('/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
     });    
 

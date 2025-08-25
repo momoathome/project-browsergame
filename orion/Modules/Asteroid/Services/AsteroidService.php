@@ -20,7 +20,7 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
-use Orion\Modules\Asteroid\Services\asteroidGenerator;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 
 class AsteroidService

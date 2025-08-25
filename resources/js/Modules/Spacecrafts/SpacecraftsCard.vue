@@ -189,7 +189,7 @@ function unlockSpacecraft() {
 
 <template>
   <div class="flex relative">
-    <div class="flex flex-col rounded-3xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
+    <div class="flex flex-col w-full rounded-3xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
       <div class="image relative">
         <img :src="spacecraft.image" class="rounded-t-3xl h-[144px] w-full" alt="spacecraft" />
       </div>

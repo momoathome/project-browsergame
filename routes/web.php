@@ -73,7 +73,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/spacecrafts/unlock', [AdminController::class, 'adminUnlock'])->name('admin.spacecrafts.unlock');
         Route::put('/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
         Route::post('/queue/finish/{userId}', [ActionQueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
-
+        Route::post('/asteroids/regenerate/{amount}', [AdminController::class, 'adminRegenerateAsteroids'])->name('admin.asteroids.regenerate');
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });
 

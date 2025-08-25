@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Market\Services\MarketService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Building\Services\BuildingService;
@@ -16,6 +17,8 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
+
 
 class AdminController extends Controller
 {
@@ -30,6 +33,7 @@ class AdminController extends Controller
         private readonly UserAttributeService $userAttributeService,
         private readonly MarketService $marketService,
         private readonly SpacecraftProductionService $spacecraftProductionService,
+        private readonly AsteroidGenerator $asteroidGenerator,
         private readonly AuthManager $authManager
     ) {
         if (!$this->authManager->user()->hasRole('admin')) {
@@ -191,6 +195,13 @@ class AdminController extends Controller
         } else {
             return redirect()->back()->with('error', 'Fehler beim Freischalten des Raumschiffs');
         }
+    }
+
+    public function adminRegenerateAsteroids(Request $request)
+    {
+        Log::info('Regenerating asteroids', ['count' => $request->input('count')]);
+        $result = $this->asteroidGenerator->regenerateAsteroids($request->input('count'));
+        return redirect()->back()->with('message', $result['message']);
     }
 
     /**

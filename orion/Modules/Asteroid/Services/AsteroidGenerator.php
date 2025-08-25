@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Models\AsteroidResource;
 use Orion\Modules\Asteroid\Services\UniverseService;
@@ -163,6 +164,40 @@ class AsteroidGenerator
     Log::info("Asteroiden generiert: " . count($asteroids) . " - " . json_encode($asteroids));
 
     return $asteroids;
+  }
+
+  public function regenerateAsteroids(int $count): array
+  {
+      // 1. Bestehende Asteroiden und Ressourcen löschen
+      DB::transaction(function () {
+          AsteroidResource::truncate();
+          Asteroid::truncate();
+      });
+  
+      // 2. Cache leeren
+      UniverseService::clearCache();
+  
+      // 3. Reservierte Regionen ggf. neu anlegen (optional, falls du sie neu verteilen willst)
+      // $this->universeService->reserveStationRegions(Anzahl, true);
+  
+      // 4. Asteroiden generieren
+      $asteroidCount = $count ?? config('game.core.asteroid_count');
+      $asteroids = $this->generateAsteroids($asteroidCount);
+  
+      Asteroid::removeAllFromSearch();
+      Asteroid::query()->searchable();
+
+      // 5. Meilisearch-Index neu aufbauen
+/*       $asteroidModel = "Orion\\Modules\\Asteroid\\Models\\Asteroid";
+      Artisan::call('scout:flush', ['model' => $asteroidModel]);
+      Artisan::call('scout:import', ['model' => $asteroidModel]);
+      Artisan::call('scout:index', ['name' => 'asteroids']);
+      Artisan::call('meilisearch:configure'); */
+
+      // 6. Rückgabe/Logging
+      Log::info("Asteroiden wurden durch Admin neu generiert: {$asteroidCount}");
+  
+      return ['message' => "{$asteroidCount} Asteroiden wurden neu generiert."];
   }
 
   private function saveBatchedAsteroids(array $asteroids): array

@@ -5,6 +5,7 @@ namespace Orion\Modules\Asteroid\Http\Controllers;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Services\AsteroidSearch;
@@ -43,7 +44,8 @@ class AsteroidController extends Controller
         $query = $request->input('query');
 
         [$searchedAsteroids, $searchedStations] = $this->asteroidSearch->search($query);
-
+        Log::info('AsteroidSearch: count=' . count($searchedAsteroids));
+        
         return response()->json([
             'searched_asteroids' => $searchedAsteroids,
             'searched_stations' => $searchedStations,

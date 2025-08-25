@@ -62,7 +62,7 @@ class ConfigureMeilisearch extends Command
                 ]
             ],
             // Tokenisierungseinstellungen
-            'separatorTokens' => [' ', '.','-', '_'],
+            // 'separatorTokens' => [' ', '.','-', '_'],
             'nonSeparatorTokens' => ['à', 'â', 'æ', 'é', 'è', 'ê', 'ë', 'î', 'ï', 'ô', 'œ', 'ù', 'û', 'ü', 'ÿ',]
         ]);
 

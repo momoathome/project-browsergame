@@ -14,20 +14,25 @@ Das Spiel ist live: [https://game.nimbuscms.app/](https://game.nimbuscms.app/)
 
 ## Features
 
-- **Ressourcenabbau:** Baue Asteroiden ab und sichere dir wertvolle Rohstoffe.
-- **PvP & PvE:** Kämpfe gegen andere Spieler oder stelle dich KI-Herausforderungen.
+- **Raumschiffe:** Schalte neue Schiffe frei und stelle eine mächtige Flotte zusammen.
+- **Raumstationen:** Erweitere und upgrade deine Raumstation mit verschiedenen Modulen, um neue Funktionen und Vorteile zu erhalten.
+- **Ressourcenabbau:** Baue Asteroiden auf einer interaktiven Karte ab und sichere dir wertvolle Rohstoffe.
+- **PvP:** Kämpfe gegen andere Spieler und beweise dich im Universum.
 - **Handel:** Tausche Ressourcen und Waren mit anderen Spielern.
-- **Forschung:** Entwickle neue Technologien und verbessere deine Flotte.
-- **Einfluss sammeln:** Erweitere deinen Machtbereich im Universum.
 
----
+## Roadmap
+
+- [ ] **Ranking:** Spieler-Ranking basierend auf gesammeltem Einfluss.
+- [ ] **Einfluss sammeln:** Erweitere deinen Machtbereich im Universum.
+- [ ] **PvE:** Stelle dich KI-Herausforderungen.
+- [ ] **Logbook:** Protokolliert wichtige Ereignisse wie Asteroidenabbau, Kämpfe und mehr.
+- [ ] **Forschung:** Forsche an neuen Technologien und verbessere deine Flotte.
+- [ ] **Salvaging:** Gewinne zusätzliche Ressourcen, indem du Trümmerfelder nach Kämpfen plünderst.
 
 ## Tech Stack
 
 - **Frontend:** Vue.js, Tailwind CSS
 - **Backend:** Laravel, Inertia.js
-
----
 
 ## Getting Started
 

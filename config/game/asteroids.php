@@ -13,10 +13,10 @@ return [
 
     /* chance to generate of asteroid sizes */
     'asteroid_size' => [
-        'small' => 740, // Gewicht für die Zufallsauswahl sollte gesamt 1000 ergeben
+        'small' => 743, // Gewicht für die Zufallsauswahl sollte gesamt 1000 ergeben
         'medium' => 220,
         'large' => 25,
-        'extreme' => 15,
+        'extreme' => 12,
     ],
 
     /* base amount */
@@ -39,7 +39,7 @@ return [
         'small_asteroid' => 1.0,
         'medium_asteroid' => 4.0,
         'large_asteroid' => 20.0,
-        'extreme_asteroid' => 35.0,
+        'extreme_asteroid' => 37.0,
     ],
 
     'resource_min_distances' => [

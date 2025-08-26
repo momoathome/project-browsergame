@@ -47,9 +47,11 @@ readonly class CombatService
      public function prepareCombatPlan(CombatPlanRequest $planRequest): CombatRequest
     {
         $defenderStation = $this->stationService->findStationByUserId($planRequest->defender->id);
+        $attackerStation = $this->stationService->findStationByUserId($planRequest->attacker->id);
+        
         $attackerFormatted = $this->formatAttackerSpacecrafts($planRequest->spacecrafts, $planRequest->attacker);
-        $defenderFormatted = $this->formatDefenderSpacecrafts($planRequest->defenderSpacecrafts);
-    
+        $defenderFormatted = [];
+
         return new CombatRequest(
             $planRequest->attacker->id,
             $planRequest->defender->id,
@@ -57,6 +59,10 @@ readonly class CombatService
             $defenderFormatted,
             $planRequest->attacker->name,
             $planRequest->defender->name,
+            [
+                'x' => $attackerStation->x,
+                'y' => $attackerStation->y,
+            ],
             [
                 'x' => $defenderStation->x,
                 'y' => $defenderStation->y,
@@ -93,7 +99,7 @@ readonly class CombatService
     public function formatDefenderSpacecrafts($defender_spacecrafts): array
     {
         return $defender_spacecrafts
-            ->filter(fn($spacecraft) => $spacecraft->count > 0)
+            ->filter(fn($spacecraft) => $spacecraft->available_count > 0)
             ->map(fn($spacecraft) => [
                 'name' => $spacecraft->details->name,
                 'combat' => $spacecraft->combat,

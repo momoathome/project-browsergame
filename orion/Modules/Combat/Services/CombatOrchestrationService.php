@@ -13,6 +13,7 @@ use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Station\Services\StationService;
 
 readonly class CombatOrchestrationService
 {
@@ -22,7 +23,8 @@ readonly class CombatOrchestrationService
         private readonly UserService $userService,
         private readonly SpacecraftService $spacecraftService,
         private readonly AsteroidExplorer $asteroidExplorer,
-        private readonly CombatPlunderService $combatPlunderService
+        private readonly CombatPlunderService $combatPlunderService,
+        private readonly StationService $stationService
     ) {
     }
 
@@ -44,7 +46,7 @@ readonly class CombatOrchestrationService
         
         // Formatiere und bereite den Kampf vor
         $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
-        
+
         // Formatiere die Raumschiffe des Angreifers für die Sperre
         $filteredSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
         $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($attacker, $filteredSpacecrafts);
@@ -75,23 +77,36 @@ readonly class CombatOrchestrationService
      */
     public function completeCombat(int $attackerId, int $defenderId, array $details): CombatResult
     {
-        $combatRequest = CombatRequest::fromArray([
-            'attacker_id' => $attackerId,
-            'defender_id' => $defenderId,
-            'attacker_formatted' => $details['attacker_formatted'],
-            'defender_formatted' => $details['defender_formatted'],
-            'attacker_name' => $details['attacker_name'],
-            'defender_name' => $details['defender_name']
-        ]);
-
         $attacker = $this->userService->find($attackerId);
         $defender = $this->userService->find($defenderId);
         
+        $defenderSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($defenderId);
+        $defenderFormatted = $this->combatService->formatDefenderSpacecrafts($defenderSpacecrafts);
+        $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
+
+        Log::info(
+            'Preparing combat',
+            [
+                'defender_spacecrafts' => $defenderSpacecrafts,
+                'defender_formatted' => $defenderFormatted,
+                'attacker_spacecrafts' => $attackerSpacecrafts
+            ]
+        );
+
+        $combatRequest = new CombatRequest(
+            $attackerId,
+            $defenderId,
+            $details['attacker_formatted'],
+            $defenderFormatted,
+            $details['attacker_name'],
+            $details['defender_name'],
+            $details['attacker_coordinates'] ?? [],
+            $details['target_coordinates'] ?? []
+        );
+
         // Simuliere den Kampf und speichere das Ergebnis
         $result = $this->combatService->executeCombat($combatRequest, $attacker, $defender);
 
-        $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
-        $defenderSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($defenderId);
 
         // calculate new spacecrafts count
         $attackerSpacecraftsCount = $this->combatService->calculateNewSpacecraftsCount(
@@ -102,6 +117,12 @@ readonly class CombatOrchestrationService
             $defenderSpacecrafts,
             $result->getLossesCollection('defender')
         );
+
+        Log::info('Combat executed', [
+            'attacker_spacecrafts_count' => $attackerSpacecraftsCount,
+            'defender_spacecrafts_count' => $defenderSpacecraftsCount,
+            'result' => $result
+        ]);
 
         // Update spacecrafts count in database
         $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);

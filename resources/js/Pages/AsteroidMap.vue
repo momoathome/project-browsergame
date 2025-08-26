@@ -464,6 +464,7 @@ function updateShipPool() {
 
 function initializeNewMission(mission: QueueItem, missionId: number, missionType: 'mining' | 'combat') {
   const targetCoords = mission.details.target_coordinates;
+  const attackerCoords = mission.details.attacker_coordinates;
   const startTime = new Date(mission.startTime).getTime();
   const endTime = new Date(mission.endTime).getTime();
 
@@ -487,19 +488,34 @@ function initializeNewMission(mission: QueueItem, missionId: number, missionType
     ? mission.details.asteroid_name || '' 
     : mission.details.defender_name || 'Gegner';
 
+  // Prüfe, ob Angriff auf mich
+  const isAttackOnMe = mission.actionType === 'combat'
+    && mission.targetId === usePage().props.auth.user.id;
+
+  // Startkoordinaten setzen
+  let startX, startY;
+  if (isAttackOnMe && attackerCoords) {
+    startX = attackerCoords.x;
+    startY = attackerCoords.y;
+  } else {
+    startX = userStation.value!.x;
+    startY = userStation.value!.y;
+  }
+
   // Erstelle neues Objekt im Pool
   shipPool.value.set(missionId, {
-    shipX: userStation.value!.x,
-    shipY: userStation.value!.y,
-    exactX: userStation.value!.x,
-    exactY: userStation.value!.y,
+    shipX: startX,
+    shipY: startY,
+    exactX: startX,
+    exactY: startY,
     missionId,
     targetName,
+    isAttackOnMe,
     totalShips,
     targetX: targetCoords!.x,
     targetY: targetCoords!.y,
-    startX: userStation.value!.x,
-    startY: userStation.value!.y,
+    startX,
+    startY,
     startTime,
     endTime,
     completed: false,
@@ -558,16 +574,31 @@ function drawFlightPaths() {
   // Zeichne Missionslinien
   missions.forEach(mission => {
     const targetCoords = mission.details.target_coordinates;
-    
-    // Setze Farbe je nach Missionstyp
-    context.strokeStyle = mission.actionType === 'combat' 
-      ? 'rgba(0, 255, 255, 0.4)' // cyan für Kampfmissionen
-      : 'rgba(255, 255, 255, 0.4)'; // weiß für Mining-Missionen
-    
+    const attackerCoords = mission.details.attacker_coordinates;
+  
+    // Prüfe, ob das Ziel die eigene Station ist (Angriff auf mich)
+    const isAttackOnMe = mission.actionType === 'combat'
+      && mission.targetId === usePage().props.auth.user.id;
+  
+    // Setze Farbe je nach Missionstyp und Ziel
+    context.strokeStyle = isAttackOnMe
+      ? 'rgba(255, 0, 0, 0.7)' // rot für Angriffe auf mich
+      : mission.actionType === 'combat'
+        ? 'rgba(0, 255, 255, 0.4)' // cyan für andere Kampfmissionen
+        : 'rgba(255, 255, 255, 0.4)'; // weiß für Mining-Missionen
+  
     context.beginPath();
-    // Zeichne Linie von Station zum Ziel
-    context.moveTo(userStation.value!.x, userStation.value!.y);
-    context.lineTo(targetCoords.x, targetCoords.y);
+  
+    if (isAttackOnMe && attackerCoords) {
+      // Linie vom Angreifer zur eigenen Station zeichnen
+      context.moveTo(attackerCoords.x, attackerCoords.y);
+      context.lineTo(targetCoords.x, targetCoords.y);
+    } else {
+      // Standard: Linie von der eigenen Station zum Ziel
+      context.moveTo(userStation.value!.x, userStation.value!.y);
+      context.lineTo(targetCoords.x, targetCoords.y);
+    }
+  
     context.stroke();
   });
 
@@ -643,8 +674,10 @@ function drawShip(ctx, ship, currentScale) {
   const displayY = Math.round(ship.shipY);
 
   // Schifffarbe basierend auf Missionstyp
-  if (ship.missionType === 'combat') {
-    ctx.fillStyle = 'rgba(0, 255, 255, 0.8)'; // cyan für Kampfmissionen
+  if (ship.missionType === 'combat' && ship.isAttackOnMe) {
+    ctx.fillStyle = 'rgba(255, 0, 0, 1)'; // rot für Angriffe auf mich
+  } else if (ship.missionType === 'combat') {
+    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für andere Kampfmissionen
   } else {
     ctx.fillStyle = 'white';
   }
@@ -655,24 +688,24 @@ function drawShip(ctx, ship, currentScale) {
   ctx.fill();
 }
 
-// Angepasste drawShipLabel-Funktion
 function drawShipLabel(ctx, ship, currentScale) {
   const labelText = ship.missionType === 'combat' 
-    ? `${ship.targetName} (Angriff)` 
+    ? `${ship.targetName} (Attack)` 
     : ship.targetName;
-  
+
   const textWidth = ctx.measureText(labelText).width;
-  // Verwende exactX/Y für glattere Animationen
   const textX = ship.exactX - textWidth / 2;
   const textY = ship.exactY + ship.textOffsetY * currentScale;
-  
-  // Kampfmission-Text in Rot darstellen
-  if (ship.missionType === 'combat') {
-    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für Kampfmissionen
+
+  // Rot für Angriffe auf mich, sonst cyan/weiß
+  if (ship.missionType === 'combat' && ship.isAttackOnMe) {
+    ctx.fillStyle = 'rgba(255, 0, 0, 1)'; // rot für Angriffe auf mich
+  } else if (ship.missionType === 'combat') {
+    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für andere Kampfmissionen
   } else {
     ctx.fillStyle = 'white';
   }
-  
+
   ctx.fillText(labelText, textX, textY);
 }
 

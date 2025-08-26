@@ -50,7 +50,15 @@ class AsteroidRepository
             }
         }
         
-        if ($asteroid->resources()->count() == 0) {
+        $totalAmount = $asteroid->resources()->sum('amount');
+        $percentThreshold = max(1, floor($asteroid->value * 0.01)); // mindestens 1%
+        $flatThreshold = 40; // mindestens über 40 ressourcen gesamt
+
+        if (
+            $asteroid->resources()->count() == 0 ||
+            $totalAmount < $flatThreshold ||
+            $totalAmount < $percentThreshold
+        ) {
             $asteroid->delete();
         }
     }

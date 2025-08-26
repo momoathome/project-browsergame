@@ -36,6 +36,16 @@ readonly class SpacecraftService
         return $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetailsAndResources($userId);
     }
 
+    public function getAvailableSpacecraftsByUserIdWithDetails(int $userId): Collection
+    {
+        return $this->getAllSpacecraftsByUserIdWithDetails($userId)
+            ->filter(fn($ship) => ($ship->count - $ship->locked_count) > 0)
+            ->map(function($ship) {
+                $ship->available_count = $ship->count - $ship->locked_count;
+                return $ship;
+            });
+    }
+
     public function getAllSpacecraftsByUserIdWithQueueInformation(int $userId): Collection
     {
         return $this->addQueueInformationToSpacecrafts($userId);

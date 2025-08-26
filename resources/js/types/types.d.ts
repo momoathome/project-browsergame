@@ -70,6 +70,7 @@ export interface ShipRenderObject {
   shipY: number;
   missionId: number;
   targetName: string;
+  isAttackOnMe: boolean;
   totalShips: number;
   targetX: number;
   targetY: number;
@@ -293,6 +294,7 @@ export interface MissionDetails {
 // Typ für Missionen in der Queue
 export interface QueueItem {
   id: number;
+  targetId: number;
   actionType: string;
   startTime: string;
   endTime: string;

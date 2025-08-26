@@ -11,6 +11,7 @@ class CombatRequest
         public readonly array $defenderSpacecrafts,
         public readonly string $attackerName,
         public readonly string $defenderName,
+        public readonly array $attackerCoordinates = [],
         public readonly array $targetCoordinates = []
     ) {
     }
@@ -21,9 +22,10 @@ class CombatRequest
             $data['attacker_id'],
             $data['defender_id'],
             $data['attacker_formatted'],
-            $data['defender_formatted'],
+            $data['defender_formatted'] ?? [],
             $data['attacker_name'],
             $data['defender_name'],
+            $data['attacker_coordinates'] ?? [],
             $data['defender_coordinates'] ?? [],
         );
     }
@@ -37,6 +39,7 @@ class CombatRequest
             'defender_formatted' => $this->defenderSpacecrafts,
             'attacker_name' => $this->attackerName,
             'defender_name' => $this->defenderName,
+            'attacker_coordinates' => $this->attackerCoordinates,
             'target_coordinates' => $this->targetCoordinates
         ];
     }

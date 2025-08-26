@@ -23,10 +23,6 @@ class AsteroidSearch
     // Suchparameter vorbereiten
     $params = $this->parseSearchQuery($query);
 
-    Log::info('useID: ' . json_encode($userId));
-    Log::info('userStation: ' . json_encode($userStation));
-    Log::info('userScanrange: ' . json_encode($scanRange));
-    Log::info('Asteroid Search Params: ' . json_encode($params));
     // Räumliche Vorfilterung: Berechne die Koordinatenbereiche, in denen gesucht werden soll
     $spatialFilter = $this->createSpatialFilter($userStation->x, $userStation->y, $scanRange);
 
@@ -41,9 +37,6 @@ class AsteroidSearch
 
     // Suche ausführen und Ressourcen laden
     $searchedAsteroids = $meiliSearchQuery->get()->load('resources');
-
-    Log::info('meilisearchquery: ' . json_encode($meiliSearchQuery));
-    Log::info('searchedAsteroids: ' . json_encode($searchedAsteroids));
 
     // Genaue Filterung nach Scan-Bereich (für kreisförmigen Radius)
     $filteredAsteroids = $searchedAsteroids->filter(function ($asteroid) use ($userStation, $scanRange) {

@@ -14,9 +14,9 @@ return [
     'growth_factors' => [
         'Shipyard' => 1.35,
         'Hangar' => 1.275,
-        'Laboratory' => 1.375,
+        'Laboratory' => 1.25,
         'Warehouse' => 1.30,
-        'Scanner' => 1.325,
+        'Scanner' => 1.30,
         'Shield' => 1.375,
         // Weitere Gebäude...
     ],

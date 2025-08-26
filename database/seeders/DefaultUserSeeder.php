@@ -19,17 +19,17 @@ class DefaultUserSeeder extends Seeder
         $roleUser = Role::create(['name' => 'user']);
 
         $admin = User::create([
-            'name' => 'admin',
-            'email' => 'admin@browsergame.de',
-            'password' => Hash::make('password')
+            'name' => 'Snowowl',
+            'email' => 'mknoll1901@gmail.com',
+            'password' => Hash::make('MBKg5MGE50FNjd1')
         ]);
 
         $admin->assignRole($roleAdmin);
 
         // tester
         $user = User::create([
-            'name' => 'tester',
-            'email' => 'tester@browsergame.de',
+            'name' => 'Starlord',
+            'email' => 'Starlord@browsergame.de',
             'password' => Hash::make('password')
         ]);
 

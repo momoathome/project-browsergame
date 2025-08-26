@@ -140,8 +140,6 @@ Perform database migrations with the following command. This will set up your da
 ./vendor/bin/sail composer dump-autoload
 ```
 
----
-
 ## Commands
 
 ``` bash
@@ -160,13 +158,9 @@ sail artisan make:extended ModelNamen --m --c --r --s
 Dieses Projekt ist ein persönliches Herzensprojekt und **nicht für die kommerzielle Nutzung oder das eigenständige Re-Releasen** bestimmt.  
 Das Clonen zu privaten Lernzwecken ist in Ordnung, aber eine Veröffentlichung, Weiterverbreitung oder kommerzielle Nutzung ist ausdrücklich untersagt.
 
----
-
 ## Feedback
 
 Feedback gerne über [GitHub Issues](https://github.com/momoathome/project-browsergame/issues).
-
----
 
 **Viel Spaß beim Erkunden des Universums!**
 

@@ -18,7 +18,7 @@ const props = defineProps<{
   spacecrafts: Spacecraft[];
 }>();
 
-const stationImageSrc = '/images/space-station.png';
+const stationImageSrc = '/images/space-station-yellow.png';
 const asteroidImageSrc = '/images/asteroid.png';
 
 const stationImage = new Image();

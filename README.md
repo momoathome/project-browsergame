@@ -1,4 +1,33 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<img src="orions_frontier.png" alt="Orions Frontier" width="400">
+
+# Orions Frontier
+
+**Mein persönliches Space-Game-Projekt**
+
+Seit vielen Jahren wollte ich ein eigenes Browsergame erschaffen – inspiriert von den großen Klassikern, aber mit meiner eigenen Vision. Nach zahllosen Anläufen und verworfenen Versionen ist daraus endlich ein Spiel entstanden, das dich in eine dynamische Galaxie voller Raumschiffe, Raumstationen und Asteroiden eintauchen lässt.
+
+Im Zentrum steht der Orion-Gürtel – eine der bekanntesten Sternenkonstellationen des Universums. In *Orions Frontier* dreht sich alles um die Erkundung, den Abbau von Ressourcen und die Eroberung dieses Sektors. Baue deine Flotte aus, erweitere deine Raumstation und sichere dir deinen Platz im Herzen des Orion!
+
+Das Spiel ist live: [https://game.nimbuscms.app/](https://game.nimbuscms.app/)
+
+---
+
+## Features
+
+- **Ressourcenabbau:** Baue Asteroiden ab und sichere dir wertvolle Rohstoffe.
+- **PvP & PvE:** Kämpfe gegen andere Spieler oder stelle dich KI-Herausforderungen.
+- **Handel:** Tausche Ressourcen und Waren mit anderen Spielern.
+- **Forschung:** Entwickle neue Technologien und verbessere deine Flotte.
+- **Einfluss sammeln:** Erweitere deinen Machtbereich im Universum.
+
+---
+
+## Tech Stack
+
+- **Frontend:** Vue.js, Tailwind CSS
+- **Backend:** Laravel, Inertia.js
+
+---
 
 ## Getting Started
 
@@ -69,12 +98,17 @@ PUSHER_PORT=443
 PUSHER_SCHEME="https"
 PUSHER_APP_CLUSTER="mt1"
 
-SCOUT_DRIVER=meilisearch
-MEILISEARCH_HOST=http://meilisearch:7700
-MEILISEARCH_NO_ANALYTICS=false
-MEILISEARCH_KEY=masterKey
+VITE_PUSHER_HOST=
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_APP_ID="${PUSHER_APP_ID}"
+VITE_PUSHER_APP_SECRET="${PUSHER_APP_SECRET}"
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_CLUSTER="${PUSHER_APP_CLUSTER}"
 
-DEBUGBAR_ENABLED=true
+SCOUT_DRIVER=meilisearch
+SCOUT_QUEUE=false
+MEILISEARCH_HOST=http://meilisearch:7700
+MEILISEARCH_KEY=masterKey
 ```
 
 ### Step 8: Run Database Migrations
@@ -101,6 +135,8 @@ Perform database migrations with the following command. This will set up your da
 ./vendor/bin/sail composer dump-autoload
 ```
 
+---
+
 ## Commands
 
 ``` bash
@@ -112,6 +148,21 @@ sail artisan test:station-spawns 50 --refresh --debug --clear-cache --reserve-re
 sail artisan make:extended ModelNamen --m --c --r --s
 ```
 
-## Authors
+---
+
+## Lizenz
+
+Dieses Projekt ist ein persönliches Herzensprojekt und **nicht für die kommerzielle Nutzung oder das eigenständige Re-Releasen** bestimmt.  
+Das Clonen zu privaten Lernzwecken ist in Ordnung, aber eine Veröffentlichung, Weiterverbreitung oder kommerzielle Nutzung ist ausdrücklich untersagt.
+
+---
+
+## Feedback
+
+Feedback gerne über [GitHub Issues](https://github.com/momoathome/project-browsergame/issues).
+
+---
+
+**Viel Spaß beim Erkunden des Universums!**
 
 - [@momoathome](https://github.com/momoathome) - Maurice

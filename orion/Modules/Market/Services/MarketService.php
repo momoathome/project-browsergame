@@ -72,7 +72,6 @@ readonly class MarketService
                 }
             });
 
-
             broadcast(new UpdateUserResources($user));
             $totalCostFormatted = number_format($totalCost, 0, ',', '.');
             return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully for {$totalCostFormatted} credits");

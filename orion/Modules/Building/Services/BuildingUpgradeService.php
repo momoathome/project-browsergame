@@ -221,21 +221,12 @@ class BuildingUpgradeService
         $effectType = $effectConfig['type'] ?? BuildingEffectType::ADDITIVE;
         $updatedAttributes = collect();
 
-        // Debug-Informationen hinzufügen
-        \Log::debug("Updating user attributes for building", [
-            'user_id' => $userId,
-            'building_id' => $building->id,
-            'building_name' => $building->details->name,
-            'building_level' => $building->level,
-            'effect_value' => $building->effect_value
-        ]);
-
         // Wenn keine Attribute definiert sind, frühzeitig beenden
         if (empty($effectAttributeNames)) {
             return $updatedAttributes;
         }
 
-        collect($effectAttributeNames)->each(function ($attributeNameStr) use ($userId, $building, $effectType, &$updatedAttributes) {
+        collect($effectAttributeNames)->each(function ($attributeNameStr) use ($userId, $building, $effectType, &$updatedAttributes, $buildingType) {
             $attributeName = UserAttributeType::tryFrom($attributeNameStr);
 
             // Falls die Umwandlung fehlschlägt, überspringen
@@ -247,16 +238,22 @@ class BuildingUpgradeService
                 return;
             }
 
-            // Den vorberechneten effect_value direkt übernehmen
-            $valueToApply = ceil($building->effect_value);
+            if ($buildingType === BuildingType::LABORATORY) {
+                $increment = $buildingType->getEffectConfiguration()['increment'] ?? 3;
+                $valueToApply = $increment;
+                $replace = false; // addieren statt ersetzen
+            } else {
+                $valueToApply = ceil($building->effect_value);
+                $replace = true; // ersetzen wie gehabt
+            }
 
             // Attribut aktualisieren - replace=true, damit der Wert ersetzt und nicht addiert wird
             $updatedAttribute = $this->userAttributeService->updateUserAttribute(
                 $userId,
                 $attributeName,
                 $valueToApply,
-                false,  // nicht multiplizieren
-                true    // ersetzen
+                false,      // nicht multiplizieren
+                $replace    // ersetzen
             );
 
             if ($updatedAttribute) {

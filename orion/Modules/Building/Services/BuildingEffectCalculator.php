@@ -28,7 +28,7 @@ class BuildingEffectCalculator
 
         // Spezialfall Laboratory: immer nur das Inkrement pro Upgrade
         if ($buildingType === BuildingType::LABORATORY) {
-            return $increment;
+            return $building->effect_value + $increment;
         }
 
         return match ($effectType) {
@@ -45,7 +45,7 @@ class BuildingEffectCalculator
      */
     private function calculateAdditiveEffect(float $baseValue, float $increment, int $level): float
     {
-        return $baseValue + ($level - 1) * $increment;
+        return floor($baseValue + ($level - 1) * $increment);
     }
 
     /**
@@ -53,7 +53,7 @@ class BuildingEffectCalculator
      */
     private function calculateMultiplicativeEffect(float $baseValue, float $increment, int $level): float
     {
-        return $baseValue * (1 + ($level - 1) * $increment);
+        return floor($baseValue * (1 + ($level - 1) * $increment));
     }
 
     /**
@@ -61,7 +61,7 @@ class BuildingEffectCalculator
      */
     private function calculateExponentialEffect(float $baseValue, float $increment, int $level): float
     {
-        return $baseValue * pow($increment, $level - 1);
+        return floor($baseValue * pow($increment, $level - 1));
     }
 
     /**
@@ -69,7 +69,7 @@ class BuildingEffectCalculator
      */
     private function calculateLogarithmicEffect(float $baseValue, float $increment, int $level): float
     {
-        return $baseValue * (1 + log($level) * $increment);
+        return floor($baseValue * (1 + log($level) * $increment));
     }
 
     // Methode zum Anzeigen von Gebäudeeffekten
@@ -87,7 +87,8 @@ class BuildingEffectCalculator
         $effectType = $config['type'] ?? BuildingEffectType::MULTIPLICATIVE;
     
         // Aktueller oder zukünftiger Effektwert
-        // Spezialfall Laboratory: immer nur das Inkrement pro Upgrade
+        // Spezialfall Laboratory: immer nur das Inkrement pro Upgrade + den aktuellen wert
+
         $effectValue = ($buildingType === BuildingType::LABORATORY)
             ? $increment
             : match ($effectType) {

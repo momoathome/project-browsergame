@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import viteCompression from 'vite-plugin-compression'
 
 export default defineConfig({
     plugins: [
@@ -16,5 +17,7 @@ export default defineConfig({
                 },
             },
         }),
+        viteCompression({ algorithm: 'brotliCompress', ext: '.br', deleteOriginFile: false }),
+        viteCompression({ algorithm: 'gzip', ext: '.gz', deleteOriginFile: false })
     ],
 });

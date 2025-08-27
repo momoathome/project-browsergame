@@ -20,7 +20,7 @@ class DefaultUserSeeder extends Seeder
 
         $admin = User::create([
             'name' => 'Snowowl',
-            'email' => 'mknoll1901@gmail.com',
+            'email' => 'admin@browsergame.de',
             'password' => Hash::make('MBKg5MGE50FNjd1')
         ]);
 
@@ -29,7 +29,7 @@ class DefaultUserSeeder extends Seeder
         // tester
         $user = User::create([
             'name' => 'Starlord',
-            'email' => 'Starlord@browsergame.de',
+            'email' => 'tester@browsergame.de',
             'password' => Hash::make('password')
         ]);
 

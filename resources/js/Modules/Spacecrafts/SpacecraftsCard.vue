@@ -95,7 +95,7 @@ const crewStatus = computed(() => {
   // crew_limit of spacecrafts in queue
   const queuedCrewLimit = usePage().props.queue.reduce((acc, item) => {
     if (item.action_type === 'produce') {
-      const queuedSpacecraft = usePage().props.spacecrafts.find(s => s.id === item.target_id);
+      const queuedSpacecraft = usePage().props.spacecrafts.find(s => s.id === item.targetId);
       if (queuedSpacecraft) {
         const quantity = item.details?.quantity || 1;
         return acc + (queuedSpacecraft.crew_limit * quantity);

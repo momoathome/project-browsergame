@@ -45,7 +45,7 @@ class BuildingEffectCalculator
      */
     private function calculateAdditiveEffect(float $baseValue, float $increment, int $level): float
     {
-        return floor($baseValue + ($level - 1) * $increment);
+        return $baseValue + ($level - 1) * $increment;
     }
 
     /**
@@ -53,7 +53,7 @@ class BuildingEffectCalculator
      */
     private function calculateMultiplicativeEffect(float $baseValue, float $increment, int $level): float
     {
-        return floor($baseValue * (1 + ($level - 1) * $increment));
+        return $baseValue * (1 + ($level - 1) * $increment);
     }
 
     /**
@@ -61,7 +61,7 @@ class BuildingEffectCalculator
      */
     private function calculateExponentialEffect(float $baseValue, float $increment, int $level): float
     {
-        return floor($baseValue * pow($increment, $level - 1));
+        return $baseValue * pow($increment, $level - 1);
     }
 
     /**
@@ -69,7 +69,7 @@ class BuildingEffectCalculator
      */
     private function calculateLogarithmicEffect(float $baseValue, float $increment, int $level): float
     {
-        return floor($baseValue * (1 + log($level) * $increment));
+        return $baseValue * (1 + log($level) * $increment);
     }
 
     // Methode zum Anzeigen von Gebäudeeffekten

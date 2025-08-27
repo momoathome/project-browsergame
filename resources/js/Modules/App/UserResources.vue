@@ -43,7 +43,11 @@ function updateResources(resources) {
     if (found) {
       found.amount = res.amount;
     }
+    console.log('Updated resource:', found);
   });
+
+  console.log('All updated resources:', resourcesData.value);
+  console.log('Formatted resources:', formattedResources.value);
 }
 
 onMounted(() => {

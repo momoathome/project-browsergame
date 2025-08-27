@@ -64,7 +64,7 @@
                     ruler.
                 </p>
                 <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
-                    <Link v-if="canRegister" :href="route('register')"
+                    <Link v-if="canRegister && !$page.props.auth.user" :href="route('register')"
                         class="px-8 py-4 bg-secondary hover:bg-secondary-light border border-solid border-secondary-dark text-tertiary-dark font-bold text-lg rounded-lg transition transform hover:scale-105">
                     Play Now
                     </Link>

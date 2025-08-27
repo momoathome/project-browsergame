@@ -20,7 +20,7 @@ const formattedResources = computed(() => {
       name: resource.resource ? resource.resource.name : null,
       description: resource.resource ? resource.resource.description : null,
       image: resource.resource ? resource.resource.image : null,
-      amount: computed(() => numberFormat(resource.amount)),
+      amount: numberFormat(resource.amount),
     };
   });
 });
@@ -38,12 +38,10 @@ function addResource(resourceId) {
 }
 
 function updateResources(resources) {
-  resourcesData.value.forEach((resourceData) => {
-    const updatedResource = resources.find((res) => 
-      parseInt(res.id) === parseInt(resourceData.resource_id)
-    );
-    if (updatedResource) {
-      resourceData.amount = updatedResource.amount;
+  resources.forEach((res) => {
+    const found = resourcesData.value.find(r => r.resource_id === res.id);
+    if (found) {
+      found.amount = res.amount;
     }
   });
 }

@@ -266,7 +266,6 @@ onMounted(() => {
 
     window.Echo.private(`user.combat.${page.props.auth.user.id}`)
         .listen('.user.attacked', (data) => {
-            console.log('Angriff erkannt:', data);
 
             if (data.attackData) {
                 // Prüfe ob der Angriff bereits in einer der Queues ist

@@ -50,7 +50,7 @@ class BuildingUpgradeService
                 $this->addBuildingUpgradeToQueue($user->id, $building);
             });
 
-
+            $user = $this->userService->find($user->id);
             broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,

@@ -46,6 +46,7 @@ class SpacecraftProductionService
                 $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity);
             });
 
+            $user = $this->userService->find($user->id);
             broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,

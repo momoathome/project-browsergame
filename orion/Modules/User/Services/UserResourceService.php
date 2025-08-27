@@ -32,7 +32,6 @@ class UserResourceService
     public function addResourceAmount(User $user, int $resourceId, int $amount): void
     {
         $this->userResourceRepository->addResourceAmount($user->id, $resourceId, $amount);
-        broadcast(new UpdateUserResources($user));
     }
 
     public function subtractResourceAmount(User $user, int $resourceId, int $amount): void

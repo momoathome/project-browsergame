@@ -225,6 +225,7 @@ class AsteroidService
             }
         }
 
+        $user = $this->userService->find($user->id);
         broadcast(new UpdateUserResources($user));
     }
 

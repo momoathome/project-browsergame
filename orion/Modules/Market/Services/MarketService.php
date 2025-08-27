@@ -10,6 +10,7 @@ use Orion\Modules\Market\Models\Market;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Services\User\Services\UserService;
 use Orion\Modules\Market\Repositories\MarketRepository;
 use Orion\Modules\Market\Exceptions\InsufficientCreditsException;
 use Orion\Modules\Market\Exceptions\InsufficientStorageException;
@@ -21,7 +22,8 @@ readonly class MarketService
         private readonly MarketRepository $marketRepository,
         private readonly AuthManager $authManager,
         private readonly UserAttributeService $userAttributeService,
-        private readonly UserResourceService $userResourceService
+        private readonly UserResourceService $userResourceService,
+        private readonly UserService $userService
     ) {
     }
 
@@ -72,7 +74,7 @@ readonly class MarketService
                 }
             });
 
-
+            $user = $this->userService->find($user->id);
             broadcast(new UpdateUserResources($user));
             $totalCostFormatted = number_format($totalCost, 0, ',', '.');
             return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully for {$totalCostFormatted} credits");

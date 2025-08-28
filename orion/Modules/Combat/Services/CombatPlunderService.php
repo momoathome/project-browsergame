@@ -26,6 +26,8 @@ class CombatPlunderService
      */
     public function plunderResources(User $attacker, User $defender, Collection $attackerSpacecrafts): Collection
     {
+        $plunderProtectionAmount = 500;
+
         $formattedSpacecrafts = $this->formatSpacecraftsForCalculation($attackerSpacecrafts);
         $totalCargoCapacity = $this->calculateTotalCargoCapacity($attacker, $formattedSpacecrafts);
         $defenderResources = $this->userResourceService->getAllUserResourcesByUserId($defender->id);
@@ -33,10 +35,16 @@ class CombatPlunderService
         // Berechne verfügbare Ressourcen und Restressourcen
         $resourcesAvailable = collect();
         $remainingResources = collect();
-
-        $defenderResources->each(function ($userResource) use ($resourcesAvailable, $remainingResources) {
+        
+        $defenderResources->each(function ($userResource) use ($resourcesAvailable, $remainingResources, $plunderProtectionAmount) {
             if ($userResource->amount > 0) {
                 $maxPlunder = floor($userResource->amount * 0.8); // 80% können geplündert werden
+        
+                // PATCH: Für Ressourcen 1,2,3,4 mindestens 500 übrig lassen
+                if (in_array($userResource->resource_id, [1, 2, 3, 4])) {
+                    $maxPlunder = min($maxPlunder, max(0, $userResource->amount - $plunderProtectionAmount));
+                }
+        
                 $resourcesAvailable->put($userResource->resource_id, $maxPlunder);
                 $remainingResources->put($userResource->resource_id, $userResource->amount - $maxPlunder);
             }

@@ -8,6 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import MapModalUnits from './MapModalUnits.vue';
 import type { Station, SpacecraftSimple, Asteroid } from '@/types/types';
+import { QueueActionType } from '@/types/actionTypes';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 
@@ -68,7 +69,13 @@ const {
   computed(() => props.content)
 );
 
-const { miningDuration } = useAsteroidMining(asteroid, form.spacecrafts, props.spacecrafts);
+const actionType = computed(() =>
+  props.content.type === 'asteroid'
+    ? QueueActionType.MINING
+    : QueueActionType.COMBAT
+);
+
+const { miningDuration } = useAsteroidMining(asteroid, form.spacecrafts, props.spacecrafts, actionType);
 const totalCombatPower = computed(() => calculateTotalCombatPower());
 const totalCargoCapacity = computed(() => calculateTotalCargoCapacity());
 const formattedDuration = miningDuration;

@@ -1033,7 +1033,8 @@ watch(() => usePage().props.queue, () => {
     </div>
 
     <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @close="closeModal" :show="isModalOpen"
-      :title="selectedObject?.data?.name" :content="{
+      :title="selectedObject?.data?.name" 
+      :content="{
         type: selectedObject?.type,
         imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
         data: selectedObject?.data as Asteroid | Station,

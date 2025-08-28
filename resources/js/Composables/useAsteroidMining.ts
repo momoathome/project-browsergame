@@ -23,7 +23,7 @@ export function useAsteroidMining(
   const miningDuration = computed(() => {
     if (!asteroid.value) return '00:00';
 
-    const anySpacecraftSelected = Object.values(spacecraftsForm).some(value => value > 0);
+    const anySpacecraftSelected = Object.values(spacecraftsForm).some((value: any) => value > 0);
     if (!anySpacecraftSelected) return '00:00';
 
     // Niedrigste Geschwindigkeit finden
@@ -74,8 +74,6 @@ export function useAsteroidMining(
         }
       }
     }
-
-      console.log('actionType:', actionType.value, 'totalMiningSpeed:', totalMiningSpeed, hasMiner);
 
     if (
       actionType.value === QueueActionType.MINING &&

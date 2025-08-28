@@ -14,9 +14,21 @@ class ActionQueueController extends Controller
     ) {
     }
     /**
-     * Display a listing of the resource.
+     * Get a listing of the action queue for the authenticated user.
      */
     public function index()
+    {
+        if (Auth::check()) {
+            $queue = $this->queueService->getUserQueue(Auth::user()->id);
+            return response()->json(['queue' => $queue]);
+        }
+        return response()->json(['queue' => []]);
+    }
+
+    /**
+     * Process the action queue for the authenticated user.
+     */
+    public function process()
     {
         if (Auth::check()) {
             $this->queueService->processQueueForUser(Auth::user()->id);

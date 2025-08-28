@@ -5,11 +5,14 @@ import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import { useQueueStore } from '@/Composables/useQueueStore';
 import type { Building } from '@/types/types';
 
 const props = defineProps<{
   building: Building
 }>();
+
+const { refreshQueue } = useQueueStore()
 
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);

@@ -10,6 +10,7 @@ import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
 import type { Asteroid, Station, Spacecraft, ShipRenderObject, QueueItem, SavedQueueItemState, SpacecraftFleet, MiningMissionDetails, MissionDetails } from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
+import { useQueueStore } from '@/Composables/useQueueStore';
 import * as config from '@/config';
 
 const props = defineProps<{
@@ -17,6 +18,8 @@ const props = defineProps<{
   stations: Station[];
   spacecrafts: Spacecraft[];
 }>();
+
+const { queueData } = useQueueStore();
 
 const stationImageSrc = '/images/space-station-yellow.png';
 const asteroidImageSrc = '/images/asteroid.png';
@@ -427,13 +430,14 @@ function onMouseMove(e: MouseEvent) {
     scheduleDraw();
   }
 }
+
 function updateShipPool() {
-  const queueItems = usePage().props.queue || [];
+  const queueItems = (queueData.value || []) as QueueItem[];
   const currentTime = new Date().getTime();
   const activeMissionIds = new Set<number>();
 
   // 1. Sammle alle relevanten Missionen
-  const missions = queueItems.filter((item: QueueItem) => 
+  const missions = queueItems.filter((item) => 
     (item.actionType === 'mining' || item.actionType === 'combat') && 
     item.details?.target_coordinates !== undefined
   );
@@ -558,8 +562,8 @@ function drawFlightPaths() {
   if (!userStation.value || !ctx.value) return;
 
   const context = ctx.value;
-  const queueItems = usePage().props.queue || [];
-  
+  const queueItems = queueData.value || [];
+
   // Sammle alle relevanten Missionen
   const missions = queueItems.filter(item =>
     (item.actionType === 'mining' || item.actionType === 'combat') &&
@@ -1032,7 +1036,7 @@ watch(() => usePage().props.queue, () => {
       </span>
     </div>
 
-    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @close="closeModal" :show="isModalOpen"
+    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @redraw="drawScene" @close="closeModal" :show="isModalOpen"
       :title="selectedObject?.data?.name" 
       :content="{
         type: selectedObject?.type,

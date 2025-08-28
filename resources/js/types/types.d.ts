@@ -227,6 +227,14 @@ export interface QueueItemDetails {
   defender_id?: number;
   attacker_formatted?: array;
   defender_formatted?: array;
+  target_coordinates?: {
+    x: number;
+    y: number;
+  };
+  attacker_coordinates?: {
+    x: number;
+    y: number;
+  };
 }
 
 export interface RawQueueItem {

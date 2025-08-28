@@ -39,7 +39,7 @@ enum BuildingType: string
             self::WAREHOUSE => [
                 'type' => BuildingEffectType::EXPONENTIAL,
                 'base_value' => 1_500,
-                'increment' => 1.285,
+                'increment' => 1.225,
             ],
             self::LABORATORY => [
                 'type' => BuildingEffectType::ADDITIVE,

@@ -31,11 +31,10 @@ class AsteroidController extends Controller
         $user = $this->authManager->user();
         $result = $this->asteroidService->StartAsteroidMining($user, request: $request);
 
-        if ($result['success']) {
-            return redirect()->route('asteroidMap')->banner($result['message']);
-        } else {
-            return redirect()->route('asteroidMap')->dangerBanner($result['message']);
-        }
+        return response()->json([
+            'message' => $result['message'],
+            'asteroid' => $result['asteroid'] ?? null,
+        ], 200);
     }
 
     public function search(Request $request)
@@ -63,7 +62,8 @@ class AsteroidController extends Controller
 
     private function renderAsteroidMap()
     {
-        $viewData = $this->asteroidService->getAsteroidMapData(auth()->user());
+        $user = $this->authManager->user();
+        $viewData = $this->asteroidService->getAsteroidMapData($user);
 
         return Inertia::render('AsteroidMap', $viewData);
     }

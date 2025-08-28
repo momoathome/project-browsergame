@@ -186,9 +186,9 @@ onUnmounted(() => {
             <tr>
               <th class="text-left p-2">Name</th>
               <th class="text-left p-2">Type</th>
-              <th class="text-left p-2">Quantity</th>
               <th class="text-left p-2">Crew</th>
               <th class="text-left p-2">Combat</th>
+              <th class="text-left p-2">Quantity</th>
               <th class="text-left p-2">InOrbit</th>
               <th class="text-left p-2">Production</th>
             </tr>
@@ -202,9 +202,9 @@ onUnmounted(() => {
                   <AppTooltip :label="spacecraft.type" position="left" />
                 </div>
               </td>
-              <td class="p-2">{{ spacecraft.count }}</td>
               <td class="p-2">{{ spacecraft.crew_limit }}</td>
               <td class="p-2">{{ numberFormat(spacecraft.combat) }}</td>
+              <td class="p-2">{{ spacecraft.count }}</td>
               <td class="p-2">{{ spacecraftsInOrbit[spacecraft.name] || 0 }}</td>
               <td class="p-2">
                 <template v-if="getSpacecraftsQueueItem(spacecraft.id)">

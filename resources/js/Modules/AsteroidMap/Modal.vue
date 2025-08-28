@@ -11,6 +11,8 @@ import type { Station, SpacecraftSimple, Asteroid } from '@/types/types';
 import { QueueActionType } from '@/types/actionTypes';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
+import { useQueueStore } from '@/Composables/useQueueStore';
+import axios from 'axios';
 
 export type ModalContent = {
   type: 'asteroid' | 'station' | 'undefined';
@@ -26,7 +28,7 @@ const props = defineProps<{
   userScanRange: number,
 }>();
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'redraw']);
 
 const dialog = ref();
 const userStation = usePage().props.stations.find(station =>
@@ -105,10 +107,10 @@ const canScanAsteroid = computed(() => {
   return false;
 });
 
-
+const { refreshQueue } = useQueueStore();
 const isSubmitting = ref(false);
 
-function exploreAsteroid() {
+async function exploreAsteroid() {
   if (isSubmitting.value) return;
   if (asteroid.value) {
     form.asteroid_id = asteroid.value.id;
@@ -118,15 +120,17 @@ function exploreAsteroid() {
   if (noSpacecraftSelected) return;
 
   isSubmitting.value = true;
-  form.post(route('asteroidMap.update'), {
-    onSuccess: () => close(),
-    onFinish: () => {
-      isSubmitting.value = false;
-    },
-    onError: () => {
-      isSubmitting.value = false;
-    }
-  });
+  try {
+    const { data } = await axios.post('/asteroidMap/update', form);
+    // Zeige Erfolg/Fehler
+    // Aktualisiere gezielt die Queue und ggf. den Asteroiden
+    await refreshQueue();
+    close();
+  } catch (error) {
+    // Fehlerbehandlung
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 
 function fastExploreAsteroid() {
@@ -168,6 +172,7 @@ const close = () => {
   form.station_user_id = null;
 
   emit('close');
+  emit('redraw');
 };
 
 // UI Aktionen

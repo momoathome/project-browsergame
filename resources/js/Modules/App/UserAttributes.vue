@@ -33,7 +33,7 @@ const formattedAttributes = computed(() => {
       // attribute name from formattedAttributesNames
       name: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.name : null,
       label: attribute ? formattedAttributesNames.value.find((item) => item.name === attribute.attribute_name)?.label : null,
-      amount: computed(() => numberFormat(attribute.attribute_value))
+      amount: numberFormat(Math.floor(attribute.attribute_value))
     };
   });
 });
@@ -41,7 +41,7 @@ const formattedAttributes = computed(() => {
 const unitsRatio = computed(() => {
   const totalUnits = page.props.userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
   const crewLimit = page.props.userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
-  return `${numberFormat(totalUnits)} / ${numberFormat(crewLimit)}`;
+  return `${numberFormat(totalUnits)} / ${numberFormat(Math.floor(crewLimit))}`;
 });
 </script>
 

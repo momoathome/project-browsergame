@@ -243,7 +243,7 @@ class BuildingUpgradeService
                 $valueToApply = $increment;
                 $replace = false; // addieren statt ersetzen
             } else {
-                $valueToApply = ceil($building->effect_value);
+                $valueToApply = $building->effect_value;
                 $replace = true; // ersetzen wie gehabt
             }
 

@@ -104,8 +104,9 @@ class BuildingEffectCalculator
         $results = [];
     
         foreach ($attributes as $attributeName) {
+            $flooredEffectValue = floor($effectValue);
             $formattedValue = number_format($effectValue, 2, ',', '.');
-            $formattedValueNoDecimals = number_format($effectValue, 0, ',', '.');
+            $formattedValueNoDecimals = number_format($flooredEffectValue, 0, ',', '.');
             $formattedPercent = number_format(($effectValue - 1) * 100, 0, ',', '.') . "%";
 
             $displayText = match ($attributeName) {

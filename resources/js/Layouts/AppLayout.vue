@@ -30,10 +30,6 @@ const props = defineProps<{
 
     </div>
   </div>
-
-  <pre>
-    {{ usePage().props }}
-  </pre>
 </template>
 
 <style scoped>

@@ -224,7 +224,7 @@ onUnmounted(() => {
                 {{ fleetSummary.totalCount }}
               </td>
               <td class="p-2 text-nowrap">
-                {{ fleetSummary.totalCrew }} / {{ crewLimit }}
+                {{ Math.floor(fleetSummary.totalCrew) }} / {{ Math.floor(crewLimit) }}
               </td>
               <td class="p-2">
                 {{ numberFormat(fleetSummary.totalCombat) }}

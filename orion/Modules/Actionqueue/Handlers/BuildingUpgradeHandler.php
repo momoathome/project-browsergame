@@ -19,14 +19,6 @@ class BuildingUpgradeHandler
             $action->user_id
         );
         
-        // Log für Debugging
-        Log::info('Building upgrade result:', [
-            'action_id' => $action->id,
-            'user_id' => $action->user_id,
-            'target_id' => $action->target_id,
-            'result' => $result
-        ]);
-        
         // Überprüfen Sie den success-Schlüssel im zurückgegebenen Array
         return isset($result['success']) && $result['success'] === true;
     }

@@ -78,7 +78,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });
 
-    Route::patch('/queueProcess', [ActionQueueController::class, 'index'])->name('queue.process');
+    Route::get('/queue', [ActionQueueController::class, 'index'])->name('queue');
+    Route::patch('/queueProcess', [ActionQueueController::class, 'process'])->name('queue.process');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
 

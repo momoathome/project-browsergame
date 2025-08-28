@@ -105,18 +105,27 @@ const canScanAsteroid = computed(() => {
   return false;
 });
 
-// Aktionsfunktionen
+
+const isSubmitting = ref(false);
+
 function exploreAsteroid() {
+  if (isSubmitting.value) return;
   if (asteroid.value) {
     form.asteroid_id = asteroid.value.id;
   }
 
-  // Wenn keine Raumschiffe ausgewählt sind, abbrechen
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
   if (noSpacecraftSelected) return;
 
+  isSubmitting.value = true;
   form.post(route('asteroidMap.update'), {
-    onSuccess: () => close()
+    onSuccess: () => close(),
+    onFinish: () => {
+      isSubmitting.value = false;
+    },
+    onError: () => {
+      isSubmitting.value = false;
+    }
   });
 }
 
@@ -129,16 +138,23 @@ function fastExploreAsteroid() {
 }
 
 function attackUser() {
+  if (isSubmitting.value) return;
   if (station.value) {
     form.station_user_id = station.value.user_id;
   }
 
-  // Wenn keine Raumschiffe ausgewählt sind, abbrechen
   const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
   if (noSpacecraftSelected) return;
 
+  isSubmitting.value = true;
   form.post(route('asteroidMap.combat'), {
-    onSuccess: () => close()
+    onSuccess: () => close(),
+    onFinish: () => {
+      isSubmitting.value = false;
+    },
+    onError: () => {
+      isSubmitting.value = false;
+    }
   });
 }
 

@@ -3,6 +3,7 @@
 namespace Orion\Modules\Actionqueue\Repositories;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
@@ -31,15 +32,28 @@ readonly class ActionQueueRepository
 
     public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
     {
-        return ActionQueue::create([
-            'user_id' => $userId,
-            'action_type' => $actionType,
-            'target_id' => $targetId,
-            'start_time' => now(),
-            'end_time' => now()->addSeconds($duration),
-            'status' => QueueStatusType::STATUS_IN_PROGRESS,
-            'details' => $details,
-        ]);
+        return DB::transaction(function () use ($userId, $actionType, $targetId, $duration, $details) {
+            $exists = ActionQueue::where('user_id', $userId)
+                ->where('action_type', $actionType)
+                ->where('target_id', $targetId)
+                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->lockForUpdate()
+                ->exists();
+    
+            if ($exists) {
+                return null;
+            }
+    
+            return ActionQueue::create([
+                'user_id' => $userId,
+                'action_type' => $actionType,
+                'target_id' => $targetId,
+                'start_time' => now(),
+                'end_time' => now()->addSeconds($duration),
+                'status' => QueueStatusType::STATUS_IN_PROGRESS,
+                'details' => $details,
+            ]);
+        });
     }
 
     public function deleteFromQueue($id)
@@ -59,17 +73,21 @@ readonly class ActionQueueRepository
 
     public function processQueue(): Collection
     {
-        return ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
-            ->where('end_time', '<=', now())
-            ->get();
+        return DB::transaction(function () {
+            return ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->where('end_time', '<=', now())
+                ->get();
+        });
     }
 
     public function processQueueForUser(int $userId): Collection
     {
-        return ActionQueue::where('user_id', $userId)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
-            ->where('end_time', '<=', now())
-            ->get();
+        return DB::transaction(function () use ($userId) {
+            return ActionQueue::where('user_id', $userId)
+                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->where('end_time', '<=', now())
+                ->get();
+        });
     }
 
     public function processQueueForUserInstant(int $userId): Collection

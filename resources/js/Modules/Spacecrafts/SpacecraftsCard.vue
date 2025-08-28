@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
@@ -16,6 +16,7 @@ const props = defineProps<{
 
 const isProducing = computed(() => props.spacecraft.is_producing || false);
 const productionEndTime = computed(() => props.spacecraft.end_time || null);
+const isSubmitting = ref(false)
 
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
@@ -26,21 +27,26 @@ const form = useForm({
 });
 
 function produceSpacecraft() {
-  if (form.amount <= 0) {
-    return
-  }
+  if (form.amount <= 0) return;
+  if (isProducing.value || isSubmitting.value) return;
+  isSubmitting.value = true;
 
-  form.post(route('shipyard.update', props.spacecraft.id), {
-    preserveState: true,
-    preserveScroll: true,
-
-    onSuccess: () => {
-      form.reset();
-    },
-    onError: () => {
-      //
-    },
-  });
+  form.post(
+    route('shipyard.update', props.spacecraft.id),
+    {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => {
+        form.reset();
+      },
+      onFinish: () => {
+        isSubmitting.value = false;
+      },
+      onError: () => {
+        isSubmitting.value = false;
+      }
+    }
+  );
 }
 
 function handleProduceComplete() {
@@ -103,7 +109,7 @@ const crewStatus = computed(() => {
     }
     return acc;
   }, 0);
-  const availableUnitSlots = userCrewLimit - userTotalUnits - queuedCrewLimit;
+  const availableUnitSlots = Math.floor(userCrewLimit) - userTotalUnits - queuedCrewLimit;
   
   const hasEnoughCrewSlots = availableUnitSlots >= props.spacecraft.crew_limit;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
@@ -201,7 +207,7 @@ function unlockSpacecraft() {
               <p class="text-[12px] font-medium text-gray">{{ spacecraft.type }}</p>
             </div>
             <div class="flex">
-              <span class="text-sm font-medium mt-2 me-1 text-secondary">count</span>
+              <span class="text-sm font-medium mt-2 me-1 text-secondary">quantity</span>
               <p class="text-xl">{{ spacecraft.count }}</p>
             </div>
           </div>
@@ -269,7 +275,7 @@ function unlockSpacecraft() {
               </div>
 
               <PrimaryButton :disabled="isProducing || form.amount == 0 || !canProduce">
-                <span v-if="isProducing">Producing...</span>
+                <span v-if="isProducing">Producing</span>
                 <span v-else>Produce</span>
               </PrimaryButton>
             </div>

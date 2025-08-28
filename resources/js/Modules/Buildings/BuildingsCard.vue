@@ -12,10 +12,9 @@ const props = defineProps<{
   building: Building
 }>();
 
-const { refreshQueue } = useQueueStore()
-
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
+const isSubmitting = ref(false)
 
 const currentEffect = computed(() => {
   if (!props.building.current_effects || props.building.current_effects.length === 0) {
@@ -92,11 +91,17 @@ const canUpgrade = computed(() => {
 });
 
 function upgradeBuilding() {
-  if (isUpgrading.value) return;
-
-  router.post(route('buildings.update', props.building.id), {
-    preserveState: true,
-  });
+  if (isUpgrading.value || isSubmitting.value) return;
+  isSubmitting.value = true;
+  router.post(
+    route('buildings.update', props.building.id),
+    {},
+    {
+      preserveState: true,
+      onFinish: () => { isSubmitting.value = false; },
+      onError: () => { isSubmitting.value = false; }
+    }
+  );
 }
 
 function handleUpgradeComplete() {

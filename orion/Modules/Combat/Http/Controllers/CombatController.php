@@ -73,8 +73,6 @@ class CombatController extends Controller
             $validated['spacecrafts'],
             $defenderStation
         );
-
-        return redirect()->route('asteroidMap');
     }
 
 }

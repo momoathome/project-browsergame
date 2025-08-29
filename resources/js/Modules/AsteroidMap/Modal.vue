@@ -130,6 +130,7 @@ async function exploreAsteroid() {
     // Fehlerbehandlung
   } finally {
     isSubmitting.value = false;
+    emit('redraw');
   }
 }
 
@@ -141,7 +142,7 @@ function fastExploreAsteroid() {
   exploreAsteroid();
 }
 
-function attackUser() {
+async function attackUser() {
   if (isSubmitting.value) return;
   if (station.value) {
     form.station_user_id = station.value.user_id;
@@ -151,15 +152,18 @@ function attackUser() {
   if (noSpacecraftSelected) return;
 
   isSubmitting.value = true;
-  form.post(route('asteroidMap.combat'), {
-    onSuccess: () => close(),
-    onFinish: () => {
-      isSubmitting.value = false;
-    },
-    onError: () => {
-      isSubmitting.value = false;
-    }
-  });
+    try {
+    const { data } = await axios.post('/asteroidMap/combat', form);
+    // Zeige Erfolg/Fehler
+    // Aktualisiere gezielt die Queue und ggf. den Asteroiden
+    await refreshQueue();
+    close();
+  } catch (error) {
+    // Fehlerbehandlung
+  } finally {
+    isSubmitting.value = false;
+    emit('redraw');
+  }
 }
 
 // Modal schließen
@@ -172,7 +176,6 @@ const close = () => {
   form.station_user_id = null;
 
   emit('close');
-  emit('redraw');
 };
 
 // UI Aktionen

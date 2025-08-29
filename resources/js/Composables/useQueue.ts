@@ -26,6 +26,20 @@ export function useQueue(userId: number) {
         timerCompleteCallbacks.push(cb)
     }
 
+    let fallbackInterval: number | undefined
+    
+    const fallbackCheck = () => {
+        processedQueueItems.value.forEach(item => {
+            if (!item.completed && item.remainingTime <= 0) {
+                item.completed = true
+                if (!item.timerCompletedFired) {
+                    item.timerCompletedFired = true
+                    timerCompleteCallbacks.forEach(cb => cb(item))
+                }
+            }
+        })
+    }
+
     const findState = (id: number) => queueItemStates.value.find(s => s.id === id)
     const upsertState = (state: SavedQueueItemState) => {
         const idx = queueItemStates.value.findIndex(s => s.id === state.id)
@@ -199,9 +213,11 @@ export function useQueue(userId: number) {
     onMounted(() => {
         processQueueData()
         timerInterval = setInterval(updateTimers, 1000)
+        fallbackInterval = setInterval(fallbackCheck, 5000)
     })
     onUnmounted(() => {
         if (timerInterval) clearInterval(timerInterval)
+        if (fallbackInterval) clearInterval(fallbackInterval)
     })
 
     watch(queueData, processQueueData, { deep: true })

@@ -11,15 +11,16 @@ import { api } from '@/Services/api';
 import type { Asteroid, Station, Spacecraft, ShipRenderObject, QueueItem, SavedQueueItemState, SpacecraftFleet, MiningMissionDetails, MissionDetails } from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import * as config from '@/config';
 
 const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
-  spacecrafts: Spacecraft[];
 }>();
 
 const { queueData } = useQueueStore();
+const { spacecrafts } = useSpacecraftStore();
 
 const stationImageSrc = '/images/space-station-yellow.png';
 const asteroidImageSrc = '/images/asteroid.png';

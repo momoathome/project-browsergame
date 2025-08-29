@@ -33,6 +33,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');
 
+    Route::get('', [SpacecraftController::class, 'getAllSpacecrafts'])->name('shipyard.api');
     Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
     Route::post('/shipyard/{spacecraft}/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
     Route::post('/shipyard/{spacecraft}/unlock', [SpacecraftController::class, 'unlock'])->name('shipyard.unlock');

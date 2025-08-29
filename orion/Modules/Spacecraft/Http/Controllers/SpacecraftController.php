@@ -63,6 +63,16 @@ class SpacecraftController extends Controller
         }
     }
 
+    public function getAllSpacecrafts()
+    {
+        $user = $this->authManager->user();
+        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
+
+        return response()->json([
+            'spacecrafts' => $spacecrafts,
+        ], 200);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

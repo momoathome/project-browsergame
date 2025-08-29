@@ -12,6 +12,7 @@ import { QueueActionType } from '@/types/actionTypes';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import axios from 'axios';
 
 export type ModalContent = {
@@ -24,7 +25,7 @@ const props = defineProps<{
   show: boolean,
   title?: string,
   content: ModalContent,
-  spacecrafts: SpacecraftSimple[],
+  spacecrafts: SpacecraftSimple[] | undefined,
   userScanRange: number,
 }>();
 
@@ -108,6 +109,7 @@ const canScanAsteroid = computed(() => {
 });
 
 const { refreshQueue } = useQueueStore();
+const { refreshSpacecrafts } = useSpacecraftStore();
 const isSubmitting = ref(false);
 
 async function exploreAsteroid() {
@@ -125,6 +127,7 @@ async function exploreAsteroid() {
     // Zeige Erfolg/Fehler
     // Aktualisiere gezielt die Queue und ggf. den Asteroiden
     await refreshQueue();
+    await refreshSpacecrafts();
     close();
   } catch (error) {
     // Fehlerbehandlung
@@ -157,6 +160,7 @@ async function attackUser() {
     // Zeige Erfolg/Fehler
     // Aktualisiere gezielt die Queue und ggf. den Asteroiden
     await refreshQueue();
+    await refreshSpacecrafts();
     close();
   } catch (error) {
     // Fehlerbehandlung

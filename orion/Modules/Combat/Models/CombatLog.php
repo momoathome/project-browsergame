@@ -14,12 +14,14 @@ class CombatLog extends Model
         'winner',
         'attacker_losses',
         'defender_losses',
+        'plundered_resources',
         'date'
     ];
 
     protected $casts = [
         'attacker_losses' => 'array',
         'defender_losses' => 'array',
+        'plundered_resources' => 'array',
         'date' => 'datetime'
     ];
 

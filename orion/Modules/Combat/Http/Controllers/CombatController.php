@@ -6,8 +6,9 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthManager;
 use App\Http\Controllers\Controller;
-use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\Combat\Models\CombatLog;
 use Orion\Modules\Combat\Services\CombatService;
+use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Combat\Services\CombatOrchestrationService;
 
@@ -73,6 +74,24 @@ class CombatController extends Controller
             $validated['spacecrafts'],
             $defenderStation
         );
+    }
+
+    public function logBook()
+    {
+        $user = $this->authManager->user();
+        $logs = CombatLog::with(['attacker:id,name', 'defender:id,name'])
+            ->where('attacker_id', $user->id)
+            ->orWhere('defender_id', $user->id)
+            ->orderBy('date', 'desc')
+            ->limit(10)
+            ->get();
+
+        $spacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+
+        return Inertia::render('Logbook', [
+            'logs' => $logs,
+            'spacecrafts' => $spacecrafts,
+        ]);
     }
 
 }

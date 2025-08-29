@@ -10,14 +10,15 @@ readonly class CombatRepository
     /**
      * Speichert ein Kampfergebnis in der Datenbank
      */
-    public function saveCombatResult(int $attackerId, int $defenderId, CombatResult $result): void
+    public function saveCombatResult(int $attackerId, int $defenderId, CombatResult $result, array $plunderedResources = []): void
     {
         CombatLog::create([
             'attacker_id' => $attackerId,
             'defender_id' => $defenderId,
             'winner' => $result->winner,
-            'attacker_losses' => json_encode($result->attackerLosses),
-            'defender_losses' => json_encode($result->defenderLosses),
+            'attacker_losses' => $result->attackerLosses,
+            'defender_losses' => $result->defenderLosses,
+            'plundered_resources' => $plunderedResources,
             'date' => now()
         ]);
     }

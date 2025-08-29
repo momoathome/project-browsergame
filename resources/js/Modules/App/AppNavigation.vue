@@ -10,7 +10,8 @@ const NavigationLinks = [
   // { name: 'research', label: 'Research', image: '/images/navigation/research.png' },
   { name: 'asteroidMap', label: 'AsteroidMap', image: '/images/navigation/asteroidmap.png' },
   { name: 'market', label: 'Market', image: '/images/navigation/market.png' },
-  // { name: 'logbook', label: 'Logbook', image: '/images/navigation/logbook.png' },
+  { name: 'logbook', label: 'Logbook', image: '/images/navigation/logbook.png' },
+  // { name: 'influence', label: 'Influence', image: '/images/attributes/influence.png' },
   { name: 'simulator', label: 'Simulator', image: '/images/navigation/simulator.png' },
 ];
 </script>

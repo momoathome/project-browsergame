@@ -42,8 +42,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/market/{marketRes}/buy', [MarketController::class, 'buy'])->name('market.buy');
     Route::post('/market/{marketRes}/sell', [MarketController::class, 'sell'])->name('market.sell');
 
-    Route::get('/logbook', function () {
-        return Inertia::render('Logbook'); })->name('logbook');
     Route::get('/research', function () {
         return Inertia::render('Research'); })->name('research');
     Route::get('/influence', function () {
@@ -61,6 +59,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/simulator', [CombatController::class, 'index'])->name('simulator');
     Route::post('/simulator', [CombatController::class, 'simulate'])->name('simulator.simulate');
+    Route::get('/logbook', [CombatController::class, 'logBook'])->name('logbook');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 

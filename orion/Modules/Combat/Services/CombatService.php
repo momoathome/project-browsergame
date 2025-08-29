@@ -146,14 +146,12 @@ readonly class CombatService
         $result->attackerName = $combatRequest->attackerName;
         $result->defenderName = $combatRequest->defenderName;
 
-        // Speichere Kampfergebnis in die Datenbank
-/*         $this->combatRepository->saveCombatResult(
-            $combatRequest->attackerId,
-            $combatRequest->defenderId,
-            $result
-        ); */
-
         return $result;
+    }
+
+    public function saveCombatResult(int $attackerId, int $defenderId, CombatResult $result, array $plunderedResources = []): void
+    {
+        $this->combatRepository->saveCombatResult($attackerId, $defenderId, $result, $plunderedResources);
     }
 
     private function convertToShipCollection(array $ships): Collection

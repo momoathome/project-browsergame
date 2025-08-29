@@ -84,15 +84,6 @@ readonly class CombatOrchestrationService
         $defenderFormatted = $this->combatService->formatDefenderSpacecrafts($defenderSpacecrafts);
         $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
 
-        Log::info(
-            'Preparing combat',
-            [
-                'defender_spacecrafts' => $defenderSpacecrafts,
-                'defender_formatted' => $defenderFormatted,
-                'attacker_spacecrafts' => $attackerSpacecrafts
-            ]
-        );
-
         $combatRequest = new CombatRequest(
             $attackerId,
             $defenderId,
@@ -107,7 +98,6 @@ readonly class CombatOrchestrationService
         // Simuliere den Kampf und speichere das Ergebnis
         $result = $this->combatService->executeCombat($combatRequest, $attacker, $defender);
 
-
         // calculate new spacecrafts count
         $attackerSpacecraftsCount = $this->combatService->calculateNewSpacecraftsCount(
             $attackerSpacecrafts, 
@@ -118,12 +108,6 @@ readonly class CombatOrchestrationService
             $result->getLossesCollection('defender')
         );
 
-        Log::info('Combat executed', [
-            'attacker_spacecrafts_count' => $attackerSpacecraftsCount,
-            'defender_spacecrafts_count' => $defenderSpacecraftsCount,
-            'result' => $result
-        ]);
-
         // Update spacecrafts count in database
         $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
         $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
@@ -133,13 +117,21 @@ readonly class CombatOrchestrationService
         $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
         
         // Plündere Ressourcen, wenn der Angreifer gewonnen hat
+        $plunderedResources = [];
         if ($result->winner === 'attacker') {
-            $this->combatPlunderService->plunderResources(
+            $plunderedResources = $this->combatPlunderService->plunderResources(
                 $attacker,
                 $defender,
                 $attackerSpacecraftsCount
-            );
+            )->toArray();
         }
+
+        $this->combatService->saveCombatResult(
+            $attacker->id,
+            $defender->id,
+            $result,
+            $plunderedResources
+        );
         
         return $result;
     }

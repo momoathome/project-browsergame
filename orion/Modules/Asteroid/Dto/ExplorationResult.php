@@ -5,10 +5,10 @@ namespace Orion\Modules\Asteroid\Dto;
 class ExplorationResult
 {
     public function __construct(
-        private array $resourcesExtracted,
-        private int $totalCargoCapacity,
-        private int $asteroidId,
-        private bool $hasMiner
+        public readonly array $resourcesExtracted,
+        public readonly int $totalCargoCapacity,
+        public readonly int $asteroidId,
+        public readonly bool $hasMiner
     ) {
     }
 

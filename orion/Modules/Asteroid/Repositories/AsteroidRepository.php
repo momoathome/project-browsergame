@@ -5,13 +5,11 @@ namespace Orion\Modules\Asteroid\Repositories;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Asteroid\Models\Asteroid;
+use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Asteroid\Models\AsteroidResource;
-use Orion\Modules\Resource\Models\Resource;
-use Orion\Modules\Spacecraft\Models\Spacecraft;
-use Orion\Modules\Station\Models\Station;
-use Orion\Modules\User\Models\UserAttribute;
-use Orion\Modules\User\Models\UserResource;
+use Orion\Modules\Logbook\Models\AsteroidMiningLog;
 
 class AsteroidRepository
 {
@@ -33,6 +31,30 @@ class AsteroidRepository
     public function getAllAsteroids(): Collection
     {
         return Asteroid::select('id', 'x', 'y', 'pixel_size')->get();
+    }
+
+    public function saveAsteroidMiningResult(User $user, Asteroid $asteroid, ExplorationResult $result, $filteredSpacecrafts): void
+    {
+        AsteroidMiningLog::create([
+            'user_id' => $user->id,
+            'asteroid_info' => [
+                'name' => $asteroid->name,
+                'x' => $asteroid->x,
+                'y' => $asteroid->y,
+                'size' => $asteroid->size,
+            ],
+            'resources_extracted' => $result->resourcesExtracted,
+            'spacecrafts_used' => $filteredSpacecrafts,
+        ]);
+    }
+
+    public function getRecentAsteroidMines(int $userId, int $limit = 10)
+    {
+        return AsteroidMiningLog::with(['user:id,name',])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
     }
     
     public function updateAsteroidResources(Asteroid $asteroid, array $remainingResources): void

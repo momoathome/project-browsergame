@@ -2,7 +2,7 @@
 
 namespace Orion\Modules\Combat\Repositories;
 
-use Orion\Modules\Combat\Models\CombatLog;
+use Orion\Modules\Logbook\Models\CombatLog;
 use Orion\Modules\Combat\Dto\CombatResult;
 
 readonly class CombatRepository
@@ -28,7 +28,8 @@ readonly class CombatRepository
      */
     public function getRecentCombatsForUser(int $userId, int $limit = 10)
     {
-        return CombatLog::where('attacker_id', $userId)
+        return CombatLog::with(['attacker:id,name', 'defender:id,name'])
+            ->where('attacker_id', $userId)
             ->orWhere('defender_id', $userId)
             ->orderBy('date', 'desc')
             ->limit($limit)

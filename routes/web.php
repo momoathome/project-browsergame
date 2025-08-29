@@ -7,11 +7,11 @@ use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;
 use App\Http\Middleware\HandleExceptionsForJetstream;
 use Orion\Modules\Admin\Http\Controllers\AdminController;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Combat\Http\Controllers\CombatController;
 use Orion\Modules\Market\Http\Controllers\MarketController;
 use Orion\Modules\User\Http\Controllers\OverviewController;
+use Orion\Modules\Logbook\Http\Controllers\LogbookController;
 use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
 use Orion\Modules\Building\Http\Controllers\BuildingController;
 use Orion\Modules\User\Http\Controllers\UserResourceController;
@@ -59,7 +59,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/simulator', [CombatController::class, 'index'])->name('simulator');
     Route::post('/simulator', [CombatController::class, 'simulate'])->name('simulator.simulate');
-    Route::get('/logbook', [CombatController::class, 'logBook'])->name('logbook');
+
+    Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook');
 
     Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Orion\Modules\Combat\Models;
+namespace Orion\Modules\Logbook\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

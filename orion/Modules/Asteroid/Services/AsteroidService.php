@@ -216,6 +216,18 @@ class AsteroidService
             Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
         }
 
+        $this->asteroidRepository->saveAsteroidMiningResult(
+            $user,
+            $asteroid,
+            new ExplorationResult(
+                $resourcesExtracted,
+                $totalCargoCapacity,
+                $asteroid->id,
+                $hasMiner
+            ),
+            $filteredSpacecrafts
+        );
+
         return new ExplorationResult(
             $resourcesExtracted,
             $totalCargoCapacity,
@@ -261,5 +273,10 @@ class AsteroidService
     public function getAllAsteroids(): Collection
     {
         return $this->asteroidRepository->getAllAsteroids();
+    }
+
+    public function saveAsteroidMiningResult(User $user, Asteroid $asteroid, ExplorationResult $result, $filteredSpacecrafts): void
+    {
+        $this->asteroidRepository->saveAsteroidMiningResult($user, $asteroid, $result, $filteredSpacecrafts);
     }
 }

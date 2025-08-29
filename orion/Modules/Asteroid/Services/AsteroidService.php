@@ -104,6 +104,31 @@ class AsteroidService
             throw new \Exception("No spacecrafts selected");
         }
 
+        // Prüfe, ob der User genug freie (nicht gelockte) Spacecrafts besitzt
+        // Hole alle Spacecrafts des Users inkl. locked_count
+        $userSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+        // Erstelle ein Array: [name => [total, locked]] (Name aus details-Relation)
+        $spacecraftStatus = [];
+        foreach ($userSpacecrafts as $sc) {
+            $type = $sc->details->name ?? $sc->details_id; // Fallback auf ID, falls Name nicht geladen
+            $spacecraftStatus[$type] = [
+                'total' => $sc->count,
+                'locked' => $sc->locked_count,
+            ];
+        }
+
+        // Für jeden Typ, der versendet werden soll, prüfen ob genug unlocked vorhanden sind
+        foreach ($spaceCrafts as $type => $amount) {
+            if ($amount <= 0) continue;
+            if (!isset($spacecraftStatus[$type])) {
+                throw new \Exception("User does not own spacecraft type: $type");
+            }
+            $available = $spacecraftStatus[$type]['total'] - $spacecraftStatus[$type]['locked'];
+            if ($available < $amount) {
+                throw new \Exception("Not enough unlocked $type available. Requested: $amount, Available: $available");
+            }
+        }
+
         return $asteroid;
     }
 

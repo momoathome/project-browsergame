@@ -34,7 +34,6 @@ class AsteroidService
         private readonly UserService $userService,
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
-        private readonly AsteroidGenerator $asteroidGenerator
     ) {
     }
 
@@ -166,7 +165,7 @@ class AsteroidService
         );
     }
 
-    public function completeAsteroidMining(int $asteroidId, int $userId, array $details)
+    public function completeAsteroidMining(int $asteroidId, int $userId, array $details, AsteroidGenerator $asteroidGenerator)
     {
         $user = $this->userService->find($userId);
         if (!$user) {
@@ -211,7 +210,7 @@ class AsteroidService
         broadcast(new ReloadFrontendCanvas($asteroid));
 
         try {
-            $this->asteroidGenerator->generateAsteroids(rand(1, 3)); // oder eine Zufallszahl
+            $asteroidGenerator->generateAsteroids(rand(1, 3)); // oder eine Zufallszahl
         } catch (\Exception $e) {
             Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
         }

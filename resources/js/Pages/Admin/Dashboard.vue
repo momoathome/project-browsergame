@@ -67,8 +67,6 @@ function regenerateAsteroids() {
 
 
       <div class="grid grid-cols-2 gap-4">
-        <!-- <ResourceDistribution :universeResources="universeResources" /> -->
-
         <DashboardUserOverview :users="users" />
         <DashboardMarket :market="market" />
       </div>

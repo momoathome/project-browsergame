@@ -36,7 +36,6 @@ class AdminController extends Controller
         private readonly UserAttributeService $userAttributeService,
         private readonly MarketService $marketService,
         private readonly SpacecraftProductionService $spacecraftProductionService,
-        private readonly AsteroidGenerator $asteroidGenerator,
         private readonly AuthManager $authManager,
         private readonly ResetUserData $resetUserData,
         private readonly SetupInitialMarket $setupInitialMarket,
@@ -202,13 +201,12 @@ class AdminController extends Controller
         }
     }
 
-    public function adminRegenerateAsteroids(Request $request)
+    public function adminRegenerateAsteroids(Request $request, AsteroidGenerator $asteroidGenerator)
     {
-        Log::info('Regenerating asteroids', ['count' => $request->input('count')]);
-        $result = $this->asteroidGenerator->regenerateAsteroids($request->input('count'));
+        $result = $asteroidGenerator->regenerateAsteroids($request->input('count'));
         return redirect()->back()->with('message', $result['message']);
     }
-
+    
     public function resetUserData(Request $request)
     {
         $userId = $request->input('user_id');

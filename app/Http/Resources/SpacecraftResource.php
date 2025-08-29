@@ -16,7 +16,8 @@ class SpacecraftResource extends JsonResource
             'unlocked' => $this->unlocked,
             'speed' => $this->speed,
             'build_time' => $this->build_time,
-            'crewLimit' => $this->crewLimit,
+            'crew_limit' => $this->crew_limit,
+            'research_cost' => $this->research_cost,
             'details' => [
                 'id' => $this->details->id,
                 'name' => $this->details->name,

@@ -3,21 +3,24 @@
 namespace Orion\Modules\Admin\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Auth\AuthManager;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Services\UserService;
-use App\Http\Controllers\Controller;
+use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use Orion\Modules\Market\Models\Market;
+use Orion\Modules\User\Services\ResetUserData;
 use Orion\Modules\Market\Services\MarketService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\Market\Services\SetupInitialMarket;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
-use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 
 class AdminController extends Controller
@@ -34,7 +37,9 @@ class AdminController extends Controller
         private readonly MarketService $marketService,
         private readonly SpacecraftProductionService $spacecraftProductionService,
         private readonly AsteroidGenerator $asteroidGenerator,
-        private readonly AuthManager $authManager
+        private readonly AuthManager $authManager,
+        private readonly ResetUserData $resetUserData,
+        private readonly SetupInitialMarket $setupInitialMarket,
     ) {
         if (!$this->authManager->user()->hasRole('admin')) {
             return redirect()->route('overview');
@@ -143,7 +148,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function updateBuilding(Request $request, string $id)
+    public function updateBuilding(Request $request)
     {
         $request->validate([
             'building_id' => 'required|integer',
@@ -202,6 +207,33 @@ class AdminController extends Controller
         Log::info('Regenerating asteroids', ['count' => $request->input('count')]);
         $result = $this->asteroidGenerator->regenerateAsteroids($request->input('count'));
         return redirect()->back()->with('message', $result['message']);
+    }
+
+    public function resetUserData(Request $request)
+    {
+        $userId = $request->input('user_id');
+        $user = User::find($userId);
+        if ($user) {
+            $this->resetUserData->resetUserData($user);
+            return redirect()->back()->with('message', 'Benutzerdaten zurückgesetzt');
+        }
+        return redirect()->back()->with('error', 'Benutzer nicht gefunden');
+    }
+
+    public function resetAllUsersData()
+    {
+        $users = User::all();
+        foreach ($users as $user) {
+            $this->resetUserData->resetUserData($user);
+        }
+        return redirect()->back()->with('message', 'Alle Benutzerdaten zurückgesetzt');
+    }
+
+    public function resetMarketData()
+    {
+        Market::query()->delete();
+        $this->setupInitialMarket->create();
+        return redirect()->back()->with('message', 'Alle Marktdaten zurückgesetzt');
     }
 
     /**

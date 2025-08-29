@@ -25,4 +25,9 @@ class SetupInitialUserResources
             ]);
         }
     }
+
+    public function reset(int $userId): void
+    {
+        UserResource::where('user_id', $userId)->delete();
+    }
 }

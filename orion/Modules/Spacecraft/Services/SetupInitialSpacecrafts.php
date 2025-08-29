@@ -26,20 +26,29 @@ class SetupInitialSpacecrafts
         }
     }
 
+    public function reset(int $userId)
+    {
+        $spacecraftIds = Spacecraft::where('user_id', $userId)->pluck('id');
+
+        SpacecraftResourceCost::whereIn('spacecraft_id', $spacecraftIds)->delete();
+
+        Spacecraft::where('user_id', $userId)->delete();
+    }
+
     private function createSpacecraft(int $userId, array $spacecraftConfig)
     {
         return Spacecraft::create([
             'user_id' => $userId,
             'details_id' => $spacecraftConfig['details_id'],
             'combat' => $spacecraftConfig['combat'],
-            'count' => $spacecraftConfig['count'],
-            'locked_count' => $spacecraftConfig['lockedCount'],
             'cargo' => $spacecraftConfig['cargo'],
             'speed' => $spacecraftConfig['speed'],
             'operation_speed' => $spacecraftConfig['operation_speed'],
-            'crew_limit' => $spacecraftConfig['crewLimit'],
-            'build_time' => $spacecraftConfig['buildTime'],
-            'research_cost' => $spacecraftConfig['researchCost'],
+            'count' => $spacecraftConfig['count'],
+            'locked_count' => $spacecraftConfig['locked_count'],
+            'build_time' => $spacecraftConfig['build_time'],
+            'crew_limit' => $spacecraftConfig['crew_limit'],
+            'research_cost' => $spacecraftConfig['research_cost'],
             'unlocked' => $spacecraftConfig['unlocked'],
         ]);
     }

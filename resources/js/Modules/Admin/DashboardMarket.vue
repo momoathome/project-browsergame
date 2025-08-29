@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import { useForm, router } from '@inertiajs/vue3';
+import ConfirmationModal from '@/Components/ConfirmationModal.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { ref } from 'vue';
 import type { Market } from '@/types/types';
 import { numberFormat } from '@/Utils/format';
@@ -27,13 +30,29 @@ const updateMarketResource = (index: number, resourceId: number) => {
         }
     });
 };
+
+const showResetMarketModal = ref(false);
+
+function resetMarketData() {
+  router.post(route('admin.market.reset'), {
+    preserveState: true,
+    preserveScroll: true,
+  });
+  showResetMarketModal.value = false;
+}
+
 </script>
 
 <template>
     <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
-            Market
-        </h2>
+        <div class="flex justify-between items-center p-4 border-b border-primary bg-base-dark rounded-t-xl">
+            <h2 class="text-xl font-semibold text-light">
+                Market
+            </h2>
+            <SecondaryButton type="button" @click="showResetMarketModal = true">
+                alle Markt-Daten zurücksetzen
+            </SecondaryButton>
+        </div>
         <table class="w-full text-light mt-1">
             <thead class="text-gray-400 border-b border-primary">
                 <tr>
@@ -87,5 +106,25 @@ const updateMarketResource = (index: number, resourceId: number) => {
                 </tr>
             </tfoot>
         </table>
+
+        <ConfirmationModal :show="showResetMarketModal" @close="showResetMarketModal = false">
+            <template #title>
+                Alle Markt-Daten zurücksetzen
+            </template>
+            <template #content>
+                Bist du sicher, dass du <b>alle</b> Markt-Daten zurücksetzen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
+            </template>
+            <template #footer>
+                <div class="flex gap-2">
+                    <PrimaryButton @click="showResetMarketModal = false">
+                        Abbrechen
+                    </PrimaryButton>
+                    <SecondaryButton @click="resetMarketData">
+                        Bestätigen
+                    </SecondaryButton>
+                </div>
+            </template>
+        </ConfirmationModal>
     </div>
+
 </template>

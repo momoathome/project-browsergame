@@ -219,15 +219,15 @@ onUnmounted(() => {
           </tbody>
           <tfoot>
             <tr class="border-t border-primary bg-primary rounded-b-xl">
-              <td class="px-2 py-3" colspan="2">Fleet Summary</td>
-              <td class="p-2">
-                {{ fleetSummary.totalCount }}
-              </td>
+              <td class="px-2 py-3" colspan="2">Summary</td>
               <td class="p-2 text-nowrap">
                 {{ Math.floor(fleetSummary.totalCrew) }} / {{ Math.floor(crewLimit) }}
               </td>
               <td class="p-2">
                 {{ numberFormat(fleetSummary.totalCombat) }}
+              </td>
+              <td class="p-2">
+                {{ fleetSummary.totalCount }}
               </td>
               <td class="p-2">
                 {{ totalSpacecraftsInOrbit }}

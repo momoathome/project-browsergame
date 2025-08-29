@@ -23,7 +23,8 @@ class Spacecraft extends Model
         'count',
         'locked_count',
         'build_time',
-        'crewLimit',
+        'crew_limit',
+        'research_cost',
         'unlocked',
     ];
 

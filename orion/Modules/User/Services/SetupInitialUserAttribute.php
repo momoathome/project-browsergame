@@ -23,4 +23,9 @@ class SetupInitialUserAttribute
       ]);
     }
   }
+
+  public function reset(int $userId): void
+  {
+    UserAttribute::where('user_id', $userId)->delete();
+  }
 }

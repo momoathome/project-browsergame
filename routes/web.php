@@ -45,6 +45,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         return Inertia::render('Logbook'); })->name('logbook');
     Route::get('/research', function () {
         return Inertia::render('Research'); })->name('research');
+    Route::get('/influence', function () {
+        return Inertia::render('Influence'); })->name('influence');
 
     Route::group([
         'prefix' => 'asteroidMap'
@@ -75,6 +77,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::put('/market/{id}', [MarketController::class, 'update'])->name('admin.market.update');
         Route::post('/queue/finish/{userId}', [ActionQueueService::class, 'processQueueForUserInstant'])->name('admin.queue.finish');
         Route::post('/asteroids/regenerate/{amount}', [AdminController::class, 'adminRegenerateAsteroids'])->name('admin.asteroids.regenerate');
+        Route::post('/user/reset', [AdminController::class, 'resetUserData'])->name('admin.user.reset');
+        Route::post('/users/reset', [AdminController::class, 'resetAllUsersData'])->name('admin.users.reset');
+        Route::post('/market/reset', [AdminController::class, 'resetMarketData'])->name('admin.market.reset');
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
     });
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import ResourceDistribution from '@/Modules/Admin/ResourceDistribution.vue';
 import DashboardUserOverview from '@/Modules/Admin/DashboardUserOverview.vue';
@@ -9,27 +9,26 @@ import type { Resource, Market } from '@/types/types';
 import type { User } from '@/types/types';
 
 const props = defineProps<{
-    universeResources?: Resource[];
-    market: Market[];
-    users: User[];
+  universeResources?: Resource[];
+  market: Market[];
+  users: User[];
 }>()
 
-const form = useForm({
+const asteroidCount = useForm({
   count: 7000
 });
 
 function regenerateAsteroids() {
-  if (form.count <= 0) {
+  if (asteroidCount.count <= 0) {
     return
   }
 
-  form.post(route('admin.asteroids.regenerate', form.count), {
+  asteroidCount.post(route('admin.asteroids.regenerate', asteroidCount.count), {
     preserveState: true,
     preserveScroll: true,
 
     onSuccess: () => {
-        console.log("Asteroids regenerated");
-        form.reset();
+      asteroidCount.reset();
     },
     onError: () => {
       //
@@ -39,51 +38,56 @@ function regenerateAsteroids() {
 </script>
 
 <template>
-    <AppLayout title="dashboard">
-        <div>
-            <h1 class="text-3xl mb-4 font-bold text-light">
-                Dashboard
-            </h1>
+  <AppLayout title="dashboard">
+    <div>
+      <h1 class="text-3xl mb-4 font-bold text-light">
+        Dashboard
+      </h1>
 
-            <div class="flex gap-4 w-full">
-                <div class="w-1/3 mb-4">
-                    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-                        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
-                            Module
-                        </h2>
-                        <div class="grid grid-cols-2 gap-4 p-4 text-light">
-                            <Link :href="route('admin.progression')" class="font-medium text-lg">Building Progression</Link>
-                            <!-- <Link :href="route('admin.resources')" class="font-medium text-lg">Resource Management</Link> -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="w-1/3 mb-4">
-                    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-                        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">Actions</h2>
-                        <div class="p-4">
-                            <form @submit.prevent="regenerateAsteroids">
-                                <div class="mb-4">
-                                    <label for="count" class="block text-light font-medium mb-2">Anzahl der Asteroiden:</label>
-                                    <input type="number" id="count" name="count" min="1" max="20000" v-model="form.count"
-                                        class="w-full p-2 border border-gray-300 rounded-md bg-base text-light" required>
-                                </div>
-                                <SecondaryButton type="submit">
-                                    Asteroiden neu generieren
-                                </SecondaryButton>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+      <div class="flex gap-4 w-full">
+<!--         <div class="w-1/3 mb-4">
+          <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+            <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
+              Module
+            </h2>
+            <div class="grid grid-cols-2 gap-4 p-4 text-light">
+              <Link :href="route('admin.progression')" class="font-medium text-lg">Building Progression</Link>
+              <Link :href="route('admin.resources')" class="font-medium text-lg">Resource Management</Link>
             </div>
+          </div>
+        </div> -->
 
-
-            <div class="grid grid-cols-2 gap-4">
-                <!-- <ResourceDistribution :universeResources="universeResources" /> -->
-
-                <DashboardUserOverview :users="users" />
-                <DashboardMarket :market="market" />
+        <div class="w-1/3 mb-4">
+          <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
+            <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
+              Asteroid Management
+            </h2>
+            <div class="p-4">
+              <form @submit.prevent="regenerateAsteroids">
+                <div class="mb-4">
+                  <label for="count" class="block text-light font-medium mb-2">Anzahl der Asteroiden:</label>
+                  <input type="number" id="count" name="count" min="1" max="20000" v-model="asteroidCount.count"
+                    class="w-full p-2 border border-gray-300 rounded-md bg-base text-light" required>
+                </div>
+                <SecondaryButton type="submit">
+                  Asteroiden neu generieren
+                </SecondaryButton>
+              </form>
             </div>
+          </div>
         </div>
-    </AppLayout>
+      </div>
+
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- <ResourceDistribution :universeResources="universeResources" /> -->
+
+        <DashboardUserOverview :users="users" />
+        <DashboardMarket :market="market" />
+      </div>
+    </div>
+
+
+
+  </AppLayout>
 </template>

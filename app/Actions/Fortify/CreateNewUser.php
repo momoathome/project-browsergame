@@ -38,7 +38,7 @@ class CreateNewUser implements CreatesNewUsers
             'password' => Hash::make($input['password']),
         ]);
 
-        $this->setupInitialUserData->setupInitialData($user);
+        $this->setupInitialUserData->setupInitialData($user, true);
         $user->assignRole('user');
 
         return $user;

@@ -52,6 +52,18 @@ class SetupInitialBuildings
         ]);
     }
 
+    public function reset(int $userId): void
+    {
+        // Alle Gebäude-IDs des Users holen
+        $buildingIds = Building::where('user_id', $userId)->pluck('id');
+    
+        // Alle zugehörigen BuildingResourceCost-Einträge löschen
+        BuildingResourceCost::whereIn('building_id', $buildingIds)->delete();
+    
+        // Dann die Gebäude selbst löschen
+        Building::where('user_id', $userId)->delete();
+    }
+
     /**
      * Wendet die Effekte aller Gebäude auf die Benutzerattribute an
      */

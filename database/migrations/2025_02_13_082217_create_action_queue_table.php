@@ -34,7 +34,7 @@ return new class extends Migration {
 
         // Add check constraints using raw SQL
         DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_action_type CHECK (action_type IN ('mining', 'building', 'produce', 'trade', 'combat', 'research'))");
-        DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_status CHECK (status IN ('pending', 'in_progress', 'completed', 'cancelled', 'failed'))");
+        DB::statement("ALTER TABLE action_queue ADD CONSTRAINT check_status CHECK (status IN ('pending', 'in_progress', 'processing', 'completed', 'cancelled', 'failed'))");
     }
 
     /**

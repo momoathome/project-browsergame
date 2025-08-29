@@ -62,7 +62,7 @@ class ActionQueueService
 
     public function processQueue(): void
     {
-        $completedActions = $this->actionqueueRepository->processQueue();
+        $completedActions = $this->actionqueueRepository->processQueue() ?? [];
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);
@@ -71,7 +71,7 @@ class ActionQueueService
 
     public function processQueueForUser($userId): void
     {
-        $completedActions = $this->actionqueueRepository->processQueueForUser($userId);
+        $completedActions = $this->actionqueueRepository->processQueueForUser($userId) ?? [];
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);

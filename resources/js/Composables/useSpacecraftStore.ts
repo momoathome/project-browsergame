@@ -31,8 +31,6 @@ export function useSpacecraftStore() {
 			} else {
 				spacecrafts!.value = []
 			}
-
-      console.log(data);
 		}
 	}
 

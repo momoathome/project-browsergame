@@ -4,6 +4,7 @@ namespace Orion\Modules\Actionqueue\Repositories;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
@@ -76,15 +77,28 @@ readonly class ActionQueueRepository
         return DB::transaction(function () {
             return ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
                 ->where('end_time', '<=', now())
+                ->lockForUpdate()
                 ->get();
         });
     }
 
-    public function processQueueForUser(int $userId): Collection
+    public function processQueueForUser($userId): Collection
     {
         return DB::transaction(function () use ($userId) {
-            return ActionQueue::where('user_id', $userId)
+            // Atomar claimen: Status auf PROCESSING setzen und nur die IDs zurückgeben
+            $affected = ActionQueue::where('user_id', $userId)
                 ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->where('end_time', '<=', now())
+                ->lockForUpdate()
+                ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
+
+            if ($affected > 0) {
+                Log::info("Claimed $affected queue items for user $userId");
+            }
+    
+            // Jetzt alle "geclaimten" Actions holen
+            return ActionQueue::where('user_id', $userId)
+                ->where('status', QueueStatusType::STATUS_PROCESSING)
                 ->where('end_time', '<=', now())
                 ->get();
         });
@@ -94,6 +108,7 @@ readonly class ActionQueueRepository
     {
         return ActionQueue::where('user_id', $userId)
             ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->lockForUpdate()
             ->get();
     }
 }

@@ -11,41 +11,12 @@ const props = defineProps<{
 
 const showResetModal = ref(false);
 const selectedUser = ref(null);
-const showResetAllUsersModal = ref(false);
-
-const userResetForm = useForm({
-    user_id: null
-});
 
 function openResetModal(user) {
     selectedUser.value = user;
     showResetModal.value = true;
 }
 
-function resetUserData() {
-    if (!selectedUser.value) return;
-    userResetForm.user_id = selectedUser.value.id;
-    userResetForm.post(route('admin.user.reset', userResetForm.user_id), {
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-            userResetForm.reset();
-            showResetModal.value = false;
-            selectedUser.value = null;
-        },
-        onError: () => {
-            // Fehlerbehandlung
-        },
-    });
-}
-
-function resetAllUsersData() {
-  router.post(route('admin.users.reset'), {
-    preserveState: true,
-    preserveScroll: true,
-  });
-  showResetAllUsersModal.value = false;
-}
 </script>
 
 <template>
@@ -54,16 +25,15 @@ function resetAllUsersData() {
             <h2 class="text-xl font-semibold text-light">
                 Action Queue
             </h2>
-            <SecondaryButton type="button" @click="showResetAllUsersModal = true">
+<!--             <SecondaryButton type="button" @click="showResetAllUsersModal = true">
                 Process Action Queue
-            </SecondaryButton>
+            </SecondaryButton> -->
         </div>
         <table class="w-full text-light mt-1">
             <thead class="text-gray-400 border-b border-primary">
                 <tr>
                     <th class="text-left p-2">Name</th>
                     <th class="text-left p-2">Type</th>
-                    <th class="text-left p-2">Target</th>
                     <th class="text-left p-2">Start Time</th>
                     <th class="text-left p-2">End Time</th>
                     <th class="text-left p-2">Status</th>
@@ -75,9 +45,8 @@ function resetAllUsersData() {
                 @click="() => { router.visit(route('admin.user.show', { id: action.user_id })) }">
                     <td class="p-2 cursor-pointer">{{ action.user_id }}</td>
                     <td class="p-2 cursor-pointer">{{ action.action_type }}</td>
-                    <td class="p-2 cursor-pointer">{{ action.target_id }}</td>
-                    <td class="p-2 cursor-pointer">{{ action.start_time }}</td>
-                    <td class="p-2 cursor-pointer">{{ action.end_time }}</td>
+                    <td class="p-2 cursor-pointer">{{ new Date(action.start_time).toLocaleString() }}</td>
+                    <td class="p-2 cursor-pointer">{{ new Date(action.end_time).toLocaleString() }}</td>
                     <td class="p-2 cursor-pointer">{{ action.status }}</td>
                     <td class="p-2 cursor-pointer">{{ action.details }}</td>
  <!--                    <td class="p-2 text-center">
@@ -104,25 +73,6 @@ function resetAllUsersData() {
                 <div class="flex gap-2">
                     <SecondaryButton @click="showResetModal = false">Abbrechen</SecondaryButton>
                     <SecondaryButton class="bg-red-600 hover:bg-red-700 text-white" @click="resetUserData">Bestätigen</SecondaryButton>
-                </div>
-            </template>
-        </ConfirmationModal>
-
-        <ConfirmationModal :show="showResetAllUsersModal" @close="showResetAllUsersModal = false">
-            <template #title>
-                Alle User-Daten zurücksetzen
-            </template>
-            <template #content>
-                Bist du sicher, dass du <b>alle</b> User-Daten zurücksetzen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.
-            </template>
-            <template #footer>
-                <div class="flex gap-2">
-                <PrimaryButton @click="showResetAllUsersModal = false">
-                    Abbrechen
-                </PrimaryButton>
-                <SecondaryButton @click="resetAllUsersData">
-                    Bestätigen
-                </SecondaryButton>
                 </div>
             </template>
         </ConfirmationModal> -->

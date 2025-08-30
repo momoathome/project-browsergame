@@ -7,6 +7,7 @@ import UserDetailStation from '@/Modules/Admin/UserDetailStation.vue';
 import UserDetailBuilding from '@/Modules/Admin/UserDetailBuilding.vue';
 import UserDetailSpacecraft from '@/Modules/Admin/UserDetailSpacecraft.vue';
 import UserDetailResource from '@/Modules/Admin/UserDetailResource.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 
 const props = defineProps<{
     user: User;
@@ -40,7 +41,8 @@ const finishQueue = () => {
                 <!-- Benutzer-Basisinformationen -->
                 <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
                     <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">
-                        Basisinformationen</h2>
+                        Basisinformationen
+                    </h2>
                     <div class="grid grid-cols-2 gap-4 p-4">
                         <p><span class="font-medium">Name:</span> {{ user.name }}</p>
                         <p><span class="font-medium">ID:</span> {{ user.id }}</p>
@@ -58,10 +60,9 @@ const finishQueue = () => {
                 <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
                     <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">Actions</h2>
                     <div class="p-4">
-                        <button @click="finishQueue"
-                            class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition">
-                            Warteschlange sofort beenden
-                        </button>
+                        <SecondaryButton @click="finishQueue">
+                            Process Action Queue
+                        </SecondaryButton>
                     </div>
                 </div>
             </section>

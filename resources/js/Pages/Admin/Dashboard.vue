@@ -2,6 +2,7 @@
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DashboardUserOverview from '@/Modules/Admin/DashboardUserOverview.vue';
+import DashboardQueue from '@/Modules/Admin/DashboardQueue.vue';
 import DashboardMarket from '@/Modules/Admin/DashboardMarket.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import type { Resource, Market } from '@/types/types';
@@ -11,6 +12,7 @@ const props = defineProps<{
   universeResources?: Resource[];
   market: Market[];
   users: User[];
+  gameQueue: any[];
 }>()
 
 const asteroidCount = useForm({
@@ -66,9 +68,10 @@ function regenerateAsteroids() {
       </div>
 
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-3 gap-4">
         <DashboardUserOverview :users="users" />
         <DashboardMarket :market="market" />
+        <DashboardQueue :action-queue="gameQueue" />
       </div>
     </div>
 

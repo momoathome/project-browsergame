@@ -21,7 +21,7 @@ use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
-
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 
 class AdminController extends Controller
 {
@@ -39,6 +39,7 @@ class AdminController extends Controller
         private readonly AuthManager $authManager,
         private readonly ResetUserData $resetUserData,
         private readonly SetupInitialMarket $setupInitialMarket,
+        private readonly ActionQueueService $actionQueueService,
     ) {
         if (!$this->authManager->user()->hasRole('admin')) {
             return redirect()->route('overview');
@@ -54,6 +55,7 @@ class AdminController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
             'market' => $market,
+            'gameQueue' => $this->actionQueueService->getActionQueue(),
         ]);
     }
 
@@ -206,7 +208,7 @@ class AdminController extends Controller
         $result = $asteroidGenerator->regenerateAsteroids($request->input('count'));
         return redirect()->back()->with('message', $result['message']);
     }
-    
+
     public function resetUserData(Request $request)
     {
         $userId = $request->input('user_id');

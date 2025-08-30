@@ -26,6 +26,12 @@ class ActionQueueService
         private readonly UserService $userService
     ) {
     }
+
+    public function getActionQueue(): Collection
+    {
+        return $this->actionqueueRepository->getActionQueue();
+    }
+
     public function getUserQueue($userId): Collection
     {
         return $this->actionqueueRepository->getUserQueue($userId);

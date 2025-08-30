@@ -12,6 +12,17 @@ use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 
 readonly class ActionQueueRepository
 {
+
+    public function getActionQueue(): Collection
+    {
+        return ActionQueue::query()
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PROCESSING
+            ])
+            ->get();
+    }
+
     public function getUserQueue(int $userId): Collection
     {
         $userQueue = ActionQueue::query()

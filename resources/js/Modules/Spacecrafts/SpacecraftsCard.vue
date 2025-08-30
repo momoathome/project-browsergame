@@ -14,49 +14,35 @@ const props = defineProps<{
   spacecraft: Spacecraft
 }>();
 
+// --- State & Helpers ---
+const isSubmitting = ref(false);
+const form = useForm({ amount: 0 });
+
+// --- Computed Properties ---
+const userAttributes = computed(() => usePage().props.userAttributes);
+const userResources = computed(() => usePage().props.userResources);
+// Typisierung für bessere IDE-Unterstützung und Fehlervermeidung
+const queue = computed<any[]>(() => usePage().props.queue as any[]);
+const spacecrafts = computed<any[]>(() => usePage().props.spacecrafts as any[]);
+
+const getAttribute = (name: string) => {
+  const attr = userAttributes.value.find((a: any) => a.attribute_name === name);
+  return attr ? Number(attr.attribute_value) : 0;
+};
+
 const isProducing = computed(() => props.spacecraft.is_producing || false);
 const productionEndTime = computed(() => props.spacecraft.end_time || null);
-const isSubmitting = ref(false)
 
 const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
 const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
-const formattedBuildTime = computed(() => timeFormat(Math.floor(props.spacecraft.build_time / (usePage().props.userAttributes.find(attr => attr.attribute_name === 'production_speed')?.attribute_value || 1))));
-
-const form = useForm({
-  amount: 0
+const formattedBuildTime = computed(() => {
+  const speed = getAttribute('production_speed') || 1;
+  return timeFormat(Math.floor(props.spacecraft.build_time / speed));
 });
 
-function produceSpacecraft() {
-  if (form.amount <= 0) return;
-  if (isProducing.value || isSubmitting.value) return;
-  isSubmitting.value = true;
-
-  form.post(
-    route('shipyard.update', props.spacecraft.id),
-    {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => {
-        form.reset();
-      },
-      onFinish: () => {
-        isSubmitting.value = false;
-      },
-      onError: () => {
-        isSubmitting.value = false;
-      }
-    }
-  );
-}
-
-function handleProduceComplete() {
-  setTimeout(() => {
-    router.reload({ only: ['spacecrafts', 'queue', 'userAttributes'] });
-  }, 500);
-}
-
 const actualBuildTime = computed(() => {
-  const trueBuildTime = Math.floor(props.spacecraft.build_time / (usePage().props.userAttributes.find(attr => attr.attribute_name === 'production_speed')?.attribute_value || 1));
+  const speed = getAttribute('production_speed') || 1;
+  const trueBuildTime = Math.floor(props.spacecraft.build_time / speed);
   if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
     return trueBuildTime * props.spacecraft.currently_producing;
   }
@@ -71,20 +57,15 @@ const activeProduction = computed(() => {
 });
 
 const resourceStatus = computed(() => {
-  const userResources = usePage().props.userResources;
-  const spacecraftResources = props.spacecraft.resources;
-  
-  return spacecraftResources.map(resource => {
-    const userResource = userResources.find(ur => ur.resource_id === resource.id);
-    if (!userResource) return { id: resource.id, sufficient: false };
-    
-    // Prüfe ob genug Ressourcen für EIN Raumschiff vorhanden sind
-    return { 
-      id: resource.id, 
-      sufficient: userResource.amount >= resource.amount,
-      userAmount: userResource.amount,
+  return props.spacecraft.resources.map(resource => {
+    const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
+    const userAmount = userResource ? userResource.amount : 0;
+    return {
+      id: resource.id,
+      sufficient: userAmount >= resource.amount,
+      userAmount,
       required: resource.amount,
-      maxCount: Math.floor(userResource.amount / resource.amount)
+      maxCount: Math.floor(userAmount / resource.amount)
     };
   });
 });
@@ -95,100 +76,99 @@ function isResourceSufficient(resourceId: number): boolean {
 }
 
 const crewStatus = computed(() => {
-  const userAttributes = usePage().props.userAttributes;
-  const userCrewLimit = userAttributes.find(attr => attr.attribute_name === 'crew_limit')?.attribute_value || 0;
-  const userTotalUnits = userAttributes.find(attr => attr.attribute_name === 'total_units')?.attribute_value || 0;
-  // crew_limit of spacecrafts in queue
-  const queuedCrewLimit = usePage().props.queue.reduce((acc, item) => {
-    if (item.action_type === 'produce') {
-      const queuedSpacecraft = usePage().props.spacecrafts.find(s => s.id === item.targetId);
+  const crewLimit = getAttribute('crew_limit');
+  const totalUnits = getAttribute('total_units');
+  const queuedCrew = queue.value.reduce((acc: number, item: any) => {
+    if (item.actionType === 'produce' && item.details?.quantity && item.status === 'in_progress') {
+      const queuedSpacecraft = spacecrafts.value.find((s: any) => s.id === item.targetId);
       if (queuedSpacecraft) {
-        const quantity = item.details?.quantity || 1;
-        return acc + (queuedSpacecraft.crew_limit * quantity);
+        return acc + (queuedSpacecraft.crew_limit * item.details.quantity);
       }
     }
     return acc;
   }, 0);
-  const availableUnitSlots = Math.floor(userCrewLimit) - userTotalUnits - queuedCrewLimit;
-  
-  const hasEnoughCrewSlots = availableUnitSlots >= props.spacecraft.crew_limit;
+  const availableUnitSlots = crewLimit - totalUnits - queuedCrew;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
-  
   return {
-    sufficient: hasEnoughCrewSlots,
     available: availableUnitSlots,
     required: props.spacecraft.crew_limit,
-    maxCount: maxCrewCount
+    maxCount: Math.max(0, maxCrewCount),
+    sufficient: availableUnitSlots >= props.spacecraft.crew_limit
   };
 });
 
 const maxSpacecraftCount = computed(() => {
   const resourceLimits = resourceStatus.value.map(res => res.maxCount || 0);
   const crewLimit = crewStatus.value.maxCount || 0;
-  
   return Math.min(...resourceLimits, crewLimit);
 });
 
 const canProduce = computed(() => {
-  const hasEnoughResources = resourceStatus.value.every(resource => resource.sufficient);
-  return hasEnoughResources && crewStatus.value.sufficient;
+  return resourceStatus.value.every(resource => resource.sufficient) && crewStatus.value.sufficient;
 });
 
 const canUnlockSpacecraft = computed(() => {
-  const userAttributes = usePage().props.userAttributes;
-  const researchPoints = userAttributes.find(ua => ua.attribute_name === 'research_points')?.attribute_value || 0;
+  const researchPoints = getAttribute('research_points');
   return researchPoints >= props.spacecraft.research_cost;
 });
 
+// --- Actions ---
+function produceSpacecraft() {
+  if (form.amount <= 0 || isProducing.value || isSubmitting.value) return;
+  isSubmitting.value = true;
+  form.post(
+    route('shipyard.update', props.spacecraft.id),
+    {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => form.reset(),
+      onFinish: () => { isSubmitting.value = false; },
+      onError: () => { isSubmitting.value = false; }
+    }
+  );
+}
+
+function handleProduceComplete() {
+  setTimeout(() => {
+    router.reload({ only: ['spacecrafts', 'queue', 'userAttributes'] });
+  }, 500);
+}
+
 function goToMarketWithMissingResources() {
-  const userResources = usePage().props.userResources;
   const missing = props.spacecraft.resources
     .map(resource => {
-      const userResource = userResources.find((ur: any) => ur.resource_id === resource.id);
+      const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
       const missingAmount = resource.amount - (userResource?.amount || 0);
-      return missingAmount > 0
-        ? { id: resource.id, amount: missingAmount }
-        : null;
+      return missingAmount > 0 ? { id: resource.id, amount: missingAmount } : null;
     })
     .filter((item): item is { id: number; amount: number } => item !== null);
-
   if (missing.length === 0) return;
-
   router.get(route('market', {
     resource_ids: missing.map(r => r.id).join(','),
-    amounts: missing.map(r => r.amount).join(','),
+    amounts: missing.map(r => r.amount).join(',')
   }));
 }
 
-const increment = () => {
-  if (form.amount < maxSpacecraftCount.value) {
-    form.amount++
-  }
+function increment() {
+  if (form.amount < maxSpacecraftCount.value) form.amount++;
 }
-const incrementBy10 = () => {
-  if (form.amount < maxSpacecraftCount.value - 10) {
-    form.amount += 10
-  }
+function incrementBy10() {
+  if (form.amount < maxSpacecraftCount.value - 9) form.amount += 10;
+  else form.amount = maxSpacecraftCount.value;
 }
-const decrement = () => {
-  if (form.amount > 0) {
-    form.amount--
-  }
+function decrement() {
+  if (form.amount > 0) form.amount--;
 }
-const decrementBy10 = () => {
-  if (form.amount > 10) {
-    form.amount -= 10
-  }
+function decrementBy10() {
+  if (form.amount > 10) form.amount -= 10;
+  else form.amount = 0;
 }
 
 function unlockSpacecraft() {
-  if (!canUnlockSpacecraft.value) {
-    return;
-  }
-
+  if (!canUnlockSpacecraft.value) return;
   router.post(route('shipyard.unlock', props.spacecraft.id), {
     preserveState: true,
-    preserveScroll: true,
+    preserveScroll: true
   });
 }
 </script>

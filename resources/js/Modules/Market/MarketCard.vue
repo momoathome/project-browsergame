@@ -94,6 +94,7 @@ function setUserResourcesInput() {
 
 function setMaxAmount() {
   const maxAmount = Math.min(Math.floor(userCredits.value / props.marketData.cost), Math.floor(userStorage.value - userResourceAmount.value));
+  console.log(maxAmount);
   form.amount = maxAmount;
 }
 </script>

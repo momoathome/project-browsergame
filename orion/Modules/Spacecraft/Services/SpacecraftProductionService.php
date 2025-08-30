@@ -90,9 +90,32 @@ class SpacecraftProductionService
 
     private function validateCrewCapacity(int $userId, int $requiredCapacity): void
     {
+        // Crew-Limit des Users
         $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
+        if (!$crewLimit) {
+            throw new InsufficientCrewCapacityException();
+        }
 
-        if (!$crewLimit || $crewLimit->attribute_value < $requiredCapacity) {
+        // Bereits gebaute Einheiten (total_units)
+        $totalUnitsAttr = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::TOTAL_UNITS);
+        $totalUnits = $totalUnitsAttr ? (int)$totalUnitsAttr->attribute_value : 0;
+
+        // Alle offenen Produktionen in der Queue summieren
+        $queuedCrew = 0;
+        $queueEntries = $this->queueService->getUserQueue($userId);
+        foreach ($queueEntries as $entry) {
+            if ($entry->action_type === QueueActionType::ACTION_TYPE_PRODUCE && $entry->status === 'in_progress') {
+                // Hole das Spacecraft für die Crew-Berechnung
+                $sc = app(SpacecraftRepository::class)->findSpacecraftById($entry->target_id, $userId);
+                if ($sc && isset($entry->details['quantity'])) {
+                    $queuedCrew += $sc->crew_limit * (int)$entry->details['quantity'];
+                }
+            }
+        }
+
+        // Die aktuelle Produktion (requiredCapacity = anzahl * crew_limit)
+        $usedCrew = $totalUnits + $queuedCrew + $requiredCapacity;
+        if ($usedCrew > $crewLimit->attribute_value) {
             throw new InsufficientCrewCapacityException();
         }
     }

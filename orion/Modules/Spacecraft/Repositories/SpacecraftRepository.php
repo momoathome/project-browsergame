@@ -68,33 +68,28 @@ readonly class SpacecraftRepository
     {
         return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
             $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId, $filteredSpacecrafts);
-                
+    
             foreach ($spacecrafts as $spacecraft) {
+                // Pessimistisches Locking
+                $spacecraft = Spacecraft::where('id', $spacecraft->id)->lockForUpdate()->first();
+    
                 $spacecraft->locked_count = $spacecraft->locked_count ?? 0;
-                
                 $changeAmount = $filteredSpacecrafts->has($spacecraft->details->name) ?
                     $filteredSpacecrafts->get($spacecraft->details->name) : 0;
-                    
-                if ($changeAmount <= 0) {
-                    continue;
-                }
-                
+    
+                if ($changeAmount <= 0) continue;
+    
                 if ($increment) {
-                    // Wenn wir Schiffe freigeben, reduzieren wir locked_count
                     $spacecraft->locked_count = max(0, $spacecraft->locked_count - $changeAmount);
                 } else {
-                    // Wenn wir Schiffe sperren, erhöhen wir locked_count
-                    $changeAmount = min($changeAmount, $spacecraft->count);
+                    $changeAmount = min($changeAmount, $spacecraft->count - $spacecraft->locked_count);
                     $spacecraft->locked_count += $changeAmount;
                 }
-                
-                // Sicherstellen, dass keine negativen Werte existieren
-                $spacecraft->count = max(0, $spacecraft->count);
-                $spacecraft->locked_count = max(0, $spacecraft->locked_count);
-                
+    
+                $spacecraft->locked_count = max(0, min($spacecraft->locked_count, $spacecraft->count));
                 $spacecraft->save();
             }
-            
+    
             return true;
         });
     }

@@ -52,10 +52,6 @@ readonly class ActionQueueRepository
                 ->lockForUpdate()
                 ->exists();
     
-            if ($exists) {
-                return null;
-            }
-    
             return ActionQueue::create([
                 'user_id' => $userId,
                 'action_type' => $actionType,

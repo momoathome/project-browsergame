@@ -30,12 +30,12 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'redraw']);
 
 const asteroidImages = [
-  '/images/asteroid_full.webp',
-  '/images/asteroid3_full.webp',
-  '/images/asteroid4_full.webp',
-  '/images/asteroid5_full.webp',
-  '/images/asteroid6_full.webp',
-  '/images/asteroid7_full.webp',
+  '/images/Asteroid_full.webp',
+  '/images/Asteroid3_full.webp',
+  '/images/Asteroid4_full.webp',
+  '/images/Asteroid5_full.webp',
+  '/images/Asteroid6_full.webp',
+  '/images/Asteroid7_full.webp',
 
   // ...weitere Bilder
 ];

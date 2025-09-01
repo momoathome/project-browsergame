@@ -23,12 +23,12 @@ const { queueData } = useQueueStore();
 const { spacecrafts } = useSpacecraftStore();
 
 const asteroidImages = [
-  '/images/asteroid2.webp',
-  '/images/asteroid3.webp',
-  '/images/asteroid4.webp',
-  '/images/asteroid5.webp',
-  '/images/asteroid6.webp',
-  '/images/asteroid7.webp',
+  '/images/Asteroid2.webp',
+  '/images/Asteroid3.webp',
+  '/images/Asteroid4.webp',
+  '/images/Asteroid5.webp',
+  '/images/Asteroid6.webp',
+  '/images/Asteroid7.webp',
   // ...weitere Bilder einfach ergänzen
 ];
 

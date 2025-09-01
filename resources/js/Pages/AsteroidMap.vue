@@ -46,7 +46,7 @@ const asteroidImageElements = asteroidImages.map(src => {
 });
 
 const stationImageSrc = '/images/station_full.webp';
-const asteroidImageSrc = '/images/asteroid2.webp';
+const asteroidImageSrc = '/images/Asteroid2.webp';
 
 const stationImage = new Image();
 const asteroidImage = new Image();

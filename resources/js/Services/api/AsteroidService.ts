@@ -1,5 +1,5 @@
 import { BaseApiService } from './BaseApiService';
-import type { ApiResponse, AsteroidResourceResponse, AsteroidSearchResponse } from '@/types/api';
+import type { ApiResponse, AsteroidResourceResponse, AsteroidSearchResponse, AsteroidAutoMineResponse } from '@/types/api';
 
 export class AsteroidService extends BaseApiService {
   async getResources(asteroidId: number): Promise<ApiResponse<AsteroidResourceResponse>> {
@@ -15,6 +15,17 @@ export class AsteroidService extends BaseApiService {
       {
         method: 'POST',
         body: JSON.stringify({ query })
+      }
+    );
+  }
+
+  async autoMine(params?: { filter?: string }): Promise<ApiResponse<AsteroidAutoMineResponse>> {
+    return this.fetchWithError<AsteroidAutoMineResponse>(
+      route('asteroidMap.autoMine'),
+      {
+        method: 'POST',
+        body: params ? JSON.stringify(params) : undefined,
+        headers: { 'Content-Type': 'application/json' },
       }
     );
   }

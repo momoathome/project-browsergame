@@ -33,6 +33,21 @@ class AsteroidRepository
         return Asteroid::select('id', 'x', 'y', 'pixel_size')->get();
     }
 
+    public function getAsteroidsInRange(float $centerX, float $centerY, float $scanRange): Collection
+    {
+        // Hole alle Asteroiden im quadratischen Bereich
+        $asteroids = Asteroid::with('resources')
+            ->whereBetween('x', [$centerX - $scanRange, $centerX + $scanRange])
+            ->whereBetween('y', [$centerY - $scanRange, $centerY + $scanRange])
+            ->get();
+
+        // Filtere auf echten Radius (kreisförmig)
+        return $asteroids->filter(function ($asteroid) use ($centerX, $centerY, $scanRange) {
+            $distance = sqrt(pow($centerX - $asteroid->x, 2) + pow($centerY - $asteroid->y, 2));
+            return $distance <= $scanRange;
+        })->values();
+    }
+
     public function saveAsteroidMiningResult(User $user, Asteroid $asteroid, ExplorationResult $result, $filteredSpacecrafts): void
     {
         AsteroidMiningLog::create([

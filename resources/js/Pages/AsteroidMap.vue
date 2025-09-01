@@ -3,16 +3,17 @@ import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { usePage, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
+import AutoMineModal from '@/Modules/AsteroidMap/AutoMineModal.vue';
 import AsteroidMapSearch from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
-import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet} from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import * as config from '@/config';
+import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet} from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -47,7 +48,7 @@ const asteroidImageElements = asteroidImages.map(src => {
 });
 
 const stationImageSrc = '/images/station_full.webp';
-const asteroidImageSrc = '/images/Asteroid2.webp';
+const asteroidImageSrc = '/images/asteroids/Asteroid2.webp';
 
 const stationImage = new Image();
 const asteroidImage = new Image();
@@ -1010,12 +1011,17 @@ const focusOnSingleResult = () => {
   }
 };
 
+const isAutoMineModalOpen = ref(false);
 const isModalOpen = ref(false)
 function closeModal() {
   isModalOpen.value = false;
   setTimeout(() => {
     selectedObject.value = null;
   }, 300);
+}
+
+function closeAutoMineModal() {
+  isAutoMineModalOpen.value = false;
 }
 
 const selectedAsteroid = ref<Asteroid>();
@@ -1028,10 +1034,6 @@ watch(() => usePage().props.queue, () => {
   updateShipPool();
   scheduleDraw();
 }, { deep: true });
-
-function performAutoMine() {
-  // Implement the auto mining logic here
-}
 </script>
 
 <template>
@@ -1054,7 +1056,7 @@ function performAutoMine() {
       <button type="button" 
         class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-slate-900 ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
         :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
-        @click="performAutoMine"
+        @click="isAutoMineModalOpen = true"
       >
         auto mine
       </button>
@@ -1079,6 +1081,12 @@ function performAutoMine() {
       :spacecrafts="spacecrafts" 
       :user-scan-range="userScanRange" 
       @redraw="drawScene" 
+    />
+
+    <AutoMineModal
+      :open="isAutoMineModalOpen"
+      @close="closeAutoMineModal"
+      @redraw="drawScene"
     />
   </AppLayout>
 </template>

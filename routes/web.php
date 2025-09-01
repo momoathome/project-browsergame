@@ -55,6 +55,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/combat', [CombatController::class, 'combat'])->name('asteroidMap.combat');
         Route::post('/search', [AsteroidController::class, 'search'])->name('asteroidMap.search');
         Route::post('/asteroid/{asteroid}', [AsteroidController::class, 'getAsteroidResources'])->name('asteroidMap.asteroid');
+        Route::post('/auto-mine', [AsteroidController::class, 'autoMine'])->name('asteroidMap.autoMine');
+        Route::post('/auto-mine/start', [AsteroidController::class, 'autoMineStart'])->name('asteroidMap.autoMineStart');
     });
 
     Route::get('/simulator', [CombatController::class, 'index'])->name('simulator');
@@ -85,7 +87,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     });
 
     Route::get('/queue', [ActionQueueController::class, 'index'])->name('queue');
-    Route::patch('/queueProcess', [ActionQueueController::class, 'process'])->name('queue.process');
+    Route::patch('/queue/process', [ActionQueueController::class, 'process'])->name('queue.process');
 
     Route::get('/images/{filename}', [ImageController::class, 'show']);
 

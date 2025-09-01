@@ -22,6 +22,26 @@ const props = defineProps<{
 const { queueData } = useQueueStore();
 const { spacecrafts } = useSpacecraftStore();
 
+const asteroidImages = [
+  '/images/asteroid2.webp',
+  '/images/asteroid3.webp',
+  '/images/asteroid4.webp',
+  // ...weitere Bilder einfach ergänzen
+];
+
+const asteroidsWithImages = computed(() =>
+  props.asteroids.map(asteroid => ({
+    ...asteroid,
+    imageIndex: asteroid.id % asteroidImages.length // oder Math.floor(Math.random() * asteroidImages.length)
+  }))
+);
+
+const asteroidImageElements = asteroidImages.map(src => {
+  const img = new Image();
+  img.src = src;
+  return img;
+});
+
 const stationImageSrc = '/images/station_full.webp';
 const asteroidImageSrc = '/images/asteroid2.webp';
 
@@ -356,6 +376,10 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
 function drawAsteroid(x: number, y: number, id: number, size: number) {
   if (ctx.value) {
+    const asteroid = asteroidsWithImages.value.find(a => a.id === id);
+    const imageIndex = asteroid?.imageIndex ?? 0;
+    const asteroidImg = asteroidImageElements[imageIndex] ?? asteroidImageElements[0];
+
     const scaledSize = (asteroidBaseSize * size) * scale.value;
     const imageX = x - (scaledSize / 2);
     const imageY = y - (scaledSize / 2);
@@ -365,13 +389,16 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
       drawHighlight(x, y, scaledSize, 'asteroid', isFocused);
     }
 
-    ctx.value.drawImage(
-      asteroidImage,
-      0, 0,
-      asteroidImage.width,
-      asteroidImage.height,
-      imageX, imageY,
-      scaledSize, scaledSize);
+    if (asteroidImg) {
+      ctx.value.drawImage(
+        asteroidImg,
+        0, 0,
+        asteroidImg.width,
+        asteroidImg.height,
+        imageX, imageY,
+        scaledSize, scaledSize
+      );
+    }
   }
 }
 

@@ -29,6 +29,23 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'redraw']);
 
+const asteroidImages = [
+  '/images/asteroid_full.webp',
+  '/images/asteroid3_full.webp',
+  '/images/asteroid4_full.webp',
+  // ...weitere Bilder
+];
+
+const asteroidImageIndex = computed(() =>
+  asteroid.value?.id !== undefined
+    ? asteroid.value.id % asteroidImages.length
+    : 0
+);
+
+const asteroidImageSrc = computed(() =>
+  asteroidImages[asteroidImageIndex.value]
+);
+
 const asteroid = computed<Asteroid>(() => props.content.data as Asteroid);
 const station = computed<Station>(() => props.content.data as Station);
 const userStation = usePage().props.stations.find(station =>
@@ -212,9 +229,7 @@ async function startMission() {
 }
 
 const resetForm = () => {
-  Object.keys(form.spacecrafts).forEach(key => {
-    form.spacecrafts[key] = 0;
-  });
+  resetSpacecraftsForm();
   form.asteroid_id = null;
   form.station_user_id = null;
 };
@@ -312,7 +327,13 @@ function availableCount(s) {
 
                 <div class="relative flex items-center justify-center w-[360px] h-[360px] mx-auto">
                   <img
-                    :src="actionType === QueueActionType.MINING ? '/images/asteroid_full.webp' : '/images/station_full.webp'"
+                    v-if="actionType === QueueActionType.MINING"
+                    :src="asteroidImageSrc"
+                    class="z-10"
+                  />
+                  <img
+                    v-else
+                    src="/images/station_full.webp"
                     class="z-10"
                   />
                   <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid" :showResources="canScanAsteroid" class="absolute inset-0" />

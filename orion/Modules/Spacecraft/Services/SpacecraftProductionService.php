@@ -104,7 +104,9 @@ class SpacecraftProductionService
         $queuedCrew = 0;
         $queueEntries = $this->queueService->getUserQueue($userId);
         foreach ($queueEntries as $entry) {
-            if ($entry->action_type === QueueActionType::ACTION_TYPE_PRODUCE && $entry->status === 'in_progress') {
+            $actionType = $entry->action_type ?? $entry->actionType ?? null;
+            $status = $entry->status ?? $entry->Status ?? null;
+            if ($actionType === QueueActionType::ACTION_TYPE_PRODUCE && $status === 'in_progress') {
                 // Hole das Spacecraft für die Crew-Berechnung
                 $sc = app(SpacecraftRepository::class)->findSpacecraftById($entry->target_id, $userId);
                 if ($sc && isset($entry->details['quantity'])) {

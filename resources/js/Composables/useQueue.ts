@@ -30,12 +30,11 @@ export function useQueue(userId: number) {
     
     const fallbackCheck = () => {
         processedQueueItems.value.forEach(item => {
-            if (!item.completed && item.remainingTime <= 0) {
+            if (item.remainingTime <= 0 && !item.timerCompletedFired) {
+                console.log('Fallback greift für Item:', item);
                 item.completed = true
-                if (!item.timerCompletedFired) {
-                    item.timerCompletedFired = true
-                    timerCompleteCallbacks.forEach(cb => cb(item))
-                }
+                item.timerCompletedFired = true
+                timerCompleteCallbacks.forEach(cb => cb(item))
             }
         })
     }
@@ -186,6 +185,7 @@ export function useQueue(userId: number) {
         })
 
         processedQueueItems.value = newItems
+        processedQueueItems.value = newItems.filter(item => !(item.completed && item.timerCompletedFired))
     }
 
     const toggleInfo = (item: ProcessedQueueItem): void => {

@@ -30,13 +30,13 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'redraw']);
 
 const asteroidImages = [
-  '/images/Asteroid_full.webp',
-  '/images/Asteroid3_full.webp',
-  '/images/Asteroid4_full.webp',
-  '/images/Asteroid5_full.webp',
-  '/images/Asteroid6_full.webp',
-  '/images/Asteroid7_full.webp',
-
+  '/images/asteroids/Asteroid_full.webp',
+  '/images/asteroids/Asteroid3_full.webp',
+  '/images/asteroids/Asteroid4_full.webp',
+  '/images/asteroids/Asteroid5_full.webp',
+  '/images/asteroids/Asteroid6_full.webp',
+  '/images/asteroids/Asteroid7_full.webp',
+  '/images/asteroids/Asteroid8_full.webp',
   // ...weitere Bilder
 ];
 
@@ -355,7 +355,7 @@ function availableCount(s) {
                   <template v-if="actionType === QueueActionType.COMBAT">
                     <span class="italic text-slate-400">no Informations available</span>
                   </template>
-                  <template v-else-if="actionType === QueueActionType.MINING && canScanAsteroid">
+                  <template v-else-if="actionType === QueueActionType.MINING">
                     <span
                       v-if="asteroid.size === 'extreme' && (!form.spacecrafts['Titan'] || form.spacecrafts['Titan'] === 0)"
                       class="text-yellow-300 text-sm text-pretty"

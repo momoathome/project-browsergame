@@ -221,7 +221,13 @@ class AsteroidService
 
         try {
             $asteroidGenerator = app(AsteroidGenerator::class);
-            $asteroidGenerator->generateAsteroids(rand(1, 3)); // oder eine Zufallszahl
+            $radius = 25000;
+            $asteroidGenerator->generateAsteroids(
+                rand(0, 2),
+                $asteroid->x,
+                $asteroid->y,
+                $radius
+            );
         } catch (\Exception $e) {
             Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
         }

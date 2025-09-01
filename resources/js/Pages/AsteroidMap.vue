@@ -23,13 +23,14 @@ const { queueData } = useQueueStore();
 const { spacecrafts } = useSpacecraftStore();
 
 const asteroidImages = [
-  '/images/Asteroid2.webp',
-  '/images/Asteroid3.webp',
-  '/images/Asteroid4.webp',
-  '/images/Asteroid5.webp',
-  '/images/Asteroid6.webp',
-  '/images/Asteroid7.webp',
-  // ...weitere Bilder einfach ergänzen
+  '/images/asteroids/Asteroid2.webp',
+  '/images/asteroids/Asteroid3.webp',
+  '/images/asteroids/Asteroid4.webp',
+  '/images/asteroids/Asteroid5.webp',
+  '/images/asteroids/Asteroid6.webp',
+  '/images/asteroids/Asteroid7.webp',
+  '/images/asteroids/Asteroid8.webp',
+  // ...weitere Bilder
 ];
 
 const asteroidsWithImages = computed(() =>
@@ -77,8 +78,7 @@ const pendingDraw = ref(false);
 
 // static values
 const userStation = computed(() => {
-  const userId = usePage().props.auth.user.id;
-  return props.stations.find(station => station.user_id === userId);
+  return props.stations.find(station => station.user_id === usePage().props.auth.user.id);
 });
 
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
@@ -133,9 +133,8 @@ onMounted(() => {
     asteroidImage.src = asteroidImageSrc;
 
     stationImage.onload = asteroidImage.onload = () => {
+      focusUserStationOnInitialLoad();
       drawScene();
-      const userId = usePage().props.auth.user.id;
-      focusUserStationOnInitialLoad(userId);
     };
   }
 
@@ -178,7 +177,7 @@ function initQuadtree() {
   });
 }
 
-function focusUserStationOnInitialLoad(userId: number) {
+function focusUserStationOnInitialLoad() {
   if (!userStation.value || !canvasRef.value) return;
 
   pointX.value = -(userStation.value.x * config.initialZoom - canvasRef.value.width / 2);
@@ -1030,6 +1029,9 @@ watch(() => usePage().props.queue, () => {
   scheduleDraw();
 }, { deep: true });
 
+function performAutoMine() {
+  // Implement the auto mining logic here
+}
 </script>
 
 <template>
@@ -1049,8 +1051,11 @@ watch(() => usePage().props.queue, () => {
         class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="highlightedAsteroids"
         :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
 
-      <button type="button" class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-slate-900 ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
-      :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }">
+      <button type="button" 
+        class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-slate-900 ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+        :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
+        @click="performAutoMine"
+      >
         auto mine
       </button>
 

@@ -8,7 +8,7 @@ return [
         'small' => 4,
         'medium' => 7,
         'large' => 14,
-        'extreme' => 22,
+        'extreme' => 24,
     ],
 
     /* chance to generate of asteroid sizes */

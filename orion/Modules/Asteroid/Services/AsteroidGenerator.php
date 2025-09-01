@@ -93,7 +93,7 @@ class AsteroidGenerator
     );
   }
 
-  public function generateAsteroids($count)
+  public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null)
   {
     // Reservierte Stationsstandorte prüfen oder erzeugen
     $reservedRegions = $this->universeService->getReservedStationRegions();
@@ -117,7 +117,11 @@ class AsteroidGenerator
 
         $minStationDistance = $this->calculateMinStationDistance($asteroid['size'], $resources);
 
-        $coordinate = $this->generateAsteroidCoordinate($minStationDistance, $resources);
+        if ($centerX !== null && $centerY !== null && $radius !== null) {
+            $coordinate = $this->generateAsteroidCoordinateInRadius($centerX, $centerY, $radius, $minStationDistance, $resources);
+        } else {
+            $coordinate = $this->generateAsteroidCoordinate($minStationDistance, $resources);
+        }
         $asteroid['x'] = $coordinate['x'];
         $asteroid['y'] = $coordinate['y'];
 
@@ -289,6 +293,37 @@ class AsteroidGenerator
       }
   
       return $baseDistance * $maxModifier;
+  }
+
+  private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = []): array
+  {
+      $maxAttempts = 2000;
+      $attempts = 0;
+      do {
+          // Zufälliger Punkt im Kreis
+          $angle = mt_rand(0, 360);
+          $distance = mt_rand(0, $radius);
+          $x = (int) round($centerX + cos(deg2rad($angle)) * $distance);
+          $y = (int) round($centerY + sin(deg2rad($angle)) * $distance);
+
+          $isAllowedForAsteroid = true;
+          $resourceLevel = $this->determineResourceLevel($resources);
+
+          if ($this->isInReservedStationRegion($x, $y, $resourceLevel)) {
+              $isAllowedForAsteroid = false;
+          }
+          if ($isAllowedForAsteroid) {
+              $isAllowedForAsteroid = !$this->isCollidingWithStation($x, $y, $minStationDistance) &&
+                  !$this->isCollidingWithAsteroid($x, $y, $this->config['asteroid_distance']);
+          }
+          $attempts++;
+      } while (!$isAllowedForAsteroid && $attempts < $maxAttempts);
+
+      if (!$isAllowedForAsteroid) {
+          // Fallback auf Standard-Logik
+          return $this->generateAsteroidCoordinate($minStationDistance, $resources);
+      }
+      return ['x' => $x, 'y' => $y];
   }
 
   private function generateAsteroidCoordinate(int $minStationDistance, array $resources = []): array

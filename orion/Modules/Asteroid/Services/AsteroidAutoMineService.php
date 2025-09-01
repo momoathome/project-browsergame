@@ -54,63 +54,74 @@ class AsteroidAutoMineService
         }
     }
 
-    // Overflow: Ignoriere Storage-Limit, extrahiere alles
-    private function extractOverflow($asteroids, $availableSpacecrafts, $user): array
+    private function buildMinerPool($availableSpacecrafts): array
     {
-        $missions = [];
-        // Miner-Pool: Name => Anzahl, Cargo
         $minerPool = [];
         foreach ($availableSpacecrafts as $sc) {
             $name = $sc->details->name;
-            $cargo = (int)($sc->cargo ?? $sc->details->cargo ?? 0);
-            $count = ($sc->count ?? 1) - ($sc->locked_count ?? 0); // Nur freie Schiffe!
-            if ($count <= 0) continue; // Keine freien Schiffe, überspringen
+            $cargo = (int)($sc->cargo ?? 0);
+            $count = ($sc->count ?? 1) - ($sc->locked_count ?? 0);
+            if ($count <= 0) continue;
             $minerPool[$name] = [
                 'count' => $count,
                 'cargo' => $cargo,
             ];
         }
+        return $minerPool;
+    }
+
+    private function assignMinersToAsteroid(array &$minerPool, $asteroid, int $totalResources, bool $isExtreme = false, bool $isSmall = false): array
+    {
+        $minerAssignment = [];
+        $cargoAssigned = 0;
+
+        // Zuerst: Mindestens ein Titan zuweisen, falls extrem und Titan verfügbar
+        if ($isExtreme && isset($minerPool['Titan']) && $minerPool['Titan']['count'] > 0) {
+            $minerAssignment['Titan'] = 1;
+            $cargoAssigned += $minerPool['Titan']['cargo'];
+            $minerPool['Titan']['count'] -= 1;
+        }
+
+        foreach ($minerPool as $name => $data) {
+            if ($data['count'] <= 0) continue;
+            // Titans sollen keine "small"-Asteroiden minen
+            if (strtolower($name) === 'titan' && $isSmall) continue;
+            $cargoPerMiner = $data['cargo'];
+            $neededMiner = min($data['count'], ceil(($totalResources - $cargoAssigned) / $cargoPerMiner));
+            if ($neededMiner <= 0) continue;
+            $minerAssignment[$name] = ($minerAssignment[$name] ?? 0) + $neededMiner;
+            $cargoAssigned += $neededMiner * $cargoPerMiner;
+            $minerPool[$name]['count'] -= $neededMiner;
+            if ($cargoAssigned >= $totalResources) break;
+        }
+
+        return [$minerAssignment, $cargoAssigned];
+    }
+
+    // Overflow: Ignoriere Storage-Limit, extrahiere alles
+    private function extractOverflow($asteroids, $availableSpacecrafts, $user): array
+    {
+        $missions = [];
+        $minerPool = $this->buildMinerPool($availableSpacecrafts);
     
         foreach ($asteroids as $asteroid) {
             $totalResources = 0;
             foreach ($asteroid->resources as $resource) {
                 $totalResources += $resource->amount;
             }
-        
-            $minerAssignment = [];
-            $cargoAssigned = 0;
-        
-            // Prüfe, ob der Asteroid "extreme" ist
+    
             $isExtreme = isset($asteroid->size) && strtolower($asteroid->size) === 'extreme';
-        
-            // Zuerst: Mindestens ein Titan zuweisen, falls extrem und Titan verfügbar
-            if ($isExtreme && isset($minerPool['Titan']) && $minerPool['Titan']['count'] > 0) {
-                $minerAssignment['Titan'] = 1;
-                $cargoAssigned += $minerPool['Titan']['cargo'];
-                $minerPool['Titan']['count'] -= 1;
-            }
-        
-            // Dann wie gehabt alle Miner zuweisen, bis Cargo voll
-            foreach ($minerPool as $name => $data) {
-                if ($data['count'] <= 0) continue;
-                // Wenn extrem, Titan wurde schon zugewiesen, also hier alle Miner-Typen zulassen
-                $cargoPerMiner = $data['cargo'];
-                $neededMiner = min($data['count'], ceil(($totalResources - $cargoAssigned) / $cargoPerMiner));
-                if ($neededMiner <= 0) continue;
-                $minerAssignment[$name] = ($minerAssignment[$name] ?? 0) + $neededMiner;
-                $cargoAssigned += $neededMiner * $cargoPerMiner;
-                $minerPool[$name]['count'] -= $neededMiner;
-                if ($cargoAssigned >= $totalResources) break;
-            }
-        
-            if ($cargoAssigned <= 0) continue; // Keine Miner mehr verfügbar
-        
-            // Ressourcen extrahieren (hier: alle Ressourcen des Asteroiden)
+            $isSmall = isset($asteroid->size) && strtolower($asteroid->size) === 'small';
+    
+            [$minerAssignment, $cargoAssigned] = $this->assignMinersToAsteroid($minerPool, $asteroid, $totalResources, $isExtreme, $isSmall);
+    
+            if ($cargoAssigned <= 0) continue;
+    
             $resourcesExtracted = [];
             foreach ($asteroid->resources as $resource) {
                 $resourcesExtracted[$resource->resource_type] = $resource->amount;
             }
-        
+    
             $missions[] = [
                 'asteroid' => $asteroid,
                 'spacecrafts' => $minerAssignment,
@@ -123,8 +134,7 @@ class AsteroidAutoMineService
                     collect($minerAssignment)
                 ),
             ];
-        
-            // Abbruch, wenn keine Miner mehr verfügbar
+    
             $totalMinerLeft = array_sum(array_column($minerPool, 'count'));
             if ($totalMinerLeft <= 0) break;
         }
@@ -137,21 +147,9 @@ class AsteroidAutoMineService
     {
         $usedStoragePerResource = $resourceStorage;
         $missions = [];
-        // Miner-Pool: Name => Anzahl, Cargo
-        $minerPool = [];
-        foreach ($availableSpacecrafts as $sc) {
-            $name = $sc->details->name;
-            $cargo = (int)($sc->cargo ?? $sc->details->cargo ?? 0);
-            $count = ($sc->count ?? 1) - ($sc->locked_count ?? 0);
-            if ($count <= 0) continue;
-            $minerPool[$name] = [
-                'count' => $count,
-                'cargo' => $cargo,
-            ];
-        }
-
+        $minerPool = $this->buildMinerPool($availableSpacecrafts);
+    
         foreach ($asteroids as $asteroid) {
-            // Prüfe, ob für alle Ressourcen des Asteroiden noch Storage frei ist
             $resourcesExtracted = [];
             $totalExtractable = 0;
             foreach ($asteroid->resources as $resource) {
@@ -164,31 +162,22 @@ class AsteroidAutoMineService
                     $totalExtractable += $extractableAmount;
                 }
             }
-            if ($totalExtractable <= 0) continue; // Asteroid überspringen, wenn keine Ressource passt
-
-            // Miner zuweisen, bis Cargo für die extrahierbaren Ressourcen reicht
-            $minerAssignment = [];
-            $cargoAssigned = 0;
-            foreach ($minerPool as $name => $data) {
-                if ($data['count'] <= 0) continue;
-                $cargoPerMiner = $data['cargo'];
-                $neededMiner = min($data['count'], ceil(($totalExtractable - $cargoAssigned) / $cargoPerMiner));
-                if ($neededMiner <= 0) continue;
-                $minerAssignment[$name] = $neededMiner;
-                $cargoAssigned += $neededMiner * $cargoPerMiner;
-                $minerPool[$name]['count'] -= $neededMiner;
-                if ($cargoAssigned >= $totalExtractable) break;
-            }
-            if ($cargoAssigned <= 0) continue; // Keine Miner mehr verfügbar
-
-            // Extrahiere nur so viel wie Cargo und Storage zulassen
+            if ($totalExtractable <= 0) continue;
+    
+            $isExtreme = isset($asteroid->size) && strtolower($asteroid->size) === 'extreme';
+            $isSmall = isset($asteroid->size) && strtolower($asteroid->size) === 'small';
+    
+            [$minerAssignment, $cargoAssigned] = $this->assignMinersToAsteroid($minerPool, $asteroid, $totalExtractable, $isExtreme, $isSmall);
+    
+            if ($cargoAssigned <= 0) continue;
+    
             foreach ($resourcesExtracted as $resourceId => $amount) {
                 $maxByCargo = min($amount, $cargoAssigned);
                 $resourcesExtracted[$resourceId] = $maxByCargo;
                 $cargoAssigned -= $maxByCargo;
                 $usedStoragePerResource[$resourceId] = ($usedStoragePerResource[$resourceId] ?? 0) + $maxByCargo;
             }
-
+    
             $missions[] = [
                 'asteroid' => $asteroid,
                 'spacecrafts' => $minerAssignment,
@@ -201,12 +190,10 @@ class AsteroidAutoMineService
                     collect($minerAssignment)
                 ),
             ];
-
-            // Abbruch wenn keine Miner mehr verfügbar
+    
             $totalMinerLeft = array_sum(array_column($minerPool, 'count'));
             if ($totalMinerLeft <= 0) break;
-
-            // Abbruch wenn für keine Ressource mehr Storage frei ist
+    
             $anyStorageLeft = false;
             foreach ($usedStoragePerResource as $amount) {
                 if ($amount < $storageLimit) {
@@ -223,18 +210,6 @@ class AsteroidAutoMineService
     private function extractSmart($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit): array
     {
        
-    }
-
-    private function getCargoForMiner(string $name, User $user): int
-    {
-        $spacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id);
-        foreach ($spacecrafts as $sc) {
-            if ($sc->details->name === $name) {
-                return (int)($sc->cargo ?? $sc->details->cargo ?? 0);
-            }
-        }
-        // Fallback falls nicht gefunden
-        return 0;
     }
 
 }

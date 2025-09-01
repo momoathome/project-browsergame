@@ -524,4 +524,14 @@ function availableCount(s) {
     inset 0px -20px 45px 0px #101d2c;
   border-radius: 16px 16px 0 0;
 }
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-to, .fade-leave-from {
+  opacity: 1;
+}
 </style>

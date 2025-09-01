@@ -29,10 +29,6 @@ const props = defineProps<{
       </main>
 
     </div>
-
-    <pre>
-      {{ usePage().props }}
-    </pre>
   </div>
 </template>
 

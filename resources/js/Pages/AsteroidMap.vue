@@ -8,7 +8,7 @@ import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
-import type { Asteroid, Station, Spacecraft, ShipRenderObject, QueueItem, SavedQueueItemState, SpacecraftFleet, MiningMissionDetails, MissionDetails } from '@/types/types';
+import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet} from '@/types/types';
 import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
@@ -22,8 +22,8 @@ const props = defineProps<{
 const { queueData } = useQueueStore();
 const { spacecrafts } = useSpacecraftStore();
 
-const stationImageSrc = '/images/space-station-yellow.png';
-const asteroidImageSrc = '/images/asteroid.png';
+const stationImageSrc = '/images/station_full.webp';
+const asteroidImageSrc = '/images/asteroid2.webp';
 
 const stationImage = new Image();
 const asteroidImage = new Image();
@@ -384,11 +384,11 @@ function drawHighlight(
 ) {
   if (!ctx.value) return;
 
-  const padding = 8 * scale.value;
+  const padding = 6 * scale.value;
   const adjustedRadius = scaledSize + padding;
   const tintColor = isFocused
     ? 'rgba(255, 80, 80, 0.15)'
-    : 'rgba(255, 255, 80, 0.15)';
+    : 'rgba(0, 255, 255, 0.15)';
 
   // 1. Farb-Tint als gefüllter Kreis
   ctx.value.save();
@@ -398,17 +398,6 @@ function drawHighlight(
   ctx.value.globalAlpha = 1;
   ctx.value.fill();
   ctx.value.restore();
-
-  // 2. Weicher Glow (nur Schatten, kein Stroke)
-/*   ctx.value.save();
-  ctx.value.beginPath();
-  ctx.value.arc(x, y, adjustedRadius, 0, 2 * Math.PI);
-  ctx.value.shadowColor = isFocused ? 'rgba(255,0,0,0.45)' : 'rgba(255,255,0,0.33)';
-  ctx.value.shadowBlur = isFocused ? 48 * scale.value : 32 * scale.value;
-  ctx.value.globalAlpha = 0.7;
-  ctx.value.fillStyle = 'rgba(0,0,0,0)';
-  ctx.value.fill();
-  ctx.value.restore(); */
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -1030,20 +1019,32 @@ watch(() => usePage().props.queue, () => {
         class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="highlightedAsteroids"
         :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
 
-      <span class="absolute top-0 right-0 z-100 text-white me-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
-      <span @click="focusOnObject(null, usePage().props.auth.user.id)"
-        class="cursor-pointer absolute top-6 right-0 z-100 text-white me-2">
-        reset
-      </span>
+      <button type="button" class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-slate-900 ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+      :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }">
+        auto mine
+      </button>
+
+      <div class="absolute top-2 right-0 z-100 flex flex-col text-end">
+        <span class="text-white me-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
+        <span @click="focusOnObject(null, usePage().props.auth.user.id)"
+          class="cursor-pointer text-white me-2">
+          reset
+        </span>
+      </div>
+
     </div>
 
-    <Modal :spacecrafts="spacecrafts" :user-scan-range="userScanRange" @redraw="drawScene" @close="closeModal" :show="isModalOpen"
-      :title="selectedObject?.data?.name" 
-      :content="{
-        type: selectedObject?.type,
-        imageSrc: selectedObject?.type === 'station' ? stationImageSrc : asteroidImageSrc,
-        data: selectedObject?.data as Asteroid | Station,
-      }" />
+    <Modal :content="{
+      type: selectedObject?.type,
+      data: selectedObject?.data as Asteroid | Station,
+      title: selectedObject?.data?.name,
+    }"
+      :open="isModalOpen"
+      @close="closeModal"
+      :spacecrafts="spacecrafts" 
+      :user-scan-range="userScanRange" 
+      @redraw="drawScene" 
+    />
   </AppLayout>
 </template>
 

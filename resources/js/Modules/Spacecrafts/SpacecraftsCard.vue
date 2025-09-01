@@ -233,31 +233,38 @@ function unlockSpacecraft() {
 
         <div class="flex flex-col gap-4 mt-auto">
           <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
-            <div class="flex justify-between gap-4">
-              <div class="flex items-center">
-                <button @click="decrement" @click.shift="decrementBy10" type="button"
-                  :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
-                    <path fill="currentColor"
-                      d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z" />
-                  </svg>
-                </button>
-
-                <AppInput :id="spacecraft.name" :maxlength="4" :maxInputValue="maxSpacecraftCount" v-model="form.amount" :disabled="isProducing || !canProduce" class="h-10" />
-
-                <button @click="increment" @click.shift="incrementBy10" type="button"
-                  :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount" class="border-none p-0 disabled:opacity-50 disabled:pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="25" viewBox="0 0 320 512">
-                    <path fill="currentColor"
-                      d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256L73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z" />
-                  </svg>
-                </button>
-              </div>
-
-              <PrimaryButton :disabled="isProducing || form.amount == 0 || !canProduce">
+            <div class="flex items-center justify-between rounded-xl border-primary-light ring-1 ring-primary shadow-inner overflow-hidden">
+              <button
+                class="h-10 px-3 rounded-l-xl bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-r border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="decrement"
+                @click.shift="decrementBy10"
+                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
+                type="button"
+              >−</button>
+              <AppInput
+                :id="spacecraft.name"
+                :maxlength="4"
+                :maxInputValue="maxSpacecraftCount"
+                v-model="form.amount"
+                :disabled="isProducing || !canProduce"
+                class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-x-2 transition-colors"
+              />
+              <button
+                class="h-10 px-3 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="increment"
+                @click.shift="incrementBy10"
+                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
+                type="button"
+              >＋</button>
+              <button
+                class="h-10 px-6 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none focus:ring-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="isProducing || form.amount == 0 || !canProduce"
+                @click="produceSpacecraft"
+                type="button"
+              >
                 <span v-if="isProducing">Producing</span>
                 <span v-else>Produce</span>
-              </PrimaryButton>
+              </button>
             </div>
           </form>
 

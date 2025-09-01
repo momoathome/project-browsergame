@@ -1,16 +1,10 @@
 <script lang="ts" setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed } from 'vue';
 import type { Asteroid } from '@/types/types';
-
-interface Resource {
-  name: string;
-  amount: number;
-  color: string;
-}
 
 const props = defineProps<{
   asteroid: Asteroid;
-  showResources: boolean | undefined;
+  showResources?: boolean;
 }>();
 
 const resourceColors: Record<string, string> = {
@@ -26,110 +20,74 @@ const resourceColors: Record<string, string> = {
   Hyperdiamond: 'navy',
   Dilithium: 'purple',
   Deuterium: 'orangered',
-  // Weitere Ressourcenfarben hier hinzufügen
 };
 
-const formattedResources = computed<Resource[]>(() => {
-  return props.asteroid.resources.map(resource => {
-    return {
-      name: resource.resource_type,
-      amount: resource.amount,
+const circleRadius = 40;
+const circumference = 2 * Math.PI * circleRadius;
+
+const filteredResources = computed(() => {
+  if (!props.asteroid || !props.asteroid.resources) return [];
+  return props.asteroid.resources
+    .filter(res => res.amount > 0)
+    .map(res => ({
+      name: res.resource_type,
+      amount: res.amount,
       color: props.showResources
-        ? resourceColors[resource.resource_type] || 'grey'
+        ? resourceColors[res.resource_type] || 'grey'
         : 'grey',
+    }));
+});
+
+const totalResources = computed(() =>
+  filteredResources.value.reduce((sum, res) => sum + res.amount, 0)
+);
+
+const ringData = computed(() => {
+  const gap = 2;
+  let offset = filteredResources.value.length <= 2 ? 0 : 8;
+  return filteredResources.value.map(res => {
+    const dash = Math.round((res.amount / totalResources.value) * circumference);
+    const data = {
+      color: res.color,
+      dashArray: `${dash},${circumference}`,
+      dashOffset: offset,
     };
+    offset -= dash + gap;
+    return data;
   });
 });
 
-const filteredResources = computed(() => formattedResources.value.filter(res => res.amount > 0));
-const totalResources = computed(() => filteredResources.value.reduce((total, res) => total + res.amount, 0));
-
-const dashArrays = ref<number[]>([]);
-const dashOffsets = ref<number[]>([]);
-
-const circleRadius = 30;
-const circumference = Math.floor(2 * Math.PI * circleRadius / 2);
-const asteroidRessourceStrokeWidth = ref(2);
-
-const calcDashArrayAndOffset = () => {
-  let currentOffset = 0;
-  const gap = 2;
-
-  dashArrays.value = filteredResources.value.map(res => {
-    const dashArray = Math.round((res.amount / totalResources.value) * circumference);
-    dashOffsets.value.push(currentOffset);
-    currentOffset -= dashArray + gap;
-    return dashArray;
-  });
-};
-
-const getAsteroidResourceStrokeWidth = () => {
+const asteroidResourceStrokeWidth = computed(() => {
   const total = totalResources.value;
-  if (total >= 10000) {
-    return 4;
-  } else if (total >= 5500) {
-    return 3;
-  } else if (total >= 2500) {
-    return 2;
-  } else if (total >= 1000) {
-    return 1.5;
-  } else {
-    return 1; // Standardwert
-  }
-};
-
-onMounted(() => {
-  calcDashArrayAndOffset();
-  asteroidRessourceStrokeWidth.value = getAsteroidResourceStrokeWidth()
+  if (total >= 10000) return 4;
+  if (total >= 5500) return 3;
+  if (total >= 2500) return 2;
+  if (total >= 1000) return 1.5;
+  return 1;
 });
 </script>
 
 <template>
-  <div class="absolute -top-[130px] -left-[120px]">
-    <svg viewBox="0 0 100 100">
-      <circle v-for="(res, index) in filteredResources"
-        :key="res.name" 
-        cx="50" 
-        cy="50" 
+  <div class="flex items-center justify-center w-full h-full">
+    <svg :width="500" :height="500" viewBox="0 0 100 100">
+      <circle
+        v-for="(ring, idx) in ringData"
+        :key="idx"
+        cx="50"
+        cy="50"
         :r="circleRadius"
-        :stroke="res.color" 
-        :stroke-dasharray="dashArrays[index] + ', 284'" 
-        :stroke-dashoffset="dashOffsets[index]">
-      </circle>
+        :stroke="ring.color"
+        :stroke-dasharray="ring.dashArray"
+        :stroke-dashoffset="ring.dashOffset"
+        :stroke-width="asteroidResourceStrokeWidth"
+        fill="transparent"
+      />
     </svg>
   </div>
 </template>
 
 <style scoped>
 svg {
-  width: 500px;
-  height: 500px;
-  transform: rotate(180deg);
-}
-
-circle {
-  stroke-width: v-bind(asteroidRessourceStrokeWidth + 'px');
-  fill: transparent;
-}
-
-@keyframes animateRessource {
-  from {
-    stroke-dasharray: 0, 284;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes animateTitanium {
-  from {
-    stroke-dasharray: 0, 284;
-  }
-
-  to {
-    stroke-dasharray: var(--dash-array), 284;
-    opacity: 1;
-  }
+  display: block;
 }
 </style>

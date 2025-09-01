@@ -142,14 +142,32 @@ function setMaxAmount() {
           </div>
         </div>
       </div>
-      <div class="flex justify-between gap-2">
-        <SecondaryButton @click="sellResource" :disabled="isSellDisabled">
+      <div class="flex items-center justify-between rounded-xl border-primary-light ring-1 ring-primary shadow-inner overflow-hidden">
+        <!-- Sell Button -->
+        <button
+          class="h-10 px-4 rounded-l-xl bg-tertiary text-white font-semibold transition border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none focus:ring-2 focus:ring-tertiary/60 focus:border-tertiary disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="isSellDisabled"
+          @click="sellResource"
+          type="button"
+        >
           Sell
-        </SecondaryButton>
-        <AppInput :maxlength="5" v-model="form.amount" class="px-1" />
-        <PrimaryButton @click="buyResource" :disabled="isBuyDisabled">
+        </button>
+        <!-- Input -->
+        <AppInput
+          :maxlength="5"
+          v-model="form.amount"
+          name="amount"
+          class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-cyan-400/80 focus:!border-x-2 transition-colors"
+        />
+        <!-- Buy Button -->
+        <button
+          class="h-10 px-4 rounded-r-xl bg-primary text-white border-primary-light hover:bg-primary-dark font-semibold transition border-l focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="isBuyDisabled"
+          @click="buyResource"
+          type="button"
+        >
           Buy
-        </PrimaryButton>
+        </button>
       </div>
     </form>
   </div>

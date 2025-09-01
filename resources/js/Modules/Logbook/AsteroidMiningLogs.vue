@@ -43,7 +43,7 @@ const getTypeIcon = (type) => {
 </script>
 <template>
   <div class="space-y-4">
-    <div v-for="log in props.logs" :key="log.id" class="bg-base rounded-xl border-yellow-400 border-4 border-solid content_card">
+    <div v-for="log in props.logs" :key="log.id" class="bg-base rounded-xl border-primary border-2 border-solid">
       <button
         class="w-full flex flex-row items-center justify-between px-4 py-3 text-left bg-base-dark hover:bg-base-dark/60 rounded-xl transition-colors duration-100 focus:outline-none"
         @click="selectedLog && selectedLog.id === log.id ? selectedLog = null : selectedLog = log"
@@ -101,14 +101,3 @@ const getTypeIcon = (type) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.content_card {
-  --shadow-color: 45deg 70% 30%;
-  --glow-color: 45deg 100% 60%;
-  box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.3),
-    3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
-    8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
-    0 0 20px -2px hsl(var(--glow-color) / 0.15);
-}
-</style>

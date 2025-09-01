@@ -84,7 +84,7 @@ onUnmounted(() => {
 <template>
   <div class="dropdown-container">
     <button @click="toggleDropdown" @keydown="onKeyDown"
-      class="bg-root flex items-center justify-between text-light text-start text-nowrap ps-3 pe-1 py-2 w-full rounded-md ring-[#bfbfbf] border border-[#6b7280]">
+      class="bg-[hsl(263,45%,7%)] ring-[#bfbfbf] border border-[#6b7280] flex items-center justify-between text-light text-start text-nowrap ps-3 pe-1 py-2 w-full rounded-lg">
       {{ selectedAsteroid ? selectedAsteroid.name : searchedAsteroids[0].name }}
       <span>
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
@@ -97,13 +97,14 @@ onUnmounted(() => {
       tabindex="0" 
       @keydown="onKeyDown"
       ref="dropdownListRef"
-      class="absolute top-full left-0 mt-1 max-h-48 w-full overflow-y-auto bg-root rounded-md py-2 no-scrollbar list-none ring-[#bfbfbf] border border-[#6b7280]">
+      class="absolute top-full left-0 mt-1 max-h-48 w-full overflow-y-auto bg-[hsl(263,45%,7%)] rounded-lg py-2 no-scrollbar list-none ring-[#bfbfbf] border border-[#6b7280]">
       <li v-for="(asteroid, index) in searchedAsteroids"
         @click="selectAsteroid(asteroid)" 
         :key="asteroid.name"
         :ref="el => itemRefs[index] = el as HTMLElement"
+        :class="{'bg-slate-900': highlightedIndex === index}"
         class="py-1 px-3 cursor-pointer text-light text-sm text-nowrap hover:bg-slate-900"
-        :class="{'bg-slate-900': highlightedIndex === index}">
+      >
         <span>
           {{ asteroid.name }}
         </span>
@@ -130,5 +131,9 @@ ul::-webkit-scrollbar-thumb {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #bfbfbf;
+}
+
+ul:focus-visible {
+    outline: 1px solid #bfbfbf;
 }
 </style>

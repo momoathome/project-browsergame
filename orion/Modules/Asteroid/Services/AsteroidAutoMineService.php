@@ -76,30 +76,41 @@ class AsteroidAutoMineService
             foreach ($asteroid->resources as $resource) {
                 $totalResources += $resource->amount;
             }
-    
+        
             $minerAssignment = [];
             $cargoAssigned = 0;
-    
-            // Miner zuweisen, bis alle Ressourcen abgebaut oder keine Miner mehr verfügbar
+        
+            // Prüfe, ob der Asteroid "extreme" ist
+            $isExtreme = isset($asteroid->size) && strtolower($asteroid->size) === 'extreme';
+        
+            // Zuerst: Mindestens ein Titan zuweisen, falls extrem und Titan verfügbar
+            if ($isExtreme && isset($minerPool['Titan']) && $minerPool['Titan']['count'] > 0) {
+                $minerAssignment['Titan'] = 1;
+                $cargoAssigned += $minerPool['Titan']['cargo'];
+                $minerPool['Titan']['count'] -= 1;
+            }
+        
+            // Dann wie gehabt alle Miner zuweisen, bis Cargo voll
             foreach ($minerPool as $name => $data) {
                 if ($data['count'] <= 0) continue;
+                // Wenn extrem, Titan wurde schon zugewiesen, also hier alle Miner-Typen zulassen
                 $cargoPerMiner = $data['cargo'];
                 $neededMiner = min($data['count'], ceil(($totalResources - $cargoAssigned) / $cargoPerMiner));
                 if ($neededMiner <= 0) continue;
-                $minerAssignment[$name] = $neededMiner;
+                $minerAssignment[$name] = ($minerAssignment[$name] ?? 0) + $neededMiner;
                 $cargoAssigned += $neededMiner * $cargoPerMiner;
                 $minerPool[$name]['count'] -= $neededMiner;
                 if ($cargoAssigned >= $totalResources) break;
             }
-    
+        
             if ($cargoAssigned <= 0) continue; // Keine Miner mehr verfügbar
-    
+        
             // Ressourcen extrahieren (hier: alle Ressourcen des Asteroiden)
             $resourcesExtracted = [];
             foreach ($asteroid->resources as $resource) {
                 $resourcesExtracted[$resource->resource_type] = $resource->amount;
             }
-    
+        
             $missions[] = [
                 'asteroid' => $asteroid,
                 'spacecrafts' => $minerAssignment,
@@ -112,7 +123,7 @@ class AsteroidAutoMineService
                     collect($minerAssignment)
                 ),
             ];
-    
+        
             // Abbruch, wenn keine Miner mehr verfügbar
             $totalMinerLeft = array_sum(array_column($minerPool, 'count'));
             if ($totalMinerLeft <= 0) break;

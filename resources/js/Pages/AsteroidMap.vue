@@ -513,7 +513,7 @@ function initializeNewMission(mission: QueueItem, missionId: number, missionType
     startTime,
     endTime,
     completed: false,
-    textOffsetY: -25,
+    textOffsetY: -30,
     missionType
   });
 }
@@ -678,7 +678,7 @@ function drawShip(ctx, ship, currentScale) {
 
   // Schiff als Kreis darstellen
   ctx.beginPath();
-  ctx.arc(displayX, displayY, 10 * currentScale, 0, 2 * Math.PI);
+  ctx.arc(displayX, displayY, 20 * currentScale, 0, 2 * Math.PI);
   ctx.fill();
 }
 

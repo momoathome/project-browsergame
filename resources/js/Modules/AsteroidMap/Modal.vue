@@ -251,6 +251,34 @@ onUnmounted(() => {
 function availableCount(s) {
   return s.count - (s.locked_count || 0)
 }
+
+// Extraktions-Schätzung für Asteroiden (Frontend-Logik analog Backend)
+/* const estimatedExtraction = computed(() => {
+  if (actionType.value !== QueueActionType.MINING || !asteroid.value || !asteroid.value.resources || !canScanAsteroid.value) return [];
+  // Cargo berechnen
+  let totalCargo = 0;
+  let hasMiner = false;
+  (props.spacecrafts ?? []).forEach(s => {
+    const qty = form.spacecrafts[s.name] || 0;
+    totalCargo += s.cargo * qty;
+    if (s.type === 'Miner' && qty > 0) hasMiner = true;
+  });
+  if (totalCargo === 0) return asteroid.value.resources.map(r => ({ resource_type: r.resource_type, amount: 0 }));
+  const extractionMultiplier = hasMiner ? 1 : 0.5;
+  // Schritt 1: initial extraction (maximal pro Ressource, aber nicht mehr als cargo*multiplier)
+  const initialExtraction = asteroid.value.resources.map(r => {
+    const maxExtract = Math.min(r.amount, Math.floor(totalCargo * extractionMultiplier));
+    return { resource_type: r.resource_type, amount: maxExtract };
+  });
+  const totalAvailable = initialExtraction.reduce((sum, r) => sum + r.amount, 0);
+  // Schritt 2: extraction ratio
+  const extractionRatio = totalAvailable > totalCargo ? totalCargo / totalAvailable : 1;
+  // Schritt 3: finale Extraktion
+  return initialExtraction.map(r => ({
+    resource_type: r.resource_type,
+    amount: Math.floor(r.amount * extractionRatio)
+  }));
+}); */
 </script>
 
 <template>
@@ -276,8 +304,8 @@ function availableCount(s) {
             </button>
 
             <!-- Body -->
-            <div class="grid grid-cols-[420px_1fr] gap-6 p-6">
-              
+            <div class="grid grid-cols-[420px_1fr] min-h-[600px] gap-6 p-6">
+
               <!-- Left Asteroid -->
               <div class="relative text-center">
                 <h1 class="text-2xl flex justify-center text-white mt-2">{{ content.title }}</h1>
@@ -290,14 +318,26 @@ function availableCount(s) {
                   <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid" :showResources="canScanAsteroid" class="absolute inset-0" />
                 </div>
 
-                <!-- Resources -->
-                <div v-if="canScanAsteroid" class="text-gray-300 flex items-center justify-center mt-6">
-                    <div class="flex gap-8">
-                    <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
-                        <img :src="`/images/resources/${resource_type}.png`" class="h-6" alt="" />
-                        {{ amount }}
+                <div v-if="actionType === QueueActionType.MINING && canScanAsteroid" class="flex items-center justify-center gap-6 text-gray-300">
+                  <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
+                      <img :src="`/images/resources/${resource_type}.png`" class="h-6" alt="" />
+                      {{ amount }}
+                  </span>
+                </div>
+
+                <!-- Info/Fehlermeldungen/Estimation -->
+                <div class="mt-8 px-4 min-h-[48px] flex flex-col text-start text-gray-300">
+                  <template v-if="actionType === QueueActionType.COMBAT">
+                    <span class="italic text-slate-400">no Informations available</span>
+                  </template>
+                  <template v-else-if="actionType === QueueActionType.MINING && canScanAsteroid">
+                    <span
+                      v-if="asteroid.size === 'extreme' && (!form.spacecrafts['Titan'] || form.spacecrafts['Titan'] === 0)"
+                      class="text-yellow-300 text-sm text-pretty"
+                    >
+                      Info: Extreme asteroids can only be mined by Massive Miners.
                     </span>
-                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -392,7 +432,7 @@ function availableCount(s) {
                         <div class="flex justify-between items-center mb-1">
                             <h3 class="text-light font-semibold">{{ s.name }}</h3>
                             <span
-                              class="text-light cursor-pointer"
+                              class="text-cyan-100 cursor-pointer"
                               @click="setMax(s.name, availableCount(s))"
                               :title="`${availableCount(s)} verfügbar von ${s.count}`"
                             >
@@ -400,8 +440,8 @@ function availableCount(s) {
                             </span>
                         </div>
                       <div class="flex justify-between">
-                          <span class="text-xs text-slate-400">Combat: {{ numberFormat(s.combat) }}</span>
-                          <span class="text-xs text-slate-400">Cargo: {{ numberFormat(s.cargo) }}</span>
+                          <span class="text-sm text-slate-400">Combat: {{ numberFormat(s.combat) }}</span>
+                          <span class="text-sm text-slate-400">Cargo: {{ numberFormat(s.cargo) }}</span>
                       </div>
                     </div>
                     <div class="px-4 pb-4 mt-2">

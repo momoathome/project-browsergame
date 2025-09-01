@@ -23,6 +23,7 @@ class AsteroidExplorer
     {
         $totalCargoCapacity = 0;
         $hasMiner = false;
+        $hasTitan = false;
 
         $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
 
@@ -30,9 +31,12 @@ class AsteroidExplorer
             $amountOfSpacecrafts = $filteredSpacecrafts[$spacecraft->details->name];
             $totalCargoCapacity += $amountOfSpacecrafts * $spacecraft->cargo;
             $hasMiner = $hasMiner || ($spacecraft->details->type === 'Miner');
+            if (strtolower($spacecraft->details->name) === 'titan' && $amountOfSpacecrafts > 0) {
+                $hasTitan = true;
+            }
         }
 
-        return [$totalCargoCapacity, $hasMiner];
+        return [$totalCargoCapacity, $hasMiner, $hasTitan];
     }
 
     public function getSpacecraftsWithDetails($user, Collection $filteredSpacecrafts): Collection

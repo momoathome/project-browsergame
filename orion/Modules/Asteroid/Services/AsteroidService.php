@@ -181,18 +181,28 @@ class AsteroidService
             return false;
         }
 
-        list($totalCargoCapacity, $hasMiner) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
+
+        list($totalCargoCapacity, $hasMiner, $hasTitan) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
             $user,
             $filteredSpacecrafts
         );
 
         $asteroidResources = $this->asteroidRepository->getAsteroidResources($asteroid);
 
-        list($resourcesExtracted, $remainingResources) = $this->asteroidExplorer->calculateResourceExtraction(
-            $asteroidResources,
-            $totalCargoCapacity,
-            $hasMiner
-        );
+        // Prüfe auf extreme Asteroiden und Massive Miner ("Titan")
+        if ($asteroid->size === 'extreme' && !$hasTitan) {
+            $resourcesExtracted = [];
+            $remainingResources = [];
+            foreach ($asteroidResources as $asteroidResource) {
+                $remainingResources[$asteroidResource->resource_type] = $asteroidResource->amount;
+            }
+        } else {
+            list($resourcesExtracted, $remainingResources) = $this->asteroidExplorer->calculateResourceExtraction(
+                $asteroidResources,
+                $totalCargoCapacity,
+                $hasMiner
+            );
+        }
 
         $transactionResult = DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $filteredSpacecrafts) {
             $this->updateUserResources($user, $resourcesExtracted);

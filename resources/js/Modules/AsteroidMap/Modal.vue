@@ -33,6 +33,10 @@ const asteroidImages = [
   '/images/asteroid_full.webp',
   '/images/asteroid3_full.webp',
   '/images/asteroid4_full.webp',
+  '/images/asteroid5_full.webp',
+  '/images/asteroid6_full.webp',
+  '/images/asteroid7_full.webp',
+
   // ...weitere Bilder
 ];
 

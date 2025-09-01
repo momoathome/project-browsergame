@@ -26,6 +26,9 @@ const asteroidImages = [
   '/images/asteroid2.webp',
   '/images/asteroid3.webp',
   '/images/asteroid4.webp',
+  '/images/asteroid5.webp',
+  '/images/asteroid6.webp',
+  '/images/asteroid7.webp',
   // ...weitere Bilder einfach ergänzen
 ];
 

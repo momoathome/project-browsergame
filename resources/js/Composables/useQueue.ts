@@ -170,6 +170,12 @@ export function useQueue(userId: number) {
             if (rawItem.endTime) {
                 updateItemTimer(processedItem)
             }
+
+            if (processedItem.completed && !processedItem.timerCompletedFired) {
+                processedItem.timerCompletedFired = true
+                timerCompleteCallbacks.forEach(cb => cb(processedItem))
+            }
+            
             newItems.push(processedItem)
         })
 

@@ -2,18 +2,17 @@
 
 namespace Orion\Modules\Building\Services;
 
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Resource\Models\Resource;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
-use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Building\Models\BuildingResourceCost;
 
 class SetupInitialBuildings
 {
     public function __construct(
-        private readonly BuildingEffectCalculator $effectCalculator,
         private readonly UserAttributeService $userAttributeService
     ) {
     }
@@ -86,7 +85,7 @@ class SetupInitialBuildings
                 
                 // Falls die Umwandlung fehlschlägt, überspringen
                 if ($attributeName === null) {
-                    \Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
+                    Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
                         'user_id' => $userId,
                         'building_id' => $building->id
                     ]);

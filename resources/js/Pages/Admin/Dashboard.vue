@@ -65,6 +65,13 @@ function regenerateAsteroids() {
             </div>
           </div>
         </div>
+<!--         <div class="w-1/3 mb-4">
+          <Link as="div" :href="route('admin.progression')" class="bg-base rounded-xl w-full cursor-pointer border-primary border-4 border-solid">
+            <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
+              Building Management
+            </h2>
+          </Link>
+        </div> -->
       </div>
 
 

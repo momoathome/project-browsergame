@@ -247,6 +247,9 @@ const close = () => {
 watch(() => props.open, (open) => {
   if (open) {
     resetForm();
+    if (props.content.data && props.content.type === 'asteroid') {
+      setMinUnits();
+    }
     document.body.style.overflow = 'hidden';
   } else {
     document.body.style.overflow = '';

@@ -19,13 +19,13 @@ return [
         ],
         [
             'resource_name' => 'Kyberkristall',
-            'cost' => 250,
+            'cost' => 300,
             'stock' => 65000,
         ],
         [
             'resource_name' => 'Cobalt',
-            'cost' => 450,
-            'stock' => 55000,
+            'cost' => 500,
+            'stock' => 60000,
         ],
         [
             'resource_name' => 'Iridium',

@@ -44,6 +44,17 @@ export function useSpacecraftUtils(
 
     const allowedTypes = getAllowedTypes();
 
+    if (asteroid.size === 'extreme') {
+      const titan = spacecrafts.value.find(s => s.name === 'Titan');
+      if (titan && allowedTypes.includes(titan.type)) {
+        const availableCount = Math.max(0, titan.count - (titan.locked_count || 0));
+        if (availableCount > 0) {
+          MinNeededUnits['Titan'] = 1;
+          remainingResources -= titan.cargo;
+        }
+      }
+    }
+
     const processSpacecrafts = (filterFn: (spacecraft: SpacecraftSimple) => boolean) => {
       spacecrafts.value
         .filter(filterFn)
@@ -52,6 +63,8 @@ export function useSpacecraftUtils(
             MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
             return;
           }
+
+          if (asteroid.size === 'extreme' && spacecraft.name === 'Titan' && MinNeededUnits['Titan']) return;
 
           const availableCount = Math.max(0, spacecraft.count - (spacecraft.locked_count || 0));
           const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);

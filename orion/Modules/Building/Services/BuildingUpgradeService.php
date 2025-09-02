@@ -6,28 +6,27 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\Building\Services\BuildingCostCalculator;
-use Orion\Modules\Building\Services\BuildingEffectCalculator;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Building\Services\BuildingProgressionService;
 use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
 
 class BuildingUpgradeService
 {
     public function __construct(
         private readonly BuildingService $buildingService,
-        private readonly BuildingCostCalculator $costCalculator,
-        private readonly BuildingEffectCalculator $effectCalculator,
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
+        private readonly BuildingProgressionService $buildingProgressionService,
         private readonly ActionQueueService $queueService,
         private readonly ResourceService $resourceService
     ) {
@@ -61,7 +60,7 @@ class BuildingUpgradeService
                 'message' => $e->getMessage()
             ];
         } catch (\Exception $e) {
-            \Log::error("Error occurred while starting building upgrade:", [
+            Log::error("Error occurred while starting building upgrade:", [
                 'user_id' => $user->id,
                 'building_id' => $building->id,
                 'error' => $e->getMessage(),
@@ -104,38 +103,27 @@ class BuildingUpgradeService
 
     public function upgradeBuilding(Building $building)
     {
-        $costs = $this->calculateUpgradeCosts($building);
+        $costs = $this->buildingProgressionService->calculateUpgradeCosts($building);
 
         return DB::transaction(function () use ($building, $costs) {
             // Gebäude aktualisieren
             $building->level += 1;
-            $building->effect_value = $this->calculateNewEffectValue($building);
-            $building->build_time = $this->calculateBuildTime($building);
+            $building->effect_value = $this->buildingProgressionService->calculateNewEffectValue($building);
+            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building);
             $building->save();
+
+            Log::info('Building upgraded', [
+                'building' => $building,
+                'new_level' => $building->level,
+                'new_effect_value' => $building->effect_value,
+                'new_build_time' => $building->build_time
+            ]);
 
             // Neue Kosten für das nächste Level speichern
             $this->updateBuildingCosts($building, $costs);
 
             return $building;
         });
-    }
-
-    public function calculateUpgradeCosts(Building $building): Collection
-    {
-        $costs = $this->costCalculator->calculateUpgradeCost($building) ?? [];
-        return collect($costs);
-    }
-
-    private function calculateNewEffectValue(Building $building): float
-    {
-        return $this->effectCalculator->calculateEffectValue($building);
-    }
-
-    private function calculateBuildTime(Building $building): float
-    {
-        // Bauzeit je nach Level erhöhen
-        $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.35);
-        return floor(60 * pow($buildTimeMultiplier, $building->level - 1));
     }
 
     private function updateBuildingCosts(Building $building, Collection $costs): void
@@ -201,7 +189,7 @@ class BuildingUpgradeService
                 'details' => $result
             ];
         } catch (\Exception $e) {
-            \Log::error("Fehler beim Gebäude-Upgrade: " . $e->getMessage(), [
+            Log::error("Fehler beim Gebäude-Upgrade: " . $e->getMessage(), [
                 'building_id' => $buildingId,
                 'user_id' => $userId,
                 'exception' => $e
@@ -218,7 +206,7 @@ class BuildingUpgradeService
     {
         $effectAttributeNames = $buildingType->getEffectAttributes();
         $effectConfig = $buildingType->getEffectConfiguration();
-        $effectType = $effectConfig['type'] ?? BuildingEffectType::ADDITIVE;
+        $effectType = BuildingEffectType::tryFrom($effectConfig['type'] ?? 'additive') ?? BuildingEffectType::ADDITIVE;
         $updatedAttributes = collect();
 
         // Wenn keine Attribute definiert sind, frühzeitig beenden
@@ -231,7 +219,7 @@ class BuildingUpgradeService
 
             // Falls die Umwandlung fehlschlägt, überspringen
             if ($attributeName === null) {
-                \Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
+                Log::warning("Ungültiger Attributtyp: {$attributeNameStr}", [
                     'user_id' => $userId,
                     'building_id' => $building->id
                 ]);
@@ -256,6 +244,15 @@ class BuildingUpgradeService
                 $replace    // ersetzen
             );
 
+            Log::debug('UserAttribute Update', [
+                'user_id' => $userId,
+                'building' => $building,
+                'attribute_name' => $attributeNameStr,
+                'effect_value' => $valueToApply,
+                'replace' => $replace,
+                'effect_type' => $effectType->value
+            ]);
+
             if ($updatedAttribute) {
                 $updatedAttributes->put($attributeNameStr, [
                     'name' => $attributeNameStr,
@@ -264,7 +261,7 @@ class BuildingUpgradeService
                     'effect_type' => $effectType->value
                 ]);
             } else {
-                \Log::warning("Attribut {$attributeNameStr} konnte nicht aktualisiert werden", [
+                Log::warning("Attribut {$attributeNameStr} konnte nicht aktualisiert werden", [
                     'user_id' => $userId,
                     'building_id' => $building->id,
                     'effect_value' => $valueToApply

@@ -15,7 +15,7 @@ class SpacecraftDetailsSeeder extends Seeder
     {
         SpacecraftDetails::create([
             'name' => 'Merlin',
-            'description' => 'Agile light fighter for quick attacks.',
+            'description' => 'Light fighter for quick scouting.',
             'image' => '/images/spacecrafts/merlin.webp',
             'type' => 'Fighter',
         ]);
@@ -36,7 +36,7 @@ class SpacecraftDetailsSeeder extends Seeder
 
         SpacecraftDetails::create([
             'name' => 'Sentinel',
-            'description' => 'Engineering masterpiece for any challenge.',
+            'description' => 'Engineered for any challenge.',
             'image' => '/images/spacecrafts/sentinel.webp',
             'type' => 'Fighter',
         ]);

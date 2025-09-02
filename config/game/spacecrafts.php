@@ -5,19 +5,19 @@ return [
         [
             'name' => 'Merlin',
             'details_id' => 1,
-            'combat' => 120,
+            'combat' => 100,
             'count' => 0,
             'locked_count' => 0,
             'cargo' => 10,
-            'speed' => 100,
+            'speed' => 150,
             'operation_speed' => 0,
             'crew_limit' => 1,
             'build_time' => 50,
             'research_cost' => 1,
             'unlocked' => true,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 300],
-                ['resource_name' => 'Titanium', 'amount' => 300],
+                ['resource_name' => 'Carbon', 'amount' => 250],
+                ['resource_name' => 'Titanium', 'amount' => 250],
                 ['resource_name' => 'Hydrogenium', 'amount' => 250],
             ],
         ],
@@ -150,10 +150,10 @@ return [
                 ['resource_name' => 'Hydrogenium', 'amount' => 1100],
                 ['resource_name' => 'Kyberkristall', 'amount' => 600],
                 ['resource_name' => 'Cobalt', 'amount' => 450],
-                ['resource_name' => 'Iridium', 'amount' => 400],
+                ['resource_name' => 'Iridium', 'amount' => 350],
                 ['resource_name' => 'Uraninite', 'amount' => 350],
                 ['resource_name' => 'Thorium', 'amount' => 300],
-                ['resource_name' => 'Astatine', 'amount' => 300]
+                ['resource_name' => 'Astatine', 'amount' => 250]
             ],
         ],
         [

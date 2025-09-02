@@ -66,8 +66,8 @@ return [
     ],
 
     'pool_weights' => [
-        'low_value' => 0.75, //75%
-        'medium_value' => 0.21, //21%
+        'low_value' => 0.73, //75%
+        'medium_value' => 0.23, //21%
         'high_value' => 0.03, //3%
         'extreme_value' => 0.01, //1%
     ],

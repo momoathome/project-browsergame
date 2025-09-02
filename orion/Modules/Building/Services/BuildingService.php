@@ -6,16 +6,14 @@ use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
-use Orion\Modules\Building\Services\BuildingCostCalculator;
-use Orion\Modules\Building\Services\BuildingEffectCalculator;
+use Orion\Modules\Building\Services\BuildingProgressionService;
 
 class BuildingService
 {
     public function __construct(
         private readonly BuildingRepository $buildingRepository,
-        private readonly BuildingCostCalculator $buildingCostCalculator,
         private readonly ActionQueueService $queueService,
-        private readonly BuildingEffectCalculator $buildingEffectCalculator
+        private readonly BuildingProgressionService $buildingProgressionService
     ) {
     }
     
@@ -96,8 +94,8 @@ class BuildingService
             }
 
             // Effektinformationen hinzufügen
-            $currentEffects = $this->buildingEffectCalculator->getEffectPreview($building);
-            $nextLevelEffects = $this->buildingEffectCalculator->getEffectPreview($building, true);
+            $currentEffects = $this->buildingProgressionService->getEffectPreview($building);
+            $nextLevelEffects = $this->buildingProgressionService->getEffectPreview($building, true);
 
             $formattedBuilding['current_effects'] = $currentEffects;
             $formattedBuilding['next_level_effects'] = $nextLevelEffects;

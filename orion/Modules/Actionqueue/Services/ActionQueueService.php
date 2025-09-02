@@ -7,8 +7,9 @@ use App\Events\GettingAttacked;
 use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
-use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
+use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Handlers\CombatHandler;
@@ -104,7 +105,7 @@ class ActionQueueService
             try {
                 $actionType = QueueActionType::from($action->action_type);
             } catch (\ValueError $e) {
-                \Log::error("Ungültiger Aktionstyp", [
+                Log::error("Ungültiger Aktionstyp", [
                     'action_id' => $action->id,
                     'action_type' => $action->action_type,
                     'error' => $e->getMessage()
@@ -125,7 +126,7 @@ class ActionQueueService
         };
 
         if (!$handlerClass) {
-            \Log::error("Kein Handler für Aktionstyp gefunden", [
+            Log::error("Kein Handler für Aktionstyp gefunden", [
                 'action_id' => $action->id,
                 'action_type' => $action->action_type,
                 'normalized_type' => $actionType instanceof QueueActionType ? $actionType->value : $actionType
@@ -149,7 +150,7 @@ class ActionQueueService
             $this->archiveCompletedQueue($action);
 
         } catch (\Exception $e) {
-            \Log::error("Fehler bei der Aktionsverarbeitung", [
+            Log::error("Fehler bei der Aktionsverarbeitung", [
                 'action_id' => $action->id,
                 'action_type' => $action->action_type,
                 'exception' => $e->getMessage(),

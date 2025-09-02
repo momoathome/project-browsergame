@@ -234,7 +234,7 @@ export function useQueue(userId: number) {
     onMounted(() => {
         processQueueData()
         timerInterval = setInterval(updateTimers, 1000)
-        fallbackInterval = setInterval(fallbackCheck, 5000)
+        fallbackInterval = setInterval(fallbackCheck, 30000)
     })
     onUnmounted(() => {
         if (timerInterval) clearInterval(timerInterval)

@@ -11,4 +11,13 @@ export class QueueService extends BaseApiService {
       }
     )
   }
+
+  async processQueue(): Promise<ApiResponse<RawQueueItem[]>> {
+    return this.fetchWithError<RawQueueItem[]>(
+      route('queue.process'),
+      { 
+        method: 'PATCH' 
+      }
+    )
+  }
 }

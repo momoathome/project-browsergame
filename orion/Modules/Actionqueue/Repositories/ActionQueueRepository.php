@@ -98,10 +98,6 @@ readonly class ActionQueueRepository
                 ->where('end_time', '<=', now())
                 ->lockForUpdate()
                 ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
-
-            if ($affected > 0) {
-                Log::info("Claimed $affected queue items for user $userId");
-            }
     
             // Jetzt alle "geclaimten" Actions holen
             return ActionQueue::where('user_id', $userId)

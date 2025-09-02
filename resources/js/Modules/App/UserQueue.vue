@@ -2,6 +2,8 @@
 import { usePage, router } from '@inertiajs/vue3'
 import { ref, onMounted } from 'vue'
 import { useQueue } from '@/Composables/useQueue'
+import { api } from '@/Services/api'
+import { useQueueStore } from '@/Composables/useQueueStore'
 import type { ProcessedQueueItem } from '@/types/types'
 
 declare global {
@@ -13,6 +15,9 @@ declare global {
 const page = usePage()
 const userId = page.props.auth.user.id
 
+const queueStore = useQueueStore()
+const { refreshQueue } = queueStore
+
 const {
     processedQueueItems,
     toggleInfo,
@@ -21,12 +26,20 @@ const {
     onTimerComplete,
 } = useQueue(userId)
 
-function handleTimerComplete(item: ProcessedQueueItem): void {
-    removeQueueItem(item.id)
-    router.patch(route('queue.process'), {
-        preserveState: true,
-        preserveScroll: true,
-    })
+let processTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleProcessQueue() {
+  if (processTimeout) return;
+  processTimeout = setTimeout(async () => {
+    await api.queue.processQueue();
+    await refreshQueue();
+    processTimeout = null;
+  }, 5000); // 5 Sekunden sammeln
+}
+
+async function handleTimerComplete(item: ProcessedQueueItem): Promise<void> {
+  removeQueueItem(item.id);
+  scheduleProcessQueue();
 }
 
 onMounted(() => {

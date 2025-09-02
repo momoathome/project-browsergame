@@ -8,6 +8,7 @@ import UserDetailBuilding from '@/Modules/Admin/UserDetailBuilding.vue';
 import UserDetailSpacecraft from '@/Modules/Admin/UserDetailSpacecraft.vue';
 import UserDetailResource from '@/Modules/Admin/UserDetailResource.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import axios from 'axios';
 
 const props = defineProps<{
     user: User;
@@ -17,11 +18,15 @@ const props = defineProps<{
     attributes: UserAttributes[];
 }>();
 
-const finishQueue = () => {
-    router.post(route('admin.queue.finish', { userId: props.user.id }), {
-        preserveScroll: true,
-    });
-};
+async function finishQueue() {
+  try {
+    await axios.post(route('admin.queue.finish', { userId: props.user.id }));
+  } catch (error) {
+    // Fehlerbehandlung
+    console.error(error);
+  }
+}
+
 </script>
 
 <template>

@@ -112,13 +112,6 @@ class BuildingUpgradeService
             $building->build_time = $this->buildingProgressionService->calculateBuildTime($building);
             $building->save();
 
-            Log::info('Building upgraded', [
-                'building' => $building,
-                'new_level' => $building->level,
-                'new_effect_value' => $building->effect_value,
-                'new_build_time' => $building->build_time
-            ]);
-
             // Neue Kosten für das nächste Level speichern
             $this->updateBuildingCosts($building, $costs);
 
@@ -243,15 +236,6 @@ class BuildingUpgradeService
                 false,      // nicht multiplizieren
                 $replace    // ersetzen
             );
-
-            Log::debug('UserAttribute Update', [
-                'user_id' => $userId,
-                'building' => $building,
-                'attribute_name' => $attributeNameStr,
-                'effect_value' => $valueToApply,
-                'replace' => $replace,
-                'effect_type' => $effectType->value
-            ]);
 
             if ($updatedAttribute) {
                 $updatedAttributes->put($attributeNameStr, [

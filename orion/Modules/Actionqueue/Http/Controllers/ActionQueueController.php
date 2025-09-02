@@ -32,7 +32,10 @@ class ActionQueueController extends Controller
     {
         if (Auth::check()) {
             $this->queueService->processQueueForUser(Auth::user()->id);
+            $queue = $this->queueService->getUserQueue(Auth::user()->id);
+            return response()->json(['queue' => $queue]);
         }
+        return response()->json(['queue' => []]);
     }
 
     /**

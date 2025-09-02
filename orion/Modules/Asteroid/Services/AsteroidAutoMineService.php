@@ -60,7 +60,7 @@ class AsteroidAutoMineService
         foreach ($availableSpacecrafts as $sc) {
             $name = $sc->details->name;
             $cargo = (int)($sc->cargo ?? 0);
-            $count = ($sc->count ?? 1) - ($sc->locked_count ?? 0);
+            $count = $sc->available_count ?? 0;
             if ($count <= 0) continue;
             $minerPool[$name] = [
                 'count' => $count,

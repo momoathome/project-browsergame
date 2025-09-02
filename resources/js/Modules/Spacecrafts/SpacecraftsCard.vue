@@ -259,7 +259,7 @@ function unlockSpacecraft() {
                 type="button"
               >＋</button>
               <button
-                class="h-10 px-6 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none focus:ring-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                class="h-10 px-6 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="isProducing || form.amount == 0 || !canProduce"
                 @click="produceSpacecraft"
                 type="button"

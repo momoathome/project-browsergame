@@ -64,8 +64,6 @@ export function useSpacecraftUtils(
             return;
           }
 
-          if (asteroid.size === 'extreme' && spacecraft.name === 'Titan' && MinNeededUnits['Titan']) return;
-
           const availableCount = Math.max(0, spacecraft.count - (spacecraft.locked_count || 0));
           const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
           const usedUnits = Math.min(neededUnits, availableCount);

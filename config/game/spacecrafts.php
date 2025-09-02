@@ -14,7 +14,7 @@ return [
             'crew_limit' => 1,
             'build_time' => 50,
             'research_cost' => 1,
-            'unlocked' => true,
+            'unlocked' => false,
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 250],
                 ['resource_name' => 'Titanium', 'amount' => 250],

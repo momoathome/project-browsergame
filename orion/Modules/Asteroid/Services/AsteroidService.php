@@ -181,7 +181,6 @@ class AsteroidService
             return false;
         }
 
-
         list($totalCargoCapacity, $hasMiner, $hasTitan) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
             $user,
             $filteredSpacecrafts
@@ -204,15 +203,19 @@ class AsteroidService
             );
         }
 
-        $transactionResult = DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $filteredSpacecrafts) {
-            $this->updateUserResources($user, $resourcesExtracted);
-            $this->asteroidRepository->updateAsteroidResources($asteroid, $remainingResources);
-            $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
-
-            return true;
-        });
-
-        if (!$transactionResult) {
+        try {
+            DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $filteredSpacecrafts) {
+                $this->updateUserResources($user, $resourcesExtracted);
+                $this->asteroidRepository->updateAsteroidResources($asteroid, $remainingResources);
+                $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
+            });
+        } catch (\Throwable $e) {
+            Log::error('AsteroidMining DB-Transaktion fehlgeschlagen', [
+                'asteroidId' => $asteroidId,
+                'userId' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+            // Cleanup: Versuche Raumschiffe zu entsperren, falls sie gelockt sind
             $this->spacecraftService->freeSpacecrafts($user, $filteredSpacecrafts);
             return false;
         }

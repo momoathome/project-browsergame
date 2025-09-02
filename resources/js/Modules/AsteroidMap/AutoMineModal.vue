@@ -10,21 +10,6 @@ import axios from 'axios';
 const props = defineProps<{ open: boolean }>();
 const emit = defineEmits(['close', 'redraw']);
 
-const resourceIdToName: Record<string, string> = {
-  '1': 'Carbon',
-  '2': 'Titanium',
-  '3': 'Hydrogenium',
-  '4': 'Kyberkristall',
-  '5': 'Cobalt',
-  '6': 'Iridium',
-  '7': 'Uraninite',
-  '8': 'Thorium',
-  '9': 'Astatine',
-  '10': 'Hyperdiamond',
-  '11': 'Dilithium',
-  '12': 'Deuterium'
-};
-
 const missions = ref<AsteroidAutoMineMission[]>([]);
 const filter = ref('overflow');
 const filterOptions = [
@@ -37,6 +22,7 @@ async function getAutoMineMissions() {
   try {
     const response = await api.asteroids.autoMine({ filter: filter.value });
     missions.value = (response.data as AsteroidAutoMineResponse).missions ?? [];
+    console.log(missions.value);
   } catch (error) {
     console.error('Fehler beim AutoMine:', error);
   }

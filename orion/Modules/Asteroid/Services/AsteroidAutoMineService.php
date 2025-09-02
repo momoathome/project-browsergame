@@ -7,23 +7,28 @@ use Illuminate\Support\Facades\Log;
 use \Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Asteroid\Services\AsteroidService;
+use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
-use Orion\Modules\User\Services\UserResourceService;
+use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
 
 class AsteroidAutoMineService
 {
     public function __construct(
         private readonly AsteroidRepository $asteroidRepository,
-        private readonly SpacecraftService $spacecraftService,
-        private readonly UserAttributeService $userAttributeService,
+        private readonly AsteroidService $asteroidService,
         private readonly AsteroidExplorer $asteroidExplorer,
-        private readonly StationService $stationService,
+        private readonly UserAttributeService $userAttributeService,
         private readonly UserResourceService $userResourceService,
+        private readonly SpacecraftService $spacecraftService,
+        private readonly StationService $stationService,
+        private readonly ActionQueueService $queueService,
     ) {}
 
-    public function prepareAutoMineMissions(User $user, string $filter = 'smart'): array
+    public function prepareAutoMineMissions(User $user, string $filter = 'overflow'): array
     {
         $station = $this->stationService->findStationByUserId($user->id);
         $storageAttr = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::STORAGE);
@@ -31,6 +36,13 @@ class AsteroidAutoMineService
 
         $scanRange = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::SCAN_RANGE)?->attribute_value ?? 5000;
         $asteroids = $this->asteroidRepository->getAsteroidsInRange($station->x, $station->y, $scanRange);
+
+        $activeMiningQueues = $this->queueService
+            ->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_MINING)
+            ->pluck('target_id')
+            ->toArray();
+
+        $asteroids = $asteroids->filter(fn($a) => !in_array($a->id, $activeMiningQueues));
 
         $userResources = $this->userResourceService->getAllUserResourcesByUserId($user->id);
         $resourceStorage = [];
@@ -96,6 +108,46 @@ class AsteroidAutoMineService
         }
 
         return [$minerAssignment, $cargoAssigned];
+    }
+
+    public function startAutoMineMissions($user, array $missions): array
+    {
+        $results = [];
+        // Nur einmal laden!
+        $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id);
+
+        foreach ($missions as $mission) {
+            $asteroidId = $mission['asteroid_id'];
+            $spacecrafts = collect($mission['spacecrafts']);
+
+            // Prüfe, ob noch genug Raumschiffe verfügbar sind
+            foreach ($spacecrafts as $type => $amount) {
+                $available = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type)?->available_count ?? 0;
+                if ($available < $amount) {
+                    $results[] = [
+                        'success' => false,
+                        'message' => "Not enough $type available for asteroid $asteroidId.",
+                    ];
+                    continue 2; // nächste Mission
+                }
+            }
+
+            // Lokale Kopie aktualisieren (Raumschiffe abziehen)
+            foreach ($spacecrafts as $type => $amount) {
+                $sc = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type);
+                if ($sc) {
+                    $sc->available_count -= $amount;
+                }
+            }
+
+            $result = $this->asteroidService->startAsteroidMining($user, new AsteroidExploreRequest([
+                'asteroid_id' => $asteroidId,
+                'spacecrafts' => $spacecrafts,
+            ]));
+            $results[] = $result;
+        }
+
+        return $results;
     }
 
     // Overflow: Ignoriere Storage-Limit, extrahiere alles

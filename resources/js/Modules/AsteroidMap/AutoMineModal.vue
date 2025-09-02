@@ -234,9 +234,9 @@ onUnmounted(() => {
 
             <!-- Aktionen -->
             <div class="mt-8 flex justify-end gap-4">
-              <button class="px-6 py-2 rounded-full transition bg-cyan-700 text-cyan-200 border border-cyan-700/30 hover:scale-105 hover:text-cyan-100 font-semibold text-base shadow"
+              <button class="px-6 py-2 rounded-full transition bg-cyan-700 text-cyan-200 border border-cyan-700/30 hover:scale-105 hover:text-cyan-100 font-semibold text-base shadow disabled:cursor-not-allowed disabled:opacity-40"
                 @click="startAutoMine"
-                :disabled="selectedMissions.size === 0"
+                :disabled="selectedMissions.size === 0 || isSubmitting"
               >
                 Start Operations
               </button>

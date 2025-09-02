@@ -31,7 +31,7 @@ class AsteroidController extends Controller
     public function update(AsteroidExploreRequest $request)
     {
         $user = $this->authManager->user();
-        $result = $this->asteroidService->StartAsteroidMining($user, request: $request);
+        $result = $this->asteroidService->startAsteroidMining($user, request: $request);
 
         return response()->json([
             'message' => $result['message'],
@@ -85,19 +85,9 @@ class AsteroidController extends Controller
     {
         $user = $this->authManager->user();
         $missions = $request->input('missions', []);
-        $results = [];
-    
-        foreach ($missions as $mission) {
-            $asteroidId = $mission['asteroid_id'];
-            $spacecrafts = collect($mission['spacecrafts']);
-            // Nutze die bestehende Logik für jede Mission
-            $result = $this->asteroidService->StartAsteroidMining($user, new AsteroidExploreRequest([
-                'asteroid_id' => $asteroidId,
-                'spacecrafts' => $spacecrafts,
-            ]));
-            $results[] = $result;
-        }
-    
+
+        $results = $this->asteroidAutoMineService->startAutoMineMissions($user, $missions);
+
         return response()->json([
             'results' => $results
         ], 200);

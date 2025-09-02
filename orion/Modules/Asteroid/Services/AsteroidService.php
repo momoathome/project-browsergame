@@ -55,26 +55,23 @@ class AsteroidService
         ];
     }
 
-    public function StartAsteroidMining($user, AsteroidExploreRequest $request): array
+    public function startAsteroidMining($user, AsteroidExploreRequest $request): array
     {
         try {
             $asteroidId = $request->integer('asteroid_id');
             $spaceCrafts = $request->collect('spacecrafts');
+            $asteroid = $this->find($asteroidId);
 
-            // Validiere Asteroid und Raumschiffe
-            $asteroid = $this->validateMiningOperation($asteroidId, $user, $spaceCrafts);
-
-            // Führe die Mining-Operation in einer Transaktion durch
             DB::transaction(function () use ($user, $asteroid, $spaceCrafts) {
+                // Validiere Asteroid und Raumschiffe
+                $asteroid = $this->validateMiningOperation($asteroid, $user, $spaceCrafts);
                 // Raumschiffe filtern und sperren
                 $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spaceCrafts);
                 $this->spacecraftService->lockSpacecrafts($user, $filteredSpacecrafts);
 
-                // Reisedauer berechnen
                 $duration = $this->calculateMiningDuration($user, $asteroid, $filteredSpacecrafts);
-
-                // Zur Queue hinzufügen
                 $this->addMiningOperationToQueue($user, $asteroid, $duration, $filteredSpacecrafts);
+
             });
 
             return [
@@ -91,10 +88,8 @@ class AsteroidService
         }
     }
 
-    private function validateMiningOperation(int $asteroidId, User $user, Collection $spaceCrafts): Asteroid
+    private function validateMiningOperation(Asteroid $asteroid, User $user, Collection $spaceCrafts): Asteroid
     {
-        $asteroid = $this->find($asteroidId);
-
         if (!$asteroid) {
             throw new \Exception("Asteroid not found");
         }

@@ -44,9 +44,10 @@ async function handleTimerComplete(item: ProcessedQueueItem): Promise<void> {
 
 onMounted(() => {
     onTimerComplete(handleTimerComplete)
+    refreshQueue();
     window.Echo.private(`user.combat.${userId}`)
         .listen('.user.attacked', () => {
-            router.reload({ only: ['queue'] });
+            refreshQueue();
         })
 })
 </script>

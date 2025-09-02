@@ -8,6 +8,8 @@ import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import type { Building } from '@/types/types';
 
+const { queueData, refreshQueue } = useQueueStore();
+
 const props = defineProps<{
   building: Building
 }>();
@@ -98,7 +100,7 @@ function upgradeBuilding() {
     {},
     {
       preserveState: true,
-      onFinish: () => { isSubmitting.value = false; },
+      onFinish: () => { isSubmitting.value = false, refreshQueue(); },
       onError: () => { isSubmitting.value = false; }
     }
   );
@@ -106,7 +108,8 @@ function upgradeBuilding() {
 
 function handleUpgradeComplete() {
   setTimeout(() => {
-    router.reload({ only: ['buildings', 'queue', 'userAttributes'] });
+    router.reload({ only: ['buildings', 'userAttributes'] });
+    refreshQueue();
   }, 500);
 }
 </script>

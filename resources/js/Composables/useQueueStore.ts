@@ -8,16 +8,8 @@ let queueData: ReturnType<typeof ref<RawQueueItem[]>> | null = null
 export function useQueueStore() {
   const page = usePage()
   if (!queueData) {
-    queueData = ref<RawQueueItem[]>(Array.isArray(page.props.queue) ? page.props.queue : [])
+    queueData = ref<RawQueueItem[]>([])
   }
-
-  // Watch auf page.props.queue, um queueData bei jedem Inertia-Redirect zu aktualisieren
-  watch(
-    () => page.props.queue,
-    (newQueue) => {
-      queueData!.value = Array.isArray(newQueue) ? newQueue : []
-    }
-  )
 
   async function refreshQueue() {
     const { data, error } = await api.queue.getQueue()

@@ -3,12 +3,14 @@ import { ref, computed } from 'vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import type { Spacecraft } from '@/types/types';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import { useQueueStore } from '@/Composables/useQueueStore';
+
+const { queueData, refreshQueue } = useQueueStore();
 
 const props = defineProps<{
   spacecraft: Spacecraft
@@ -22,7 +24,6 @@ const form = useForm({ amount: 0 });
 const userAttributes = computed(() => usePage().props.userAttributes);
 const userResources = computed(() => usePage().props.userResources);
 // Typisierung für bessere IDE-Unterstützung und Fehlervermeidung
-const queue = computed<any[]>(() => usePage().props.queue as any[]);
 const spacecrafts = computed<any[]>(() => usePage().props.spacecrafts as any[]);
 
 const getAttribute = (name: string) => {
@@ -78,7 +79,7 @@ function isResourceSufficient(resourceId: number): boolean {
 const crewStatus = computed(() => {
   const crewLimit = getAttribute('crew_limit');
   const totalUnits = getAttribute('total_units');
-  const queuedCrew = queue.value.reduce((acc: number, item: any) => {
+  const queuedCrew = queueData.value.reduce((acc: number, item: any) => {
     if (item.actionType === 'produce' && item.details?.quantity && item.status === 'in_progress') {
       const queuedSpacecraft = spacecrafts.value.find((s: any) => s.id === item.targetId);
       if (queuedSpacecraft) {
@@ -122,7 +123,7 @@ function produceSpacecraft() {
       preserveState: true,
       preserveScroll: true,
       onSuccess: () => form.reset(),
-      onFinish: () => { isSubmitting.value = false; },
+      onFinish: () => { isSubmitting.value = false, refreshQueue(); },
       onError: () => { isSubmitting.value = false; }
     }
   );
@@ -130,7 +131,8 @@ function produceSpacecraft() {
 
 function handleProduceComplete() {
   setTimeout(() => {
-    router.reload({ only: ['spacecrafts', 'queue', 'userAttributes'] });
+    router.reload({ only: ['spacecrafts', 'userAttributes'] });
+    refreshQueue();
   }, 500);
 }
 

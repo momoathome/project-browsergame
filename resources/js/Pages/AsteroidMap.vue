@@ -1030,7 +1030,7 @@ function selectAsteroid(asteroid: Asteroid) {
   selectedAsteroid.value = asteroid;
 }
 
-watch(() => usePage().props.queue, () => {
+watch(() => queueData.value, () => {
   updateShipPool();
   scheduleDraw();
 }, { deep: true });

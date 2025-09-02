@@ -54,9 +54,6 @@ class HandleInertiaRequests extends Middleware
             'userAttributes' => Auth::check()
                 ? $this->userAttributeService->getAllUserAttributesByUserId(Auth::user()->id)
                 : [],
-            'queue' => Auth::check()
-                ? $this->queueService->getUserQueue(Auth::user()->id)
-                : [],
         ]);
     }
 }

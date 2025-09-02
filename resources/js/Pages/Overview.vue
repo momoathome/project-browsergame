@@ -6,11 +6,13 @@ import type { Building, Spacecraft, RawQueueItem } from '@/types/types';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import SectionHeader from '@/Components/SectionHeader.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
+import { useQueueStore } from '@/Composables/useQueueStore';
+
+const { queueData } = useQueueStore();
 
 const props = defineProps<{
   buildings: Building[],
   spacecrafts: Spacecraft[],
-  queue: RawQueueItem[],
 }>()
 
 const page = usePage()
@@ -43,12 +45,12 @@ const FormattedTime = (item) => {
   return timeFormat(Math.floor(remainingTimeMs / 1000));
 }
 
-const queueBuildings = computed(() => props.queue.filter(item => item.actionType === 'building'));
-const queueSpacecrafts = computed(() => props.queue.filter(item => item.actionType === 'produce'));
-const queueMining = computed(() => props.queue.filter(item => item.actionType === 'mining'));
-const queueCombat = computed(() => props.queue.filter(item => item.actionType === 'combat'));
+const queueBuildings = computed(() => queueData.value.filter(item => item.actionType === 'building'));
+const queueSpacecrafts = computed(() => queueData.value.filter(item => item.actionType === 'produce'));
+const queueMining = computed(() => queueData.value.filter(item => item.actionType === 'mining'));
+const queueCombat = computed(() => queueData.value.filter(item => item.actionType === 'combat'));
 
-const totalSpacecraftsInOrbit = computed(() => props.queue.reduce((acc, item) => {
+const totalSpacecraftsInOrbit = computed(() => queueData.value.reduce((acc, item) => {
   if (item.actionType === 'combat') {
     const totalSpacecrafts = item.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0);
     acc += totalSpacecrafts;
@@ -66,7 +68,7 @@ const spacecraftsInOrbit = computed(() => {
     result[sc.id] = 0;
   });
 
-  props.queue.forEach(item => {
+  queueData.value.forEach(item => {
     if (item.actionType === 'combat' && item.details.attacker_formatted) {
       item.details.attacker_formatted.forEach((sc: any) => {
         if (result[sc.id] !== undefined) {
@@ -90,7 +92,7 @@ const spacecraftsInOrbit = computed(() => {
   return result;
 });
 
-const totalMiningOperations = computed(() => props.queue.reduce((acc, item) => {
+const totalMiningOperations = computed(() => queueData.value.reduce((acc, item) => {
   if (item.actionType === 'mining') {
     acc++;
   }

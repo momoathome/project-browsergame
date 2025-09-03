@@ -67,13 +67,15 @@ class ActionQueueService
         return $this->actionqueueRepository->getInProgressQueuesFromUserByType($userId, $actionType);
     }
 
-    public function processQueue(): void
+    public function processQueue(): int
     {
         $completedActions = $this->actionqueueRepository->processQueue() ?? [];
 
         foreach ($completedActions as $action) {
             $this->completeAction($action);
         }
+
+        return count($completedActions);
     }
 
     public function processQueueForUser($userId): void
@@ -95,7 +97,7 @@ class ActionQueueService
         }
     }
 
-    private function completeAction(ActionQueue $action): void
+    public function completeAction(ActionQueue $action): void
     {
         // Aktionstyp normalisieren - falls als String statt Enum
         $actionType = $action->action_type;

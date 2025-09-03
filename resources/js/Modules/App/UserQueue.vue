@@ -28,18 +28,19 @@ const {
 
 let processTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function scheduleProcessQueue() {
+function scheduleProcessQueue(item: ProcessedQueueItem): void {
   if (processTimeout) return;
   processTimeout = setTimeout(async () => {
-    await api.queue.processQueue();
+    //await api.queue.processQueue();
     await refreshQueue();
+    removeQueueItem(item.id);
+    
     processTimeout = null;
-  }, 5000); // 5 Sekunden sammeln
+  }, 10000); // 10 Sekunden sammeln
 }
 
 async function handleTimerComplete(item: ProcessedQueueItem): Promise<void> {
-  removeQueueItem(item.id);
-  scheduleProcessQueue();
+    scheduleProcessQueue(item);
 }
 
 onMounted(() => {

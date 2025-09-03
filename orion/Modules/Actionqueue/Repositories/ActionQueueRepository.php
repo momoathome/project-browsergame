@@ -82,9 +82,15 @@ readonly class ActionQueueRepository
     public function processQueue(): Collection
     {
         return DB::transaction(function () {
-            return ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            // Zuerst Status updaten (ohne get)
+            ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
                 ->where('end_time', '<=', now())
                 ->lockForUpdate()
+                ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
+
+            // Dann die aktualisierten Datensätze holen
+            return ActionQueue::where('status', QueueStatusType::STATUS_PROCESSING)
+                ->where('end_time', '<=', now())
                 ->get();
         });
     }

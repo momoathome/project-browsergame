@@ -191,22 +191,6 @@ export function useQueue(userId: number) {
         })
 
         processedQueueItems.value = newItems
-
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        newItems.forEach(item => {
-            if (item.completed && item.timerCompletedFired) {
-                // Backend-Call nachholen, z.B.:
-                fetch('/queue/process', {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' },
-                    body: JSON.stringify({ id: item.id })
-                }).then(() => {
-                    removeQueueItem(item.id)
-                }).catch(() => {
-                    // Optional: Fehlerbehandlung/Retry
-                })
-            }
-        })
     }
 
     const toggleInfo = (item: ProcessedQueueItem): void => {

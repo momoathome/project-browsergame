@@ -2,33 +2,29 @@
 
 namespace App\Console;
 
+use App\Jobs\ProcessActionQueueJob;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-  /**
-   * Define the application's command schedule.
-   */
-  protected function schedule(Schedule $schedule): void
-  {
-    // Queue alle Minute verarbeiten
-    $schedule->command('queue:process')->everyMinute();
+    /**
+     * Definiere den Schedule
+     */
+    protected function schedule(Schedule $schedule): void
+    {
+        // Führt jede Minute den command aus
+        Log::info('Schedule-Methode wird ausgeführt');
+        $schedule->command('actionqueue:process')->everyMinute();
+    }
 
-    // Beispiel: Einmal täglich um Mitternacht Asteroiden generieren
-/*     $schedule->call(function () {
-      $generator = new \App\Services\AsteroidGenerator();
-      $generator->generateAsteroids(100);
-    })->dailyAt('00:00'); */
-  }
-
-  /**
-   * Register the commands for the application.
-   */
-  protected function commands(): void
-  {
-    $this->load(__DIR__ . '/Commands');
-
-    require_once base_path('routes/console.php');
-  }
+    /**
+     * Lade die Commands
+     */
+    protected function commands(): void
+    {
+        $this->load(__DIR__.'/Commands');
+        require base_path('routes/console.php');
+    }
 }

@@ -16,7 +16,8 @@ class Kernel extends ConsoleKernel
     {
         // Führt jede Minute den command aus
         Log::info('Schedule-Methode wird ausgeführt');
-        $schedule->command('actionqueue:process')->everyMinute();
+        $schedule->command('actionqueue:processbatch')->everyMinute();
+
     }
 
     /**

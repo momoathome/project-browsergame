@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use App\Jobs\ProcessActionQueue;
+use App\Jobs\ProcessActionQueueBatch;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -28,10 +29,9 @@ Artisan::command('actionqueue:process', function () {
 Artisan::command('actionqueue:reset-stuck', function () {
     ActionQueue::where('status', QueueStatusType::STATUS_PROCESSING)
         ->where('updated_at', '<', now()->subMinutes(10))
+        ->orWhere('end_time', '<', now()->subMinutes(10))
         ->update(['status' => QueueStatusType::STATUS_IN_PROGRESS]);
 })->purpose('Reset stuck processing actions');
-
-use App\Jobs\ProcessActionQueueBatch;
 
 Artisan::command('actionqueue:processbatch', function () {
     $batchSize = 20;
@@ -42,7 +42,6 @@ Artisan::command('actionqueue:processbatch', function () {
 
     $ids = $entries->pluck('id')->toArray();
 
-    // Status auf PROCESSING setzen
     ActionQueue::whereIn('id', $ids)
         ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
 

@@ -26,19 +26,6 @@ export function useQueue(userId: number) {
         timerCompleteCallbacks.push(cb)
     }
 
-    let fallbackInterval: number | undefined
-    
-    const fallbackCheck = () => {
-        processedQueueItems.value.forEach(item => {
-            if (item.remainingTime <= 0 && !item.timerCompletedFired) {
-                console.log('Fallback greift für Item:', item);
-                item.completed = true
-                item.timerCompletedFired = true
-                timerCompleteCallbacks.forEach(cb => cb(item))
-            }
-        })
-    }
-
     const findState = (id: number) => queueItemStates.value.find(s => s.id === id)
     const upsertState = (state: SavedQueueItemState) => {
         const idx = queueItemStates.value.findIndex(s => s.id === state.id)
@@ -118,7 +105,7 @@ export function useQueue(userId: number) {
             completed: false,
             remainingTime: 0,
             formattedTime: '00:00',
-            timerCompletedFired: false, // <--- NEU: Flag, damit Callback nur einmal feuert
+            processing: false
         }
     }
 
@@ -132,10 +119,9 @@ export function useQueue(userId: number) {
             item.remainingTime = 0
             item.formattedTime = '00:00'
             item.completed = true
-            if (!item.timerCompletedFired) {
-                item.timerCompletedFired = true
-                timerCompleteCallbacks.forEach(cb => cb(item))
-            }
+            item.processing = true
+
+            timerCompleteCallbacks.forEach(cb => cb(item))
             return
         }
         item.remainingTime = diff
@@ -171,8 +157,7 @@ export function useQueue(userId: number) {
                 updateItemTimer(processedItem)
             }
 
-            if (processedItem.completed && !processedItem.timerCompletedFired) {
-                processedItem.timerCompletedFired = true
+            if (processedItem.completed) {
                 timerCompleteCallbacks.forEach(cb => cb(processedItem))
             }
             
@@ -218,11 +203,9 @@ export function useQueue(userId: number) {
     onMounted(() => {
         processQueueData()
         timerInterval = setInterval(updateTimers, 1000)
-        fallbackInterval = setInterval(fallbackCheck, 30000)
     })
     onUnmounted(() => {
         if (timerInterval) clearInterval(timerInterval)
-        if (fallbackInterval) clearInterval(fallbackInterval)
     })
 
     watch(queueData, processQueueData, { deep: true })

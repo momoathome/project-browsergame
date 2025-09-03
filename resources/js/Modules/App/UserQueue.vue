@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { usePage, router } from '@inertiajs/vue3'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useQueue } from '@/Composables/useQueue'
 import { api } from '@/Services/api'
 import { useQueueStore } from '@/Composables/useQueueStore'
@@ -27,22 +27,21 @@ const {
 } = useQueue(userId)
 
 let processTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function scheduleProcessQueue(item: ProcessedQueueItem): void {
+function scheduleRefreshQueue(item: ProcessedQueueItem): void {
   if (processTimeout) return;
   processTimeout = setTimeout(async () => {
-    //await api.queue.processQueue();
-    await refreshQueue();
     removeQueueItem(item.id);
-    
+    await refreshQueue();
+
     processTimeout = null;
-  }, 10000); // 10 Sekunden sammeln
+  }, 10000);
 }
 
 async function handleTimerComplete(item: ProcessedQueueItem): Promise<void> {
-    scheduleProcessQueue(item);
+    scheduleRefreshQueue(item);
 }
 
+let processInterval: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
     onTimerComplete(handleTimerComplete)
     refreshQueue();
@@ -50,6 +49,27 @@ onMounted(() => {
         .listen('.user.attacked', () => {
             refreshQueue();
         })
+
+    if (!processInterval) {
+        processInterval = setInterval(async () => {
+            // Prüfe, ob mindestens ein Item im Status processing ist
+            if (processedQueueItems.value.some(item => item.processing)) {
+                await api.queue.processQueue()
+                await refreshQueue()
+            }
+        }, 20000)
+    }
+})
+
+onUnmounted(() => {
+    if (processTimeout) {
+        clearTimeout(processTimeout)
+        processTimeout = null
+    }
+    if (processInterval) {
+        clearInterval(processInterval)
+        processInterval = null
+    }
 })
 </script>
 
@@ -79,7 +99,10 @@ onMounted(() => {
                                 <span v-else>{{ item.details }}</span>
                             </p>
                         </div>
-                        <p class="text-xs text-gray-400 ml-2 self-end">{{ item.formattedTime }}</p>
+                        <p class="text-xs text-gray-400 ml-2 self-end">
+                            <span v-if="item.processing">processing...</span>
+                            <span v-else>{{ item.formattedTime }}</span>
+                        </p>
                     </div>
                 </transition>
             </div>

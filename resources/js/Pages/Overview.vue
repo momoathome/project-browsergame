@@ -141,6 +141,10 @@ onUnmounted(() => {
     clearInterval(timerInterval)
   }
 })
+
+const displayQueueTime = (item: RawQueueItem) => {
+  return getRemainingTime(item) === 0 ? 'processing...' : FormattedTime(item)
+}
 </script>
 
 <template>
@@ -167,7 +171,7 @@ onUnmounted(() => {
               <td class="p-2">{{ getBuildingEffectDisplay(building) }}</td>
               <td class="p-2">
                 <template v-if="getBuildingQueueItem(building.id)">
-                  {{ FormattedTime(getBuildingQueueItem(building.id)) }}
+                  <span>{{ displayQueueTime(getBuildingQueueItem(building.id)) }}</span>
                 </template>
                 <template v-else>
                   -
@@ -210,8 +214,7 @@ onUnmounted(() => {
               <td class="p-2">{{ spacecraftsInOrbit[spacecraft.name] || 0 }}</td>
               <td class="p-2">
                 <template v-if="getSpacecraftsQueueItem(spacecraft.id)">
-                  {{ getSpacecraftsQueueItem(spacecraft.id)?.details.quantity }} - {{
-                    FormattedTime(getSpacecraftsQueueItem(spacecraft.id)) }}
+                  <span>{{ displayQueueTime(getSpacecraftsQueueItem(spacecraft.id)) }}</span>
                 </template>
                 <template v-else>
                   -
@@ -267,7 +270,11 @@ onUnmounted(() => {
                 <td class="p-2">
                   {{combat.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0)}}
                 </td>
-                <td class="p-2">{{ FormattedTime(combat) }}</td>
+                <td class="p-2">
+                    <span>
+                      {{ displayQueueTime(combat) }}
+                    </span>
+                </td>
               </tr>
 
               <tr v-for="mining in queueMining" :key="mining.id">
@@ -288,7 +295,9 @@ onUnmounted(() => {
                     />
                   </div>
                 </td>
-                <td class="p-2">{{ FormattedTime(mining) }}</td>
+                <td class="p-2">
+                  {{ displayQueueTime(mining) }}
+                </td>
               </tr>
             </template>
             <template v-else>

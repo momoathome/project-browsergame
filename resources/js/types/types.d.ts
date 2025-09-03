@@ -259,7 +259,7 @@ export interface ProcessedQueueItem {
   remainingTime?: number;
   formattedTime?: string;
   completed: boolean;
-  timerCompletedFired: boolean;
+  processing: boolean;
 }
 
 export interface SavedQueueItemState {

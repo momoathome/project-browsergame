@@ -14,7 +14,7 @@ const missions = ref<AsteroidAutoMineMission[]>([]);
 const filter = ref('overflow');
 const filterOptions = [
   { value: 'overflow', label: 'Overflow' },
-  { value: 'smart', label: 'Smart' },
+  /* { value: 'smart', label: 'Smart' }, */
   { value: 'minimal', label: 'Minimal' },
 ];
 
@@ -22,7 +22,6 @@ async function getAutoMineMissions() {
   try {
     const response = await api.asteroids.autoMine({ filter: filter.value });
     missions.value = (response.data as AsteroidAutoMineResponse).missions ?? [];
-    console.log(missions.value);
   } catch (error) {
     console.error('Fehler beim AutoMine:', error);
   }
@@ -44,6 +43,7 @@ function toggleMission(id: number) {
 }
 
 function close() {
+  if (isSubmitting.value) return;
   emit('close');
 }
 
@@ -83,7 +83,7 @@ async function startAutoMine() {
   isSubmitting.value = true;
   const missionsToStart = missions.value.filter(m => selectedMissions.value.has(m.asteroid.id));
   try {
-    await axios.post('/asteroidMap/auto-mine/start', {
+    await axios.post(route('asteroidMap.autoMineStart'), {
       missions: missionsToStart.map(m => ({
         asteroid_id: m.asteroid.id,
         spacecrafts: m.spacecrafts,
@@ -92,13 +92,13 @@ async function startAutoMine() {
     // Optional: Queue und Spacecrafts aktualisieren
     await refreshQueue();
     await refreshSpacecrafts();
-    close();
   } catch (error) {
     // Fehlerbehandlung
     console.error(error);
   } finally {
     isSubmitting.value = false;
     emit('redraw');
+    close();
   }
 }
 
@@ -147,7 +147,7 @@ onUnmounted(() => {
       <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                   w-[1200px] max-w-[95vw] rounded-3xl border border-cyan-400/20
                   shadow-2xl">
-        <div class="rounded-3xl bg-[#0b1623]/95">
+        <div class="rounded-3xl bg-[#0b1623]/95" :class="isSubmitting ? 'opacity-80 pointer-events-none' : ''">
           <button type="button" class="absolute top-3 right-3 px-1 py-1 rounded-xl text-white font-medium border-transparent hover:bg-cyan-900/30 outline-none transition" @click="close">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path fill="currentColor" d="m8.382 17.025l-1.407-1.4L10.593 12L6.975 8.4L8.382 7L12 10.615L15.593 7L17 8.4L13.382 12L17 15.625l-1.407 1.4L12 13.41z"/></svg>
           </button>

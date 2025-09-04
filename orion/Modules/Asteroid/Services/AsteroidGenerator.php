@@ -24,7 +24,6 @@ class AsteroidGenerator
   private array $asteroidConfig = [];
   private array $config = [];
   private array $stations = [];
-  private array $existingAsteroids = [];
   private array $cachedAsteroidPositions = [];
   private array $spatialIndex = [];
   private int $gridSize = 1000;
@@ -41,7 +40,6 @@ class AsteroidGenerator
   private function loadExistingAsteroids()
   {
     $asteroids = $this->asteroidRepository->getAllAsteroids();
-    $this->existingAsteroids = $asteroids->toArray();
 
     foreach ($asteroids as $asteroid) {
       $this->cachedAsteroidPositions[] = [
@@ -297,7 +295,7 @@ class AsteroidGenerator
 
   private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = []): array
   {
-      $maxAttempts = 2000;
+      $maxAttempts = 2500;
       $attempts = 0;
       do {
           // Zufälliger Punkt im Kreis

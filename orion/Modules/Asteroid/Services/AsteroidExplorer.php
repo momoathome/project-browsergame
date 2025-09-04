@@ -82,16 +82,17 @@ class AsteroidExplorer
     /**
      * Findet die niedrigste Geschwindigkeit in einer Sammlung von Raumschiffen
      */
-    private function findLowestSpeedOfSpacecrafts(Collection $spacecrafts): int
+    private function findLowestSpeedOfSpacecrafts($spacecrafts): int
     {
         $lowestSpeed = 0;
-
+    
         foreach ($spacecrafts as $spacecraft) {
-            if ($spacecraft->speed > 0 && ($lowestSpeed === 0 || $spacecraft->speed < $lowestSpeed)) {
-                $lowestSpeed = $spacecraft->speed;
+            $speed = is_array($spacecraft) ? ($spacecraft['speed'] ?? 0) : ($spacecraft->speed ?? 0);
+            if ($speed > 0 && ($lowestSpeed === 0 || $speed < $lowestSpeed)) {
+                $lowestSpeed = $speed;
             }
         }
-
+    
         return $lowestSpeed;
     }
 

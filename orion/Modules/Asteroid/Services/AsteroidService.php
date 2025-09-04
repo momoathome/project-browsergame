@@ -215,11 +215,9 @@ class AsteroidService
             return false;
         }
 
-        broadcast(new ReloadFrontendCanvas($asteroid));
-
         try {
             $asteroidGenerator = app(AsteroidGenerator::class);
-            $radius = 25000;
+            $radius = 20000;
             $asteroidGenerator->generateAsteroids(
                 rand(0, 2),
                 $asteroid->x,
@@ -229,6 +227,8 @@ class AsteroidService
         } catch (\Exception $e) {
             Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
         }
+
+        broadcast(new ReloadFrontendCanvas($asteroid));
 
         $this->asteroidRepository->saveAsteroidMiningResult(
             $user,

@@ -11,17 +11,15 @@ class CombatPlanRequest
         public readonly User $attacker,
         public readonly User $defender,
         public readonly array $spacecrafts,
-        public readonly Collection $defenderSpacecrafts
     ) {
     }
 
-    public static function fromRequest(User $attacker, User $defender, array $spacecrafts, Collection $defenderSpacecrafts): self
+    public static function fromRequest(User $attacker, User $defender, array $spacecrafts): self
     {
         return new self(
             $attacker,
             $defender,
             $spacecrafts,
-            $defenderSpacecrafts
         );
     }
 }

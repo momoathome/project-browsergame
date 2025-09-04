@@ -79,6 +79,16 @@ readonly class ActionQueueRepository
             ->keyBy('target_id');
     }
 
+    public function getInProgressQueuesByUser(int $userId): Collection
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PROCESSING
+            ])
+            ->get();
+    }
+
     public function processQueue(): Collection
     {
         return DB::transaction(function () {

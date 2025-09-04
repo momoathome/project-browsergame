@@ -4,6 +4,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQueue } from '@/Composables/useQueue'
 import { api } from '@/Services/api'
 import { useQueueStore } from '@/Composables/useQueueStore'
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore'
 import type { ProcessedQueueItem } from '@/types/types'
 
 declare global {
@@ -15,8 +16,9 @@ declare global {
 const page = usePage()
 const userId = page.props.auth.user.id
 
-const queueStore = useQueueStore()
-const { refreshQueue } = queueStore
+
+const { refreshQueue } = useQueueStore()
+const { refreshSpacecrafts } = useSpacecraftStore()
 
 const {
     processedQueueItems,
@@ -32,6 +34,7 @@ function scheduleRefreshQueue(item: ProcessedQueueItem): void {
   processTimeout = setTimeout(async () => {
     removeQueueItem(item.id);
     await refreshQueue();
+    await refreshSpacecrafts();
 
     processTimeout = null;
   }, 10000);
@@ -45,6 +48,7 @@ let processInterval: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
     onTimerComplete(handleTimerComplete)
     refreshQueue();
+    refreshSpacecrafts();
     window.Echo.private(`user.combat.${userId}`)
         .listen('.user.attacked', () => {
             refreshQueue();

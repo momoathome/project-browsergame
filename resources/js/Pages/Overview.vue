@@ -7,12 +7,13 @@ import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import SectionHeader from '@/Components/SectionHeader.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 
 const { queueData } = useQueueStore();
+const { spacecrafts } = useSpacecraftStore();
 
 const props = defineProps<{
   buildings: Building[],
-  spacecrafts: Spacecraft[],
 }>()
 
 const page = usePage()
@@ -28,15 +29,11 @@ const getTypeIcon = (type) => {
   }
 };
 
-const unlockedSpacecrafts = computed(() => props.spacecrafts.filter(spacecraft => spacecraft.unlocked));
-
 const currentTime = ref(new Date().getTime());
-
 const getRemainingTime = (item: RawQueueItem): number => {
   if (!item.endTime) return 0
 
   const endTime = new Date(item.endTime).getTime()
-
   return Math.max(0, endTime - currentTime.value)
 }
 
@@ -45,59 +42,26 @@ const FormattedTime = (item) => {
   return timeFormat(Math.floor(remainingTimeMs / 1000));
 }
 
+const unlockedSpacecrafts = computed(() => spacecrafts.value.filter(spacecraft => spacecraft.unlocked));
 const queueBuildings = computed(() => queueData.value.filter(item => item.actionType === 'building'));
 const queueSpacecrafts = computed(() => queueData.value.filter(item => item.actionType === 'produce'));
 const queueMining = computed(() => queueData.value.filter(item => item.actionType === 'mining'));
 const queueCombat = computed(() => queueData.value.filter(item => item.actionType === 'combat'));
-
-const totalSpacecraftsInOrbit = computed(() => queueData.value.reduce((acc, item) => {
-  if (item.actionType === 'combat') {
-    const totalSpacecrafts = item.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0);
-    acc += totalSpacecrafts;
-  }
-  if (item.actionType === 'mining') {
-    const totalSpacecrafts = Object.values(item.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0);
-    acc += totalSpacecrafts;
-  }
-  return acc;
-}, 0));
-
-const spacecraftsInOrbit = computed(() => {
-  const result: Record<string, number> = {};
-  props.spacecrafts.forEach(sc => {
-    result[sc.id] = 0;
-  });
-
-  queueData.value.forEach(item => {
-    if (item.actionType === 'combat' && item.details.attacker_formatted) {
-      item.details.attacker_formatted.forEach((sc: any) => {
-        if (result[sc.id] !== undefined) {
-          result[sc.id] += sc.count;
-        } else {
-          result[sc.id] = sc.count;
-        }
-      });
-    }
-    if (item.actionType === 'mining' && item.details.spacecrafts) {
-      Object.entries(item.details.spacecrafts as Record<string, number>).forEach(([name, count]) => {
-        if (result[name] !== undefined) {
-          result[name] += count;
-        } else {
-          result[name] = count;
-        }
-      });
-    }
-  });
-
-  return result;
-});
-
 const totalMiningOperations = computed(() => queueData.value.reduce((acc, item) => {
   if (item.actionType === 'mining') {
     acc++;
   }
   return acc;
 }, 0));
+
+// Statt nur Queue-Daten:
+const spacecraftsInOrbit = computed(() => {
+  const result: Record<string, number> = {};
+  spacecrafts.value.forEach(sc => {
+    result[sc.id] = sc.locked_count || 0;
+  });
+  return result;
+});
 
 const getBuildingQueueItem = computed(() => (buildingId: number) => {
   return queueBuildings.value.find(item => item.targetId === buildingId);
@@ -115,10 +79,11 @@ const getBuildingEffectDisplay = (building) => {
 };
 
 const fleetSummary = computed(() => ({
-  totalCount: props.spacecrafts.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
+  totalCount: spacecrafts.value.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
+  totalCombat: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
+  totalCargo: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
   totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
-  totalCombat: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
-  totalCargo: props.spacecrafts.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
+  totalInOrbit: spacecrafts.value.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0)
 }));
 
 const crewLimit = computed(() => {
@@ -211,9 +176,10 @@ const displayQueueTime = (item: RawQueueItem) => {
               <td class="p-2">{{ spacecraft.crew_limit }}</td>
               <td class="p-2">{{ numberFormat(spacecraft.combat) }}</td>
               <td class="p-2">{{ spacecraft.count }}</td>
-              <td class="p-2">{{ spacecraftsInOrbit[spacecraft.name] || 0 }}</td>
+              <td class="p-2">{{ spacecraftsInOrbit[spacecraft.id] || 0 }}</td>
               <td class="p-2">
                 <template v-if="getSpacecraftsQueueItem(spacecraft.id)">
+                  <span>{{ getSpacecraftsQueueItem(spacecraft.id)?.details.quantity }} - </span>
                   <span>{{ displayQueueTime(getSpacecraftsQueueItem(spacecraft.id)) }}</span>
                 </template>
                 <template v-else>
@@ -235,7 +201,7 @@ const displayQueueTime = (item: RawQueueItem) => {
                 {{ fleetSummary.totalCount }}
               </td>
               <td class="p-2">
-                {{ totalSpacecraftsInOrbit }}
+                {{ fleetSummary.totalInOrbit }}
               </td>
               <td></td>
             </tr>

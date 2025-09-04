@@ -43,6 +43,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         'Hangar' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -53,6 +54,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         'Laboratory' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -63,6 +65,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         'Warehouse' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -73,6 +76,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         'Scanner' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -83,6 +87,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         'Shield' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
@@ -93,6 +98,7 @@ return [
             'level_16' => ['Astatine'],
             'level_20' => ['Hyperdiamond'],
             'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
         ],
         // Weitere Gebäude mit spezifischen Ressourcenanforderungen...
     ],

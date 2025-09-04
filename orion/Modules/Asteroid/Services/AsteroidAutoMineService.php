@@ -3,6 +3,7 @@
 namespace Orion\Modules\Asteroid\Services;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use \Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Station\Services\StationService;
@@ -37,12 +38,14 @@ class AsteroidAutoMineService
         $scanRange = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::SCAN_RANGE)?->attribute_value ?? 5000;
         $asteroids = $this->asteroidRepository->getAsteroidsInRange($station->x, $station->y, $scanRange);
 
+        // Filtere Asteroiden, die bereits abgebaut werden
         $activeMiningQueues = $this->queueService
             ->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_MINING)
             ->pluck('target_id')
             ->toArray();
 
         $asteroids = $asteroids->filter(fn($a) => !in_array($a->id, $activeMiningQueues));
+        $asteroids = $asteroids->sortBy(fn($a) => sqrt(pow($station->x - $a->x, 2) + pow($station->y - $a->y, 2)));
 
         $userResources = $this->userResourceService->getAllUserResourcesByUserId($user->id);
         $resourceStorage = [];
@@ -51,28 +54,85 @@ class AsteroidAutoMineService
         }
 
         $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id)
-            ->filter(fn($sc) => $sc->details->type === 'Miner' || strtolower($sc->details->name) === 'titan');
+            ->filter(fn($sc) => $sc->details->type === 'Miner' || $sc->details->name === 'Titan');
+        
+        // get spacecrafts that are already in mining queues
+        $spacecraftsInQueues = $this->queueService
+            ->getInProgressQueuesByUser($user->id)
+            ->pluck('details')
+            ->toArray();
 
-        $asteroids = $asteroids->sortBy(fn($a) => sqrt(pow($station->x - $a->x, 2) + pow($station->y - $a->y, 2)));
+        $spacecraftsInQueuesCounts = [];
+        foreach ($spacecraftsInQueues as $details) {
+            if (isset($details['spacecrafts']) && is_array($details['spacecrafts'])) {
+                foreach ($details['spacecrafts'] as $type => $count) {
+                    $spacecraftsInQueuesCounts[$type] = ($spacecraftsInQueuesCounts[$type] ?? 0) + $count;
+                }
+            }
+            if (isset($details['attacker_formatted']) && is_array($details['attacker_formatted'])) {
+                foreach ($details['attacker_formatted'] as $sc) {
+                    if (isset($sc['name'], $sc['count'])) {
+                        $type = $sc['name'];
+                        $count = $sc['count'];
+                        $spacecraftsInQueuesCounts[$type] = ($spacecraftsInQueuesCounts[$type] ?? 0) + $count;
+                    }
+                }
+            }
+        }
+
+        $trueAvailableSpacecrafts = $this->getTrueAvailableSpacecrafts(
+            $availableSpacecrafts->map(function($sc) {
+                return [
+                    'name' => $sc->details->name,
+                    'cargo' => (int)($sc->cargo ?? 0),
+                    'count' => $sc->count,
+                    'locked_count' => $sc->locked_count ?? 0,
+                    'details' => $sc->details,
+                ];
+            })->toArray(),
+            $spacecraftsInQueuesCounts
+        );
+
+        Log::info('True available spacecrafts: ' . json_encode($trueAvailableSpacecrafts) . json_encode($availableSpacecrafts));
 
         switch ($filter) {
             case 'overflow':
-                return $this->extractOverflow($asteroids, $availableSpacecrafts, $user);
+                return $this->extractOverflow($asteroids, $trueAvailableSpacecrafts, $user);
             case 'smart':
-                return $this->extractSmart($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit);
+                return $this->extractSmart($user, $asteroids, $trueAvailableSpacecrafts, $resourceStorage, $storageLimit);
             case 'minimal':
             default:
-                return $this->extractMinimal($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit);
+                return $this->extractMinimal($user, $asteroids, $trueAvailableSpacecrafts, $resourceStorage, $storageLimit);
         }
+    }
+
+    private function getTrueAvailableSpacecrafts(array $availableSpacecraftsArr, array $spacecraftCounts): array
+    {
+        $result = [];
+        foreach ($availableSpacecraftsArr as $sc) {
+            $name = $sc['name'];
+            $lockedInQueue = $spacecraftCounts[$name] ?? 0;
+            $lockedInDb = $sc['locked_count'] ?? 0;
+            $reallyLocked = min($lockedInQueue, $lockedInDb);
+            $available = max(0, $sc['count'] - $reallyLocked);
+
+            $result[$name] = [
+                'count' => $available,
+                'cargo' => $sc['cargo'],
+                'locked_count' => $reallyLocked,
+                'total_count' => $sc['count'],
+                'details' => $sc['details'],
+            ];
+        }
+        return $result;
     }
 
     private function buildMinerPool($availableSpacecrafts): array
     {
         $minerPool = [];
-        foreach ($availableSpacecrafts as $sc) {
-            $name = $sc->details->name;
-            $cargo = (int)($sc->cargo ?? 0);
-            $count = $sc->available_count ?? 0;
+        foreach ($availableSpacecrafts as $name => $sc) {
+            $cargo = (int)($sc['cargo'] ?? 0);
+            $count = $sc['count'] ?? 0;
             if ($count <= 0) continue;
             $minerPool[$name] = [
                 'count' => $count,
@@ -116,36 +176,39 @@ class AsteroidAutoMineService
         // Nur einmal laden!
         $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id);
 
-        foreach ($missions as $mission) {
-            $asteroidId = $mission['asteroid_id'];
-            $spacecrafts = collect($mission['spacecrafts']);
+        foreach (array_chunk($missions, 20) as $missionBatch) {
+            foreach ($missionBatch as $mission) {
+                $asteroidId = $mission['asteroid_id'];
+                $spacecrafts = collect($mission['spacecrafts']);
 
-            // Prüfe, ob noch genug Raumschiffe verfügbar sind
-            foreach ($spacecrafts as $type => $amount) {
-                $available = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type)?->available_count ?? 0;
-                if ($available < $amount) {
-                    $results[] = [
-                        'success' => false,
-                        'message' => "Not enough $type available for asteroid $asteroidId.",
-                    ];
-                    continue 2; // nächste Mission
+                // Prüfe, ob noch genug Raumschiffe verfügbar sind
+                foreach ($spacecrafts as $type => $amount) {
+                    $available = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type)?->available_count ?? 0;
+                    if ($available < $amount) {
+                        $results[] = [
+                            'success' => false,
+                            'message' => "Not enough $type available for asteroid $asteroidId.",
+                        ];
+                        continue 2; // nächste Mission
+                    }
                 }
-            }
 
-            // Lokale Kopie aktualisieren (Raumschiffe abziehen)
-            foreach ($spacecrafts as $type => $amount) {
-                $sc = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type);
-                if ($sc) {
-                    $sc->available_count -= $amount;
+                // Lokale Kopie aktualisieren (Raumschiffe abziehen)
+                foreach ($spacecrafts as $type => $amount) {
+                    $sc = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type);
+                    if ($sc) {
+                        $sc->available_count -= $amount;
+                    }
                 }
-            }
 
-            $result = $this->asteroidService->startAsteroidMining($user, new AsteroidExploreRequest([
-                'asteroid_id' => $asteroidId,
-                'spacecrafts' => $spacecrafts,
-            ]));
-            $results[] = $result;
+                $result = $this->asteroidService->startAsteroidMining($user, new AsteroidExploreRequest([
+                    'asteroid_id' => $asteroidId,
+                    'spacecrafts' => $spacecrafts,
+                ]));
+                $results[] = $result;
+            }
         }
+        usleep(1000000);
 
         return $results;
     }

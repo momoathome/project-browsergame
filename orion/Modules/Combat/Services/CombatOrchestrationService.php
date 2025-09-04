@@ -32,17 +32,15 @@ readonly class CombatOrchestrationService
     /**
      * Plant und sendet einen Kampf in die Warteschlange
      */
-    public function planAndQueueCombat($attacker, int $defenderId, array $spacecrafts, Station $defenderStation): void
+    public function planAndQueueCombat($attacker, int $defenderId, array $attackerSpacecrafts, Station $defenderStation): void
     {
         $defender = $this->userService->find($defenderId);
-        $defenderSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($defenderId);
         
         // Erstelle einen Kampfplan mit allen notwendigen Informationen
         $combatPlanRequest = CombatPlanRequest::fromRequest(
             $attacker,
             $defender,
-            $spacecrafts,
-            $defenderSpacecrafts
+            $attackerSpacecrafts,
         );
         
         // Formatiere und bereite den Kampf vor

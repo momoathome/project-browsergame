@@ -12,7 +12,6 @@ const props = defineProps<{
   universeResources?: Resource[];
   market: Market[];
   users: User[];
-  gameQueue: any[];
 }>()
 
 const asteroidCount = useForm({
@@ -78,7 +77,7 @@ function regenerateAsteroids() {
       <div class="grid grid-cols-3 gap-4">
         <DashboardUserOverview :users="users" />
         <DashboardMarket :market="market" />
-        <DashboardQueue :action-queue="gameQueue" />
+        <!-- <DashboardQueue :action-queue="gameQueue" /> -->
       </div>
     </div>
 

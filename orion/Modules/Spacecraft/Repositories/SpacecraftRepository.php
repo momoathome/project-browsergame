@@ -57,55 +57,40 @@ readonly class SpacecraftRepository
 
     public function lockSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
-        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, false);
+        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, true);
     }
     
     public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
     {
-        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, true);
+        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, false);
     }
     
-    private function updateSpacecraftLockedCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
+    public function updateSpacecraftLockedCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
     {
         return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
-            $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId, $filteredSpacecrafts);
-
-            foreach ($spacecrafts as $spacecraft) {
-                // Pessimistisches Locking
-                $spacecraft = Spacecraft::where('id', $spacecraft->id)->lockForUpdate()->first();
-
-                $spacecraft->locked_count = $spacecraft->locked_count ?? 0;
-                $changeAmount = $filteredSpacecrafts->has($spacecraft->details->name) ?
-                    $filteredSpacecrafts->get($spacecraft->details->name) : 0;
-
-                if ($changeAmount <= 0) continue;
-
-                if ($increment) {
-                    // Nur freigeben, wenn wirklich etwas gelockt ist
-                    if ($spacecraft->locked_count > 0) {
-                        $oldLocked = $spacecraft->locked_count;
-                        $spacecraft->locked_count = max(0, $spacecraft->locked_count - $changeAmount);
-                        // Optional: Logging für Debug
-                        if ($oldLocked == $spacecraft->locked_count) {
-                            Log::info("Spacecraft unlock called, but nothing was locked", [
-                                'spacecraft_id' => $spacecraft->id,
-                                'user_id' => $userId,
-                                'changeAmount' => $changeAmount
-                            ]);
-                        }
-                    }
-                } else {
-                    $changeAmount = min($changeAmount, $spacecraft->count - $spacecraft->locked_count);
-                    $spacecraft->locked_count += $changeAmount;
+            foreach ($filteredSpacecrafts as $type => $amount) {
+                $spacecraft = Spacecraft::where('user_id', $userId)
+                    ->whereHas('details', fn($q) => $q->where('name', $type))
+                    ->lockForUpdate()
+                    ->first();
+    
+                if (!$spacecraft) {
+                    throw new \Exception("Spacecraft $type not found");
                 }
-
-                // Immer im gültigen Bereich halten
-                $spacecraft->locked_count = max(0, min($spacecraft->locked_count, $spacecraft->count));
+    
+                if ($increment) {
+                    // Lock
+                    if (($spacecraft->count - $spacecraft->locked_count) < $amount) {
+                        throw new \Exception("Not enough $type available");
+                    }
+                    $spacecraft->locked_count += $amount;
+                } else {
+                    // Unlock
+                    $spacecraft->locked_count = max(0, $spacecraft->locked_count - $amount);
+                }
                 $spacecraft->save();
             }
-
             return true;
         });
     }
-    
 }

@@ -55,7 +55,7 @@ class AdminController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
             'market' => $market,
-            'gameQueue' => $this->actionQueueService->getActionQueue(),
+            /* 'gameQueue' => $this->actionQueueService->getActionQueue(), */
         ]);
     }
 

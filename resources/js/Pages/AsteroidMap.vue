@@ -556,26 +556,32 @@ function updateMissionPosition(missionId, currentTime) {
   const elapsedDuration = currentTime - shipObject.startTime;
   const progressPercent = Math.min(Math.max(elapsedDuration / totalDuration, 0), 1);
 
-  // Wenn die Mission abgeschlossen ist (100% Fortschritt)
-  if (progressPercent >= 1) {
+  // Flugphasen berechnen
+  if (progressPercent < 0.5) {
+    // Hinflug: Start -> Ziel
+    const flightProgress = progressPercent / 0.5;
+    shipObject.exactX = shipObject.startX + (shipObject.targetX - shipObject.startX) * flightProgress;
+    shipObject.exactY = shipObject.startY + (shipObject.targetY - shipObject.startY) * flightProgress;
+  } else if (progressPercent < 1) {
+    // Rückflug: Ziel -> Start
+    const returnProgress = (progressPercent - 0.5) / 0.5;
+    shipObject.exactX = shipObject.targetX + (shipObject.startX - shipObject.targetX) * returnProgress;
+    shipObject.exactY = shipObject.targetY + (shipObject.startY - shipObject.targetY) * returnProgress;
+  } else {
+    // Mission abgeschlossen, Schiff am Start
+    shipObject.exactX = shipObject.startX;
+    shipObject.exactY = shipObject.startY;
+    shipObject.shipX = shipObject.startX;
+    shipObject.shipY = shipObject.startY;
+    shipObject.completed = true;
+    // Nach kurzer Zeit entfernen
     if (currentTime >= shipObject.endTime + 1000) {
       shipPool.value.delete(missionId);
       return;
-    } else {
-      // Sicherstelle, dass Schiffe exakt am Ziel sind
-      shipObject.exactX = shipObject.targetX;
-      shipObject.exactY = shipObject.targetY;
-      shipObject.shipX = shipObject.targetX;
-      shipObject.shipY = shipObject.targetY;
-      shipObject.completed = true;
     }
-  } else {
-    // Aktualisiere Position während des Fluges
-    shipObject.exactX = shipObject.startX + (shipObject.targetX - shipObject.startX) * progressPercent;
-    shipObject.exactY = shipObject.startY + (shipObject.targetY - shipObject.startY) * progressPercent;
-    shipObject.shipX = shipObject.exactX;
-    shipObject.shipY = shipObject.exactY;
   }
+  shipObject.shipX = shipObject.exactX;
+  shipObject.shipY = shipObject.exactY;
 }
 
 function drawFlightPaths() {

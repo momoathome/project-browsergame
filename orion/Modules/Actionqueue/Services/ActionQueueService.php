@@ -3,6 +3,7 @@
 namespace Orion\Modules\Actionqueue\Services;
 
 use App\Services\UserService;
+use InvalidArgumentException;
 use App\Events\GettingAttacked;
 use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
@@ -97,71 +98,48 @@ class ActionQueueService
         }
     }
 
+    public function claimQueueForUser($userId): Collection
+    {
+        return $this->actionqueueRepository->claimQueueForUser($userId);
+    }
+
+
     public function completeAction(ActionQueue $action): void
     {
-        // Aktionstyp normalisieren - falls als String statt Enum
-        $actionType = $action->action_type;
-
-        if (is_string($actionType)) {
-            // Versuche, den String in den entsprechenden Enum-Wert zu konvertieren
-            try {
-                $actionType = QueueActionType::from($action->action_type);
-            } catch (\ValueError $e) {
-                Log::error("Ungültiger Aktionstyp", [
-                    'action_id' => $action->id,
-                    'action_type' => $action->action_type,
-                    'error' => $e->getMessage()
-                ]);
-                $action->status = QueueStatusType::STATUS_FAILED;
-                $action->save();
-                return;
-            }
-        }
-
-        // Handlerklassen für verschiedene Aktionstypen
-        $handlerClass = match ($actionType) {
-            QueueActionType::ACTION_TYPE_BUILDING => BuildingUpgradeHandler::class,
-            QueueActionType::ACTION_TYPE_PRODUCE => SpacecraftProductionHandler::class,
-            QueueActionType::ACTION_TYPE_MINING => AsteroidMiningHandler::class,
-            QueueActionType::ACTION_TYPE_COMBAT => CombatHandler::class,
-            default => null
-        };
-
-        if (!$handlerClass) {
-            Log::error("Kein Handler für Aktionstyp gefunden", [
-                'action_id' => $action->id,
-                'action_type' => $action->action_type,
-                'normalized_type' => $actionType instanceof QueueActionType ? $actionType->value : $actionType
-            ]);
-            $action->status = QueueStatusType::STATUS_FAILED;
-            $action->save();
-            return;
-        }
-
-        $handler = App::make($handlerClass);
+        $handler = $this->resolveHandler($action);
 
         try {
             $success = $handler->handle($action);
 
-            if ($success) {
-                $action->status = QueueStatusType::STATUS_COMPLETED;
-            } else {
-                $action->status = QueueStatusType::STATUS_FAILED;
-            }
+            $action->status = $success
+                ? QueueStatusType::STATUS_COMPLETED
+                : QueueStatusType::STATUS_FAILED;
 
             $this->archiveCompletedQueue($action);
 
-        } catch (\Exception $e) {
-            Log::error("Fehler bei der Aktionsverarbeitung", [
+            if ($success && $action->action_type === QueueActionType::ACTION_TYPE_MINING) {
+                \App\Jobs\AsteroidDepletedJob::dispatch($action->target_id, $action->user_id);
+            }
+
+        } catch (\Throwable $e) {
+            Log::error("Fehler bei Aktionsverarbeitung", [
                 'action_id' => $action->id,
-                'action_type' => $action->action_type,
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error' => $e->getMessage()
             ]);
             $action->status = QueueStatusType::STATUS_FAILED;
         }
 
         $action->save();
+    }
+
+    public function resolveHandler(ActionQueue $action): object
+    {
+        return match ($action->action_type) {
+            QueueActionType::ACTION_TYPE_MINING => app(AsteroidMiningHandler::class),
+            QueueActionType::ACTION_TYPE_COMBAT => app(CombatHandler::class),
+            QueueActionType::ACTION_TYPE_BUILDING => app(BuildingUpgradeHandler::class),
+            default => throw new InvalidArgumentException("No handler for action type {$action->action_type}"),
+        };
     }
 
     private function archiveCompletedQueue(ActionQueue $action)

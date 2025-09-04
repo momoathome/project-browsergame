@@ -30,13 +30,22 @@ class ActionQueueController extends Controller
      */
     public function process()
     {
-        if (Auth::check()) {
-            $this->queueService->processQueueForUser(Auth::user()->id);
-            $queue = $this->queueService->getUserQueue(Auth::user()->id);
-            return response()->json(['queue' => $queue]);
+        if (!Auth::check()) {
+            return response()->json(['queue' => []]);
         }
-        return response()->json(['queue' => []]);
+
+        $userId = Auth::id();
+        $actions = $this->queueService->claimQueueForUser($userId);
+
+        foreach ($actions as $action) {
+            \App\Jobs\CompleteActionJob::dispatch($action->id);
+        }
+
+        // Antwort sofort zurück
+        $queue = $this->queueService->getUserQueue($userId);
+        return response()->json(['queue' => $queue]);
     }
+
 
     /**
      * Show the form for creating a new resource.

@@ -119,4 +119,19 @@ readonly class ActionQueueRepository
             ->lockForUpdate()
             ->get();
     }
+
+    public function claimQueueForUser($userId): Collection
+    {
+        return DB::transaction(function () use ($userId) {
+                ActionQueue::where('user_id', $userId)
+                    ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                    ->where('end_time', '<=', now())
+                    ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
+
+                return ActionQueue::where('user_id', $userId)
+                    ->where('status', QueueStatusType::STATUS_PROCESSING)
+                    ->where('end_time', '<=', now())
+                    ->get();
+        }, 5); // Retry 
+    }
 }

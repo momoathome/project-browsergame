@@ -71,6 +71,8 @@ class CombatPlunderService
             $this->updateDefenderResources($defender, $remainingResources);
         });
 
+        broadcast(new UpdateUserResources($attacker));
+
         return $resourcesExtracted;
     }
 

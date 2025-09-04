@@ -93,8 +93,6 @@ class AsteroidAutoMineService
             $spacecraftsInQueuesCounts
         );
 
-        Log::info('True available spacecrafts: ' . json_encode($trueAvailableSpacecrafts) . json_encode($availableSpacecrafts));
-
         switch ($filter) {
             case 'overflow':
                 return $this->extractOverflow($asteroids, $trueAvailableSpacecrafts, $user);

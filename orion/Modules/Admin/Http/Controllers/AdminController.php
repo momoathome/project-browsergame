@@ -21,7 +21,6 @@ use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 
 class AdminController extends Controller
 {
@@ -39,7 +38,6 @@ class AdminController extends Controller
         private readonly AuthManager $authManager,
         private readonly ResetUserData $resetUserData,
         private readonly SetupInitialMarket $setupInitialMarket,
-        private readonly ActionQueueService $actionQueueService,
     ) {
         if (!$this->authManager->user()->hasRole('admin')) {
             return redirect()->route('overview');
@@ -59,7 +57,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function progression()
+    /* public function progression()
     {
         // Gebäudetypen aus Enum sammeln
         $buildingTypes = [];
@@ -112,7 +110,7 @@ class AdminController extends Controller
             'progressionData' => $progressionData,
             'resourceRequirements' => $resourceRequirements,
         ]);
-    }
+    } */
 
     /**
      * Display the specified resource.

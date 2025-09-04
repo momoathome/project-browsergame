@@ -45,7 +45,6 @@ class AsteroidController extends Controller
         $query = $request->input('query');
 
         [$searchedAsteroids, $searchedStations] = $this->asteroidSearch->search($query);
-        Log::info('AsteroidSearch: count=' . count($searchedAsteroids));
         
         return response()->json([
             'searched_asteroids' => $searchedAsteroids,

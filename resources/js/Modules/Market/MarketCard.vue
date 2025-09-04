@@ -154,7 +154,7 @@ function setMaxAmount() {
         </button>
         <!-- Input -->
         <AppInput
-          :maxlength="5"
+          :maxlength="7"
           v-model="form.amount"
           name="amount"
           class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-cyan-400/80 focus:!border-x-2 transition-colors"

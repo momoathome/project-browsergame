@@ -140,7 +140,7 @@ readonly class CombatService
         $result = $this->simulateBattle(
             $combatRequest->attackerSpacecrafts,
             $combatRequest->defenderSpacecrafts,
-            $attacker->id
+            $defender->id
         );
 
         $result->attackerName = $combatRequest->attackerName;

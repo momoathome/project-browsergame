@@ -5,7 +5,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  maxlength: 4,
+  maxlength: 6,
 })
 
 const count = defineModel<number | string>( { default: 0 })

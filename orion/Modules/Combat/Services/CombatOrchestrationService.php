@@ -4,16 +4,17 @@ namespace Orion\Modules\Combat\Services;
 
 use App\Models\User;
 use App\Services\UserService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
+use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
-use Orion\Modules\Station\Services\StationService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
 
 readonly class CombatOrchestrationService
 {
@@ -81,13 +82,14 @@ readonly class CombatOrchestrationService
         $defender = $this->userService->find($defenderId);
         
         $defenderSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($defenderId);
-        $defenderFormatted = $this->combatService->formatDefenderSpacecrafts($defenderSpacecrafts);
         $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
+        $defenderFormatted = $this->combatService->formatDefenderSpacecrafts($defenderSpacecrafts);
+        $attackerFormatted = $details['attacker_formatted'] ?? [];
 
         $combatRequest = new CombatRequest(
             $attackerId,
             $defenderId,
-            $details['attacker_formatted'],
+            $attackerFormatted,
             $defenderFormatted,
             $details['attacker_name'],
             $details['defender_name'],
@@ -108,14 +110,20 @@ readonly class CombatOrchestrationService
             $result->getLossesCollection('defender')
         );
 
-        // Update spacecrafts count in database
-        $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
-        $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
+        try {
+            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts) {
+                // Update spacecraft counts in database
+                $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
+                $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
+                // Free spacecrafts from locked_count
+                $formattedSpacecrafts = $this->combatService->formatModelsForLocking($attackerSpacecrafts);
+                $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
 
-        // Free spacecrafts from locked_count
-        $formattedSpacecrafts = $this->combatService->formatModelsForLocking($attackerSpacecrafts);
-        $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
-        
+            });
+        } catch (\Exception $e) {
+            Log::error('Error occurred while completing combat: ' . $e->getMessage());
+        }
+
         // Plündere Ressourcen, wenn der Angreifer gewonnen hat
         $plunderedResources = [];
         if ($result->winner === 'attacker') {

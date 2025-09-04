@@ -106,7 +106,7 @@ class CombatPlunderService
             $userResource = $this->userResourceService->getSpecificUserResource($attacker->id, $resourceId);
 
             $availableStorage = $storageCapacity - $userResource->amount;
-            $amountToAdd = min($extractedAmount, $availableStorage);
+            $amountToAdd = round(min($extractedAmount, $availableStorage));
 
             $userResource->amount += $amountToAdd;
             $userResource->save();
@@ -124,7 +124,7 @@ class CombatPlunderService
             $userResource = $this->userResourceService->getSpecificUserResource($defender->id, $resourceId);
 
             if ($userResource) {
-                $userResource->amount = max(0, $remainingAmount);
+                $userResource->amount = round(max(0, $remainingAmount));
                 $userResource->save();
             }
         });

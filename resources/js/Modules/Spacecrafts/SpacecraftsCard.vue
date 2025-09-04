@@ -252,14 +252,26 @@ function unlockSpacecraft() {
                 class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-x-2 transition-colors"
               />
               <button
-                class="h-10 px-3 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="increment"
                 @click.shift="incrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
                 type="button"
               >＋</button>
+                            <!-- Direkt zwischen + und Produce Button einfügen -->
               <button
-                class="h-10 px-6 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="maxSpacecraftCount == 0 || isProducing"
+                @click="form.amount = maxSpacecraftCount"
+                type="button"
+                aria-label="Maximum"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-5 h-5" viewBox="0 0 24 24"> 
+                  <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
+                </svg>
+              </button>
+              <button
+                class="h-10 px-4 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="isProducing || form.amount == 0 || !canProduce"
                 @click="produceSpacecraft"
                 type="button"

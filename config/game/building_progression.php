@@ -1,6 +1,6 @@
 <?php
 
-$build_time_multiplier = 1.35;
+$build_time_multiplier = 1.30;
 $additional_resource_base_value = 100;
 $additional_resources_multiplier = 1;
 $additional_resource_referenz = 1000;
@@ -11,25 +11,25 @@ return [
     'additional_resources_multiplier' => $additional_resources_multiplier,
     'additional_resource_referenz' => $additional_resource_referenz,
 
+    // general resource growth factors per building type
     'growth_factors' => [
-        'Shipyard' => 1.35,
+        'Shipyard' => 1.30,
         'Hangar' => 1.275,
-        'Laboratory' => 1.25,
-        'Warehouse' => 1.30,
-        'Scanner' => 1.30,
-        'Shield' => 1.375,
+        'Laboratory' => 1.30,
+        'Warehouse' => 1.275,
+        'Scanner' => 1.25,
+        'Shield' => 1.30,
         // Weitere Gebäude...
     ],
 
-    // Zusätzliche Multiplikatoren an bestimmten Meilensteinen
+    // Milestone Multipliers resource requirements at specific levels
     'milestone_multipliers' => [
         5 => 1.2,   // Level 5: 20% extra
         10 => 1.3,  // Level 10: 30% extra
-        14 => 1.5,  // Level 14: 50% extra
-        18 => 1.8,  // Level 18: 80% extra
-        21 => 2.0,  // Level 21: 100% extra
-        25 => 2.5,  // Level 25: 150% extra
-        30 => 3.0,  // Level 30: 200% extra
+        15 => 1.4,  // Level 15: 40% extra
+        20 => 1.5,  // Level 20: 50% extra
+        25 => 1.75,  // Level 25: 75% extra
+        30 => 2.0,  // Level 30: 100% extra
     ],
 
     // Ressourcenanforderungen nach Gebäudetyp

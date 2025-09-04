@@ -94,7 +94,6 @@ function setUserResourcesInput() {
 
 function setMaxAmount() {
   const maxAmount = Math.min(Math.floor(userCredits.value / props.marketData.cost), Math.floor(userStorage.value - userResourceAmount.value));
-  console.log(maxAmount);
   form.amount = maxAmount;
 }
 </script>
@@ -117,9 +116,8 @@ function setMaxAmount() {
     </div>
 
     <div class="relative flex justify-center items-center py-4">
-      <div class="group relative">
-        <img :src="marketData.image" class="h-[64px] cursor-pointer" @click="setUserResourcesInput" @click.shift="setMaxAmount" alt="resource" />
-        <AppTooltip class="py-2 px-3" label="click to add all sellable resources<br>shift click to add all buyable resources" position="bottom" />
+      <div class="relative">
+        <img :src="marketData.image" class="h-[64px]" alt="resource" />
       </div>
     </div>
 
@@ -145,12 +143,22 @@ function setMaxAmount() {
       <div class="flex items-center justify-between rounded-xl border-primary-light ring-1 ring-primary shadow-inner overflow-hidden">
         <!-- Sell Button -->
         <button
-          class="h-10 px-4 rounded-l-xl bg-tertiary text-white font-semibold transition border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          class="h-10 px-3 rounded-l-xl bg-tertiary text-light font-semibold transition border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="isSellDisabled"
           @click="sellResource"
           type="button"
         >
           Sell
+        </button>
+        <button
+          class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-r border-primary-light focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="setUserResourcesInput"
+          type="button"
+          aria-label="Maximum sellable amount"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="currentColor" d="m7.825 12l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T5.426 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7zm6.6 0l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T12.026 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7z"/>
+          </svg>
         </button>
         <!-- Input -->
         <AppInput
@@ -159,9 +167,19 @@ function setMaxAmount() {
           name="amount"
           class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-cyan-400/80 focus:!border-x-2 transition-colors"
         />
+        <button
+          class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="setMaxAmount"
+          type="button"
+          aria-label="Maximum buyable amount"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-5 h-5" viewBox="0 0 24 24"> 
+            <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
+          </svg>
+        </button>
         <!-- Buy Button -->
         <button
-          class="h-10 px-4 rounded-r-xl bg-primary text-white border-primary-light hover:bg-primary-dark font-semibold transition border-l focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          class="h-10 px-3 rounded-r-xl bg-primary text-cyan-100 border-primary-light hover:bg-primary-dark font-semibold transition border-l focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="isBuyDisabled"
           @click="buyResource"
           type="button"

@@ -258,7 +258,6 @@ function unlockSpacecraft() {
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
                 type="button"
               >＋</button>
-                            <!-- Direkt zwischen + und Produce Button einfügen -->
               <button
                 class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="maxSpacecraftCount == 0 || isProducing"

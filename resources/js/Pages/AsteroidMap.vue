@@ -620,11 +620,9 @@ function drawFlightPaths() {
     context.beginPath();
   
     if (isAttackOnMe && attackerCoords) {
-      // Linie vom Angreifer zur eigenen Station zeichnen
       context.moveTo(attackerCoords.x, attackerCoords.y);
       context.lineTo(targetCoords.x, targetCoords.y);
     } else {
-      // Standard: Linie von der eigenen Station zum Ziel
       context.moveTo(userStation.value!.x, userStation.value!.y);
       context.lineTo(targetCoords.x, targetCoords.y);
     }

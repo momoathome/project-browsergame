@@ -47,9 +47,15 @@ function close() {
   emit('close');
 }
 
+
+const selectedMissionList = computed(() =>
+  missions.value.filter(m => selectedMissions.value.has(m.asteroid.id))
+);
+const totalOperations = computed(() => selectedMissionList.value.length);
+
 const totalUnits = computed(() => {
   let sum = 0;
-  missions.value.forEach(mission => {
+  selectedMissionList.value.forEach(mission => {
     Object.values(mission.spacecrafts).forEach(count => {
       sum += count;
     });
@@ -59,14 +65,13 @@ const totalUnits = computed(() => {
 
 const totalResources = computed(() => {
   const res: Record<string, number> = {};
-  missions.value.forEach(m => {
+  selectedMissionList.value.forEach(m => {
     Object.entries(m.resources).forEach(([type, amount]) => {
       res[type] = (res[type] || 0) + amount;
     });
   });
   return res;
 });
-
 
 const { refreshQueue } = useQueueStore();
 const { refreshSpacecrafts } = useSpacecraftStore();
@@ -178,7 +183,7 @@ onUnmounted(() => {
             <!-- Zusammenfassung -->
             <div class="mb-6 flex flex-wrap gap-8 text-cyan-200">
                 <div>
-                    <span class="font-semibold text-light">Operations:</span> {{ missions.length }}
+                    <span class="font-semibold text-light">Operations:</span> {{ totalOperations }}
                 </div>
                 <div>
                     <span class="font-semibold text-light">Total Units:</span> {{ totalUnits }}

@@ -73,6 +73,27 @@ const totalResources = computed(() => {
   return res;
 });
 
+const asteroidCount = computed(() => {
+  const counts = { small: 0, medium: 0, large: 0, extreme: 0 };
+  selectedMissionList.value.forEach(m => {
+    switch (m.asteroid.size) {
+      case 'small':
+        counts.small += 1;
+        break;
+      case 'medium':
+        counts.medium += 1;
+        break;
+      case 'large':
+        counts.large += 1;
+        break;
+      case 'extreme':
+        counts.extreme += 1;
+        break;
+    }
+  });
+  return counts;
+});
+
 const { refreshQueue } = useQueueStore();
 const { refreshSpacecrafts } = useSpacecraftStore();
 const isSubmitting = ref(false);
@@ -187,6 +208,14 @@ onUnmounted(() => {
                 </div>
                 <div>
                     <span class="font-semibold text-light">Total Units:</span> {{ totalUnits }}
+                </div>
+                <!-- asteroid count small: medium: large: extrem -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-semibold text-light">Asteroid Count:</span>
+                    <span class="mx-2">Small: {{ asteroidCount.small }}</span>
+                    <span class="mx-2">Medium: {{ asteroidCount.medium }}</span>
+                    <span class="mx-2">Large: {{ asteroidCount.large }}</span>
+                    <span class="mx-2">Extreme: {{ asteroidCount.extreme }}</span>
                 </div>
               <div>
                 <span class="font-semibold text-light">Total Resources:</span>

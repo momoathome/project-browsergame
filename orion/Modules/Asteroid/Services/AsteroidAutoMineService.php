@@ -145,6 +145,11 @@ class AsteroidAutoMineService
         $minerAssignment = [];
         $cargoAssigned = 0;
 
+        // Falls extrem und kein Titan verfügbar: Keine Miner zuweisen!
+        if ($isExtreme && (!isset($minerPool['Titan']) || $minerPool['Titan']['count'] <= 0)) {
+            return [$minerAssignment, $cargoAssigned];
+        }
+
         // Zuerst: Mindestens ein Titan zuweisen, falls extrem und Titan verfügbar
         if ($isExtreme && isset($minerPool['Titan']) && $minerPool['Titan']['count'] > 0) {
             $minerAssignment['Titan'] = 1;

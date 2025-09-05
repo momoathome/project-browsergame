@@ -10,7 +10,6 @@ use Orion\Modules\Actionqueue\Services\ActionQueueService;
 class ProcessActionQueue implements ShouldQueue
 {
     public $queueEntryId;
-    public $timeout = 60;
 
     use Dispatchable, InteractsWithQueue;  
 

@@ -17,10 +17,12 @@ class Kernel extends ConsoleKernel
         // Führt jede Minute den command aus
         $schedule->command('actionqueue:processbatch')->everyMinute();
 
-        $schedule->command('queue:work --sleep=3 --tries=3 --max-time=55 --stop-when-empty')
+        $schedule->command('queue:work --sleep=3 --tries=3 --max-time=55')
             ->everyMinute()
             ->withoutOverlapping()
             ->sendOutputTo(storage_path('logs/queue.log'));
+
+        $schedule->command('actionqueue:reset-stuck')->everyFiveMinutes();
 
     }
 

@@ -34,19 +34,17 @@ Artisan::command('actionqueue:reset-stuck', function () {
 })->purpose('Reset stuck processing actions');
 
 Artisan::command('actionqueue:processbatch', function () {
-    $batchSize = 20;
+    $batchSize = 50;
     $entries = ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
         ->where('end_time', '<=', now())
-        ->limit(200)
+        ->pluck('id')
         ->get();
 
-    $ids = $entries->pluck('id')->toArray();
-
-    ActionQueue::whereIn('id', $ids)
+    ActionQueue::whereIn('id', $entries)
         ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
 
     // In Batches dispatchen
-    foreach (array_chunk($ids, $batchSize) as $batch) {
+    foreach (array_chunk($entries, $batchSize) as $batch) {
         ProcessActionQueueBatch::dispatch($batch);
     }
-})->purpose('Process the action queue')->everyMinute();
+})->purpose('Process the action queue');

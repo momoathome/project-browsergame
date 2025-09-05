@@ -217,7 +217,7 @@ class AsteroidService
 
         try {
             $asteroidGenerator = app(AsteroidGenerator::class);
-            $radius = 20000;
+            $radius = 15000;
             $asteroidGenerator->generateAsteroids(
                 rand(0, 2),
                 $asteroid->x,

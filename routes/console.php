@@ -34,8 +34,8 @@ Artisan::command('actionqueue:reset-stuck', function () {
 })->purpose('Reset stuck processing actions')->everyFiveMinutes();
 
 Artisan::command('actionqueue:processbatch', function () {
-    $batchSize = 20;  // Anzahl der IDs pro Job
-    $chunkSize = 100; // Anzahl der IDs, die auf einmal aus DB geholt werden
+    $batchSize = 5;  // Anzahl der IDs pro Job
+    $chunkSize = 50; // Anzahl der IDs, die auf einmal aus DB geholt werden
 
     ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
         ->where('end_time', '<=', now())

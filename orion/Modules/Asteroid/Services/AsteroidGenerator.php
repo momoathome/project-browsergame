@@ -47,9 +47,9 @@ class AsteroidGenerator
                 $minStationDistance = $this->calculateMinStationDistance($asteroid['size'], $resources);
 
                 if ($centerX !== null && $centerY !== null && $radius !== null) {
-                    $coordinate = $this->generateAsteroidCoordinateInRadius($centerX, $centerY, $radius, $minStationDistance, $resources);
+                    $coordinate = $this->generateAsteroidCoordinateInRadius($centerX, $centerY, $radius, $minStationDistance, $resources, $asteroid['size']);
                 } else {
-                    $coordinate = $this->generateAsteroidCoordinate($minStationDistance, $resources);
+                    $coordinate = $this->generateAsteroidCoordinate($minStationDistance, $resources, $asteroid['size']);
                 }
                 $asteroid['x'] = $coordinate['x'];
                 $asteroid['y'] = $coordinate['y'];
@@ -220,7 +220,7 @@ class AsteroidGenerator
         return $baseDistance * $maxModifier;
     }
 
-    private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = []): array
+    private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = [], string $size = 'small'): array
     {
         $maxAttempts = 2500;
         $attempts = 0;
@@ -240,6 +240,10 @@ class AsteroidGenerator
                 $isAllowedForAsteroid = !$this->isCollidingWithStation($x, $y, $minStationDistance) &&
                     !$this->isCollidingWithAsteroidDB($x, $y, $this->config['asteroid_distance']);
             }
+            if ($isAllowedForAsteroid && $size === 'extreme') {
+              $extremeDistance = $this->config['extreme_asteroid_distance'] ?? 5000;
+              $isAllowedForAsteroid = !$this->isCollidingWithExtremeAsteroid($x, $y, $extremeDistance);
+            }
             $attempts++;
         } while (!$isAllowedForAsteroid && $attempts < $maxAttempts);
 
@@ -249,7 +253,7 @@ class AsteroidGenerator
         return ['x' => $x, 'y' => $y];
     }
 
-    private function generateAsteroidCoordinate(int $minStationDistance, array $resources = []): array
+    private function generateAsteroidCoordinate(int $minStationDistance, array $resources = [], string $size = 'small'): array
     {
         $asteroidToAsteroidDistance = $this->config['asteroid_distance'];
         $minDistance = $this->config['asteroid_to_station_distance'];
@@ -296,6 +300,10 @@ class AsteroidGenerator
                 $isAllowedForAsteroid = !$this->isCollidingWithStation($x, $y, $minStationDistance) &&
                     !$this->isCollidingWithAsteroidDB($x, $y, $asteroidToAsteroidDistance);
             }
+            if ($isAllowedForAsteroid && $size === 'extreme') {
+              $extremeDistance = $this->config['extreme_asteroid_distance'] ?? 5000;
+              $isAllowedForAsteroid = !$this->isCollidingWithExtremeAsteroid($x, $y, $extremeDistance);
+            }
 
             $attempts++;
             if ($attempts % 1000 === 0 && $minDistance > 100) {
@@ -313,6 +321,18 @@ class AsteroidGenerator
     private function isCollidingWithAsteroidDB(int $x, int $y, int $minDistance): bool
     {
         return Asteroid::whereBetween('x', [$x - $minDistance, $x + $minDistance])
+            ->whereBetween('y', [$y - $minDistance, $y + $minDistance])
+            ->get()
+            ->contains(function ($asteroid) use ($x, $y, $minDistance) {
+                $distance = sqrt(pow($asteroid->x - $x, 2) + pow($asteroid->y - $y, 2));
+                return $distance < $minDistance;
+            });
+    }
+
+    private function isCollidingWithExtremeAsteroid(int $x, int $y, int $minDistance): bool
+    {
+        return Asteroid::where('size', 'extreme')
+            ->whereBetween('x', [$x - $minDistance, $x + $minDistance])
             ->whereBetween('y', [$y - $minDistance, $y + $minDistance])
             ->get()
             ->contains(function ($asteroid) use ($x, $y, $minDistance) {

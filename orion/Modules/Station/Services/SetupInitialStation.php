@@ -19,7 +19,7 @@ class SetupInitialStation
     {
         // Station in einer reservierten Region platzieren
 
-        $coordinate = $this->universeService->assignStationRegion();
+        $coordinate = $this->universeService->assignStationRegion($userId);
         if ($coordinate === null) {
             throw new \Exception('No available region for station placement.');
         }
@@ -30,9 +30,6 @@ class SetupInitialStation
             'x' => $coordinate['x'],
             'y' => $coordinate['y'],
         ]);
-
-        // Cache aktualisieren
-        Cache::forget('universe:stations');
 
         return $station;
     }

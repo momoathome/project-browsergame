@@ -803,7 +803,7 @@ function onMouseClick(e: MouseEvent) {
   const coords = getClickCoordinates(e);
   if (!coords) return;
 
-  if (e.ctrlKey && handleCoordinateDisplay(coords, e)) return;
+  if (e.shiftKey && handleCoordinateDisplay(coords, e)) return;
 
   const clickedStation = findClickedStation(coords);
   if (clickedStation) {

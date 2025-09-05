@@ -6,18 +6,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Models\AsteroidResource;
-use Orion\Modules\Asteroid\Services\UniverseService;
+use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 
 class AsteroidGenerator
 {
     public function __construct(
-        private readonly UniverseService $universeService,
+        private readonly StationService $stationService,
         private readonly AsteroidRepository $asteroidRepository,
     ) {
         $this->asteroidConfig = config('game.asteroids');
         $this->config = config('game.core');
-        $this->stations = $this->universeService->getStations();
+        $this->stations = $this->stationService->getAllStations()->toArray();
     }
 
     private array $asteroidConfig = [];
@@ -26,12 +26,6 @@ class AsteroidGenerator
 
     public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null)
     {
-        $reservedRegions = $this->universeService->getReservedStationRegions();
-        if (empty($reservedRegions)) {
-            Log::info("Keine reservierten Stationsstandorte gefunden. Reserviere Standardanzahl...");
-            $reservedRegions = $this->universeService->reserveStationRegions(25);
-        }
-
         $asteroids = [];
         $maxFailures = $count * 0.1;
         $failures = 0;
@@ -349,7 +343,8 @@ class AsteroidGenerator
                 return true;
             }
         }
-        $reservedRegions = $this->getReservedStationRegions();
+
+        $reservedRegions = $this->stationService->getReservedStationRegions();
         foreach ($reservedRegions as $region) {
             $stationX = $region['station_x'] ?? $region['x'] ?? 0;
             $stationY = $region['station_y'] ?? $region['y'] ?? 0;
@@ -361,14 +356,10 @@ class AsteroidGenerator
         return false;
     }
 
-    public function getReservedStationRegions(bool $forceRefresh = false): array
-    {
-        return $this->universeService->getReservedStationRegions($forceRefresh);
-    }
-
     private function isInReservedStationRegion(int $x, int $y, string $resourceLevel = 'any'): bool
     {
-        $reservedRegions = $this->getReservedStationRegions();
+        $reservedRegions = $this->stationService->getReservedStationRegions();
+
         foreach ($reservedRegions as $region) {
             $stationX = $region['station_x'] ?? $region['x'] ?? 0;
             $stationY = $region['station_y'] ?? $region['y'] ?? 0;

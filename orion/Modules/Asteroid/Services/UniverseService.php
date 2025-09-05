@@ -7,180 +7,120 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Asteroid\Models\Asteroid;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
+use Orion\Modules\Station\Models\StationRegion;
 
 class UniverseService
 {
     protected $config;
-    protected $gridSize = 2000;
-    protected $spatialIndex = [];
+    protected $asteroidConfig;
+    protected $asteroidGenerator;
 
-    public function __construct()
+    public function __construct(AsteroidGenerator $asteroidGenerator)
     {
         $this->config = config('game.core');
-        $this->buildSpatialIndex();
+        $this->asteroidConfig = config('game.asteroids');
+        $this->asteroidGenerator = $asteroidGenerator;
     }
 
-    /**
-     * Reserviert Regionen für Stationen im Universum
-     *
-     * @param int $numStations Anzahl der zu reservierenden Regionen
-     * @param bool $forceRefresh Cache ignorieren und neu generieren
-     * @return array Liste der reservierten Regionen
-     */
-    public function reserveStationRegions(int $numStations = 50, bool $forceRefresh = false): array
+    public function reserveStationRegions(int $numStations = 25): void
     {
-        $cacheKey = 'universe:reserved-station-regions';
-
-        if (!$forceRefresh && Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
-        }
-
-        // Grundkonfiguration
-        $reservedRegions = [];
         $universeSize = $this->config['size'];
         $stationDistance = $this->config['station_distance'];
         $borderDistance = $this->config['border_distance'];
-
-        // Radius-Definitionen für Stationsregionen
         $innerRadius = $this->config['station_inner_radius'];
         $outerRadius = $this->config['station_outer_radius'];
 
         Log::info("Reserviere {$numStations} Stationsstandorte im Universum (Größe: {$universeSize}x{$universeSize})");
 
-        // Versuchslimit 
+        $created = 0;
         $attempts = 0;
         $maxAttempts = $numStations * 20;
 
-        while (count($reservedRegions) < $numStations && $attempts < $maxAttempts) {
-            // Zufällige Position im Universum wählen
-            $stationX = rand($borderDistance, $universeSize - $borderDistance);
-            $stationY = rand($borderDistance, $universeSize - $borderDistance);
+        // Lade existierende Regionen aus der DB
+        $existingRegions = StationRegion::all(['x', 'y',])->toArray();
 
-            // Prüfen, ob genügend Abstand zu anderen Stationen eingehalten wird
-            if (!$this->isTooCloseToOtherStations($stationX, $stationY, $reservedRegions, $stationDistance)) {
-                // Station hinzufügen
-                $regionId = count($reservedRegions) + 1;
-                $reservedRegions[] = [
-                    'id' => $regionId,
-                    'station_x' => (int) $stationX,
-                    'station_y' => (int) $stationY,
-                    'inner_radius' => $innerRadius,
-                    'outer_radius' => $outerRadius,
-                ];
+        while ($created < $numStations && $attempts < $maxAttempts) {
+            $stationX = rand(0, $universeSize - $borderDistance);
+            $stationY = rand(0, $universeSize - $borderDistance);
 
-                if ($regionId <= 5) {
-                    Log::debug("Station {$regionId} platziert: X={$stationX}, Y={$stationY}");
-                }
+            // Prüfe Abstand zu anderen StationRegions
+            if ($this->isTooCloseToOtherStationRegions($stationX, $stationY, $existingRegions, $stationDistance)) {
+                $attempts++;
+                continue;
             }
 
+            // Prüfe Abstand zu Asteroiden
+            if ($this->isCollidingWithAsteroid($stationX, $stationY, $innerRadius)) {
+                $attempts++;
+                continue;
+            }
+
+            // Prüfe Abstand zu wertvollen Ressourcen
+            if ($this->isNearValuableResources($stationX, $stationY, $outerRadius)) {
+                $attempts++;
+                continue;
+            }
+
+            // prüfe Abstand zu anderen Stationen
+            if ($this->isTooCloseToExistingStations($stationX, $stationY, $stationDistance)) {
+                $attempts++;
+                continue;
+            }
+
+            // Region ist gültig, in DB speichern
+            StationRegion::create([
+                'x' => $stationX,
+                'y' => $stationY,
+                'used' => false,
+            ]);
+            $existingRegions[] = [
+                'x' => $stationX,
+                'y' => $stationY,
+            ];
+            $created++;
             $attempts++;
         }
 
-        // Abschließendes Logging
-        $createdCount = count($reservedRegions);
-        $percentage = ($createdCount / $numStations) * 100;
-        Log::info("Reserviert: {$createdCount} von {$numStations} Stationsregionen ({$percentage}%) nach {$attempts} Versuchen");
-
-        // Im Cache speichern
-        Cache::put($cacheKey, $reservedRegions, 604800); // 1 Woche
-
-        return $reservedRegions;
+        $percentage = ($created / $numStations) * 100;
+        Log::info("Reserviert: {$created} von {$numStations} Stationsregionen ({$percentage}%) nach {$attempts} Versuchen");
     }
 
     /**
      * Findet eine freie Stationsregion und markiert sie als verwendet
      */
-    public function assignStationRegion(): array
+    public function assignStationRegion($userId)
     {
-        $reservedRegions = $this->getReservedStationRegions();
-        $usedRegions = Cache::get('universe:used-station-regions', []);
+        $region = StationRegion::where('used', false)->first();
+       
+        if (!$region) {
+            $player_count = \App\Models\User::count();
+            // Asteroidenzahl und Universumsgröße erhöhen
+            $this->asteroidGenerator->generateAsteroids($player_count * 25);
 
-        if (empty($reservedRegions)) {
-            throw new \Exception("Keine reservierten Stationsregionen gefunden.");
-        }
+            // Neue StationRegions generieren
+            $this->reserveStationRegions($this->config['default_stations']);
 
-        // Verfügbare Regionen finden
-        $availableRegions = [];
-        foreach ($reservedRegions as $index => $region) {
-            $regionId = $region['id'] ?? $index;
-            if (!in_array($regionId, $usedRegions)) {
-                $availableRegions[] = ['index' => $index, 'region' => $region];
+            // Nochmals versuchen, eine freie Region zu bekommen
+            $region = StationRegion::where('used', false)->first();
+            if (!$region) {
+                throw new \Exception("Auch nach Erweiterung keine freie Stationsregion verfügbar!");
             }
         }
 
-        if (empty($availableRegions)) {
-            throw new \Exception("Alle reservierten Regionen sind bereits belegt.");
-        }
-
-        // Eine zufällige Region auswählen
-        $selectedRegion = $availableRegions[array_rand($availableRegions)];
-        $region = $selectedRegion['region'];
-        $index = $selectedRegion['index'];
-
-        // Die vordefinierten Koordinaten verwenden
-        $x = (int) ($region['station_x'] ?? $region['x'] ?? 0);
-        $y = (int) ($region['station_y'] ?? $region['y'] ?? 0);
-
-        // Region als verwendet markieren
-        $regionId = $reservedRegions[$index]['id'] ?? $index;
-        $usedRegions[] = $regionId;
-        Cache::put('universe:used-station-regions', $usedRegions, 604800);
-        Cache::forget('universe:stations');
-
-        return ['x' => $x, 'y' => $y];
+        $region->used = true;
+        $region->assigned_to_user_id = $userId;
+        $region->save();
+        return ['x' => $region->x, 'y' => $region->y];
     }
 
     /**
-     * Gibt reservierte Stationsregionen zurück oder erstellt sie bei Bedarf
+     * Prüft ob der Abstand zu anderen Station Regionen ausreichend ist
      */
-    public function getReservedStationRegions(bool $forceRefresh = false): array
-    {
-        return $this->reserveStationRegions(50, $forceRefresh);
-    }
-
-    /**
-     * Validiert, dass alle reservierten Regionen frei von Kollisionen sind
-     */
-    public function validateReservedRegions(array $regions): array
-    {
-        $validRegions = [];
-        $minDistance = config('game.core.station_distance');
-
-        foreach ($regions as $key => $region) {
-            $x = $region['station_x'] ?? $region['x'] ?? 0;
-            $y = $region['station_y'] ?? $region['y'] ?? 0;
-
-            // Prüfen ob diese Region mit anderen Regionen kollidiert
-            $isValid = true;
-            foreach ($regions as $otherKey => $otherRegion) {
-                if ($key === $otherKey)
-                    continue;
-
-                $otherX = $otherRegion['station_x'] ?? $otherRegion['x'] ?? 0;
-                $otherY = $otherRegion['station_y'] ?? $otherRegion['y'] ?? 0;
-
-                $distance = sqrt(pow($x - $otherX, 2) + pow($y - $otherY, 2));
-                if ($distance < $minDistance) {
-                    $isValid = false;
-                    break;
-                }
-            }
-
-            if ($isValid) {
-                $validRegions[] = $region;
-            }
-        }
-
-        return $validRegions;
-    }
-
-    /**
-     * Prüft ob der Abstand zu anderen Stationen ausreichend ist
-     */
-    private function isTooCloseToOtherStations(float $x, float $y, array $existingRegions, float $minDistance): bool
+    private function isTooCloseToOtherStationRegions(float $x, float $y, array $existingRegions = [], float $minDistance): bool
     {
         foreach ($existingRegions as $region) {
-            $distance = sqrt(pow($region['station_x'] - $x, 2) + pow($region['station_y'] - $y, 2));
+            $distance = sqrt(pow($region['x'] - $x, 2) + pow($region['y'] - $y, 2));
             if ($distance < $minDistance) {
                 return true;
             }
@@ -193,31 +133,13 @@ class UniverseService
      */
     public function isCollidingWithAsteroid(int $x, int $y, int $minDistance): bool
     {
-        $gridX = floor($x / $this->gridSize);
-        $gridY = floor($y / $this->gridSize);
-        $checkRadius = ceil($minDistance / $this->gridSize) + 1;
-
-        for ($i = $gridX - $checkRadius; $i <= $gridX + $checkRadius; $i++) {
-            for ($j = $gridY - $checkRadius; $j <= $gridY + $checkRadius; $j++) {
-                $key = "{$i}:{$j}";
-
-                if (!isset($this->spatialIndex[$key])) {
-                    continue;
-                }
-
-                foreach ($this->spatialIndex[$key] as $object) {
-                    if ($object['type'] !== 'asteroid')
-                        continue;
-
-                    $distance = sqrt(pow($object['x'] - $x, 2) + pow($object['y'] - $y, 2));
-                    if ($distance < $minDistance) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return Asteroid::whereBetween('x', [$x - $minDistance, $x + $minDistance])
+            ->whereBetween('y', [$y - $minDistance, $y + $minDistance])
+            ->get()
+            ->contains(function ($asteroid) use ($x, $y, $minDistance) {
+                $distance = sqrt(pow($asteroid->x - $x, 2) + pow($asteroid->y - $y, 2));
+                return $distance < $minDistance;
+            });
     }
 
     /**
@@ -225,32 +147,20 @@ class UniverseService
      */
     public function isNearValuableResources(int $x, int $y, int $maxDistance): bool
     {
-        $gridX = floor($x / $this->gridSize);
-        $gridY = floor($y / $this->gridSize);
-        $checkRadius = ceil($maxDistance / $this->gridSize) + 1;
-
-        for ($i = $gridX - $checkRadius; $i <= $gridX + $checkRadius; $i++) {
-            for ($j = $gridY - $checkRadius; $j <= $gridY + $checkRadius; $j++) {
-                $key = "{$i}:{$j}";
-
-                if (!isset($this->spatialIndex[$key])) {
-                    continue;
-                }
-
-                foreach ($this->spatialIndex[$key] as $object) {
-                    if ($object['type'] !== 'resource')
-                        continue;
-
-                    $distance = sqrt(pow($object['x'] - $x, 2) + pow($object['y'] - $y, 2));
-                    $minRequiredDistance = $this->getMinDistanceForResource($object['resource_type']);
-
-                    if ($distance < $minRequiredDistance) {
-                        return true;
-                    }
+        $asteroids = Asteroid::whereBetween('x', [$x - $maxDistance, $x + $maxDistance])
+            ->whereBetween('y', [$y - $maxDistance, $y + $maxDistance])
+            ->get();
+    
+        foreach ($asteroids as $asteroid) {
+            foreach ($asteroid->resources as $resource) {
+                $distance = sqrt(pow($asteroid->x - $x, 2) + pow($asteroid->y - $y, 2));
+                $minRequiredDistance = $this->getMinDistanceForResource($resource->resource_type);
+    
+                if ($distance < $minRequiredDistance) {
+                    return true;
                 }
             }
         }
-
         return false;
     }
 
@@ -259,8 +169,8 @@ class UniverseService
      */
     private function getMinDistanceForResource(string $resourceType): int
     {
-        $resourcePools = $this->config['resource_pools'];
-        $distances = $this->config['resource_min_distances'];
+        $resourcePools = $this->asteroidConfig['resource_pools'];
+        $distances = $this->asteroidConfig['resource_min_distances'];
 
         static $resourcePoolMapping = null;
 
@@ -280,87 +190,16 @@ class UniverseService
         return 0; // Fallback
     }
 
-    /**
-     * Lädt alle Stationen
-     */
-    public function getStations($forceRefresh = false)
+    private function isTooCloseToExistingStations(float $x, float $y, float $minDistance): bool
     {
-        $cacheKey = 'universe:stations';
-
-        // Cache löschen wenn gewünscht
-        if ($forceRefresh) {
-            Cache::forget($cacheKey);
+        $stations = Station::all(['x', 'y']);
+        foreach ($stations as $station) {
+            $distance = sqrt(pow($station->x - $x, 2) + pow($station->y - $y, 2));
+            if ($distance < $minDistance) {
+                return true;
+            }
         }
-
-        return Cache::remember($cacheKey, 1800, function () {
-            $stations = Station::all(['id', 'name', 'x', 'y'])->toArray();
-            return $stations;
-        });
+        return false;
     }
 
-    /**
-     * Baut einen räumlichen Index für schnelle Abstandsprüfungen
-     */
-    protected function buildSpatialIndex()
-    {
-        // Asteroiden laden
-        $asteroids = Cache::remember('universe:asteroid-index', 1800, function () {
-            return Asteroid::select('id', 'x', 'y')->get();
-        });
-
-        // Ressourcen laden
-        $resources = Cache::remember('universe:resource-index', 1800, function () {
-            return DB::table('asteroids')
-                ->join('asteroid_resources', 'asteroids.id', '=', 'asteroid_resources.asteroid_id')
-                ->select('asteroids.id', 'asteroids.x', 'asteroids.y', 'asteroid_resources.resource_type')
-                ->get();
-        });
-
-        // Index aufbauen
-        foreach ($asteroids as $asteroid) {
-            $this->addToSpatialIndex($asteroid->x, $asteroid->y, $asteroid->id, 'asteroid');
-        }
-
-        foreach ($resources as $resource) {
-            $this->addToSpatialIndex($resource->x, $resource->y, $resource->id, 'resource', $resource->resource_type);
-        }
-    }
-
-    /**
-     * Fügt ein Objekt zum räumlichen Index hinzu
-     */
-    protected function addToSpatialIndex($x, $y, $id, $type, $resourceType = null)
-    {
-        $gridX = floor($x / $this->gridSize);
-        $gridY = floor($y / $this->gridSize);
-        $key = "{$gridX}:{$gridY}";
-
-        if (!isset($this->spatialIndex[$key])) {
-            $this->spatialIndex[$key] = [];
-        }
-
-        $entry = [
-            'id' => $id,
-            'x' => $x,
-            'y' => $y,
-            'type' => $type
-        ];
-
-        if ($resourceType) {
-            $entry['resource_type'] = $resourceType;
-        }
-
-        $this->spatialIndex[$key][] = $entry;
-    }
-
-    /**
-     * Löscht alle zwischengespeicherten Daten zum Universum
-     */
-    public static function clearCache()
-    {
-        Cache::forget('universe:stations');
-        Cache::forget('universe:asteroid-index');
-        Cache::forget('universe:resource-index');
-        Cache::forget('universe:reserved-station-regions');
-    }
 }

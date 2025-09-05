@@ -14,7 +14,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Führt jede Minute den command aus
         $schedule->command('actionqueue:processbatch')->everyMinute();
 
         $schedule->command('queue:work --sleep=3 --tries=3 --max-time=55')

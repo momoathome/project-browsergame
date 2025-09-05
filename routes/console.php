@@ -9,7 +9,7 @@ use App\Jobs\ProcessActionQueueBatch;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote')->hourly();
+})->purpose('Display an inspiring quote');
 
 Artisan::command('actionqueue:process', function () {
     $entries = ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
@@ -31,7 +31,7 @@ Artisan::command('actionqueue:reset-stuck', function () {
         ->where('updated_at', '<', now()->subMinutes(10))
         ->orWhere('end_time', '<', now()->subMinutes(10))
         ->update(['status' => QueueStatusType::STATUS_IN_PROGRESS]);
-})->purpose('Reset stuck processing actions');
+})->purpose('Reset stuck processing actions')->everyFiveMinutes();
 
 Artisan::command('actionqueue:processbatch', function () {
     $batchSize = 50;
@@ -47,4 +47,4 @@ Artisan::command('actionqueue:processbatch', function () {
     foreach (array_chunk($entries, $batchSize) as $batch) {
         ProcessActionQueueBatch::dispatch($batch);
     }
-})->purpose('Process the action queue');
+})->purpose('Process the action queue')->everyMinute();

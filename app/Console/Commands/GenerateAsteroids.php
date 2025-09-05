@@ -3,56 +3,61 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Jobs\GenerateAsteroidBatch;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Asteroid\Models\Asteroid;
+use Orion\Modules\Asteroid\Models\AsteroidResource;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 class GenerateAsteroids extends Command
 {
-    /**
-     * Der Befehlsname und Signatur der Konsolenanwendung.
-     *
-     * @var string
-     */
     protected $signature = 'game:generate-asteroids 
                             {--count=2500 : Anzahl der zu generierenden Asteroiden}
-                            {--batch=250 : Anzahl der Asteroiden pro Batch}';
+                            {--batch=250 : Anzahl der Asteroiden pro Batch}
+                            {--clear : Vorher alle Asteroiden und Ressourcen löschen}';
 
-    /**
-     * Die Konsolenbefehls-Beschreibung.
-     *
-     * @var string
-     */
     protected $description = 'Generiert Asteroiden für das Spiel';
 
-    /**
-     * Führt den Konsolenbefehl aus.
-     *
-     * @return int
-     */
     public function handle()
     {
-        $totalAsteroids = $this->option('count');
-        $batchSize = $this->option('batch');
+        if ($this->option('clear')) {
+            $this->info('Lösche alle vorhandenen Asteroiden und Ressourcen...');
+            Log::info('Alle vorhandenen Asteroiden und Ressourcen werden gelöscht.');
+            AsteroidResource::truncate();
+            Asteroid::truncate();
+            $this->info('Alle Asteroiden und Ressourcen wurden gelöscht.');
+        }
+
+        $totalAsteroids = (int)$this->option('count');
+        $batchSize = (int)$this->option('batch');
         $batches = ceil($totalAsteroids / $batchSize);
 
         $this->info("Starte Generierung von {$totalAsteroids} Asteroiden in {$batches} Batches");
+        Log::info("Asteroiden-Generierung gestartet: {$totalAsteroids} Asteroiden, Batchgröße {$batchSize}");
 
         $progressBar = $this->output->createProgressBar($batches);
         $progressBar->start();
 
+        $asteroidGenerator = app(AsteroidGenerator::class);
+
+        $startTime = microtime(true);
+
         for ($i = 0; $i < $batches; $i++) {
             $currentBatchSize = min($batchSize, $totalAsteroids - ($i * $batchSize));
-            
-            GenerateAsteroidBatch::dispatch($currentBatchSize)
-                ->onQueue('asteroid-generation')
-                ->delay(now()->addSeconds($i * 2));
-                
+            $batchStart = microtime(true);
+
+            $asteroidGenerator->generateAsteroids($currentBatchSize);
+
+            $batchDuration = round(microtime(true) - $batchStart, 2);
+            Log::info("Batch {$i}/{$batches} generiert ({$currentBatchSize} Asteroiden) in {$batchDuration}s");
             $progressBar->advance();
         }
 
         $progressBar->finish();
         $this->newLine();
-        $this->info('Asteroiden-Generierungsjobs wurden zur Queue hinzugefügt.');
-        $this->info('Führen Sie "sail artisan queue:work --queue=asteroid-generation" aus, um die Jobs zu verarbeiten.');
+
+        $totalDuration = round(microtime(true) - $startTime, 2);
+        $this->info("Asteroiden wurden direkt generiert. Dauer: {$totalDuration}s");
+        Log::info("Asteroiden-Generierung abgeschlossen. Gesamtdauer: {$totalDuration}s");
 
         return 0;
     }

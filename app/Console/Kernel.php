@@ -15,8 +15,12 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Führt jede Minute den command aus
-        Log::info('Schedule-Methode wird ausgeführt');
         $schedule->command('actionqueue:processbatch')->everyMinute();
+
+        $schedule->command('queue:work --sleep=3 --tries=3 --max-time=55 --stop-when-empty')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->sendOutputTo(storage_path('logs/queue.log'));
 
     }
 

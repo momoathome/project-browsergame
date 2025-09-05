@@ -17,7 +17,6 @@ use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\Market\Services\SetupInitialMarket;
 use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
@@ -201,11 +200,11 @@ class AdminController extends Controller
         }
     }
 
-    public function adminRegenerateAsteroids(Request $request, AsteroidGenerator $asteroidGenerator)
+/*     public function adminRegenerateAsteroids(Request $request, AsteroidGenerator $asteroidGenerator)
     {
         $result = $asteroidGenerator->regenerateAsteroids($request->input('count'));
         return redirect()->back()->with('message', $result['message']);
-    }
+    } */
 
     public function resetUserData(Request $request)
     {

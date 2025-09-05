@@ -40,7 +40,7 @@ class ActionQueueService
 
     public function getInProgressQueuesByUser($userId): Collection
     {
-        return $this->actionqueueRepository->getInProgressQueuesByUser($user);
+        return $this->actionqueueRepository->getInProgressQueuesByUser($userId);
     }
 
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)

@@ -35,16 +35,21 @@ Artisan::command('actionqueue:reset-stuck', function () {
 
 Artisan::command('actionqueue:processbatch', function () {
     $batchSize = 50;
-    $entries = ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
+
+    // Statt alles in einem Rutsch → Cursor nutzen (streaming)
+    ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
         ->where('end_time', '<=', now())
-        ->pluck('id')
-        ->get();
+        ->select('id') // nur ID laden!
+        ->chunk(1000, function ($chunk) use ($batchSize) {
+            $ids = $chunk->pluck('id')->toArray();
 
-    ActionQueue::whereIn('id', $entries)
-        ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
+            // Status direkt für diesen Chunk setzen
+            ActionQueue::whereIn('id', $ids)
+                ->update(['status' => QueueStatusType::STATUS_PROCESSING]);
 
-    // In Batches dispatchen
-    foreach (array_chunk($entries, $batchSize) as $batch) {
-        ProcessActionQueueBatch::dispatch($batch);
-    }
+            // In kleine Batches dispatchen
+            foreach (array_chunk($ids, $batchSize) as $batch) {
+                ProcessActionQueueBatch::dispatch($batch);
+            }
+        });
 })->purpose('Process the action queue')->everyMinute();

@@ -31,11 +31,11 @@ const close = () => {
         @close="close"
     >
         <div class="px-6 py-4">
-            <div class="text-lg font-bold text-light">
+            <div class="text-xl font-bold text-light">
                 <slot name="title" />
             </div>
 
-            <div class="mt-4 text-sm text-light">
+            <div class="mt-4 text-light">
                 <slot name="content" />
             </div>
         </div>

@@ -74,6 +74,57 @@ class BuildingUpgradeService
         }
     }
 
+    public function cancelBuildingUpgrade(User $user, Building $building): array
+    {
+        $queueEntry = $this->queueService->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('target_id', $building->id)
+            ->first();
+
+        if (!$queueEntry) {
+            return [
+                'success' => false,
+                'message' => 'No active upgrade found for this building.'
+            ];
+        }
+
+        try {
+            DB::transaction(function () use ($user, $building, $queueEntry) {
+                $currentCosts = $this->getBuildingUpgradeCosts($building);
+                $refundCosts = $currentCosts->map(function ($cost) {
+                    return [
+                        'id' => $cost['id'],
+                        'name' => $cost['name'],
+                        'amount' => (int) round($cost['amount'] * 0.8)
+                    ];
+                })->keyBy('id');
+
+                foreach ($refundCosts as $cost) {
+                    $this->userResourceService->addResourceAmount($user, $cost['id'], $cost['amount']);
+                }
+
+                $this->queueService->deleteFromQueue($queueEntry->id);
+            });
+
+            broadcast(new UpdateUserResources($user));
+            return [
+                'success' => true,
+                'message' => "Upgrade of {$building->details->name} has been cancelled. 80% of resources have been refunded."
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error occurred while cancelling building upgrade:", [
+                'user_id' => $user->id,
+                'building_id' => $building->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Error occurred while cancelling building upgrade: ' . $e->getMessage()
+            ];
+        }
+    }
+
     private function getBuildingUpgradeCosts(Building $building): Collection
     {
         return $building->resources()->get()->map(function ($resource) {
@@ -108,7 +159,7 @@ class BuildingUpgradeService
         return DB::transaction(function () use ($building, $costs) {
             // Gebäude aktualisieren
             $building->level += 1;
-            $building->effect_value = $this->buildingProgressionService->calculateNewEffectValue($building);
+            $building->effect_value = round($this->buildingProgressionService->calculateNewEffectValue($building));
             $building->build_time = $this->buildingProgressionService->calculateBuildTime($building);
             $building->save();
 

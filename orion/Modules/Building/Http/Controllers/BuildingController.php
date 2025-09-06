@@ -43,4 +43,17 @@ class BuildingController extends Controller
             return redirect()->route('buildings')->dangerBanner($result['message']);
         }
     }
+
+    public function cancel(Building $building)
+    {
+        $user = $this->authManager->user();
+
+        $result = $this->buildingUpgradeService->cancelBuildingUpgrade($user, $building);
+
+        if ($result['success']) {
+            return redirect()->route('buildings')->banner($result['message']);
+        } else {
+            return redirect()->route('buildings')->dangerBanner($result['message']);
+        }
+    }
 }

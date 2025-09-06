@@ -4,11 +4,13 @@ import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import Divider from '@/Components/Divider.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
-import type { Spacecraft } from '@/types/types';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import DialogModal from '@/Components/DialogModal.vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import type { Spacecraft } from '@/types/types';
 
 const { queueData, refreshQueue } = useQueueStore();
 
@@ -19,6 +21,7 @@ const props = defineProps<{
 // --- State & Helpers ---
 const isSubmitting = ref(false);
 const form = useForm({ amount: 0 });
+const showCancelModal = ref(false);
 
 // --- Computed Properties ---
 const userAttributes = computed(() => usePage().props.userAttributes);
@@ -47,7 +50,7 @@ const actualBuildTime = computed(() => {
   if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
     return trueBuildTime * props.spacecraft.currently_producing;
   }
-  return trueBuildTime * form.amount;
+  return trueBuildTime * form.amount || trueBuildTime;
 });
 
 const activeProduction = computed(() => {
@@ -173,6 +176,18 @@ function unlockSpacecraft() {
     preserveScroll: true
   });
 }
+
+function handleCancelProduction() {
+  if (!isProducing.value) return;
+
+  router.delete(route('shipyard.cancel', props.spacecraft.id), {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => refreshQueue()
+  });
+  form.reset();
+  showCancelModal.value = false;
+}
 </script>
 
 <template>
@@ -181,63 +196,66 @@ function unlockSpacecraft() {
       <div class="image relative">
         <img :src="spacecraft.image" class="rounded-t-3xl h-[144px] w-full" alt="spacecraft" />
       </div>
-      <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
-        <div class="flex flex-col gap-4">
-          <div class="flex justify-between">
-            <div class="flex flex-col">
-              <p class="font-semibold text-2xl -mb-1">{{ spacecraft.name }}</p>
-              <p class="text-[12px] font-medium text-gray">{{ spacecraft.type }}</p>
+      <div class="pt-0 flex flex-col h-full">
+        <div class="px-6 flex flex-col gap-4 h-full mb-8">
+          <div class="flex flex-col gap-4">
+            <div class="flex justify-between">
+              <div class="flex flex-col">
+                <p class="font-semibold text-2xl -mb-1">{{ spacecraft.name }}</p>
+                <p class="text-[12px] font-medium text-gray">{{ spacecraft.type }}</p>
+              </div>
+              <div class="flex">
+                <span class="text-sm font-medium mt-2 me-1 text-secondary">quantity</span>
+                <p class="text-xl">{{ spacecraft.count }}</p>
+              </div>
             </div>
-            <div class="flex">
-              <span class="text-sm font-medium mt-2 me-1 text-secondary">quantity</span>
-              <p class="text-xl">{{ spacecraft.count }}</p>
+            <p class="text-gray text-sm">{{ spacecraft.description }}</p>
+          </div>
+
+          <div class="flex w-full justify-between">
+            <div class="flex flex-col items-center">
+              <span class="text-sm text-secondary">Combat</span>
+              <p class="font-medium text-sm">{{ formattedCombat }}</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-sm text-secondary">Cargo</span>
+              <p class="font-medium text-sm">{{ formattedCargo }}</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-sm text-secondary">Crew</span>
+              <p class="font-medium text-sm" :class="{'text-red-600': !crewStatus.sufficient}">{{ spacecraft.crew_limit }}</p>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-sm text-secondary">Speed</span>
+              <p class="font-medium text-sm">{{ spacecraft.speed }}</p>
             </div>
           </div>
-          <p class="text-gray text-sm">{{ spacecraft.description }}</p>
-        </div>
 
-        <div class="flex w-full justify-between">
-          <div class="flex flex-col items-center">
-            <span class="text-sm text-secondary">Combat</span>
-            <p class="font-medium text-sm">{{ formattedCombat }}</p>
-          </div>
-          <div class="flex flex-col items-center">
-            <span class="text-sm text-secondary">Cargo</span>
-            <p class="font-medium text-sm">{{ formattedCargo }}</p>
-          </div>
-          <div class="flex flex-col items-center">
-            <span class="text-sm text-secondary">Crew</span>
-            <p class="font-medium text-sm" :class="{'text-red-600': !crewStatus.sufficient}">{{ spacecraft.crew_limit }}</p>
-          </div>
-          <div class="flex flex-col items-center">
-            <span class="text-sm text-secondary">Build Time</span>
-            <p class="font-medium text-sm">{{ formattedBuildTime }}</p>
-          </div>
-        </div>
+          <Divider />
 
-        <Divider />
-
-        <div class="grid grid-cols-4 gap-4 items-center">
-          <div class="relative group flex flex-col gap-1 items-center"
-               v-for="resource in spacecraft.resources"
-               :key="resource.name"
-               :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
-               @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
-          >
-            <img :src="resource.image" class="h-7" alt="resource" />
-            <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">
-              {{ resource.amount }}
-            </p>
-            <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
-            <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
+          <div class="grid grid-cols-4 gap-4 items-center">
+            <div class="relative group flex flex-col gap-1 items-center"
+                v-for="resource in spacecraft.resources"
+                :key="resource.name"
+                :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
+                @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
+            >
+              <img :src="resource.image" class="h-7" alt="resource" />
+              <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">
+                {{ resource.amount }}
+              </p>
+              <span v-show="form.amount > 0" class="text-xs -mt-2">({{ resource.amount * form.amount }})</span>
+              <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
+            </div>
           </div>
         </div>
 
-        <div class="flex flex-col gap-4 mt-auto">
-          <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft">
-            <div class="flex items-center justify-between rounded-xl border-primary-light ring-1 ring-primary shadow-inner overflow-hidden">
+
+        <div class="flex flex-col mt-auto">
+          <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft" >
+            <div class="flex items-center justify-between">
               <button
-                class="h-10 px-3 rounded-l-xl bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-r border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-3 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="decrement"
                 @click.shift="decrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
@@ -249,28 +267,28 @@ function unlockSpacecraft() {
                 :maxInputValue="maxSpacecraftCount"
                 v-model="form.amount"
                 :disabled="isProducing || !canProduce"
-                class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary text-center focus:!ring-0 focus:!border-x-2 transition-colors"
+                class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors"
               />
               <button
-                class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="increment"
                 @click.shift="incrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
                 type="button"
               >＋</button>
               <button
-                class="h-10 px-2 bg-primary text-cyan-100 hover:bg-primary-dark transition font-semibold border-l border-primary-light focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="maxSpacecraftCount == 0 || isProducing"
                 @click="form.amount = maxSpacecraftCount"
                 type="button"
                 aria-label="Maximum"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-5 h-5" viewBox="0 0 24 24"> 
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="w-5 h-6" viewBox="0 0 24 24"> 
                   <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
                 </svg>
               </button>
               <button
-                class="h-10 px-4 rounded-r-xl bg-primary text-cyan-100 font-semibold transition border-l border-primary-light hover:bg-primary-dark focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-4 py-3 bg-primary-dark text-cyan-100 font-semibold transition border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="isProducing || form.amount == 0 || !canProduce"
                 @click="produceSpacecraft"
                 type="button"
@@ -279,11 +297,18 @@ function unlockSpacecraft() {
                 <span v-else>Produce</span>
               </button>
             </div>
+
+            <AppCardTimer
+              v-if="spacecraft.unlocked"
+              :buildTime="actualBuildTime"
+              @upgrade-complete="handleProduceComplete"
+              :isInProgress="isProducing"
+              :endTime="productionEndTime"
+              :description="`Producing: ${activeProduction} Units`"
+              @cancel-upgrade="showCancelModal = true"
+            />
           </form>
 
-          <AppCardTimer v-if="spacecraft.unlocked" :buildTime="actualBuildTime"
-            @upgrade-complete="handleProduceComplete" :isInProgress="isProducing" :endTime="productionEndTime"
-            :description="`produce ${activeProduction}`" />
         </div>
 
       </div>
@@ -298,7 +323,30 @@ function unlockSpacecraft() {
         <span>{{ spacecraft.research_cost }}</span>
       </div>
     </TertiaryButton>
+    
   </div>
+
+  <teleport to="body">
+    <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
+      <template #title>Cancel Production</template>
+      <template #content>
+        <p>Are you sure you want to cancel the production of
+          <span class="font-semibold">
+            {{ activeProduction }} {{ spacecraft.name }}
+          </span> 
+           ?
+          </p>
+        <p class="text-gray-400 mt-2">You will lose all progress and 80% of resources spent on this production.</p>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-4">
+          <TertiaryButton @click="showCancelModal = false">No, Keep Producing</TertiaryButton>
+          <SecondaryButton @click="handleCancelProduction">Yes, Cancel Production</SecondaryButton>
+        </div>
+      </template>
+    </DialogModal>
+  </teleport>
+
 </template>
 
 <style scoped>
@@ -310,6 +358,10 @@ function unlockSpacecraft() {
     3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
     8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
     0 0 20px -2px hsl(var(--glow-color) / 0.15);
+  border: 1px solid hsl(210deg 30% 25% / 0.5);
+}
+
+.custom-border {
   border: 1px solid hsl(210deg 30% 25% / 0.5);
 }
 
@@ -326,4 +378,5 @@ function unlockSpacecraft() {
   filter: brightness(0.7) grayscale(1);
   pointer-events: none;
 }
+
 </style>

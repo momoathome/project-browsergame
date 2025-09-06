@@ -3,6 +3,9 @@ import { ref, computed } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import TertiaryButton from '@/Components/TertiaryButton.vue';
+import DialogModal from '@/Components/DialogModal.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
@@ -17,6 +20,7 @@ const props = defineProps<{
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
 const isSubmitting = ref(false)
+const showCancelModal = ref(false);
 
 const currentEffect = computed(() => {
   if (!props.building.current_effects || props.building.current_effects.length === 0) {
@@ -112,6 +116,22 @@ function handleUpgradeComplete() {
     refreshQueue();
   }, 500);
 }
+
+function handleCancelUpgrade() {
+  if (isSubmitting.value) return;
+  isSubmitting.value = true;
+
+  router.delete(route('buildings.cancel', props.building.id), {
+    preserveState: true,
+    onFinish: () => { 
+      isSubmitting.value = false; 
+      showCancelModal.value = false; 
+      refreshQueue(); 
+      router.reload({ only: ['buildings', 'userAttributes'] });
+    },
+    onError: () => { isSubmitting.value = false; }
+  });
+}
 </script>
 
 <template>
@@ -119,7 +139,9 @@ function handleUpgradeComplete() {
     <div class="image relative">
       <img :src="building.image" class="rounded-t-3xl object-cover aspect-[2/1] h-[195px]" alt="" />
     </div>
-    <div class="px-6 pt-0 pb-6 flex flex-col gap-4 h-full">
+    <div class="pt-0 flex flex-col h-full">
+      <div class="px-6 flex flex-col gap-4 h-full mb-8">
+
       <div class="flex flex-col gap-4">
         <div class="flex justify-between">
           <p class="font-semibold text-2xl">{{ building.name }}</p>
@@ -160,25 +182,50 @@ function handleUpgradeComplete() {
           <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
         </div>
       </div>
-      <div class="flex flex-col gap-4 mt-auto">
-        <div class="flex justify-center my-2">
-          <PrimaryButton @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade">
-            <span v-if="isUpgrading" class="flex gap-1 items-center">
-              Upgrading
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                viewBox="0 0 24 24">
-                <path fill="currentColor" d="M6 17.59L7.41 19L12 14.42L16.59 19L18 17.59l-6-6z" />
-                <path fill="currentColor" d="m6 11l1.41 1.41L12 7.83l4.59 4.58L18 11l-6-6z" />
-              </svg>
-            </span>
-            <span v-else>Upgrade</span>
-          </PrimaryButton>
-        </div>
-        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
-          @upgrade-complete="handleUpgradeComplete" :description="`upgrade to lv. ${building.level + 1}`" />
+    </div>
+
+      <div class="flex flex-col mt-auto">
+        <button
+          class="px-4 py-3 bg-primary-dark text-cyan-100 font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="upgradeBuilding" 
+          :disabled="isUpgrading || !canUpgrade"
+          type="button"
+        >
+          <span>Upgrade to lv. {{ building.level + 1 }}</span>
+        </button>
+        
+        <AppCardTimer 
+        :buildTime="building.build_time" 
+        :endTime="upgradeEndTime" 
+        :isInProgress="isUpgrading"
+        @upgrade-complete="handleUpgradeComplete" 
+        @cancel-upgrade="showCancelModal = true"
+        :description="`Upgrading to lv. ${building.level + 1}`" />
       </div>
     </div>
   </div>
+
+    <teleport to="body">
+    <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
+      <template #title>Cancel Upgrade</template>
+      <template #content>
+        <p>Are you sure you want to cancel the upgrade of
+          <span class="font-semibold">
+            {{ building.name }}
+          </span>
+           ?
+          </p>
+        <p class="text-gray-400 mt-2">You will lose all progress and 80% of resources spent on this upgrade.</p>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-4">
+          <TertiaryButton @click="showCancelModal = false">No, Keep Upgrading</TertiaryButton>
+          <SecondaryButton @click="handleCancelUpgrade">Yes, Cancel Upgrade</SecondaryButton>
+        </div>
+      </template>
+    </DialogModal>
+  </teleport>
+
 </template>
 
 <style scoped>

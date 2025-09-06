@@ -63,6 +63,19 @@ class SpacecraftController extends Controller
         }
     }
 
+    public function cancel(Spacecraft $spacecraft)
+    {
+        $user = $this->authManager->user();
+
+        $result = $this->spacecraftProductionService->cancelSpacecraftProduction($user, $spacecraft);
+
+        if ($result['success']) {
+            return redirect()->route('shipyard')->banner($result['message']);
+        } else {
+            return redirect()->route('shipyard')->dangerBanner($result['message']);
+        }
+    }
+
     public function getAllSpacecrafts()
     {
         $user = $this->authManager->user();

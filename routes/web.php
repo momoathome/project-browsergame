@@ -32,11 +32,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
 
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');
+    Route::delete('/buildings/{building}/cancel', [BuildingController::class, 'cancel'])->name('buildings.cancel');
 
     Route::get('/shipyard/api', [SpacecraftController::class, 'getAllSpacecrafts'])->name('shipyard.api');
     Route::get('/shipyard', [SpacecraftController::class, 'index'])->name('shipyard');
     Route::post('/shipyard/{spacecraft}/update', [SpacecraftController::class, 'update'])->name('shipyard.update');
     Route::post('/shipyard/{spacecraft}/unlock', [SpacecraftController::class, 'unlock'])->name('shipyard.unlock');
+    Route::delete('/shipyard/{spacecraft}/cancel', [SpacecraftController::class, 'cancel'])->name('shipyard.cancel');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
     Route::post('/market/{marketRes}/buy', [MarketController::class, 'buy'])->name('market.buy');

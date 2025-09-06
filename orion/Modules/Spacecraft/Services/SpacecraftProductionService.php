@@ -7,9 +7,11 @@ use App\Services\UserService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
@@ -73,6 +75,70 @@ class SpacecraftProductionService
             return [
                 'success' => false,
                 'message' => 'Error occurred while starting spacecraft production: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function cancelSpacecraftProduction(User $user, Spacecraft $spacecraft): array
+    {
+        $queueEntry = $this->queueService->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_PRODUCE)
+            ->where('target_id', $spacecraft->id)
+            ->first();
+
+        if (!$queueEntry) {
+            return [
+                'success' => false,
+                'message' => 'No active production found to cancel.'
+            ];
+        }
+
+        try {
+            DB::transaction(function () use ($user, $queueEntry) {
+                $details = $queueEntry->details;
+                if (is_string($details)) {
+                    $details = json_decode($details, true);
+                }
+                $quantity = $details['quantity'] ?? 1;
+
+                $spacecraft = $this->spacecraftRepository->findSpacecraftById($queueEntry->target_id, $user->id);
+                if (!$spacecraft) {
+                    throw new \Exception('Spacecraft not found for cancellation.');
+                }
+
+                $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
+
+                // 80% der Ressourcen zurückerstatten
+                $refundCosts = $totalCosts->map(function ($cost) {
+                    return [
+                        'id' => $cost['id'],
+                        'name' => $cost['name'],
+                        'amount' => (int)floor($cost['amount'] * 0.8)
+                    ];
+                })->filter(fn($cost) => $cost['amount'] > 0)->values();
+
+                foreach ($refundCosts as $cost) {
+                    $this->userResourceService->addResourceAmount($user, $cost['id'], $cost['amount']);
+                }
+
+                // Produktion aus der Queue entfernen
+                $this->queueService->deleteFromQueue($queueEntry->id);
+            });
+
+            broadcast(new UpdateUserResources($this->userService->find($user->id)));
+            return [
+                'success' => true,
+                'message' => 'Production successfully canceled. 80% of resources have been refunded.'
+            ];
+        } catch (\Exception $e) {
+            Log::error("Error occurred while canceling spacecraft production:", [
+                'user_id' => $user->id,
+                'spacecraft_id' => $spacecraft->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Error occurred while canceling production: ' . $e->getMessage()
             ];
         }
     }

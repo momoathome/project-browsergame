@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import type { Spacecraft } from '@/types/types';
@@ -7,6 +7,7 @@ import type { Spacecraft } from '@/types/types';
 const props = defineProps<{
   spacecrafts: Spacecraft[]
 }>()
+
 </script>
 
 <template>

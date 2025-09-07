@@ -200,7 +200,7 @@ function handleCancelProduction() {
           <!-- <p class="text-gray text-sm mt-1">{{ spacecraft.description }}</p> -->
         </div>
         <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary-dark">
-          <p class="text-2xl">{{ spacecraft.count }}</p>
+          <p class="text-xl">{{ spacecraft.count }}</p>
         </div>
       </div>
 
@@ -209,9 +209,9 @@ function handleCancelProduction() {
       </div>
 
       <div class="flex flex-col h-full">
-        <div class="flex flex-col gap-4 h-full mb-8">
+        <div class="flex flex-col gap-4 h-full mb-4">
 
-          <div class="grid grid-cols-4 gap-4 px-6">
+          <div class="grid grid-cols-4 gap-4 px-6 mt-2">
             <div class="flex flex-col items-center">
               <span class="text-sm text-secondary">Combat</span>
               <p class="font-medium text-sm">{{ formattedCombat }}</p>
@@ -250,44 +250,52 @@ function handleCancelProduction() {
         </div>
 
 
-        <div class="flex flex-col mt-auto">
+        <div class="flex flex-col border-t border-primary">
           <form v-if="spacecraft.unlocked" @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft" >
             <div class="flex items-center justify-between">
               <button
-                class="px-3 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="decrement"
                 @click.shift="decrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
                 type="button"
-              >−</button>
+              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2"/>
+              </svg>
+            </button>
               <AppInput
                 :id="spacecraft.name"
                 :maxlength="4"
                 :maxInputValue="maxSpacecraftCount"
                 v-model="form.amount"
                 :disabled="isProducing || !canProduce"
-                class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors"
+                class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors"
               />
               <button
-                class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="increment"
                 @click.shift="incrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
                 type="button"
-              >＋</button>
+              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M18 12.998h-5v5a1 1 0 0 1-2 0v-5H6a1 1 0 0 1 0-2h5v-5a1 1 0 0 1 2 0v5h5a1 1 0 0 1 0 2"/>
+              </svg>
+            </button>
               <button
-                class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="maxSpacecraftCount == 0 || isProducing"
                 @click="form.amount = maxSpacecraftCount"
                 type="button"
                 aria-label="Maximum"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="w-5 h-6" viewBox="0 0 24 24"> 
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> 
                   <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
                 </svg>
               </button>
               <button
-                class="px-4 py-3 bg-primary-dark text-cyan-100 font-semibold transition border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-4 py-2 bg-primary-dark text-light font-semibold transition border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="isProducing || form.amount == 0 || !canProduce"
                 @click="produceSpacecraft"
                 type="button"
@@ -297,13 +305,13 @@ function handleCancelProduction() {
               </button>
             </div>
 
-            <AppCardTimer class="!rounded-b-xl"
+            <AppCardTimer
               v-if="spacecraft.unlocked"
               :buildTime="actualBuildTime"
               @upgrade-complete="handleProduceComplete"
               :isInProgress="isProducing"
               :endTime="productionEndTime"
-              :description="`Producing: ${activeProduction} Units`"
+              :description="`${activeProduction} Units`"
               @cancel-upgrade="showCancelModal = true"
             />
           </form>

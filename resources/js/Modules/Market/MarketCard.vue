@@ -99,94 +99,73 @@ function setMaxAmount() {
 </script>
 
 <template>
-  <div class="rounded-3xl flex flex-col bg-base text-light content_card" 
-        :class="{ '!border-secondary': !!localPrefill }">
-    <div class="px-4 py-4 gap-4 flex flex-col">
-      <div class="flex justify-between items-end">
-        <div class="flex flex-col">
+  <div class="rounded-xl flex flex-col bg-base text-light content_card"
+    :class="{ '!border-secondary': !!localPrefill }">
+    <div class="gap-4 flex flex-col">
+      <div class="flex justify-between items-center border-b-primary border-b-2">
+        <div class="flex flex-col justify-center px-3 py-2">
           <span class="text-xs text-gray">ressource</span>
-          <p class="font-semibold text-xl">{{ marketData.name }}</p>
+          <p class="font-semibold text-xl -mt-1">{{ marketData.name }}</p>
         </div>
-        <div class="flex items-center gap-x-1">
-          <img src="/images/attributes/credits.png" class="h-6" alt="credits" />
-          <div class="flex flex-col">
-            <span class="text-xs text-secondary">price</span>
+        <div class="flex flex-col justify-center h-full px-3 rounded-tr-xl bg-primary-dark">
+          <span class="text-xs text-secondary">price</span>
+          <div class="flex gap-1">
+            <img src="/images/attributes/credits.png" class="h-5" alt="credits" />
             <p class="font-medium">{{ formattedCost }}</p>
           </div>
         </div>
       </div>
 
-      <div class="relative flex justify-center items-center py-4">
-        <div class="relative">
-          <img :src="marketData.image" class="h-[64px]" alt="resource" />
-        </div>
+      <div class="flex justify-center items-center py-6">
+        <img :src="marketData.image" class="h-16" alt="resource" />
       </div>
 
-      <Divider />
-
-      <div class="flex w-full justify-between">
-        <div class="flex flex-col ms-2">
+      <div class="flex w-full justify-between px-3 pb-3">
+        <div class="flex flex-col">
           <span class="text-xs text-secondary">stock</span>
           <p class="font-medium">{{ formattedStock }}</p>
         </div>
-        <div class="flex items-center gap-x-1">
-          <img src="/images/attributes/credits.png" class="h-6" alt="credits" />
-          <div class="flex flex-col me-1">
-            <span class="text-xs text-secondary">total</span>
-            <p class="font-medium text-sm"
-                :class="{ 'text-red-600': notEnoughCredits }">
-              {{ formattedTotalCost }}
-            </p>
+        <div class="flex flex-col justify-center">
+          <span class="text-xs text-secondary">total</span>
+          <div class="flex gap-1">
+            <img src="/images/attributes/credits.png" class="h-5" alt="credits" />
+            <p :class="{ 'text-red-600': notEnoughCredits }" class="font-medium text-sm">{{ formattedTotalCost }}</p>
           </div>
         </div>
       </div>
     </div>
 
-    <form @submit.prevent class="flex flex-col mt-auto">
+    <form @submit.prevent class="flex flex-col border-t border-primary">
       <div class="flex items-center justify-between">
         <!-- Sell Button -->
         <button
-          class="px-4 py-3 bg-tertiary text-light font-semibold transition rounded-bl-3xl border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:hover:bg-tertiary disabled:opacity-40 disabled:cursor-not-allowed"
-          :disabled="isSellDisabled"
-          @click="sellResource"
-          type="button"
-        >
+          class="px-4 py-3 bg-tertiary text-light font-semibold transition rounded-bl-xl border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:hover:bg-tertiary disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="isSellDisabled" @click="sellResource" type="button">
           Sell
         </button>
         <button
-          class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          @click="setUserResourcesInput"
-          type="button"
-          aria-label="Maximum sellable amount"
-        >
+          class="px-2 py-3 bg-primary-dark text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="setUserResourcesInput" type="button" aria-label="Maximum sellable amount">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="w-6 h-6" viewBox="0 0 24 24">
-            <path fill="currentColor" d="m7.825 12l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T5.426 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7zm6.6 0l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T12.026 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7z"/>
+            <path fill="currentColor"
+              d="m7.825 12l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T5.426 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7zm6.6 0l3.875 3.9q.275.275.288.688t-.288.712q-.275.275-.7.275t-.7-.275l-4.6-4.6q-.15-.15-.213-.325T12.026 12t.063-.375t.212-.325l4.6-4.6q.275-.275.688-.287t.712.287q.275.275.275.7t-.275.7z" />
           </svg>
         </button>
         <!-- Input -->
-        <AppInput
-          :maxlength="7"
-          v-model="form.amount"
-          name="amount"
-          class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors"
-        />
+        <AppInput :maxlength="7" v-model="form.amount" name="amount"
+          class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors" />
         <button
-          class="px-2 py-3 bg-primary-dark text-cyan-100 hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          @click="setMaxAmount"
-          type="button"
-          aria-label="Maximum buyable amount"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-6 h-6" viewBox="0 0 24 24"> 
-            <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
+          class="px-2 py-3 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="setMaxAmount" type="button" aria-label="Maximum buyable amount">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-6 h-6" viewBox="0 0 24 24">
+            <path fill="currentColor"
+              d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z" />
           </svg>
         </button>
         <!-- Buy Button -->
         <button
-          class="px-4 py-3 bg-primary-dark text-cyan-100 font-semibold transition rounded-br-3xl border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          :disabled="isBuyDisabled"
-          @click="buyResource"
-          type="button"
-        >
+          class="px-4 py-3 bg-primary-dark text-light font-semibold transition rounded-br-xl border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          :disabled="isBuyDisabled" @click="buyResource" type="button">
           Buy
         </button>
       </div>

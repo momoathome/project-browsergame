@@ -123,10 +123,10 @@ function handleCancelUpgrade() {
 
   router.delete(route('buildings.cancel', props.building.id), {
     preserveState: true,
-    onFinish: () => { 
-      isSubmitting.value = false; 
-      showCancelModal.value = false; 
-      refreshQueue(); 
+    onFinish: () => {
+      isSubmitting.value = false;
+      showCancelModal.value = false;
+      refreshQueue();
       router.reload({ only: ['buildings', 'userAttributes'] });
     },
     onError: () => { isSubmitting.value = false; }
@@ -135,77 +135,65 @@ function handleCancelUpgrade() {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-3xl bg-base content_card text-light">
-    <div class="image relative">
-      <img :src="building.image" class="rounded-t-3xl object-cover aspect-[2/1] h-[195px]" alt="" />
+  <div class="flex flex-col rounded-xl bg-base content_card text-light">
+    <div class="flex justify-between items-center border-b-primary border-b-2">
+      <div class="flex justify-center px-3 py-2">
+        <p class="font-semibold text-xl">{{ building.name }}</p>
+      </div>
+      <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary-dark">
+        <span class="text-sm font-medium mt-2 me-1 text-secondary">lv.</span>
+        <p class="text-xl">{{ building.level }}</p>
+      </div>
     </div>
-    <div class="pt-0 flex flex-col h-full">
-      <div class="px-6 flex flex-col gap-4 h-full mb-8">
 
-      <div class="flex flex-col gap-4">
-        <div class="flex justify-between">
-          <p class="font-semibold text-2xl">{{ building.name }}</p>
-          <div class="flex">
-            <span class="text-sm font-medium mt-2 me-1 text-secondary">lv.</span>
-            <p class="text-xl">{{ building.level }}</p>
+    <div class="image relative">
+      <img :src="building.image" class="object-cover aspect-[2/1] h-48" alt="" />
+    </div>
+
+    <div class="flex flex-col h-full">
+      <div class="flex flex-col gap-4 h-full mb-6">
+        <!-- Neue Effektanzeige basierend auf Backend-Daten -->
+        <div v-if="currentEffect" class="flex flex-col gap-1 px-6 mt-3">
+          <div class="flex gap-1">
+            <span class="text-sm text-secondary">Current Effect:</span>
+            <span class="font-medium text-sm">{{ formattedEffectValue }}</span>
+          </div>
+          <div v-if="nextLevelEffect" class="flex gap-1">
+            <span class="text-sm text-secondary">Next Level:</span>
+            <span class="font-medium text-sm text-green-400">{{ formattedNextLevelValue }}</span>
           </div>
         </div>
-        <p class="text-gray text-sm">{{ building.description }}</p>
-      </div>
 
-      <!-- Neue Effektanzeige basierend auf Backend-Daten -->
-      <div v-if="currentEffect" class="flex flex-col gap-1">
-        <div class="flex gap-1">
-          <span class="text-sm text-secondary">Current Effect:</span>
-          <span class="font-medium text-sm">{{ formattedEffectValue }}</span>
-        </div>
-        <div v-if="nextLevelEffect" class="flex gap-1">
-          <span class="text-sm text-secondary">Next Level:</span>
-          <span class="font-medium text-sm text-green-400">{{ formattedNextLevelValue }}</span>
-        </div>
-      </div>
+        <Divider />
 
-      <Divider />
-
-      <div class="grid grid-cols-4 gap-4 items-center">
-        <div
-          class="relative group flex flex-col gap-1 items-center"
-          v-for="resource in building.resources"
-          :key="resource.name"
-          :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
-          @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()"
-        >
-          <img :src="resource.image" class="h-7" alt="resource" />
-          <p class="font-medium text-sm" :class="{ 'text-red-600': !isResourceSufficient(resource.id) }">
-            {{ resource.amount }}
-          </p>
-          <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
+        <div class="grid grid-cols-4 gap-4 items-center">
+          <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources"
+            :key="resource.name" :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
+            @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()">
+            <img :src="resource.image" class="h-7" alt="resource" />
+            <p class="font-medium text-sm" :class="{ 'text-red-600': !isResourceSufficient(resource.id) }">
+              {{ resource.amount }}
+            </p>
+            <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
+          </div>
         </div>
       </div>
-    </div>
 
-      <div class="flex flex-col mt-auto">
+      <div class="flex flex-col border-t border-primary mt-auto">
         <button
-          class="px-4 py-3 bg-primary-dark text-cyan-100 font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          @click="upgradeBuilding" 
-          :disabled="isUpgrading || !canUpgrade"
-          type="button"
-        >
+          class="px-4 py-3 bg-primary-dark text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade" type="button">
           <span>Upgrade to lv. {{ building.level + 1 }}</span>
         </button>
-        
-        <AppCardTimer 
-        :buildTime="building.build_time" 
-        :endTime="upgradeEndTime" 
-        :isInProgress="isUpgrading"
-        @upgrade-complete="handleUpgradeComplete" 
-        @cancel-upgrade="showCancelModal = true"
-        :description="`Upgrading to lv. ${building.level + 1}`" />
+
+        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
+          @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
+          :description="`Upgrading to lv. ${building.level + 1}`" />
       </div>
     </div>
   </div>
 
-    <teleport to="body">
+  <teleport to="body">
     <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
       <template #title>Cancel Upgrade</template>
       <template #content>
@@ -213,8 +201,8 @@ function handleCancelUpgrade() {
           <span class="font-semibold">
             {{ building.name }}
           </span>
-           ?
-          </p>
+          ?
+        </p>
         <p class="text-gray-400 mt-2">You will lose all progress and 80% of resources spent on this upgrade.</p>
       </template>
       <template #footer>

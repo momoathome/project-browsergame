@@ -108,7 +108,7 @@ function resetAllUsersData() {
             <template #footer>
                 <div class="flex gap-2">
                     <SecondaryButton @click="showResetModal = false">Abbrechen</SecondaryButton>
-                    <SecondaryButton class="bg-red-600 hover:bg-red-700 text-white" @click="resetUserData">Bestätigen</SecondaryButton>
+                    <PrimaryButton @click="resetUserData">Bestätigen</PrimaryButton>
                 </div>
             </template>
         </ConfirmationModal>
@@ -122,12 +122,12 @@ function resetAllUsersData() {
             </template>
             <template #footer>
                 <div class="flex gap-2">
-                <PrimaryButton @click="showResetAllUsersModal = false">
+                <SecondaryButton @click="showResetAllUsersModal = false">
                     Abbrechen
-                </PrimaryButton>
-                <SecondaryButton @click="resetAllUsersData">
-                    Bestätigen
                 </SecondaryButton>
+                <PrimaryButton @click="resetAllUsersData">
+                    Bestätigen
+                </PrimaryButton>
                 </div>
             </template>
         </ConfirmationModal>

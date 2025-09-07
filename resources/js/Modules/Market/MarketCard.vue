@@ -146,7 +146,7 @@ function setMaxAmount() {
       <div class="flex items-center justify-between">
         <!-- Sell Button -->
         <button
-          class="px-4 py-3 bg-tertiary text-light font-semibold transition rounded-bl-3xl border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-4 py-3 bg-tertiary text-light font-semibold transition rounded-bl-3xl border-r border-tertiary-light hover:bg-tertiary-dark focus:outline-none disabled:hover:bg-tertiary disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="isSellDisabled"
           @click="sellResource"
           type="button"

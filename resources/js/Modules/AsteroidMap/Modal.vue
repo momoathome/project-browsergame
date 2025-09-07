@@ -80,7 +80,7 @@ const { miningDuration } = useAsteroidMining(
 
 const {
   setMaxAvailableUnits,
-  setMinNeededUnits, 
+  setMinNeededUnits,
 } = useSpacecraftUtils(
   computed(() => props.spacecrafts),
   form.spacecrafts,
@@ -105,7 +105,7 @@ const totals = computed(() => {
   for (const s of props.spacecrafts) {
     const qty = form.spacecrafts[s.name] || 0
     combat += s.combat * qty
-    cargo  += s.cargo  * qty
+    cargo += s.cargo * qty
     speedWeighted += s.speed * qty
     unitCount += qty
   }
@@ -209,7 +209,7 @@ async function attackUser() {
   if (noSpacecraftSelected) return;
 
   isSubmitting.value = true;
-    try {
+  try {
     const { data } = await axios.post('/asteroidMap/combat', form);
     // Zeige Erfolg/Fehler
     // Aktualisiere gezielt die Queue und ggf. den Asteroiden
@@ -310,18 +310,19 @@ function availableCount(s) {
       <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm" @click="close"></div>
 
       <!-- Modal -->
-      <div
-        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+      <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                w-[1200px] max-w-[95vw] rounded-3xl border border-cyan-400/20
-               shadow-2xl"
-      >
+               shadow-2xl">
         <!-- Outer Glow -->
         <div class="rounded-3xl">
           <div class="rounded-3xl bg-[#0b1623]/95">
 
-            <button type="button" class="absolute top-3 right-3 px-1 py-1 rounded-xl text-white font-medium border-transparent border-solid hover:border-solid outline-none transition hover:bg-cyan-900/30" @click="close">
+            <button type="button"
+              class="absolute top-3 right-3 px-1 py-1 rounded-xl text-white font-medium border-transparent border-solid hover:border-solid outline-none transition hover:bg-cyan-900/30"
+              @click="close">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <path fill="currentColor" d="m8.382 17.025l-1.407-1.4L10.593 12L6.975 8.4L8.382 7L12 10.615L15.593 7L17 8.4L13.382 12L17 15.625l-1.407 1.4L12 13.41z"/>
+                <path fill="currentColor"
+                  d="m8.382 17.025l-1.407-1.4L10.593 12L6.975 8.4L8.382 7L12 10.615L15.593 7L17 8.4L13.382 12L17 15.625l-1.407 1.4L12 13.41z" />
               </svg>
             </button>
 
@@ -333,23 +334,17 @@ function availableCount(s) {
                 <h1 class="text-2xl flex justify-center text-white mt-2">{{ content.title }}</h1>
 
                 <div class="relative flex items-center justify-center w-[360px] h-[360px] mx-auto">
-                  <img
-                    v-if="actionType === QueueActionType.MINING"
-                    :src="asteroidImageSrc"
-                    class="z-10"
-                  />
-                  <img
-                    v-else
-                    src="/images/station_full.webp"
-                    class="z-10"
-                  />
-                  <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid" :showResources="canScanAsteroid" class="absolute inset-0" />
+                  <img v-if="actionType === QueueActionType.MINING" :src="asteroidImageSrc" class="z-10" />
+                  <img v-else src="/images/station_full.webp" class="z-10" />
+                  <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid"
+                    :showResources="canScanAsteroid" class="absolute inset-0" />
                 </div>
 
-                <div v-if="actionType === QueueActionType.MINING && canScanAsteroid" class="flex items-center justify-center gap-6 text-gray-300">
+                <div v-if="actionType === QueueActionType.MINING && canScanAsteroid"
+                  class="flex items-center justify-center gap-6 text-gray-300">
                   <span v-for="{ resource_type, amount } in asteroid.resources" :key="resource_type" class="flex gap-2">
-                      <img :src="`/images/resources/${resource_type}.png`" class="h-6" alt="" />
-                      {{ amount }}
+                    <img :src="`/images/resources/${resource_type}.png`" class="h-6" alt="" />
+                    {{ amount }}
                   </span>
                 </div>
 
@@ -361,8 +356,7 @@ function availableCount(s) {
                   <template v-else-if="actionType === QueueActionType.MINING">
                     <span
                       v-if="asteroid.size === 'extreme' && (!form.spacecrafts['Titan'] || form.spacecrafts['Titan'] === 0)"
-                      class="text-yellow-300 text-sm text-pretty"
-                    >
+                      class="text-yellow-300 text-sm text-pretty">
                       Info: Extreme asteroids can only be mined by Massive Miners.
                     </span>
                   </template>
@@ -373,74 +367,67 @@ function availableCount(s) {
               <div class="flex flex-col border border-solid rounded-3xl border-white/5 px-6 pb-4 pt-2">
                 <!-- Header -->
                 <div class="flex items-center justify-between py-4 border-b border-white/5 mb-4">
-                    <div class="flex items-center gap-6">
-                        <div class="px-3 py-1 text-light">Combat: <span class="text-cyan-300">{{ numberFormat(totals.combat) }}</span></div>
-                        <div class="px-3 py-1 text-light">Cargo: <span class="text-cyan-300">{{ numberFormat(totals.cargo) }}</span></div>
-                        <div class="px-3 py-1 text-light">
-                            Travel Time: <span class="text-cyan-300">{{ miningDuration }}</span>
-                        </div>
+                  <div class="flex items-center gap-6">
+                    <div class="px-3 py-1 text-light">Combat: <span class="text-cyan-300">{{ numberFormat(totals.combat)
+                        }}</span>
                     </div>
+                    <div class="px-3 py-1 text-light">Cargo: <span class="text-cyan-300">{{ numberFormat(totals.cargo)
+                        }}</span></div>
+                    <div class="px-3 py-1 text-light">
+                      Travel Time: <span class="text-cyan-300">{{ miningDuration }}</span>
+                    </div>
+                  </div>
 
-                    <button
-                      @click="startMission" @shift.click="fastExploreAsteroid"
-                      class="px-6 py-2 rounded-full bg-slate-900/80 text-cyan-200 border border-cyan-700/30 hover:bg-cyan-900/30 hover:text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 transition font-semibold text-base shadow flex items-center gap-2"
-                    >
-                      <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
-                      <span v-else>Start Attack</span>
-                    </button>
+                  <button @click="startMission" @shift.click="fastExploreAsteroid"
+                    class="px-4 py-2 bg-cyan-700 text-light rounded-xl font-semibold transition border border-cyan-700/30 hover:bg-cyan-600 hover:text-cyan-100 text-base shadow disabled:cursor-not-allowed disabled:opacity-40">
+                    <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
+                    <span v-else>Start Attack</span>
+                  </button>
                 </div>
 
                 <!-- Tabs -->
                 <div class="relative flex justify-between pb-4 border-b border-white/10 mb-4">
                   <div class="flex gap-1">
-                    <button
-                      v-for="t in tabs"
-                      :key="t"
-                      class="relative px-5 py-2 font-semibold text-sm transition
+                    <button v-for="t in tabs" :key="t" class="relative px-5 py-2 font-semibold text-sm transition
                         rounded-t-xl
                         flex items-center gap-2
                         focus:outline-none
                         hover:bg-cyan-400/10
-                        text-cyan-100
-                        "
-                      :class="{
-                        'bg-cyan-500/10 shadow text-cyan-200': t === activeTab,
-                        '': t !== activeTab
-                      }"
-                      @click="activeTab = t"
-                    >
-                    <img :src="`/images/spacecraftTypes/${t}.png`" alt="" width="20" height="20" />
+                        text-light
+                        " :class="{
+                          'bg-cyan-500/10 shadow text-cyan-200': t === activeTab,
+                          '': t !== activeTab
+                        }" @click="activeTab = t">
+                      <img :src="`/images/spacecraftTypes/${t}.png`" alt="" width="20" height="20" />
                       {{ t }}
-                      <span
-                        v-if="t === activeTab"
-                        class="absolute left-0 -bottom-[2px] w-full h-1 bg-cyan-400 rounded-b-xl transition-all"
-                      ></span>
+                      <span v-if="t === activeTab"
+                        class="absolute left-0 -bottom-[2px] w-full h-1 bg-cyan-400 rounded-b-xl transition-all"></span>
                     </button>
                   </div>
 
                   <div class="flex gap-2 z-10">
                     <button
-                      class="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-900/80 text-cyan-300 border border-cyan-700/30 hover:bg-cyan-900/30 hover:text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 transition font-semibold text-sm shadow"
-                      @click="setMaxUnits"
-                      title="choose all available units for this category"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16M12 4v16"/></svg>
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                      @click="setMaxUnits" title="choose all available units for this category">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16M12 4v16" />
+                      </svg>
                       Max
                     </button>
                     <button
-                      class="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-900/80 text-cyan-300 border border-cyan-700/30 hover:bg-cyan-900/30 hover:text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 transition font-semibold text-sm shadow"
-                      @click="setMinUnits"
-                      title="Set the minimum required units for this category"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16"/></svg>
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                      @click="setMinUnits" title="Set the minimum required units for this category">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16" />
+                      </svg>
                       Min
                     </button>
                     <button
-                      class="flex items-center gap-1 px-3 py-1 rounded-full bg-slate-900/80 text-cyan-300 border border-cyan-700/30 hover:bg-cyan-900/30 hover:text-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 transition font-semibold text-sm shadow"
-                      @click="resetSpacecraftsForm"
-                      title="Set all units to 0"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                      @click="resetSpacecraftsForm" title="Set all units to 0">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                       Reset
                     </button>
                   </div>
@@ -448,52 +435,53 @@ function availableCount(s) {
 
                 <!-- Grid -->
                 <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-2 fancy-scroll">
-                  <div
-                    v-for="s in filtered"
-                    :key="s.id"
-                    class="rounded-2xl border border-white/5 bg-slate-800/40 shadow-lg"
-                  >
-                    <div class="spacecraftImage relative bg-[#101d2c] flex items-center justify-center rounded-t-2xl">
-                      <img :src="s.image" class="h-[90px] w-full rounded-t-2xl" />
+                  <div v-for="s in filtered" :key="s.id"
+                    class="rounded-xl border border-white/5 bg-slate-900/5 shadow-lg">
+                    <div class="flex justify-between items-center px-3 py-1 border-b-slate-950 border-b">
+                      <h3 class="text-light font-semibold">{{ s.name }}</h3>
+                      <span class="text-light cursor-pointer" @click="setMax(s.name, availableCount(s))"
+                        :title="`${availableCount(s)} verfügbar von ${s.count}`">
+                        {{ availableCount(s) }}
+                      </span>
                     </div>
-                    <div class="px-4 pt-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <h3 class="text-light font-semibold">{{ s.name }}</h3>
-                            <span
-                              class="text-cyan-100 cursor-pointer"
-                              @click="setMax(s.name, availableCount(s))"
-                              :title="`${availableCount(s)} verfügbar von ${s.count}`"
-                            >
-                              {{ availableCount(s) }}
-                            </span>
-                        </div>
-                      <div class="flex justify-between">
-                          <span class="text-sm text-slate-400">Combat: {{ numberFormat(s.combat) }}</span>
-                          <span class="text-sm text-slate-400">Cargo: {{ numberFormat(s.cargo) }}</span>
+
+                    <div class="spacecraftImage relative bg-[#101d2c] flex items-center justify-center">
+                      <img :src="s.image" class="h-[90px] w-full" />
+                    </div>
+                    <div class="flex justify-between px-3 pt-2">
+                      <div class="flex flex-col items-center">
+                        <span class="text-sm text-secondary">Combat</span>
+                        <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.combat) }}</p>
+                      </div>
+                      <div class="flex flex-col items-center">
+                        <span class="text-sm text-secondary">Cargo</span>
+                        <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.cargo) }}</p>
                       </div>
                     </div>
-                    <div class="px-4 pb-4 mt-2">
-                      <div class="flex items-center justify-between rounded-xl bg-white/5 ring-1 ring-white/10 shadow-inner overflow-hidden">
+
+                    <div class="mt-4">
+                      <div class="flex items-center justify-between">
                         <button
-                          class="h-8 w-10 rounded-l-xl bg-slate-900/80 text-cyan-100 hover:bg-cyan-900/30 transition font-semibold border-r border-cyan-700/30 focus:outline-none disabled:hover:bg-slate-900/80 disabled:opacity-40 disabled:cursor-not-allowed"
+                          class="px-2 py-2 rounded-bl-xl bg-slate-900/10 text-light hover:bg-slate-950 transition font-semibold border-r border-slate-950 focus:outline-none disabled:hover:bg-slate-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
                           @click="dec(s.name)"
                           @click.shift="form.spacecrafts[s.name] = Math.max(0, (form.spacecrafts[s.name] || 0) - 10)"
-                          :disabled="availableCount(s) === 0"
-                          type="button"
-                        >−</button>
-                        <AppInput
-                          class="!py-1 !px-0 !w-14 !rounded-none !border-0 !bg-transparent text-center focus:!ring-0 focus:!border-cyan-400/80 focus:!border-x-2 transition-colors"
-                          v-model="form.spacecrafts[s.name]"
-                          :maxInputValue="availableCount(s)"
-                          :maxlength="4"
-                        />
+                          :disabled="availableCount(s) === 0" type="button">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M18 12.998H6a1 1 0 0 1 0-2h12a1 1 0 0 1 0 2" />
+                          </svg>
+                        </button>
+                        <AppInput v-model="form.spacecrafts[s.name]" :maxInputValue="availableCount(s)" :maxlength="5"
+                          class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-slate-900/10 text-center focus:!ring-0 focus:!border-x-2 transition-colors" />
                         <button
-                          class="h-8 w-10 rounded-r-xl bg-slate-900/80 text-cyan-100 hover:bg-cyan-900/30 transition font-semibold border-l border-cyan-700/30 focus:outline-none disabled:hover:bg-slate-900/80 disabled:opacity-40 disabled:cursor-not-allowed"
+                          class="px-2 py-2 rounded-br-xl bg-slate-900/10 text-light hover:bg-slate-950 transition font-semibold border-l border-slate-950 focus:outline-none disabled:hover:bg-slate-900/10 disabled:opacity-40 disabled:cursor-not-allowed"
                           @click="inc(s.name, availableCount(s))"
                           @click.shift="form.spacecrafts[s.name] = Math.min((form.spacecrafts[s.name] || 0) + 10, availableCount(s))"
-                          :disabled="availableCount(s) === 0"
-                          type="button"
-                        >＋</button>
+                          :disabled="availableCount(s) === 0" type="button">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                              d="M18 12.998h-5v5a1 1 0 0 1-2 0v-5H6a1 1 0 0 1 0-2h5v-5a1 1 0 0 1 2 0v5h5a1 1 0 0 1 0 2" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -509,11 +497,21 @@ function availableCount(s) {
 </template>
 
 <style scoped>
-.asteroid-spin { animation: asteroid 40s linear infinite; }
-@keyframes asteroid { to { transform: rotate(360deg); } }
+.asteroid-spin {
+  animation: asteroid 40s linear infinite;
+}
+
+@keyframes asteroid {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Scrollbar */
-.fancy-scroll::-webkit-scrollbar { width: 6px; }
+.fancy-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
 .fancy-scroll::-webkit-scrollbar-thumb {
   background: #67e8f950;
   border-radius: 9999px;
@@ -525,16 +523,20 @@ function availableCount(s) {
   inset: 0;
   box-shadow: inset 0px -15px 20px 4px #101d2c,
     inset 0px -20px 45px 0px #101d2c;
-  border-radius: 16px 16px 0 0;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
-.fade-enter-to, .fade-leave-from {
+
+.fade-enter-to,
+.fade-leave-from {
   opacity: 1;
 }
 </style>

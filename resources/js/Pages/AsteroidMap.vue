@@ -1058,19 +1058,21 @@ watch(() => queueData.value, () => {
         :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
 
       <button type="button" 
-        class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-slate-900 ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+        class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
         :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
         @click="isAutoMineModalOpen = true"
       >
         auto mine
       </button>
 
-      <div class="absolute top-2 right-0 z-100 flex flex-col text-end">
-        <span class="text-white me-2">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
-        <span @click="focusOnObject(null, usePage().props.auth.user.id)"
-          class="cursor-pointer text-white me-2">
+      <div class="absolute top-2 right-2 z-100 flex items-center">
+        <span class="text-light bg-[hsl(263,45%,7%)] ring-[#bfbfbf] border border-[#6b7280] px-3 py-2 rounded-lg transition-transform duration-200 me-1">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
+        <button type="button" 
+          class="text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+          @click="focusOnObject(null, usePage().props.auth.user.id)"
+        >
           reset
-        </span>
+        </button>
       </div>
 
     </div>

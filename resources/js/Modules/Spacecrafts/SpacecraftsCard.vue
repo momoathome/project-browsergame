@@ -192,27 +192,26 @@ function handleCancelProduction() {
 
 <template>
   <div class="flex relative">
-    <div class="flex flex-col w-full rounded-3xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
-      <div class="image relative">
-        <img :src="spacecraft.image" class="rounded-t-3xl h-[144px] w-full" alt="spacecraft" />
+    <div class="flex flex-col w-full rounded-xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
+      <div class="flex justify-between items-center border-b-primary border-b-2">
+        <div class="flex flex-col px-3 py-1">
+          <p class="font-semibold text-xl -mb-1">{{ spacecraft.name }}</p>
+          <p class="text-[12px] text-gray">{{ spacecraft.type }}</p>
+          <!-- <p class="text-gray text-sm mt-1">{{ spacecraft.description }}</p> -->
+        </div>
+        <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary-dark">
+          <p class="text-2xl">{{ spacecraft.count }}</p>
+        </div>
       </div>
-      <div class="pt-0 flex flex-col h-full">
-        <div class="px-6 flex flex-col gap-4 h-full mb-8">
-          <div class="flex flex-col gap-4">
-            <div class="flex justify-between">
-              <div class="flex flex-col">
-                <p class="font-semibold text-2xl -mb-1">{{ spacecraft.name }}</p>
-                <p class="text-[12px] font-medium text-gray">{{ spacecraft.type }}</p>
-              </div>
-              <div class="flex">
-                <span class="text-sm font-medium mt-2 me-1 text-secondary">quantity</span>
-                <p class="text-xl">{{ spacecraft.count }}</p>
-              </div>
-            </div>
-            <p class="text-gray text-sm">{{ spacecraft.description }}</p>
-          </div>
 
-          <div class="flex w-full justify-between">
+      <div class="image relative">
+        <img :src="spacecraft.image" class="h-32 w-full" alt="spacecraft" />
+      </div>
+
+      <div class="flex flex-col h-full">
+        <div class="flex flex-col gap-4 h-full mb-8">
+
+          <div class="grid grid-cols-4 gap-4 px-6">
             <div class="flex flex-col items-center">
               <span class="text-sm text-secondary">Combat</span>
               <p class="font-medium text-sm">{{ formattedCombat }}</p>
@@ -233,14 +232,14 @@ function handleCancelProduction() {
 
           <Divider />
 
-          <div class="grid grid-cols-4 gap-4 items-center">
+          <div class="grid grid-cols-4 gap-4 items-center px-6">
             <div class="relative group flex flex-col gap-1 items-center"
                 v-for="resource in spacecraft.resources"
                 :key="resource.name"
                 :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
                 @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
             >
-              <img :src="resource.image" class="h-7" alt="resource" />
+              <img :src="resource.image" class="h-6" alt="resource" />
               <p class="font-medium text-sm" :class="{'text-red-600': !isResourceSufficient(resource.id) && spacecraft.unlocked}">
                 {{ resource.amount }}
               </p>
@@ -298,7 +297,7 @@ function handleCancelProduction() {
               </button>
             </div>
 
-            <AppCardTimer
+            <AppCardTimer class="!rounded-b-xl"
               v-if="spacecraft.unlocked"
               :buildTime="actualBuildTime"
               @upgrade-complete="handleProduceComplete"
@@ -371,7 +370,6 @@ function handleCancelProduction() {
   inset: 0;
   box-shadow: inset 0px -20px 20px 4px #1E2D3B,
     inset 0px -30px 45px 0px #1E2D3B;
-  border-radius: 24px 24px 0 0;
 }
 
 .locked {

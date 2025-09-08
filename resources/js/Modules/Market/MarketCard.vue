@@ -102,12 +102,12 @@ function setMaxAmount() {
   <div class="rounded-xl flex flex-col bg-base text-light content_card"
     :class="{ '!border-secondary': !!localPrefill }">
     <div class="gap-4 flex flex-col">
-      <div class="flex justify-between items-center border-b-primary border-b-2">
+      <div class="flex justify-between items-center border-b-primary/40 border-b-2">
         <div class="flex flex-col justify-center px-3 py-2">
           <!-- <span class="text-xs text-gray">ressource</span> -->
           <p class="font-semibold text-lg">{{ marketData.name }}</p>
         </div>
-        <div class="flex flex-col justify-center h-full px-3 rounded-tr-xl bg-primary-dark">
+        <div class="flex flex-col justify-center h-full px-3 rounded-tr-xl bg-primary/25">
           <div class="flex gap-1">
             <img src="/images/attributes/credits.png" class="h-5" alt="credits" />
             <p class="font-medium">{{ formattedCost }}</p>
@@ -134,7 +134,7 @@ function setMaxAmount() {
       </div>
     </div>
 
-    <form @submit.prevent class="flex flex-col border-t border-primary">
+    <form @submit.prevent class="flex flex-col border-t border-primary/50">
       <div class="flex items-center justify-between">
         <!-- Sell Button -->
         <button
@@ -143,7 +143,7 @@ function setMaxAmount() {
           Sell
         </button>
         <button
-          class="px-2 py-3 bg-primary-dark text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-2 py-3 bg-primary/40 text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
           @click="setUserResourcesInput" type="button" aria-label="Maximum sellable amount">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" class="w-6 h-6" viewBox="0 0 24 24">
             <path fill="currentColor"
@@ -152,9 +152,9 @@ function setMaxAmount() {
         </button>
         <!-- Input -->
         <AppInput :maxlength="7" v-model="form.amount" name="amount"
-          class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors" />
+          class="!py-3 !px-0 !w-full !rounded-none !border-0 !bg-primary/40 text-center focus:!ring-0 focus:!border-x-2 transition-colors" />
         <button
-          class="px-2 py-3 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-2 py-3 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
           @click="setMaxAmount" type="button" aria-label="Maximum buyable amount">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="w-6 h-6" viewBox="0 0 24 24">
             <path fill="currentColor"
@@ -163,7 +163,7 @@ function setMaxAmount() {
         </button>
         <!-- Buy Button -->
         <button
-          class="px-4 py-3 bg-primary-dark text-light font-semibold transition rounded-br-xl border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-4 py-3 bg-primary/40 text-light font-semibold transition rounded-br-xl border-l border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
           :disabled="isBuyDisabled" @click="buyResource" type="button">
           Buy
         </button>

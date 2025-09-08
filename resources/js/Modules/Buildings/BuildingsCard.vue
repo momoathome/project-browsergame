@@ -131,11 +131,11 @@ function handleCancelUpgrade() {
 
 <template>
   <div class="flex flex-col rounded-xl bg-base content_card text-light">
-    <div class="flex justify-between items-center border-b-primary border-b-2">
+    <div class="flex justify-between items-center">
       <div class="flex justify-center px-3 py-2">
         <p class="font-semibold text-xl">{{ building.name }}</p>
       </div>
-      <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary-dark">
+      <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary/25">
         <span class="text-sm font-medium mt-2 me-1 text-secondary">lv.</span>
         <p class="text-xl">{{ building.level }}</p>
       </div>
@@ -146,8 +146,8 @@ function handleCancelUpgrade() {
     </div>
 
     <div class="flex flex-col h-full">
-      <div class="flex flex-col gap-4 h-full mb-6">
-        <div class="flex flex-col gap-2 px-4 mt-2">
+      <div class="flex flex-col h-full">
+        <div class="flex flex-col gap-1 px-4 py-2 bg-primary/25">
 
           <p class="text-sm text-gray">{{ building.description }}</p>
 
@@ -163,11 +163,8 @@ function handleCancelUpgrade() {
           </div>
         </div>
 
-
-        <Divider />
-
-        <div class="grid grid-cols-4 gap-4 items-center px-2">
-            <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources"
+        <div class="grid grid-cols-4 gap-2 px-2 py-4 min-h-36">
+            <div class="relative group flex flex-col gap-1 items-center p-1 h-min" v-for="resource in building.resources"
             :key="resource.name" :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
             @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()">
             <img :src="resource.image" class="h-7" alt="resource" />
@@ -179,12 +176,12 @@ function handleCancelUpgrade() {
         </div>
       </div>
 
-      <div class="flex mt-auto">
+      <div class="flex border-t border-primary/50">
         <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
           @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
           :description="`Up to lv. ${building.level + 1}`" />
         <button
-          class="px-4 py-3 w-full rounded-br-xl border-t border-primary bg-primary-dark text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-4 py-3 w-full rounded-br-xl border-t border-primary/40 bg-primary/40 text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
           @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade" type="button">
           <span>Upgrade to lv. {{ building.level + 1 }}</span>
         </button>
@@ -192,7 +189,6 @@ function handleCancelUpgrade() {
     </div>
   </div>
 
-  <teleport to="body">
     <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
       <template #title>Cancel Upgrade</template>
       <template #content>
@@ -211,7 +207,6 @@ function handleCancelUpgrade() {
         </div>
       </template>
     </DialogModal>
-  </teleport>
 
 </template>
 

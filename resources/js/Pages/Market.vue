@@ -44,6 +44,8 @@ const formattedResources = computed(() => {
 
 <style scoped>
 .grid {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 265px)); 
+  --grid-min-col-size: 260px;
+
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }
 </style>

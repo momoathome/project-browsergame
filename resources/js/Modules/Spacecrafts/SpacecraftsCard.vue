@@ -203,7 +203,7 @@ function handleCancelProduction() {
 <template>
   <div class="flex relative">
     <div class="flex flex-col w-full rounded-xl bg-base content_card text-light" :class="{ 'locked': !spacecraft.unlocked }">
-      <div class="flex justify-between items-center border-b-primary border-b-2">
+      <div class="flex justify-between items-center ">
         <div class="flex items-center gap-2 px-3 py-2">
           <div class="relative group">
             <img :src="`/images/spacecraftTypes/${spacecraft.type}.png`" class="h-5" alt="combat" />
@@ -214,7 +214,7 @@ function handleCancelProduction() {
           <!-- <p class="text-[12px] text-gray">{{ spacecraft.type }}</p> -->
           <!-- <p class="text-gray text-sm mt-1">{{ spacecraft.description }}</p> -->
         </div>
-        <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary-dark">
+        <div class="flex items-center h-full px-4 rounded-tr-xl bg-primary/25">
           <p class="text-lg">{{ spacecraft.count }}</p>
         </div>
       </div>
@@ -224,9 +224,9 @@ function handleCancelProduction() {
       </div>
 
       <div class="flex flex-col h-full">
-        <div class="flex flex-col gap-4 h-full mb-4">
+        <div class="flex flex-col h-full">
 
-          <div class="flex justify-between gap-4 px-4 pt-4">
+          <div class="flex justify-between gap-4 px-4 py-4 bg-primary/25">
             <div class="flex relative group items-center gap-1">
               <img src="/images/combat.png" class="h-5" alt="combat" />
               <p class="font-medium text-sm">{{ formattedCombat }}</p>
@@ -268,16 +268,14 @@ function handleCancelProduction() {
             </div>
           </div>
 
-          <Divider />
-
-          <div class="grid grid-cols-4 gap-4 items-center px-2">
-            <div class="relative group flex flex-col gap-1 items-center"
+          <div class="grid grid-cols-4 gap-2 px-2 py-4 min-h-36">
+            <div class="relative group flex flex-col gap-1 items-center p-1 h-min"
                 v-for="resource in spacecraft.resources"
                 :key="resource.name"
                 :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
                 @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
             >
-              <img :src="resource.image" class="h-7" alt="resource" />
+              <img :src="resource.image" class="h-6" alt="resource" />
               <p
                 class="font-medium text-sm"
                 :class="{
@@ -292,11 +290,11 @@ function handleCancelProduction() {
           </div>
         </div>
 
-        <div v-if="spacecraft.unlocked" class="flex flex-col border-t border-primary">
+        <div v-if="spacecraft.unlocked" class="flex flex-col border-t border-primary/50">
           <form @submit.prevent="produceSpacecraft" @keypress.enter="produceSpacecraft" >
             <div class="flex items-center justify-between">
               <button
-                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="form.amount = 0"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
                  aria-label="Minimum"
@@ -310,7 +308,7 @@ function handleCancelProduction() {
                 </svg>
               </button>
               <button
-                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="decrement"
                 @click.shift="decrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
@@ -326,10 +324,10 @@ function handleCancelProduction() {
                 :maxInputValue="maxSpacecraftCount"
                 v-model="form.amount"
                 :disabled="isProducing || !canProduce"
-                class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary-dark text-center focus:!ring-0 focus:!border-x-2 transition-colors"
+                class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary/40 text-center focus:!ring-0 focus:!border-x-2 transition-colors"
               />
               <button
-                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="increment"
                 @click.shift="incrementBy10"
                 :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
@@ -340,7 +338,7 @@ function handleCancelProduction() {
                 </svg>
             </button>
               <button
-                class="px-2 py-2 bg-primary-dark text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="maxSpacecraftCount == 0 || isProducing"
                 @click="form.amount = maxSpacecraftCount"
                 type="button"
@@ -365,7 +363,7 @@ function handleCancelProduction() {
             />
 
             <button
-              class="px-4 py-2 w-full bg-primary-dark text-light font-semibold rounded-br-xl transition border-t border-primary hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+              class="px-4 py-2 w-full bg-primary/40 text-light font-semibold rounded-br-xl transition border-t border-primary/40 hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
               :disabled="isProducing || form.amount == 0 || !canProduce"
               @click="produceSpacecraft"
               type="button"
@@ -424,10 +422,6 @@ function handleCancelProduction() {
     3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
     8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
     0 0 12px -2px hsl(var(--glow-color) / 0.15);
-  border: 1px solid hsl(210deg 30% 25% / 0.5);
-}
-
-.custom-border {
   border: 1px solid hsl(210deg 30% 25% / 0.5);
 }
 

@@ -43,7 +43,7 @@ const getTypeIcon = (type) => {
 </script>
 <template>
   <div class="space-y-4">
-    <div v-for="log in props.logs" :key="log.id" class="bg-base rounded-xl border-primary border-2 border-solid">
+    <div v-for="log in props.logs" :key="log.id" class="bg-base rounded-xl border-primary/25 border-2 border-solid">
       <button
         class="w-full flex flex-row items-center justify-between px-4 py-3 text-left bg-base-dark hover:bg-base-dark/60 rounded-xl transition-colors duration-100 focus:outline-none"
         @click="selectedLog && selectedLog.id === log.id ? selectedLog = null : selectedLog = log"

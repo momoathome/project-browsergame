@@ -3,7 +3,7 @@
 namespace Orion\Modules\Station\Repositories;
 
 use Orion\Modules\Station\Models\Station;
-
+use Orion\Modules\Station\Models\StationRegion;
 readonly class StationRepository
 {
     // Add repository logic here
@@ -20,5 +20,10 @@ readonly class StationRepository
     public function findStationByUserId(int $userId)
     {
         return Station::where('user_id', $userId)->first();
+    }
+
+    public function getReservedStationRegions()
+    {
+        return StationRegion::where('used', false)->get();
     }
 }

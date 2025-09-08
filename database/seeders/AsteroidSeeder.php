@@ -28,14 +28,8 @@ class AsteroidSeeder extends Seeder
   public function run()
   {
     $startTime = microtime(true);
-    Cache::forget('universe:reserved-station-regions');
 
-    $reservedRegions = $this->universeService->reserveStationRegions(25, true);
-    $this->command->info("Successfully " . count($reservedRegions) . " regions reserved.");
-
-    // Vor der Asteroid-Generierung validieren wir, dass alle Regionen frei von Kollisionen sind
-    $validRegions = $this->universeService->validateReservedRegions($reservedRegions);
-    $this->command->info("Validation: " . count($validRegions) . " of " . count($reservedRegions) . " regions are valid.");
+    $this->universeService->reserveStationRegions($this->config['default_stations'], true);
 
     // Dann Asteroiden generieren
     $count = $this->config['asteroid_count'];

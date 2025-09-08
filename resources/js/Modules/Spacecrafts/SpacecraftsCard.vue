@@ -237,12 +237,13 @@ function handleCancelProduction() {
               <p class="font-medium text-sm">{{ formattedCargo }}</p>
               <AppTooltip :label="'cargo capacity'" position="bottom" class="!mt-1" />
             </div>
-            <div class="flex relative group items-center gap-1">
-              <svg xmlns="http://www.w3.org/2000/svg"
+            <div class="flex relative group items-center gap-1"
                 :class="{
-                  'text-red-600': form.amount === 0 && !canProduce,
+                  'text-red-600': form.amount === 0 && !canProduce && spacecraft.unlocked,
                   'text-orange-500': form.amount > 0 && crewLimitReachedNext
-                }"
+                }">
+              <svg xmlns="http://www.w3.org/2000/svg"
+
                alt="unit limit"
                width="20" height="20" viewBox="0 0 24 24">
                 <g fill="none">
@@ -250,13 +251,7 @@ function handleCancelProduction() {
                   <path fill="currentColor" d="M12 13c2.396 0 4.575.694 6.178 1.672c.8.488 1.484 1.064 1.978 1.69c.486.615.844 1.351.844 2.138c0 .845-.411 1.511-1.003 1.986c-.56.45-1.299.748-2.084.956c-1.578.417-3.684.558-5.913.558s-4.335-.14-5.913-.558c-.785-.208-1.524-.506-2.084-.956C3.41 20.01 3 19.345 3 18.5c0-.787.358-1.523.844-2.139c.494-.625 1.177-1.2 1.978-1.69C7.425 13.695 9.605 13 12 13m0-11a5 5 0 1 1 0 10a5 5 0 0 1 0-10"/>
                 </g>
               </svg>
-              <p
-                class="font-medium text-sm"
-                :class="{
-                  'text-red-600': form.amount === 0 && !canProduce,
-                  'text-orange-500': form.amount > 0 && crewLimitReachedNext
-                }"
-              >
+              <p class="font-medium text-sm">
                 {{ spacecraft.crew_limit }}
               </p>
               <AppTooltip :label="'crew limit'" position="bottom" class="!mt-1" />
@@ -279,8 +274,8 @@ function handleCancelProduction() {
               <p
                 class="font-medium text-sm"
                 :class="{
-                  'text-red-600': form.amount === 0 && !isResourceSufficient(resource.id),
-                  'text-orange-500': form.amount > 0 && !isResourceSufficientForNext(resource.id) && spacecraft.unlocked
+                  'text-red-600': form.amount === 0 && !isResourceSufficient(resource.id) && spacecraft.unlocked,
+                  'text-orange-500': form.amount > 0 && !isResourceSufficientForNext(resource.id)
                 }"
               >
                 {{ form.amount ? numberFormat(resource.amount * form.amount) : numberFormat(resource.amount) }}
@@ -339,7 +334,7 @@ function handleCancelProduction() {
             </button>
               <button
                 class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
-                :disabled="maxSpacecraftCount == 0 || isProducing"
+                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
                 @click="form.amount = maxSpacecraftCount"
                 type="button"
                 aria-label="Maximum"

@@ -8,9 +8,9 @@ const props = defineProps<{
 }>();
 
 const getBuildingEffectDisplay = (building) => {
-    if (building.current_effects && building.current_effects.length > 0) {
-        return building.current_effects[0].display;
-    }
+  if (building.effect?.current) {
+    return building.effect.current[0].effect.text + ': ' + building.effect.current[0].effect.value;
+  }
 };
 
 const updateBuildingLevel = (building) => {

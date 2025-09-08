@@ -9,6 +9,7 @@ import DialogModal from '@/Components/DialogModal.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { numberFormat } from '@/Utils/format';
 import type { Building } from '@/types/types';
 
 const { queueData, refreshQueue } = useQueueStore();
@@ -23,33 +24,27 @@ const isSubmitting = ref(false)
 const showCancelModal = ref(false);
 
 const currentEffect = computed(() => {
-  if (!props.building.current_effects || props.building.current_effects.length === 0) {
-    return null;
-  }
-  return props.building.current_effects[0];
+  const effects = props.building.effect?.current;
+  if (!effects || effects.length === 0) return null;
+  return effects[0].effect;
 });
 
 const nextLevelEffect = computed(() => {
-  if (!props.building.next_level_effects || props.building.next_level_effects.length === 0) {
-    return null;
-  }
-  return props.building.next_level_effects[0];
+  const effects = props.building.effect?.next_level;
+  if (!effects || effects.length === 0) return null;
+  return effects[0].effect;
+});
+
+const formattedEffectText = computed(() => {
+  return currentEffect.value ? currentEffect.value.text : '';
 });
 
 const formattedEffectValue = computed(() => {
-  if (!currentEffect.value) {
-    return '';
-  }
-
-  return currentEffect.value.display;
+  return currentEffect.value ? currentEffect.value.value : '';
 });
 
 const formattedNextLevelValue = computed(() => {
-  if (!nextLevelEffect.value) {
-    return '';
-  }
-
-  return nextLevelEffect.value.display;
+  return nextLevelEffect.value ? nextLevelEffect.value.value : '';
 });
 
 const insufficientResources = computed(() => {
@@ -152,43 +147,47 @@ function handleCancelUpgrade() {
 
     <div class="flex flex-col h-full">
       <div class="flex flex-col gap-4 h-full mb-6">
-        <!-- Neue Effektanzeige basierend auf Backend-Daten -->
-        <div v-if="currentEffect" class="flex flex-col gap-1 px-6 mt-3">
-          <div class="flex gap-1">
-            <span class="text-sm text-secondary">Current Effect:</span>
-            <span class="font-medium text-sm">{{ formattedEffectValue }}</span>
-          </div>
-          <div v-if="nextLevelEffect" class="flex gap-1">
-            <span class="text-sm text-secondary">Next Level:</span>
-            <span class="font-medium text-sm text-green-400">{{ formattedNextLevelValue }}</span>
+        <div class="flex flex-col gap-2 px-4 mt-2">
+
+          <p class="text-sm text-gray">{{ building.description }}</p>
+
+          <div v-if="currentEffect" class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-secondary">{{ formattedEffectText }}:</span>
+              <span class="font-medium text-sm">{{ formattedEffectValue }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M16.15 13H5q-.425 0-.712-.288T4 12t.288-.712T5 11h11.15L13.3 8.15q-.3-.3-.288-.7t.288-.7q.3-.3.713-.312t.712.287L19.3 11.3q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.575 4.575q-.3.3-.712.288t-.713-.313q-.275-.3-.288-.7t.288-.7z"/>
+              </svg>
+              <span class="text-green-500">{{ formattedNextLevelValue }}</span>
+            </div>
           </div>
         </div>
 
+
         <Divider />
 
-        <div class="grid grid-cols-4 gap-4 items-center">
-          <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources"
+        <div class="grid grid-cols-4 gap-4 items-center px-2">
+            <div class="relative group flex flex-col gap-1 items-center" v-for="resource in building.resources"
             :key="resource.name" :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
             @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()">
             <img :src="resource.image" class="h-7" alt="resource" />
             <p class="font-medium text-sm" :class="{ 'text-red-600': !isResourceSufficient(resource.id) }">
-              {{ resource.amount }}
+              {{ numberFormat(resource.amount) }}
             </p>
             <AppTooltip :label="resource.name" position="bottom" class="!mt-1" />
           </div>
         </div>
       </div>
 
-      <div class="flex flex-col border-t border-primary mt-auto">
+      <div class="flex mt-auto">
+        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
+          @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
+          :description="`Up to lv. ${building.level + 1}`" />
         <button
-          class="px-4 py-3 bg-primary-dark text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          class="px-4 py-3 w-full rounded-br-xl border-t border-primary bg-primary-dark text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
           @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade" type="button">
           <span>Upgrade to lv. {{ building.level + 1 }}</span>
         </button>
-
-        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
-          @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
-          :description="`Upgrading to lv. ${building.level + 1}`" />
       </div>
     </div>
   </div>
@@ -224,7 +223,7 @@ function handleCancelUpgrade() {
   box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.3),
     3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
     8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
-    0 0 20px -2px hsl(var(--glow-color) / 0.15);
+    0 0 12px -2px hsl(var(--glow-color) / 0.15);
   border: 1px solid hsl(210deg 30% 25% / 0.5);
 }
 

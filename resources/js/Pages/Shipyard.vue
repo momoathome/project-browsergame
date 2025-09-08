@@ -20,7 +20,7 @@ const props = defineProps<{
 
 <style scoped>
 .grid {
-  --grid-min-col-size: 280px;
+  --grid-min-col-size: 260px;
 
   grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }

@@ -87,6 +87,8 @@ class AsteroidAutoMineService
                     'cargo' => (int)($sc->cargo ?? 0),
                     'count' => $sc->count,
                     'locked_count' => $sc->locked_count ?? 0,
+                    'speed' => $sc->speed ?? 1,
+                    'operation_speed' => $sc->operation_speed ?? 1,
                     'details' => $sc->details,
                 ];
             })->toArray(),
@@ -117,6 +119,8 @@ class AsteroidAutoMineService
             $result[$name] = [
                 'count' => $available,
                 'cargo' => $sc['cargo'],
+                'speed' => $sc['speed'],
+                'operation_speed' => $sc['operation_speed'],
                 'locked_count' => $reallyLocked,
                 'total_count' => $sc['count'],
                 'details' => $sc['details'],
@@ -235,11 +239,16 @@ class AsteroidAutoMineService
     
             if ($cargoAssigned <= 0) continue;
     
+            // Ressourcenmenge auf Cargo begrenzen!
             $resourcesExtracted = [];
+            $remainingCargo = $cargoAssigned;
             foreach ($asteroid->resources as $resource) {
-                $resourcesExtracted[$resource->resource_type] = $resource->amount;
+                $extractAmount = min($resource->amount, $remainingCargo);
+                $resourcesExtracted[$resource->resource_type] = $extractAmount;
+                $remainingCargo -= $extractAmount;
+                if ($remainingCargo <= 0) break;
             }
-    
+            
             $missions[] = [
                 'asteroid' => $asteroid,
                 'spacecrafts' => $minerAssignment,

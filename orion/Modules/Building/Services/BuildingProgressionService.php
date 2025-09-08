@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\Building\Enums\BuildingEffectType;
+use Orion\Modules\User\Enums\UserAttributeType;
 
 class BuildingProgressionService
 {
@@ -246,23 +247,33 @@ class BuildingProgressionService
             $formattedValue = number_format($effectValue, 2, ',', '.');
             $formattedValueNoDecimals = number_format($flooredEffectValue, 0, ',', '.');
             $formattedPercent = number_format(($effectValue - 1) * 100, 0, ',', '.') . "%";
-
-            $displayText = match ($attributeName) {
-                'production_speed' => "{$formattedPercent} Production speed",
-                'base_defense' => "{$formattedPercent} Defense",
-                'storage' => "{$formattedValueNoDecimals} Resource storage",
-                'scan_range' => "{$formattedValueNoDecimals} Scanner range",
-                'crew_limit' => "{$formattedValueNoDecimals} Crew Limit",
-                'research_points' => "+{$formattedValueNoDecimals} Research Points",
-                // 'energy_output' => "+{$effectValue} energy output",
-                // 'trade_income' => "+{$effectValue} Trade Limit",
-                default => "+{$effectValue} {$attributeName}"
+        
+            // Enum verwenden für Mapping
+            $effectText = match ($attributeName) {
+                UserAttributeType::PRODUCTION_SPEED->value => "Production speed",
+                UserAttributeType::BASE_DEFENSE->value => "Defense",
+                UserAttributeType::STORAGE->value => "Resource storage",
+                UserAttributeType::SCAN_RANGE->value => "Scanner range",
+                UserAttributeType::CREW_LIMIT->value => "Crew Limit",
+                UserAttributeType::RESEARCH_POINTS->value => "Research Points",
+                default => $attributeName
             };
-
+        
+            $effectValue = match ($attributeName) {
+                UserAttributeType::PRODUCTION_SPEED->value,
+                UserAttributeType::BASE_DEFENSE->value => $formattedPercent,
+                UserAttributeType::STORAGE->value,
+                UserAttributeType::SCAN_RANGE->value,
+                UserAttributeType::CREW_LIMIT->value,
+                UserAttributeType::RESEARCH_POINTS->value => $formattedValueNoDecimals,
+                default => $formattedValue
+            };
+        
             $results[] = [
-                'attribute' => $attributeName,
-                'value' => $effectValue,
-                'display' => $displayText
+                'effect' => [
+                    'text' => $effectText,
+                    'value' => $effectValue
+                ]
             ];
         }
     

@@ -94,11 +94,10 @@ class BuildingService
             }
 
             // Effektinformationen hinzufügen
-            $currentEffects = $this->buildingProgressionService->getEffectPreview($building);
-            $nextLevelEffects = $this->buildingProgressionService->getEffectPreview($building, true);
-
-            $formattedBuilding['current_effects'] = $currentEffects;
-            $formattedBuilding['next_level_effects'] = $nextLevelEffects;
+            $formattedBuilding['effect'] = [
+                'current' => $this->buildingProgressionService->getEffectPreview($building),
+                'next_level' => $this->buildingProgressionService->getEffectPreview($building, true)
+            ];
 
             $formattedBuildings[] = $formattedBuilding;
         }

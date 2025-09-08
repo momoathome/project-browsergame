@@ -24,7 +24,8 @@ const spacecraftMap = computed(() => {
     map[sc.details.name] = {
       type: sc.details.type,
       image: sc.details.image,
-      combat: sc.combat
+      combat: sc.combat,
+      cargo: sc.cargo
     };
   });
   return map;
@@ -63,13 +64,14 @@ const getTypeIcon = (type) => {
           <div class="flex flex-col md:flex-row gap-8 mb-6">
             <!-- Eingesetzte Schiffe -->
             <div class="flex-1">
-              <h3 class="text-lg font-bold mb-2 text-yellow-300">Spacecrafts Used</h3>
+              <h3 class="text-lg font-bold mb-2 text-light">Spacecrafts Used</h3>
               <table class="w-full bg-base text-light rounded-lg overflow-hidden">
                 <thead>
                   <tr>
                     <th class="px-3 py-2 text-start">Spacecraft</th>
                     <th class="px-3 py-2 text-start">Type</th>
                     <th class="px-3 py-2 text-start">Quantity</th>
+                    <th class="px-3 py-2 text-start">Cargo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -81,17 +83,19 @@ const getTypeIcon = (type) => {
                       <img v-if="getTypeIcon(spacecraftMap[name]?.type)" :src="getTypeIcon(spacecraftMap[name]?.type)" class="w-6 h-6" />
                     </td>
                     <td class="px-3 py-2">{{ count }}</td>
+                    <td class="px-3 py-2">{{ spacecraftMap[name]?.cargo ? numberFormat(spacecraftMap[name]?.cargo * count) : 0 }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <!-- Extrahierte Ressourcen -->
             <div class="flex-1">
-              <h3 class="text-lg font-bold mb-2 text-yellow-200">Resources Extracted</h3>
+              <h3 class="text-lg font-bold mb-2 text-light">Resources Extracted</h3>
               <ul class="flex flex-wrap gap-4 text-light">
-                <li v-for="(amount, resourceId) in selectedLog.resources_extracted" :key="resourceId" class="flex items-center gap-2 bg-yellow-400/10 rounded px-3 py-2">
+                <li v-for="(amount, resourceId) in selectedLog.resources_extracted" :key="resourceId" 
+                  class="flex items-center gap-2 bg-primary-dark rounded px-3 py-2">
                   <img :src="resourceMap[resourceId]?.image" class="w-6 h-6" v-if="resourceMap[resourceId]?.image" />
-                  <span class="font-bold text-yellow-200">{{ numberFormat(amount) }}</span>
+                  <span class="font-bold text-light">{{ numberFormat(amount) }}</span>
                 </li>
               </ul>
             </div>

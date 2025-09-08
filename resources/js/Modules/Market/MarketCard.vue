@@ -104,11 +104,10 @@ function setMaxAmount() {
     <div class="gap-4 flex flex-col">
       <div class="flex justify-between items-center border-b-primary border-b-2">
         <div class="flex flex-col justify-center px-3 py-2">
-          <span class="text-xs text-gray">ressource</span>
-          <p class="font-semibold text-xl -mt-1">{{ marketData.name }}</p>
+          <!-- <span class="text-xs text-gray">ressource</span> -->
+          <p class="font-semibold text-lg">{{ marketData.name }}</p>
         </div>
         <div class="flex flex-col justify-center h-full px-3 rounded-tr-xl bg-primary-dark">
-          <span class="text-xs text-secondary">price</span>
           <div class="flex gap-1">
             <img src="/images/attributes/credits.png" class="h-5" alt="credits" />
             <p class="font-medium">{{ formattedCost }}</p>
@@ -181,7 +180,7 @@ function setMaxAmount() {
   box-shadow: 1px 1px 1.6px hsl(var(--shadow-color) / 0.3),
     3.5px 3.5px 5.6px -0.8px hsl(var(--shadow-color) / 0.3),
     8.8px 8.8px 14px -1.7px hsl(var(--shadow-color) / 0.35),
-    0 0 20px -2px hsl(var(--glow-color) / 0.15);
+    0 0 12px -2px hsl(var(--glow-color) / 0.15);
   border: 1px solid hsl(210deg 30% 25% / 0.5);
 }
 </style>

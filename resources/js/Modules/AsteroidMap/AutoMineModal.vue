@@ -15,7 +15,7 @@ const filter = ref('overflow');
 const filterOptions = [
   { value: 'overflow', label: 'Overflow' },
   /* { value: 'smart', label: 'Smart' }, */
-  { value: 'minimal', label: 'Minimal' },
+  /* { value: 'minimal', label: 'Minimal' }, */
 ];
 
 async function getAutoMineMissions() {
@@ -202,31 +202,33 @@ onUnmounted(() => {
             </div>
 
             <!-- Zusammenfassung -->
-            <div class="mb-6 flex flex-wrap gap-y-6 gap-x-8 text-cyan-200">
-                <div>
-                    <span class="font-semibold text-light">Operations:</span> {{ totalOperations }}
+             <div class="flex flex-col">
+                <div class="mb-6 flex flex-wrap gap-y-4 gap-x-8 text-cyan-200">
+                  <div>
+                      <span class="font-semibold text-light">Operations:</span> {{ totalOperations }}
+                  </div>
+                  <div>
+                      <span class="font-semibold text-light">Total Units:</span> {{ totalUnits }}
+                  </div>
+                  <!-- asteroid count small: medium: large: extrem -->
+                  <div class="flex flex-wrap items-center gap-2">
+                      <span class="font-semibold text-light">Asteroid Count:</span>
+                      <span class="mx-2">Small: {{ asteroidCount.small }}</span>
+                      <span class="mx-2">Medium: {{ asteroidCount.medium }}</span>
+                      <span class="mx-2">Large: {{ asteroidCount.large }}</span>
+                      <span class="mx-2">Extreme: {{ asteroidCount.extreme }}</span>
+                  </div>
                 </div>
-                <div>
-                    <span class="font-semibold text-light">Total Units:</span> {{ totalUnits }}
-                </div>
-                <!-- asteroid count small: medium: large: extrem -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="font-semibold text-light">Asteroid Count:</span>
-                    <span class="mx-2">Small: {{ asteroidCount.small }}</span>
-                    <span class="mx-2">Medium: {{ asteroidCount.medium }}</span>
-                    <span class="mx-2">Large: {{ asteroidCount.large }}</span>
-                    <span class="mx-2">Extreme: {{ asteroidCount.extreme }}</span>
-                </div>
-              <div>
+
+              <div class="text-cyan-200 mb-6 flex items-center gap-2">
                 <span class="font-semibold text-light">Total Resources:</span>
                 <span v-for="(amount, type) in totalResources" :key="type" class="mx-2">
                 <img :src="`/images/resources/${type}.png`" class="h-5 inline" />
                 {{ numberFormat(amount) }}
                 </span>
               </div>
-            </div>
+             </div>
 
-            <!-- Missions-Liste -->
             <div class="max-h-[520px] overflow-y-auto fancy-scroll grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div v-for="mission in missions"
                     :key="mission.asteroid.id"
@@ -253,7 +255,7 @@ onUnmounted(() => {
                   </div>
                 </div>
                 <div class="flex flex-wrap gap-2 mt-2">
-                    <span v-for="(amount, type) in mission.resources" :key="type" class="flex items-center gap-1 text-cyan-100">
+                    <span v-for="(amount, type) in mission.resources" :key="type" class="flex items-center gap-1 text-light">
                     <img :src="`/images/resources/${type}.png`" class="h-5" />
                     {{ numberFormat(amount) }}
                     </span>

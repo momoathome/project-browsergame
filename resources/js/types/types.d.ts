@@ -1,3 +1,10 @@
+export interface BuildingEffectObject {
+  effect: {
+    text: string;
+    value: string;
+  };
+}
+
 export interface Building {
   id: number;
   name: string;
@@ -5,7 +12,10 @@ export interface Building {
   image: string;
   level: number;
   build_time: number;
-  effect: string;
+  effect: {
+    current: BuildingEffectObject[];
+    next_level: BuildingEffectObject[];
+  };
   is_upgrading: boolean;
   end_time: string;
   resources: Array<{
@@ -14,14 +24,6 @@ export interface Building {
     image: string;
     amount: number;
   }>;
-  current_effects: BuildingEffect[];
-  next_level_effects: BuildingEffect[];
-}
-
-export interface BuildingEffect {
-  attribute: string;
-  value: number;
-  display: string;
 }
 
 export interface Spacecraft {

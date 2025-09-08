@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('attribute_name');
-            $table->float('attribute_value');
+            $table->decimal('attribute_value', 16, 2)->default(0);
             $table->timestamps();
         });
     }

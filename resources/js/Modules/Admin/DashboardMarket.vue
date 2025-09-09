@@ -17,11 +17,12 @@ const resourceForms = ref(props.market.map(resource => useForm({
     cost: resource.cost
 })));
 
-const toggleEditResource = (index: number) => {
+const toggleEditResource = (index: number | null) => {
     editingResource.value = editingResource.value === index ? null : index;
 };
 
 const updateMarketResource = (index: number, resourceId: number) => {
+    if (!resourceForms.value[index]) return;
     resourceForms.value[index].put(route('admin.market.update', { id: resourceId }), {
         preserveScroll: true,
         onSuccess: () => {
@@ -44,68 +45,52 @@ function resetMarketData() {
 </script>
 
 <template>
-    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-        <div class="flex justify-between items-center p-4 border-b border-primary bg-base-dark rounded-t-xl">
-            <h2 class="text-xl font-semibold text-light">
-                Market
-            </h2>
+    <div class="bg-base rounded-xl w-full border border-primary/40 shadow-xl">
+        <div class="flex justify-between items-center p-6 border-b border-primary/30 bg-base-dark rounded-t-xl">
+            <h2 class="text-xl font-semibold text-light">Market</h2>
             <SecondaryButton type="button" @click="showResetMarketModal = true">
-                alle Markt-Daten zurücksetzen
+                Alle Markt-Daten zurücksetzen
             </SecondaryButton>
         </div>
-        <table class="w-full text-light mt-1">
-            <thead class="text-gray-400 border-b border-primary">
-                <tr>
-                    <th class="text-left p-2">Ressource</th>
-                    <th class="text-left p-2">Price</th>
-                    <th class="text-left p-2">Stock</th>
-                    <th class="text-left p-2">Aktion</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(resource, index) in market" :key="resource.id">
-                    <td class="p-2 font-medium">{{ resource.resource.name }}</td>
-                    <td class="p-2 font-medium">
-                        <span v-if="editingResource !== index">{{ numberFormat(resourceForms[index].cost)}}</span>
-                        <input v-else v-model="resourceForms[index].cost" type="number" min="0"
-                            class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
-                    </td>
-                    <td class="p-2">
-                        <span v-if="editingResource !== index">{{ numberFormat(resourceForms[index].stock) }}</span>
-                        <input v-else v-model="resourceForms[index].stock" type="number" min="0"
-                            class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
-                    </td>
-                    <td class="p-2">
-                        <button v-if="editingResource !== index" @click="toggleEditResource(index)"
-                            class="text-primary-light hover:text-secondary">
-                            Bearbeiten
-                        </button>
-                        <div v-else class="flex gap-2">
-                            <button @click="updateMarketResource(index, resource.resource_id)"
-                                class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm">
-                                Speichern
-                            </button>
-                            <button @click="toggleEditResource(null)"
-                                class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">
-                                Abbrechen
-                            </button>
+        <div class="grid gap-8 p-6">
+            <div v-for="(resource, index) in market" :key="resource.id" class="flex flex-col rounded-xl bg-primary/25 text-light shadow-md">
+                <div class="flex justify-between items-center border-b border-primary/40">
+                    <div class="flex items-center gap-2 px-2 py-2">
+                        <p class="font-semibold">{{ resource.resource.name }}</p>
+                    </div>
+                </div>
+                <div class="flex justify-center items-center py-6">
+                    <img :src="resource.resource.image" class="h-16" alt="resource" />
+                </div>
+                <div class="flex flex-col h-full">
+                    <div class="flex flex-col gap-1 px-3 py-2 h-full bg-primary/25">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-secondary">Price:</span>
+                            <span class="font-medium text-sm">{{ resourceForms[index] ? numberFormat(resourceForms[index].cost) : numberFormat(resource.cost) }}</span>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr class="border-t border-primary bg-primary rounded-b-xl">
-                    <td class="px-2 py-3">
-                        Ressources Total:
-                    </td>
-                    <td></td>
-                    <td class="px-2 py-3">
-                        {{numberFormat(market.reduce((sum, resource) => sum + resource.stock, 0))}}
-                    </td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-secondary">Stock:</span>
+                            <span class="">{{ resourceForms[index] ? numberFormat(resourceForms[index].stock) : numberFormat(resource.stock) }}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 px-3 py-2 mt-1">
+                        <template v-if="editingResource === index && resourceForms[index]">
+                            <div class="flex justify-between items-center gap-1">
+                                <input v-model="resourceForms[index].cost" type="number" min="0" class="w-20 px-1 py-1 border rounded-md bg-base-dark text-light" />
+                                <input v-model="resourceForms[index].stock" type="number" min="0" class="w-20 px-1 py-1 border rounded-md bg-base-dark text-light" />
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="updateMarketResource(index, resource.resource_id)" class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm mr-2">Speichern</button>
+                                <button @click="toggleEditResource(null)" class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">Abbrechen</button>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <button @click="toggleEditResource(index)" class="text-secondary bg-base py-1 px-2 rounded-md hover:bg-primary/40 transition">Bearbeiten</button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <ConfirmationModal :show="showResetMarketModal" @close="showResetMarketModal = false">
             <template #title>
@@ -116,15 +101,19 @@ function resetMarketData() {
             </template>
             <template #footer>
                 <div class="flex gap-2">
-                    <PrimaryButton @click="showResetMarketModal = false">
-                        Abbrechen
-                    </PrimaryButton>
-                    <SecondaryButton @click="resetMarketData">
-                        Bestätigen
-                    </SecondaryButton>
+                    <SecondaryButton @click="showResetMarketModal = false">Abbrechen</SecondaryButton>
+                    <PrimaryButton @click="resetMarketData">Bestätigen</PrimaryButton>
                 </div>
             </template>
         </ConfirmationModal>
     </div>
 
 </template>
+
+<style scoped>
+.grid {
+  --grid-min-col-size: 200px;
+
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
+}
+</style>

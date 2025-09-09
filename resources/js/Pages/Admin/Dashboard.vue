@@ -73,12 +73,11 @@ function regenerateAsteroids() {
         </div>
       </div> -->
 
-
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-2 gap-4">
         <DashboardUserOverview :users="users" />
         <DashboardMarket :market="market" />
-        <!-- <DashboardQueue :action-queue="gameQueue" /> -->
       </div>
+      <!-- <DashboardQueue :action-queue="gameQueue" /> -->
     </div>
 
 

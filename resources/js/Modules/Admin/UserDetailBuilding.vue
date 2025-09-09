@@ -29,31 +29,40 @@ const updateBuildingLevel = (building) => {
 </script>
 
 <template>
-    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">Buildings
-        </h2>
-        <table class="w-full text-light mt-1">
-            <thead class="text-gray-400 border-b border-primary">
-                <tr>
-                    <th class="text-left p-2">Name</th>
-                    <th class="text-left p-2">Level</th>
-                    <th class="text-left p-2">Effect value</th>
-                    <th class="text-left p-2">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="building in buildings" :key="building.id">
-                    <td class="p-2">{{ building.name }}</td>
-                    <td class="p-2">{{ building.level || 'Unbekannt' }}</td>
-                    <td class="p-2">{{ getBuildingEffectDisplay(building) }}</td>
-                    <td class="p-2">
+    <div class=" w-full p-2">
+        <div class="grid gap-8 grid-cols-2 xl:grid-cols-7">
+            <div v-for="building in buildings" :key="building.id" class="flex flex-col rounded-xl bg-base py-2 px-4 text-light">
+                <div class="flex justify-between items-center">
+                    <div class="flex justify-center px-2 py-2">
+                        <p class="font-semibold text-lg">{{ building.name }}</p>
+                    </div>
+                    <div class="flex items-center h-full px-2">
+                        <span class="text-sm font-medium mt-1 me-1 text-secondary">lv.</span>
+                        <p class="text-lg">{{ building.level }}</p>
+                    </div>
+                </div>
+                <div class="image relative">
+                    <img :src="building.image" class="object-cover aspect-[2/1] h-28 w-full rounded-xl" alt="" />
+                </div>
+                <div class="flex flex-col h-full">
+                    <div class="flex flex-col gap-1 px-3 py-2 mt-1 h-full">
+                        <div class="flex items-center gap-1">
+                            <span class="text-sm text-secondary">
+                                {{ building.effect && building.effect.current && building.effect.current[0] ? building.effect.current[0].effect.text : '' }}:
+                            </span>
+                            <span class="font-medium text-sm">
+                                {{ building.effect && building.effect.current && building.effect.current[0] ? building.effect.current[0].effect.value : '' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex px-3 py-2">
                         <button @click="updateBuildingLevel(building)"
-                            class="bg-primary text-white py-1 px-4 rounded-md hover:bg-primary-dark transition">
+                            class="text-secondary bg-primary/25 w-full py-1 px-2 rounded-md hover:bg-primary/40 transition">
                             Level up
                         </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>

@@ -42,49 +42,51 @@ async function finishQueue() {
                 </div>
             </div>
 
-            <section class="flex gap-6 w-full">
-                <!-- Benutzer-Basisinformationen -->
-                <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-                    <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">
-                        Basisinformationen
-                    </h2>
-                    <div class="grid grid-cols-2 gap-4 p-4">
-                        <p><span class="font-medium">Name:</span> {{ user.name }}</p>
-                        <p><span class="font-medium">ID:</span> {{ user.id }}</p>
-                        <p><span class="font-medium">Rolle:</span> {{ user.role }}</p>
-                        <p><span class="font-medium">E-Mail:</span> {{ user.email }}</p>
-                        <p><span class="font-medium">Status:</span> {{ user.status }}</p>
-                        <p><span class="font-medium">Last Login:</span> {{ user.last_login }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 w-full mb-6">
+                <!-- Basisinformationen als Card -->
+                <div class="flex flex-col gap-4 bg-base rounded-xl border border-primary/40 shadow-xl p-6 min-w-[320px]">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="bg-primary/20 rounded-full h-16 w-16 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="M12 12a5 5 0 1 0 0-10a5 5 0 0 0 0 10Zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5Z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-light">{{ user.name }}</h2>
+                            <span class="text-secondary text-sm">ID: {{ user.id }}</span>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Stationen -->
-                <UserDetailStation :user="user" />
-
-                <!-- Actions -->
-                <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-                    <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">Actions</h2>
-                    <div class="p-4">
+                    <div class="grid grid-cols-2 gap-2">
+                        <p><span class="font-medium text-secondary">Rolle:</span> {{ user.role }}</p>
+                        <p><span class="font-medium text-secondary">E-Mail:</span> {{ user.email }}</p>
+                        <p><span class="font-medium text-secondary">Status:</span> {{ user.status }}</p>
+                        <p><span class="font-medium text-secondary">Last Login:</span> {{ user.last_login }}</p>
+                    </div>
+                    <div class="mt-4">
                         <SecondaryButton @click="finishQueue">
                             Process Action Queue
                         </SecondaryButton>
                     </div>
                 </div>
-            </section>
 
-            <section class="flex gap-6 mt-6">
-                <!-- Buildings -->
+                <!-- Stationen als Card -->
+                <div class="flex flex-col gap-4 bg-base rounded-xl border border-primary/40 shadow-xl p-6 min-w-[320px]">
+                    <UserDetailStation :user="user" />
+                </div>
+            </div>
+
+            <!-- Buildings Grid -->
+            <div class="mb-6">
                 <UserDetailBuilding :buildings="buildings" :user="user" />
+            </div>
 
-                <!-- Ressourcen -->
+            <!-- Ressourcen Grid -->
+            <div class="mb-6">
                 <UserDetailResource :resources="resources" :attributes="attributes" :user="user" />
-            </section>
+            </div>
 
-            <section class="flex gap-6 mt-6">
-                <!-- Spacecrafts -->
+            <!-- Spacecrafts Grid -->
+            <div class="mb-6">
                 <UserDetailSpacecraft :spacecrafts="spacecrafts" :user="user" />
-
-            </section>
+            </div>
         </div>
     </AppLayout>
 </template>

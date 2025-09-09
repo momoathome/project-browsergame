@@ -16,7 +16,7 @@ const spacecraftForms = ref(props.spacecrafts.map(spacecraft => useForm({
     user_id: props.user.id
 })));
 
-const toggleEditSpacecraft = (index: number) => {
+const toggleEditSpacecraft = (index: number | null) => {
     editingSpacecraft.value = editingSpacecraft.value === index ? null : index;
 };
 
@@ -39,72 +39,56 @@ const unlockSpacecraft = (spacecraftId: number) => {
 </script>
 
 <template>
-    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">
-            Spacecrafts
-        </h2>
-        <table class="w-full text-light mt-1">
-            <thead class="text-gray-400 border-b border-primary">
-                <tr>
-                    <th class="text-left p-2">Name</th>
-                    <th class="text-left p-2">Research</th>
-                    <th class="text-left p-2">Amount</th>
-                    <th class="text-left p-2">Locked</th>
-                    <th class="text-left p-2">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(spacecraft, index) in spacecrafts" :key="spacecraft.id">
-                    <td class="p-2">{{ spacecraft.details.name }}</td>
-                    <td class="p-2">
-                        <template v-if="spacecraft.unlocked">
-                            <span class="text-green-500">Unlocked</span>
+    <div class="w-full  p-2">
+        <div class="grid gap-8 grid-cols-2 xl:grid-cols-8">
+            <div v-for="(spacecraft, index) in spacecrafts" :key="spacecraft.id" class="flex flex-col rounded-xl bg-base py-2 px-4 text-light">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2 px-2 py-2">
+                        <p class="font-semibold text-lg">{{ spacecraft.details.name }}</p>
+                    </div>
+                    <div class="flex items-center h-full px-3">
+                        <p class="text-lg">{{ spacecraftForms[index] ? spacecraftForms[index].count : spacecraft.count }}</p>
+                    </div>
+                </div>
+                <div class="image relative">
+                    <img :src="spacecraft.details.image" class="object-cover aspect-[2/1] h-28 w-full rounded-xl" alt="" />
+                </div>
+                <div class="flex flex-col h-full">
+                    <div class="flex flex-col gap-1 px-3 py-2 h-full mt-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-secondary">Locked:</span>
+                            <span class="font-medium text-sm">{{ spacecraft.locked_count }}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-sm text-secondary">Status:</span>
+                            <span class="font-medium text-sm">
+                                <template v-if="spacecraft.unlocked">
+                                    <span class="text-green-500">Unlocked</span>
+                                </template>
+                                <template v-else>
+                                    <TertiaryButton v-if="!spacecraft.unlocked"
+                                    class="!py-1 !px-2"
+                                    @click="unlockSpacecraft(spacecraft.id)">
+                                        Unlock
+                                    </TertiaryButton>
+                                </template>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex px-3 py-2">
+                        <template v-if="editingSpacecraft === index && spacecraftForms[index]">
+                            <div class="flex flex-wrap gap-1">
+                                <input v-model="spacecraftForms[index].count" type="number" min="0" class="w-24 px-2 py-1 border rounded-md bg-base-dark text-light mr-2" />
+                                <button @click="updateSpacecraftCount(index, spacecraft.id)" class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm mr-2">Speichern</button>
+                                <button @click="toggleEditSpacecraft(null)" class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">Abbrechen</button>
+                            </div>
                         </template>
                         <template v-else>
-                            <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft(spacecraft.id)">
-                                Unlock
-                            </TertiaryButton>
+                            <button @click="toggleEditSpacecraft(index)" class="text-secondary bg-primary/25 w-full py-1 px-2 rounded-md hover:bg-primary/40 transition">Bearbeiten</button>
                         </template>
-                    </td>
-                    <td class="p-2">
-                        <span v-if="editingSpacecraft !== index">{{ spacecraft.count }}</span>
-                        <input v-else v-model="spacecraftForms[index].count" type="number" min="0"
-                            class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
-                    </td>
-                    <td class="p-2">{{ spacecraft.locked_count }}</td>
-                    <td class="p-2">
-                        <button v-if="editingSpacecraft !== index" @click="toggleEditSpacecraft(index)"
-                            class="text-primary-light hover:text-secondary">
-                            Bearbeiten
-                        </button>
-                        <div v-else class="flex gap-2">
-                            <button @click="updateSpacecraftCount(index, spacecraft.id)"
-                                class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm">
-                                Speichern
-                            </button>
-                            <button @click="toggleEditSpacecraft(null)"
-                                class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">
-                                Abbrechen
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr class="border-t border-primary bg-primary rounded-b-xl">
-                    <td class="px-2 py-3">
-                        Spacecrafts total:
-                    </td>
-                    <td class="px-2 py-3"></td>
-                    <td class="px-2 py-3">
-                        {{spacecrafts.reduce((sum, spacecraft) => sum + spacecraft.count, 0)}}
-                    </td>
-                    <td class="px-2 py-3">
-                        {{spacecrafts.reduce((sum, spacecraft) => sum + spacecraft.locked_count, 0)}}
-                    </td>
-                    <td class="px-2 py-3"></td>
-                </tr>
-            </tfoot>
-        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>

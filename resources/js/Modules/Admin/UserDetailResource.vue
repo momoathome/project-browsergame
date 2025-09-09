@@ -16,7 +16,7 @@ const resourceForms = ref(props.resources.map(resource => useForm({
     user_id: props.user.id
 })));
 
-const toggleEditResource = (index: number) => {
+const toggleEditResource = (index: number | null) => {
     editingResource.value = editingResource.value === index ? null : index;
 };
 
@@ -34,58 +34,45 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
 </script>
 
 <template>
-    <div class="bg-base rounded-xl w-full border-primary border-4 border-solid">
-        <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl">Ressources
-        </h2>
-        <table class="w-full text-light mt-1">
-            <thead class="text-gray-400 border-b border-primary">
-                <tr>
-                    <th class="text-left p-2">Ressource</th>
-                    <th class="text-left p-2">Amount</th>
-                    <th class="text-left p-2">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="(resource, index) in resources" :key="resource.id">
-                    <td class="p-2 font-medium">{{ resource.resource.name }}</td>
-                    <td class="p-2">
-                        <span v-if="editingResource !== index">{{ resource.amount }}</span>
-                        <input v-else v-model="resourceForms[index].amount" type="number" min="0"
-                            class="w-full px-2 py-1 border rounded-md bg-base-dark text-light" />
-                    </td>
-                    <td class="p-2">
-                        <button v-if="editingResource !== index" @click="toggleEditResource(index)"
-                            class="text-primary-light hover:text-secondary">
-                            Bearbeiten
-                        </button>
-                        <div v-else class="flex gap-2">
-                            <button @click="updateResourceAmount(index, resource.resource_id)"
-                                class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm">
-                                Speichern
-                            </button>
-                            <button @click="toggleEditResource(null)"
-                                class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">
-                                Abbrechen
-                            </button>
+    <div class=" w-full p-2">
+        <div class="grid gap-4 grid-cols-2 xl:grid-cols-9">
+            <div v-for="(resource, index) in resources" :key="resource.id" class="flex flex-col rounded-xl bg-base content_card text-light">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2 px-2 py-2">
+                        <img :src="resource.resource.image" class="h-8 w-8 rounded-full object-cover" alt="{{ resource.resource.name }}" />
+                        <p class="font-semibold text-lg">{{ resource.resource.name }}</p>
+                    </div>
+                </div>
+                <div class="flex flex-col h-full">
+                    <div class="flex flex-col gap-1 px-3 py-2 h-full bg-primary/25">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-secondary">Amount:</span>
+                            <span class="font-medium text-sm">{{ numberFormat(resourceForms[index] ? resourceForms[index].amount : resource.amount) }}</span>
                         </div>
-                    </td>
-                </tr>
-                <tr class="h-10">
-                    <td class="p-2">Credits</td>
-                    <td class="p-2">{{ numberFormat(credits) }}</td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr class="border-t border-primary bg-primary rounded-b-xl">
-                    <td class="px-2 py-3">
-                        Ressources Total:
-                    </td>
-                    <td class="px-2 py-3">
-                        {{resources.reduce((sum, resource) => sum + resource.amount, 0)}}
-                    </td>
-                    <td></td>
-                </tr>
-            </tfoot>
-        </table>
+                    </div>
+                    <div class="flex px-3 py-2 mt-2">
+                        <template v-if="editingResource === index && resourceForms[index]">
+                            <div class="flex flex-wrap gap-1">
+                                <input v-model="resourceForms[index].amount" type="number" min="0" class="w-24 px-2 py-1 border rounded-md bg-base-dark text-light mr-2" />
+                                <button @click="updateResourceAmount(index, resource.resource_id)" class="bg-primary text-white py-1 px-3 rounded-md hover:bg-primary-dark text-sm mr-2">Speichern</button>
+                                <button @click="toggleEditResource(null)" class="bg-gray-600 text-white py-1 px-3 rounded-md hover:bg-gray-700 text-sm">Abbrechen</button>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <button @click="toggleEditResource(index)" class="text-secondary bg-primary/25 w-full py-1 px-2 rounded-md hover:bg-primary/40 transition">Bearbeiten</button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <!-- Credits als Card -->
+            <div class="flex flex-col rounded-xl bg-base content_card text-light">
+                <div class="flex items-center gap-2 px-2 py-2">
+                    <p class="font-semibold text-lg">Credits</p>
+                </div>
+                <div class="px-3 py-2 bg-primary/25">
+                    <span class="font-medium">{{ numberFormat(credits) }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 </template>

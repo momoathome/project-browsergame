@@ -58,10 +58,12 @@ onMounted(() => {
 
 <template>
   <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-12 gap-1 w-max rounded-sm">
-    <div class="relative group grid grid-cols-2 items-center p-2 border-base border rounded-md" :class="{'cursor-pointer': is('admin')}"
+    <div class="relative group grid gap-2 items-center p-2 border-base border rounded-md" 
+      :class="{'cursor-pointer': is('admin')}"
+      style="grid-template-columns: max-content 1fr;"
       v-for="resource in formattedResources" :key="resource.name" @click="addResource(resource.resource_id)">
-      <span class="flex items-center justify-center">
-        <img :src="resource.image" class="max-h-5" />
+      <span class="flex items-center">
+        <img :src="resource.image" class="max-h-5 max-w-5" />
       </span>
       <span class="text-sm font-medium text-white">
         {{ resource.amount }}

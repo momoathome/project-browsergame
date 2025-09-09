@@ -47,7 +47,8 @@ const unitsRatio = computed(() => {
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-1 rounded-sm">
-    <div class="relative group flex gap-1 items-center p-2 border-base border rounded-md">
+    <div class="relative group grid gap-1 items-center p-2 border-base border rounded-md"
+      style="grid-template-columns: max-content 1fr;">
       <span class="flex items-center justify-center">
         <img src="/images/attributes/unit_limit.png" class="max-h-5" alt="Units">
       </span>

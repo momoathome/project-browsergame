@@ -115,7 +115,7 @@ const displayQueueTime = (item: RawQueueItem) => {
 
       <div class="flex flex-col gap-8 w-full">
         <!-- main -->
-         <div class="grid gap-6">
+         <div class="grid gap-8">
           <div v-for="building in buildings" :key="building.id" class="flex flex-col rounded-xl bg-base content_card text-light">
             <div class="flex justify-between items-center">
               <div class="flex justify-center px-2 py-2">
@@ -148,7 +148,7 @@ const displayQueueTime = (item: RawQueueItem) => {
           </div>
          </div>
 
-         <div class="grid gap-4">
+         <div class="grid gap-6">
            <div v-for="spacecraft in unlockedSpacecrafts" :key="spacecraft.id" class="flex flex-col w-full rounded-xl bg-base content_card text-light">
             <div class="flex justify-between items-center ">
               <div class="flex items-center gap-2 px-2 py-2">

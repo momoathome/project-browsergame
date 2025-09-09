@@ -55,15 +55,12 @@ const totalMiningOperations = computed(() => queueData.value.reduce((acc, item) 
   }
   return acc;
 }, 0));
-
-// Statt nur Queue-Daten:
-const spacecraftsInOrbit = computed(() => {
-  const result: Record<string, number> = {};
-  spacecrafts.value.forEach(sc => {
-    result[sc.id] = sc.locked_count || 0;
-  });
-  return result;
-});
+const totalCombatOperations = computed(() => queueData.value.reduce((acc, item) => {
+  if (item.actionType === 'combat') {
+    acc++;
+  }
+  return acc;
+}, 0));
 
 const getBuildingQueueItem = computed(() => (buildingId: number) => {
   return queueBuildings.value.find(item => item.targetId === buildingId);
@@ -231,7 +228,21 @@ const displayQueueTime = (item: RawQueueItem) => {
 
       </div>
 
-      <div class="flex flex-col gap-4 w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 rounded-xl text-light">
+      <div class="flex flex-col gap-4 w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 -my-4 rounded-xl text-light">
+        <div class="flex flex-col gap-2 border-b border-primary/50 pb-4">
+          <div class="flex items-center gap-2">
+            <img src="/images/space-craft.png" alt="spacecraft" class="h-5" />
+            <h2 class="font-semibold text-sm">in Orbit • {{ fleetSummary.totalInOrbit }}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
+            <h2 class="font-semibold text-sm">Mining Operations • {{ totalMiningOperations }}</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <img src="/images/combat.png" alt="combat" class="h-5" />
+            <h2 class="font-semibold text-sm">in Combat • {{ totalCombatOperations }}</h2>
+          </div>
+        </div>
         <div v-for="combat in queueCombat" :key="combat.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4"
           :class="{ 'border-red-600 !bg-red-900': combat.details.defender_name === page.props.auth.user.name }">
           <img :src="getTypeIcon(combat.actionType)" alt="type icon" class="h-6 w-6" />
@@ -244,17 +255,6 @@ const displayQueueTime = (item: RawQueueItem) => {
             </p>
             <p class="text-sm text-muted-foreground">
               • {{ displayQueueTime(combat) }}
-            </p>
-          </div>
-        </div>
-        <div v-for="mining in queueMining" :key="mining.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(mining.actionType)" alt="type icon" class="h-6 w-6" />
-          <div class="flex-1 space-y-1">
-            <p class="text-sm font-medium leading-none">
-              Mining
-            </p>
-            <p class="text-sm text-muted-foreground text-pretty">
-              {{ mining.details.asteroid_name }} • {{ displayQueueTime(mining) }}
             </p>
           </div>
         </div>
@@ -284,86 +284,18 @@ const displayQueueTime = (item: RawQueueItem) => {
             </p>
           </div>
         </div>
+        <div v-for="mining in queueMining" :key="mining.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
+          <img :src="getTypeIcon(mining.actionType)" alt="type icon" class="h-6 w-6" />
+          <div class="flex-1 space-y-1">
+            <p class="text-sm font-medium leading-none">
+              Mining
+            </p>
+            <p class="text-sm text-muted-foreground text-pretty">
+              {{ mining.details.asteroid_name }} • {{ displayQueueTime(mining) }}
+            </p>
+          </div>
+        </div>
       </div>
-
-      <!-- AsteroidMap -->
-      <!-- <div class="bg-base rounded-xl w-full border-primary border-4 border-solid content_card">
-        <SectionHeader title="Asteroid Map" iconSrc="/images/navigation/asteroidmap.png" :route="route('asteroidMap')"
-          :isPrimary="true" />
-
-        <table class="w-full text-light mt-1">
-          <thead class="text-gray-400 border-b border-primary">
-            <tr>
-              <th class="text-left p-2">Name</th>
-              <th class="text-left p-2">Type</th>
-              <th class="text-left p-2">Spacecrafts</th>
-              <th class="text-left p-2">Duration</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-if="queueCombat.length > 0 || queueMining.length > 0">
-              <tr v-for="combat in queueCombat" :key="combat.id">
-                <td class="p-2"><span class="text-secondary">attack</span> {{ combat.details.defender_name }}</td>
-                <td class="p-2">
-                  <div class="relative group flex">
-                    <img :src="getTypeIcon(combat.actionType)" alt="Type Icon" class="w-6 h-6">
-                    <AppTooltip :label="combat.actionType" position="left" />
-                  </div>
-                </td>
-                <td class="p-2">
-                  {{combat.details.attacker_formatted.reduce((acc, spacecraft) => acc + spacecraft.count, 0)}}
-                </td>
-                <td class="p-2">
-                    <span>
-                      {{ displayQueueTime(combat) }}
-                    </span>
-                </td>
-              </tr>
-
-              <tr v-for="mining in queueMining" :key="mining.id">
-                <td class="p-2">{{ mining.details.asteroid_name }}</td>
-                <td class="p-2">
-                  <div class="relative group flex items-center">
-                    <img :src="getTypeIcon(mining.actionType)" alt="Type Icon" class="w-6 h-6">
-                    <AppTooltip :label="mining.actionType" position="left" />
-                  </div>
-                </td>
-                <td class="p-2 flex group">
-                  <div class="relative w-max flex items-center">
-                    {{ Object.values(mining.details.spacecrafts as Record<string, number>).reduce((acc, count) => acc + count, 0) }}
-                    <AppTooltip class="!ml-2" position="right"
-                      :label="Object.entries(mining.details.spacecrafts as Record<string, number>)
-                        .map(([name, count]) => `${name}: ${count}`)
-                        .join('\n')"
-                    />
-                  </div>
-                </td>
-                <td class="p-2">
-                  {{ displayQueueTime(mining) }}
-                </td>
-              </tr>
-            </template>
-            <template v-else>
-              <tr>
-                <td class="p-2">-</td>
-                <td class="p-2">-</td>
-                <td class="p-2">-</td>
-                <td class="p-2">-</td>
-              </tr>
-            </template>
-          </tbody>
-          <tfoot>
-            <tr class="border-t border-primary bg-primary rounded-b-xl">
-              <td class="px-2 py-3" colspan="3">
-                {{ totalSpacecraftsInOrbit }} Spacecrafts in Orbit • {{ totalMiningOperations }} Mining Operations
-              </td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div> -->
-
     </div>
   </AppLayout>
 </template>

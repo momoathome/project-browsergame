@@ -4,6 +4,7 @@ namespace Orion\Modules\Building\Enums;
 
 enum BuildingType: string
 {
+    case CORE = 'Core';
     case SHIPYARD = 'Shipyard';
     case HANGAR = 'Hangar';
     case WAREHOUSE = 'Warehouse';

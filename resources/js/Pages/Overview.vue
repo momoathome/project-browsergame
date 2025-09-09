@@ -4,7 +4,6 @@ import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import type { Building, Spacecraft, RawQueueItem } from '@/types/types';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
-import SectionHeader from '@/Components/SectionHeader.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
@@ -44,18 +43,18 @@ const FormattedTime = (item) => {
   return timeFormat(Math.floor(remainingTimeMs / 1000));
 }
 
-const unlockedSpacecrafts = computed(() => spacecrafts.value.filter(spacecraft => spacecraft.unlocked));
-const queueBuildings = computed(() => queueData.value.filter(item => item.actionType === 'building'));
-const queueSpacecrafts = computed(() => queueData.value.filter(item => item.actionType === 'produce'));
-const queueMining = computed(() => queueData.value.filter(item => item.actionType === 'mining'));
-const queueCombat = computed(() => queueData.value.filter(item => item.actionType === 'combat'));
-const totalMiningOperations = computed(() => queueData.value.reduce((acc, item) => {
+const unlockedSpacecrafts = computed(() => (spacecrafts.value ?? []).filter(spacecraft => spacecraft.unlocked));
+const queueBuildings = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'building'));
+const queueSpacecrafts = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'produce'));
+const queueMining = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'mining'));
+const queueCombat = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'combat'));
+const totalMiningOperations = computed(() => (queueData.value ?? []).reduce((acc, item) => {
   if (item.actionType === 'mining') {
     acc++;
   }
   return acc;
 }, 0));
-const totalCombatOperations = computed(() => queueData.value.reduce((acc, item) => {
+const totalCombatOperations = computed(() => (queueData.value ?? []).reduce((acc, item) => {
   if (item.actionType === 'combat') {
     acc++;
   }

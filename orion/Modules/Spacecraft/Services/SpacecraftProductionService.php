@@ -194,12 +194,13 @@ class SpacecraftProductionService
         $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
 
         $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
+        $effective_build_time = floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed);
 
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
-            floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed),
+            $effective_build_time,
             [
                 'spacecraft_name' => $spacecraft->details->name,
                 'quantity' => $quantity,

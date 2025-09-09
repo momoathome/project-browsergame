@@ -34,6 +34,19 @@ class BuildingUpgradeService
 
     public function startBuildingUpgrade(User $user, Building $building): array
     {
+        $coreBuilding = Building::where('user_id', $user->id)
+            ->whereHas('details', function ($query) {
+                $query->where('name', BuildingType::CORE->value);
+            })
+            ->first();
+
+        if ($coreBuilding && $building->level >= $coreBuilding->level && $building->details->name !== BuildingType::CORE->value) {
+            return [
+                'success' => false,
+                'message' => 'You cannot upgrade buildings beyond the Core building level.'
+            ];
+        }
+
         try {
             $currentCosts = $this->getBuildingUpgradeCosts($building);
 
@@ -138,12 +151,17 @@ class BuildingUpgradeService
 
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void
     {
+        $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);
         $building_produce_speed = config('game.core.building_produce_speed');
+
+        $upgrade_multiplier = $core_upgrade_speed ? $core_upgrade_speed->attribute_value : 1;
+        $effective_build_time = floor(($building->build_time / $upgrade_multiplier) / $building_produce_speed);
+
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_BUILDING,
             $building->id,
-            $building->build_time / $building_produce_speed,
+            $effective_build_time,
             [
                 'building_name' => $building->details->name,
                 'current_level' => $building->level,

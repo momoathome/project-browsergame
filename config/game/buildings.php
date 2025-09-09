@@ -3,8 +3,22 @@
 return [
     'buildings' => [
         [
-            'name' => 'Shipyard',
+            'name' => 'Core',
             'details_id' => 1,
+            'effect_value' => 1,
+            'build_time' => 60,
+            'is_active' => true,
+            'level' => 1,
+            'costs' => [
+                ['resource_name' => 'Carbon', 'amount' => 250],
+                ['resource_name' => 'Titanium', 'amount' => 375],
+                ['resource_name' => 'Hydrogenium', 'amount' => 450],
+                ['resource_name' => 'Kyberkristall', 'amount' => 425],
+            ],
+        ],
+        [
+            'name' => 'Shipyard',
+            'details_id' => 2,
             'effect_value' => 1, // Basiswert für Level 1
             'build_time' => 60,
             'is_active' => true,
@@ -18,7 +32,7 @@ return [
         ],
         [
             'name' => 'Hangar',
-            'details_id' => 2,
+            'details_id' => 3,
             'effect_value' => 10,
             'build_time' => 60,
             'is_active' => true,
@@ -27,12 +41,12 @@ return [
                 ['resource_name' => 'Carbon', 'amount' => 250],
                 ['resource_name' => 'Titanium', 'amount' => 350],
                 ['resource_name' => 'Hydrogenium', 'amount' => 350],
-                ['resource_name' => 'Kyberkristall', 'amount' => 150],
+                ['resource_name' => 'Kyberkristall', 'amount' => 175],
             ],
         ],
         [
             'name' => 'Laboratory',
-            'details_id' => 3,
+            'details_id' => 4,
             'effect_value' => 3,
             'build_time' => 60,
             'is_active' => true,
@@ -40,19 +54,19 @@ return [
             'costs' => [
                 ['resource_name' => 'Carbon', 'amount' => 300],
                 ['resource_name' => 'Titanium', 'amount' => 250],
-                ['resource_name' => 'Hydrogenium', 'amount' => 375],
+                ['resource_name' => 'Hydrogenium', 'amount' => 350],
                 ['resource_name' => 'Kyberkristall', 'amount' => 325],
             ],
         ],
         [
             'name' => 'Warehouse',
-            'details_id' => 4,
+            'details_id' => 5,
             'effect_value' => 1_500,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 375],
+                ['resource_name' => 'Carbon', 'amount' => 350],
                 ['resource_name' => 'Titanium', 'amount' => 300],
                 ['resource_name' => 'Hydrogenium', 'amount' => 200],
                 ['resource_name' => 'Kyberkristall', 'amount' => 200],
@@ -74,13 +88,13 @@ return [
         ],
         [
             'name' => 'Shield',
-            'details_id' => 8,
+            'details_id' => 7,
             'effect_value' => 1,
             'build_time' => 60,
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 300],
+                ['resource_name' => 'Carbon', 'amount' => 275],
                 ['resource_name' => 'Titanium', 'amount' => 300],
                 ['resource_name' => 'Hydrogenium', 'amount' => 400],
                 ['resource_name' => 'Kyberkristall', 'amount' => 425],

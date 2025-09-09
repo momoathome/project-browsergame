@@ -4,6 +4,7 @@ namespace Orion\Modules\User\Enums;
 
 enum UserAttributeType: string
 {
+    case UPGRADE_SPEED = 'upgrade_speed';
     case PRODUCTION_SPEED = 'production_speed';
     case CREW_LIMIT = 'crew_limit';
     case STORAGE = 'storage';

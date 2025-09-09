@@ -12,7 +12,7 @@ return [
         ],
         [
             'attribute_name' => 'credits',
-            'attribute_value' => 300_000,
+            'attribute_value' => 350_000,
         ],
         [
             'attribute_name' => 'research_points',
@@ -36,6 +36,10 @@ return [
         ],
         [
             'attribute_name' => 'production_speed',
+            'attribute_value' => 0,
+        ],
+        [
+            'attribute_name' => 'upgrade_speed',
             'attribute_value' => 0,
         ],
         [

@@ -250,6 +250,7 @@ class BuildingProgressionService
         
             // Enum verwenden für Mapping
             $effectText = match ($attributeName) {
+                UserAttributeType::UPGRADE_SPEED->value => "Upgrade speed",
                 UserAttributeType::PRODUCTION_SPEED->value => "Production speed",
                 UserAttributeType::BASE_DEFENSE->value => "Defense",
                 UserAttributeType::STORAGE->value => "Resource storage",
@@ -260,6 +261,7 @@ class BuildingProgressionService
             };
         
             $effectValue = match ($attributeName) {
+                UserAttributeType::UPGRADE_SPEED->value,
                 UserAttributeType::PRODUCTION_SPEED->value,
                 UserAttributeType::BASE_DEFENSE->value => $formattedPercent,
                 UserAttributeType::STORAGE->value,

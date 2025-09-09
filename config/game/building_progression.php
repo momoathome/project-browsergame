@@ -1,6 +1,6 @@
 <?php
 
-$build_time_multiplier = 1.30;
+$build_time_multiplier = 1.35;
 $additional_resource_base_value = 100;
 $additional_resources_multiplier = 1;
 $additional_resource_referenz = 1000;
@@ -13,6 +13,7 @@ return [
 
     // general resource growth factors per building type
     'growth_factors' => [
+        'Core' => 1.30,
         'Shipyard' => 1.30,
         'Hangar' => 1.275,
         'Laboratory' => 1.30,
@@ -34,6 +35,17 @@ return [
 
     // Ressourcenanforderungen nach Gebäudetyp
     'building_resources' => [
+        'Core' => [
+            'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
+            'level_3' => ['Cobalt'],
+            'level_5' => ['Iridium'],
+            'level_8' => ['Uraninite'],
+            'level_12' => ['Thorium'],
+            'level_16' => ['Astatine'],
+            'level_20' => ['Hyperdiamond'],
+            'level_22' => ['Dilithium'],
+            'level_30' => ['Deuterium'],
+        ],
         'Shipyard' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
             'level_3' => ['Cobalt'],
@@ -104,6 +116,11 @@ return [
     ],
 
     'effect_configs' => [
+        'Core' => [
+            'type' => 'multiplicative',
+            'base_value' => 1,
+            'increment' => 0.05,
+        ],
         'Shipyard' => [
             'type' => 'multiplicative',
             'base_value' => 1,
@@ -137,6 +154,7 @@ return [
     ],
 
     'effect_attributes' => [
+        'Core' => ['upgrade_speed'],
         'Shipyard' => ['production_speed'],
         'Hangar' => ['crew_limit'],
         'Warehouse' => ['storage'],

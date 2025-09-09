@@ -13,8 +13,15 @@ class BuildingDetailsSeeder extends Seeder
     public function run(): void
     {
         BuildingDetails::create([
+            'name' => 'Core',
+            'description' => 'Increases Building upgrade speed.',
+            'image' => '/images/buildings/core.webp',
+            'effect' => 'Upgrade speed',
+        ]);
+
+        BuildingDetails::create([
             'name' => 'Shipyard',
-            'description' => 'Increases spaceship production speed.',
+            'description' => 'Increases Spacecraft production speed.',
             'image' => '/images/buildings/shipyard.webp',
             'effect' => 'Production speed',
         ]);
@@ -40,12 +47,12 @@ class BuildingDetailsSeeder extends Seeder
             'effect' => 'Resource storage',
         ]);
 
-        BuildingDetails::create([
+/*         BuildingDetails::create([
             'name' => 'Market',
             'description' => 'Increases trade limit for resources.',
             'image' => '/images/buildings/market.webp',
             'effect' => 'Trade Limit',
-        ]);
+        ]); */
 
         BuildingDetails::create([
             'name' => 'Scanner',
@@ -54,12 +61,12 @@ class BuildingDetailsSeeder extends Seeder
             'effect' => 'Scanner range',
         ]);
 
-        BuildingDetails::create([
+  /*       BuildingDetails::create([
             'name' => 'Supply',
             'description' => 'Increases supply capacity for crew.',
             'image' => '/images/buildings/supply.jpg',
             'effect' => 'Supply capacity',
-        ]);
+        ]); */
 
         BuildingDetails::create([
             'name' => 'Shield',
@@ -68,11 +75,11 @@ class BuildingDetailsSeeder extends Seeder
             'effect' => 'Defense',
         ]);
 
-        BuildingDetails::create([
+/*         BuildingDetails::create([
             'name' => 'Energy',
             'description' => 'Increases energy production.',
             'image' => '/images/buildings/energy.webp',
             'effect' => 'Energy',
-        ]);
+        ]); */
     }
 }

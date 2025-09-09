@@ -4,19 +4,19 @@ return [
     'resources' => [
         [
             'name' => 'Carbon',
-            'amount' => 400,
+            'amount' => 750,
         ],
         [
             'name' => 'Titanium',
-            'amount' => 500,
+            'amount' => 900,
         ],
         [
             'name' => 'Hydrogenium',
-            'amount' => 300,
+            'amount' => 750,
         ],
         [
             'name' => 'Kyberkristall',
-            'amount' => 200,
+            'amount' => 700,
         ],
         [
             'name' => 'Cobalt',

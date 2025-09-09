@@ -151,7 +151,7 @@ function handleCancelUpgrade() {
 
           <p class="text-sm text-gray">{{ building.description }}</p>
 
-          <div v-if="currentEffect" class="flex flex-col gap-1">
+          <div class="flex flex-col gap-1">
             <div class="flex items-center gap-1">
               <span class="text-sm text-secondary">{{ formattedEffectText }}:</span>
               <span class="font-medium text-sm">{{ formattedEffectValue }}</span>

@@ -64,6 +64,8 @@ export interface SpacecraftSimple {
   cargo: number;
   speed: number;
   operation_speed: number;
+  crew_limit: number;
+  build_time: number;
   unlocked: boolean;
 }
 

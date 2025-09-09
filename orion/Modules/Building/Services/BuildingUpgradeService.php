@@ -159,7 +159,7 @@ class BuildingUpgradeService
         return DB::transaction(function () use ($building, $costs) {
             // Gebäude aktualisieren
             $building->level += 1;
-            $building->effect_value = round($this->buildingProgressionService->calculateNewEffectValue($building));
+            $building->effect_value = floor($this->buildingProgressionService->calculateNewEffectValue($building));
             $building->build_time = $this->buildingProgressionService->calculateBuildTime($building);
             $building->save();
 

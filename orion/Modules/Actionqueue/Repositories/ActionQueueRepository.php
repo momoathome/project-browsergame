@@ -124,7 +124,7 @@ readonly class ActionQueueRepository
             ->delete();
     }
 
-    public function getQueuedUpgradesCount(int $userId, int $targetId, QueueActionType $actionType): int
+    public function getQueuedUpgrades(int $userId, int $targetId, QueueActionType $actionType): Collection
     {
         return ActionQueue::where('user_id', $userId)
             ->where('action_type', $actionType)
@@ -133,7 +133,7 @@ readonly class ActionQueueRepository
                 QueueStatusType::STATUS_IN_PROGRESS,
                 QueueStatusType::STATUS_PENDING
             ])
-            ->count();
+            ->get();
     }
 
     public function processQueue(): Collection

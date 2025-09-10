@@ -77,9 +77,9 @@ class ActionQueueService
         return $this->actionqueueRepository->getInProgressQueuesFromUserByType($userId, $actionType);
     }
 
-    public function getQueuedUpgradesCount($userId, $targetId, $actionType): int
+    public function getQueuedUpgrades($userId, $targetId, $actionType): Collection
     {
-        return $this->actionqueueRepository->getQueuedUpgradesCount($userId, $targetId, $actionType);
+        return $this->actionqueueRepository->getQueuedUpgrades($userId, $targetId, $actionType);
     }
 
     public function processQueue(): int

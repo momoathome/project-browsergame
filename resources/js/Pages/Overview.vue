@@ -7,6 +7,7 @@ import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import { useQueue } from '@/Composables/useQueue'
 
 const { queueData } = useQueueStore();
 const { spacecrafts } = useSpacecraftStore();
@@ -16,6 +17,7 @@ const props = defineProps<{
 }>()
 
 const page = usePage()
+const { processedQueueItems } = useQueue(page.props.auth.user.id)
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -30,39 +32,32 @@ const getTypeIcon = (type) => {
   }
 };
 
-const currentTime = ref(new Date().getTime());
-const getRemainingTime = (item: RawQueueItem): number => {
-  if (!item.endTime) return 0
-
-  const endTime = new Date(item.endTime).getTime()
-  return Math.max(0, endTime - currentTime.value)
-}
-
-const FormattedTime = (item) => {
-  const remainingTimeMs = getRemainingTime(item)
-  return timeFormat(Math.floor(remainingTimeMs / 1000));
-}
-
 const sortedQueueItems = computed(() =>
-  queueData.value?.slice().sort((a, b) => {
+  processedQueueItems.value?.slice().sort((a, b) => {
     const statusOrder = { in_progress: 0, processing: 1, pending: 2 }
-    return statusOrder[a.status] - statusOrder[b.status]
+    const statusDiff = statusOrder[a.status] - statusOrder[b.status]
+    if (statusDiff !== 0) return statusDiff
+
+    // end_time als Fallback (frühere zuerst)
+    const aEnd = new Date(a.rawData.endTime ?? 0).getTime()
+    const bEnd = new Date(b.rawData.endTime ?? 0).getTime()
+    return aEnd - bEnd
   })
 )
 
 const unlockedSpacecrafts = computed(() => (spacecrafts.value ?? []).filter(spacecraft => spacecraft.unlocked));
-const queueBuildings = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'building'));
-const queueSpacecrafts = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'produce'));
-const queueMining = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'mining'));
-const queueCombat = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'combat'));
+const queueBuildings = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'building'));
+const queueSpacecrafts = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'produce'))
+const queueMining = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'mining'));
+const queueCombat = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'combat'));
 const totalMiningOperations = computed(() => (sortedQueueItems.value ?? []).reduce((acc, item) => {
-  if (item.actionType === 'mining') {
+  if (item.rawData.actionType === 'mining') {
     acc++;
   }
   return acc;
 }, 0));
 const totalCombatOperations = computed(() => (sortedQueueItems.value ?? []).reduce((acc, item) => {
-  if (item.actionType === 'combat') {
+  if (item.rawData.actionType === 'combat') {
     acc++;
   }
   return acc;
@@ -97,22 +92,19 @@ const fleetSummary = computed(() => ({
   totalInOrbit: spacecrafts.value.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0)
 }));
 
-let timerInterval: number | undefined
-onMounted(() => {
-  timerInterval = setInterval(() => {
-    currentTime.value = new Date().getTime();
-  }, 1000);
-})
-
-onUnmounted(() => {
-  if (timerInterval) {
-    clearInterval(timerInterval)
-  }
-})
-
-const displayQueueTime = (item: RawQueueItem) => {
-  return getRemainingTime(item) === 0 ? 'processing...' : FormattedTime(item)
+const displayQueueTime = (item) => {
+  if (item.status === 'pending') return 'pending...'
+  return item.formattedTime
 }
+
+onMounted(() => {
+  if (!queueData.value) {
+    console.log('No queue data, fetching...');
+    // fetch queue data
+  } else {
+    console.log(queueData.value);
+  }
+});
 </script>
 
 <template>
@@ -250,13 +242,13 @@ const displayQueueTime = (item: RawQueueItem) => {
           </div>
         </div>
         <div v-for="combat in queueCombat" :key="combat.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4"
-          :class="{ 'border-red-600 !bg-red-900': combat.details.defender_name === page.props.auth.user.name }">
-          <img :src="getTypeIcon(combat.actionType)" alt="type icon" class="h-6 w-6" />
+          :class="{ 'border-red-600 !bg-red-900': combat.rawData.details.defender_name === page.props.auth.user.name }">
+          <img :src="getTypeIcon(combat.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
             <p class="text-sm font-medium leading-none">
               Attack on 
               <span>
-                {{ combat.details.defender_name }}
+                {{ combat.rawData.details.defender_name }}
               </span>
             </p>
             <p class="text-sm text-muted-foreground">
@@ -265,45 +257,45 @@ const displayQueueTime = (item: RawQueueItem) => {
           </div>
         </div>
         <div v-for="building in queueBuildings" :key="building.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(building.actionType)" alt="type icon" class="h-6 w-6" />
+          <img :src="getTypeIcon(building.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
             <div class="flex items-center justify-between gap-2">
               <p class="text-sm font-medium leading-none">
-                {{ building.details.building_name }}
+                {{ building.rawData.details.building_name }}
               </p>
               <span class="text-sm">{{ displayQueueTime(building) }}</span>
             </div>
             <p class="text-sm text-muted-foreground flex items-center gap-1">
-              Upgrade lv. {{ building.details.current_level }} 
+              Upgrade lv. {{ building.rawData.details.current_level }} 
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M16.15 13H5q-.425 0-.712-.288T4 12t.288-.712T5 11h11.15L13.3 8.15q-.3-.3-.288-.7t.288-.7q.3-.3.713-.312t.712.287L19.3 11.3q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.575 4.575q-.3.3-.712.288t-.713-.313q-.275-.3-.288-.7t.288-.7z"/>
               </svg>
-              lv. {{ building.details.next_level }}
+              lv. {{ building.rawData.details.next_level }}
             </p>
           </div>
         </div>
         <div v-for="spacecraft in queueSpacecrafts" :key="spacecraft.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(spacecraft.actionType)" alt="type icon" class="h-6 w-6" />
+          <img :src="getTypeIcon(spacecraft.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
             <div class="flex items-center justify-between gap-2">
               <p class="text-sm font-medium leading-none">
-                {{ spacecraft.details.spacecraft_name }}
+                {{ spacecraft.rawData.details.spacecraft_name }}
               </p>
               <span class="text-sm">{{ displayQueueTime(spacecraft) }}</span>
             </div>
             <p class="text-sm text-muted-foreground">
-              Producing {{ spacecraft.details.quantity }} Units
+              Producing {{ spacecraft.rawData.details.quantity }} Units
             </p>
           </div>
         </div>
         <div v-for="mining in queueMining" :key="mining.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(mining.actionType)" alt="type icon" class="h-6 w-6" />
+          <img :src="getTypeIcon(mining.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
             <p class="text-sm font-medium leading-none">
               Mining
             </p>
             <p class="text-sm text-muted-foreground text-pretty">
-              {{ mining.details.asteroid_name }} • {{ displayQueueTime(mining) }}
+              {{ mining.rawData.details.asteroid_name }} • {{ displayQueueTime(mining) }}
             </p>
           </div>
         </div>

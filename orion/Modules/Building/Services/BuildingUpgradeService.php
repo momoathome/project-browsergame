@@ -41,7 +41,7 @@ class BuildingUpgradeService
             })
             ->first();
 
-        $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+        $queuedUpgrades = $this->queueService->getQueuedUpgrades($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
         $targetLevel = $building->level + $queuedUpgrades + 1;
 
         if ($coreBuilding && $targetLevel > $coreBuilding->level && $building->details->name !== BuildingType::CORE->value) {
@@ -105,7 +105,7 @@ class BuildingUpgradeService
         try {
             DB::transaction(function () use ($user, $building, $queueEntries) {
                 foreach ($queueEntries as $queueEntry) {
-                    $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+                    $queuedUpgrades = $this->queueService->getQueuedUpgrades($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
                     $targetLevel = $building->level + $queuedUpgrades;
     
                     $currentCosts = collect($this->buildingProgressionService->calculateUpgradeCost($building, $targetLevel));
@@ -149,7 +149,7 @@ class BuildingUpgradeService
 
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void
     {
-        $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+        $queuedUpgrades = $this->queueService->getQueuedUpgrades($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
         $targetLevel = $building->level + $queuedUpgrades + 1;
 
         $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);

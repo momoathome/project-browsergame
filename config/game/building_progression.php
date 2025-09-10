@@ -1,6 +1,6 @@
 <?php
 
-$build_time_multiplier = 1.35;
+$build_time_multiplier = 1.25;
 $additional_resource_base_value = 100;
 $additional_resources_multiplier = 1;
 $additional_resource_referenz = 1000;
@@ -13,7 +13,7 @@ return [
 
     // general resource growth factors per building type
     'growth_factors' => [
-        'Core' => 1.325,
+        'Core' => 1.3125,
         'Shipyard' => 1.30,
         'Hangar' => 1.275,
         'Laboratory' => 1.30,
@@ -118,23 +118,23 @@ return [
     'effect_configs' => [
         'Core' => [
             'type' => 'multiplicative',
-            'base_value' => 1,
+            'base_value' => 1.0,
             'increment' => 0.05,
         ],
         'Shipyard' => [
             'type' => 'multiplicative',
-            'base_value' => 1,
+            'base_value' => 1.0,
             'increment' => 0.05,
         ],
         'Hangar' => [
             'type' => 'exponential',
-            'base_value' => 10,
-            'increment' => 1.375,
+            'base_value' => 15,
+            'increment' => 1.35,
         ],
         'Warehouse' => [
             'type' => 'exponential',
             'base_value' => 1500,
-            'increment' => 1.275,
+            'increment' => 1.3,
         ],
         'Laboratory' => [
             'type' => 'additive',
@@ -149,7 +149,7 @@ return [
         'Shield' => [
             'type' => 'multiplicative',
             'base_value' => 1.0,
-            'increment' => 0.05,
+            'increment' => 0.03,
         ],
     ],
 

@@ -60,6 +60,13 @@ const activeProduction = computed(() => {
   return form.amount;
 });
 
+const activeProductionCount = computed(() => {
+  return (queueData.value ?? []).filter(q =>
+    q.targetId === props.spacecraft.id &&
+    q.actionType === 'produce'
+  ).length;
+});
+
 const resourceStatus = computed(() => {
   return props.spacecraft.resources.map(resource => {
     const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
@@ -83,7 +90,7 @@ const crewStatus = computed(() => {
   const crewLimit = getAttribute('crew_limit');
   const totalUnits = getAttribute('total_units');
   const queuedCrew = queueData.value.reduce((acc: number, item: any) => {
-    if (item.actionType === 'produce' && item.details?.quantity && item.status === 'in_progress') {
+    if (item.actionType === 'produce' && item.details?.quantity && (item.status === 'in_progress' || item.status === 'pending')) {
       const queuedSpacecraft = spacecrafts.value.find((s: any) => s.id === item.targetId);
       if (queuedSpacecraft) {
         return acc + (queuedSpacecraft.crew_limit * item.details.quantity);
@@ -128,7 +135,7 @@ const crewLimitReachedNext = computed(() => {
 
 // --- Actions ---
 function produceSpacecraft() {
-  if (form.amount <= 0 || isProducing.value || isSubmitting.value) return;
+  if (form.amount <= 0 || isSubmitting.value) return;
   isSubmitting.value = true;
   form.post(
     route('shipyard.update', props.spacecraft.id),
@@ -291,7 +298,7 @@ function handleCancelProduction() {
               <button
                 class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="form.amount = 0"
-                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
+                :disabled="maxSpacecraftCount == 0 || form.amount <= 0"
                  aria-label="Minimum"
                 type="button"
               >
@@ -306,7 +313,7 @@ function handleCancelProduction() {
                 class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-r border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="decrement"
                 @click.shift="decrementBy10"
-                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount <= 0"
+                :disabled="maxSpacecraftCount == 0 || form.amount <= 0"
                 type="button"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -318,14 +325,14 @@ function handleCancelProduction() {
                 :maxlength="4"
                 :maxInputValue="maxSpacecraftCount"
                 v-model="form.amount"
-                :disabled="isProducing || !canProduce"
+                :disabled="!canProduce"
                 class="!py-2 !px-0 !w-full !rounded-none !border-0 !bg-primary/40 text-center focus:!ring-0 focus:!border-x-2 transition-colors"
               />
               <button
                 class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="increment"
                 @click.shift="incrementBy10"
-                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
+                :disabled="maxSpacecraftCount == 0 || form.amount >= maxSpacecraftCount"
                 type="button"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -334,7 +341,7 @@ function handleCancelProduction() {
             </button>
               <button
                 class="px-2 py-2 bg-primary/40 text-light hover:bg-primary transition font-semibold border-l border-primary focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
-                :disabled="maxSpacecraftCount == 0 || isProducing || form.amount >= maxSpacecraftCount"
+                :disabled="maxSpacecraftCount == 0 || form.amount >= maxSpacecraftCount"
                 @click="form.amount = maxSpacecraftCount"
                 type="button"
                 aria-label="Maximum"
@@ -359,12 +366,11 @@ function handleCancelProduction() {
 
             <button
               class="px-4 py-2 w-full bg-primary/40 text-light font-semibold rounded-br-xl transition border-t border-primary/40 hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-              :disabled="isProducing || form.amount == 0 || !canProduce"
+              :disabled="form.amount == 0 || !canProduce"
               @click="produceSpacecraft"
               type="button"
             >
-              <span v-if="isProducing">Producing</span>
-              <span v-else>Produce</span>
+              <span>Produce</span>
             </button>
             </div>
 

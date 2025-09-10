@@ -68,7 +68,7 @@ class BuildingService
         $formattedBuildings = [];
 
         foreach ($buildings as $building) {
-            $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+            $queuedUpgrades = $this->queueService->getQueuedUpgrades($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
             $nextUpgradeLevel = $building->level + $queuedUpgrades + 1;
             // Hole die Ressourcen für das nächste Level
             $nextLevelResources = $this->buildingProgressionService->calculateUpgradeCost($building, $nextUpgradeLevel);

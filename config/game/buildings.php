@@ -6,7 +6,7 @@ return [
             'name' => 'Core',
             'details_id' => 1,
             'effect_value' => 1,
-            'build_time' => 60,
+            'build_time' => 180,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -20,7 +20,7 @@ return [
             'name' => 'Shipyard',
             'details_id' => 2,
             'effect_value' => 1, // Basiswert für Level 1
-            'build_time' => 60,
+            'build_time' => 130,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -34,7 +34,7 @@ return [
             'name' => 'Hangar',
             'details_id' => 3,
             'effect_value' => 10,
-            'build_time' => 60,
+            'build_time' => 150,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -48,7 +48,7 @@ return [
             'name' => 'Laboratory',
             'details_id' => 4,
             'effect_value' => 3,
-            'build_time' => 60,
+            'build_time' => 135,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -62,7 +62,7 @@ return [
             'name' => 'Warehouse',
             'details_id' => 5,
             'effect_value' => 1_500,
-            'build_time' => 60,
+            'build_time' => 120,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -76,7 +76,7 @@ return [
             'name' => 'Scanner',
             'details_id' => 6,
             'effect_value' => 4000,
-            'build_time' => 60,
+            'build_time' => 140,
             'is_active' => true,
             'level' => 1,
             'costs' => [
@@ -90,7 +90,7 @@ return [
             'name' => 'Shield',
             'details_id' => 7,
             'effect_value' => 1,
-            'build_time' => 60,
+            'build_time' => 160,
             'is_active' => true,
             'level' => 1,
             'costs' => [

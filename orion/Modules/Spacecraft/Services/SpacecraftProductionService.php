@@ -35,17 +35,26 @@ class SpacecraftProductionService
 
     public function startSpacecraftProduction(User $user, Spacecraft $spacecraft, int $quantity): array
     {
+        $queuedQuantity = $this->queueService->getQueuedUpgrades($user->id, $spacecraft->id, QueueActionType::ACTION_TYPE_PRODUCE)
+            ->sum(function ($entry) {
+                $details = is_string($entry->details) ? json_decode($entry->details, true) : $entry->details;
+                return $details['quantity'] ?? 0;
+            });
+
+        $targetQuantity = $spacecraft->count + $queuedQuantity + $quantity;
+        Log::info("Starting production of {$quantity} x {$spacecraft->details->name} for user {$user->id}. Target quantity after production: {$targetQuantity}. Currently queued: {$queuedQuantity}.");
+
         try {
-            DB::transaction(function () use ($user, $spacecraft, $quantity) {
+            DB::transaction(function () use ($user, $spacecraft, $quantity, $targetQuantity) {
                 $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
 
-                $this->validateCrewCapacity($user->id, $quantity);
+                $this->validateCrewCapacity($user->id, $spacecraft->crew_limit * $quantity);
 
                 $this->userResourceService->validateUserHasEnoughResources($user->id, $totalCosts);
 
                 $this->userResourceService->decrementUserResources($user, $totalCosts);
 
-                $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity);
+                $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity, $targetQuantity);
             });
 
             broadcast(new UpdateUserResources($user));
@@ -156,46 +165,49 @@ class SpacecraftProductionService
 
     private function validateCrewCapacity(int $userId, int $requiredCapacity): void
     {
-        // Crew-Limit des Users
-        $crewLimit = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
-        if (!$crewLimit) {
+        // Crew-Limit des Users holen
+        $crewLimitAttr = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
+        if (!$crewLimitAttr) {
             throw new InsufficientCrewCapacityException();
         }
-
-        // Bereits gebaute Einheiten (total_units)
-        $totalUnitsAttr = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::TOTAL_UNITS);
-        $totalUnits = $totalUnitsAttr ? (int)$totalUnitsAttr->attribute_value : 0;
-
-        // Alle offenen Produktionen in der Queue summieren
+        $crewLimit = (int)$crewLimitAttr->attribute_value;
+    
+        // Crewbedarf aller offenen Produktionen (pending + in_progress)
         $queuedCrew = 0;
         $queueEntries = $this->queueService->getUserQueue($userId);
         foreach ($queueEntries as $entry) {
             $actionType = $entry->action_type ?? $entry->actionType ?? null;
             $status = $entry->status ?? $entry->Status ?? null;
-            if ($actionType === QueueActionType::ACTION_TYPE_PRODUCE && $status === 'in_progress') {
-                // Hole das Spacecraft für die Crew-Berechnung
-                $sc = app(SpacecraftRepository::class)->findSpacecraftById($entry->target_id, $userId);
-                if ($sc && isset($entry->details['quantity'])) {
-                    $queuedCrew += $sc->crew_limit * (int)$entry->details['quantity'];
+            if (
+                $actionType === QueueActionType::ACTION_TYPE_PRODUCE &&
+                in_array($status, [QueueStatusType::STATUS_IN_PROGRESS, QueueStatusType::STATUS_PENDING])
+            ) {
+                $sc = $this->spacecraftRepository->findSpacecraftById($entry->targetId, $userId);
+                $details = is_string($entry->details) ? json_decode($entry->details, true) : $entry->details;
+                $quantity = $details['quantity'] ?? 1;
+                if ($sc) {
+                    $queuedCrew += $sc->crew_limit * (int)$quantity;
                 }
             }
         }
+    
+        // Gesamter Crewbedarf inkl. aktueller Produktion
+        $usedCrew = $queuedCrew + $requiredCapacity;
 
-        // Die aktuelle Produktion (requiredCapacity = anzahl * crew_limit)
-        $usedCrew = $totalUnits + $queuedCrew + $requiredCapacity;
-        if ($usedCrew > $crewLimit->attribute_value) {
+        Log::info("Validating crew: Crew Limit = {$crewLimit}, Queued Crew = {$queuedCrew}, Required Capacity = {$requiredCapacity}, Used Crew = {$usedCrew}");
+        if ($usedCrew > $crewLimit) {
             throw new InsufficientCrewCapacityException();
         }
     }
 
-    private function addSpacecraftUpgradeToQueue(int $userId, Spacecraft $spacecraft, int $quantity): void
+    private function addSpacecraftUpgradeToQueue(int $userId, Spacecraft $spacecraft, int $quantity, int $targetQuantity): void
     {
         $shipyard_production_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::PRODUCTION_SPEED);
         $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
-
+    
         $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
         $effective_build_time = floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed);
-
+    
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_PRODUCE,
@@ -203,7 +215,10 @@ class SpacecraftProductionService
             $effective_build_time,
             [
                 'spacecraft_name' => $spacecraft->details->name,
+                'current_quantity' => $targetQuantity - $quantity,
+                'next_quantity' => $targetQuantity,
                 'quantity' => $quantity,
+                'duration' => $effective_build_time
             ]
         );
     }

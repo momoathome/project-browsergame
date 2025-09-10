@@ -1,12 +1,10 @@
 import { ref, watch } from 'vue'
 import { api } from '@/Services/api'
-import { usePage } from '@inertiajs/vue3'
 import type { RawQueueItem } from '@/types/types'
 
 let queueData: ReturnType<typeof ref<RawQueueItem[]>> | null = null
 
 export function useQueueStore() {
-  const page = usePage()
   if (!queueData) {
     queueData = ref<RawQueueItem[]>([])
   }

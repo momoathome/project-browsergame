@@ -52,7 +52,7 @@ const insufficientResources = computed(() => {
   const buildingResources = props.building.resources;
 
   return buildingResources.map(resource => {
-    const userResource = userResources.find(ur => ur.id === resource.id);
+    const userResource = userResources.find(ur => ur.resource_id === resource.id);
     if (!userResource) return { id: resource.id, sufficient: false };
     return {
       id: resource.id,
@@ -98,6 +98,9 @@ const nextUpgradeLevel = computed(() => props.building.level + buildingQueueCoun
 
 const canUpgrade = computed(() => {
   // Ressourcen müssen reichen UND Core-Check muss bestanden sein
+  console.log('insufficientResources', insufficientResources.value);
+  console.log('userResources', usePage().props.userResources);
+  console.log('buildingResources', props.building.resources);
   return insufficientResources.value.every(resource => resource.sufficient) && !isCoreUpgradeBlocked.value;
 });
 

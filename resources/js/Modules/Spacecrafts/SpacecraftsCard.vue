@@ -239,7 +239,7 @@ function handleCancelProduction() {
             </div>
             <div class="flex relative group items-center gap-1"
                 :class="{
-                  'text-red-600': form.amount === 0 && !canProduce && spacecraft.unlocked,
+                  'text-red-600': form.amount === 0 && !crewStatus.maxCount && spacecraft.unlocked,
                   'text-orange-500': form.amount > 0 && crewLimitReachedNext
                 }">
               <svg xmlns="http://www.w3.org/2000/svg"

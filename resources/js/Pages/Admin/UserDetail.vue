@@ -42,7 +42,7 @@ async function finishQueue() {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 w-full mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 w-full mb-6">
                 <!-- Basisinformationen als Card -->
                 <div class="flex flex-col gap-4 bg-base rounded-xl border border-primary/40 shadow-xl p-6 min-w-[320px]">
                     <div class="flex items-center gap-4 mb-2">

@@ -61,7 +61,7 @@ onMounted(() => {
                 await api.queue.processQueue()
                 await refreshQueue()
             }
-        }, 20000)
+        }, 15000)
     }
 })
 
@@ -76,8 +76,15 @@ onUnmounted(() => {
     }
 })
 
+const sortedQueueItems = computed(() =>
+  processedQueueItems.value.slice().sort((a, b) => {
+    const statusOrder = { in_progress: 0, processing: 1, pending: 2 }
+    return statusOrder[a.status] - statusOrder[b.status]
+  })
+)
+
 const miningItems = computed(() =>
-    processedQueueItems.value.filter(item => item.rawData.actionType === 'mining')
+    sortedQueueItems.value.filter(item => item.rawData.actionType === 'mining')
 )
 
 const visibleMiningItems = computed(() => {
@@ -93,11 +100,11 @@ const visibleMiningItems = computed(() => {
 })
 
 const defendItems = computed(() =>
-    processedQueueItems.value.filter(item => isDefendCombatAction(item.rawData))
+    sortedQueueItems.value.filter(item => isDefendCombatAction(item.rawData))
 )
 
 const nonMiningNonDefendItems = computed(() =>
-    processedQueueItems.value.filter(
+    sortedQueueItems.value.filter(
         item => item.rawData.actionType !== 'mining' && !isDefendCombatAction(item.rawData)
     )
 )
@@ -121,7 +128,8 @@ const nonMiningNonDefendItems = computed(() =>
                             <p class="text-xs text-gray-400 whitespace-nowrap">{{ item.details }}</p>
                         </div>
                         <p class="text-xs text-gray-400 ml-2 self-end">
-                            <span v-if="item.processing">processing...</span>
+                            <span v-if="item.status === 'pending'">queued</span>
+                            <span v-else-if="item.status === 'processing'">processing...</span>
                             <span v-else>{{ item.formattedTime }}</span>
                         </p>
                     </div>
@@ -147,7 +155,8 @@ const nonMiningNonDefendItems = computed(() =>
                             </p>
                         </div>
                         <p class="text-xs text-gray-400 ml-2 self-end">
-                            <span v-if="item.processing">processing...</span>
+                            <span v-if="item.status === 'pending'">queued</span>
+                            <span v-else-if="item.status === 'processing'">processing...</span>
                             <span v-else>{{ item.formattedTime }}</span>
                         </p>
                     </div>
@@ -172,9 +181,10 @@ const nonMiningNonDefendItems = computed(() =>
                                 <p class="text-xs text-gray-400 whitespace-nowrap">{{ item.details }}</p>
                             </div>
                             <p class="text-xs text-gray-400 ml-2 self-end">
-                                <span v-if="item.processing">processing...</span>
+                                <span v-if="item.status === 'pending'">queued</span>
+                                <span v-else-if="item.status === 'processing'">processing...</span>
                                 <span v-else>{{ item.formattedTime }}</span>
-                        </p>
+                            </p>
                         </div>
                     </div>
                 </div>

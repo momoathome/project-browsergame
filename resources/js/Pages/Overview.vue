@@ -43,18 +43,25 @@ const FormattedTime = (item) => {
   return timeFormat(Math.floor(remainingTimeMs / 1000));
 }
 
+const sortedQueueItems = computed(() =>
+  queueData.value?.slice().sort((a, b) => {
+    const statusOrder = { in_progress: 0, processing: 1, pending: 2 }
+    return statusOrder[a.status] - statusOrder[b.status]
+  })
+)
+
 const unlockedSpacecrafts = computed(() => (spacecrafts.value ?? []).filter(spacecraft => spacecraft.unlocked));
-const queueBuildings = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'building'));
-const queueSpacecrafts = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'produce'));
-const queueMining = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'mining'));
-const queueCombat = computed(() => (queueData.value ?? []).filter(item => item.actionType === 'combat'));
-const totalMiningOperations = computed(() => (queueData.value ?? []).reduce((acc, item) => {
+const queueBuildings = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'building'));
+const queueSpacecrafts = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'produce'));
+const queueMining = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'mining'));
+const queueCombat = computed(() => (sortedQueueItems.value ?? []).filter(item => item.actionType === 'combat'));
+const totalMiningOperations = computed(() => (sortedQueueItems.value ?? []).reduce((acc, item) => {
   if (item.actionType === 'mining') {
     acc++;
   }
   return acc;
 }, 0));
-const totalCombatOperations = computed(() => (queueData.value ?? []).reduce((acc, item) => {
+const totalCombatOperations = computed(() => (sortedQueueItems.value ?? []).reduce((acc, item) => {
   if (item.actionType === 'combat') {
     acc++;
   }
@@ -114,7 +121,7 @@ const displayQueueTime = (item: RawQueueItem) => {
 
       <div class="flex flex-col gap-8 w-full">
         <!-- main -->
-         <div class="grid gap-8">
+         <div class="grid gap-6">
           <div v-for="building in buildings" :key="building.id" class="flex flex-col rounded-xl bg-base content_card text-light">
             <div class="flex justify-between items-center">
               <div class="flex justify-center px-2 py-2">
@@ -127,11 +134,11 @@ const displayQueueTime = (item: RawQueueItem) => {
             </div>
 
             <div class="image relative">
-              <img :src="building.image" class="object-cover aspect-[2/1] h-28" alt="" />
+              <img :src="building.image" class="object-cover aspect-[2/1] h-36" alt="" />
             </div>
 
             <div class="flex flex-col h-full">
-              <div class="flex flex-col gap-1 px-3 py-2 h-full bg-primary/25">
+              <div class="flex flex-col gap-1 px-3 py-3 h-full bg-primary/25">
                 <div class="flex items-center gap-1">
                   <span class="text-sm text-secondary">{{ getBuildingEffectText(building) }}:</span>
                   <span class="font-medium text-sm">{{ getBuildingEffectValue(building) }}</span>
@@ -227,7 +234,7 @@ const displayQueueTime = (item: RawQueueItem) => {
 
       </div>
 
-      <div class="flex flex-col gap-4 w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 -my-4 rounded-xl text-light">
+      <div class="flex flex-col gap-4 w-4/12 xl:w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 -my-4 rounded-xl text-light">
         <div class="flex flex-col gap-2 border-b border-primary/50 pb-4">
           <div class="flex items-center gap-2">
             <img src="/images/space-craft.png" alt="spacecraft" class="h-5" />
@@ -260,9 +267,12 @@ const displayQueueTime = (item: RawQueueItem) => {
         <div v-for="building in queueBuildings" :key="building.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
           <img :src="getTypeIcon(building.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
-            <p class="text-sm font-medium leading-none">
-              {{ building.details.building_name }}
-            </p>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-sm font-medium leading-none">
+                {{ building.details.building_name }}
+              </p>
+              <span class="text-sm">{{ displayQueueTime(building) }}</span>
+            </div>
             <p class="text-sm text-muted-foreground flex items-center gap-1">
               Upgrade lv. {{ building.details.current_level }} 
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -275,11 +285,14 @@ const displayQueueTime = (item: RawQueueItem) => {
         <div v-for="spacecraft in queueSpacecrafts" :key="spacecraft.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
           <img :src="getTypeIcon(spacecraft.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
-            <p class="text-sm font-medium leading-none">
-              Producing
-            </p>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-sm font-medium leading-none">
+                {{ spacecraft.details.spacecraft_name }}
+              </p>
+              <span class="text-sm">{{ displayQueueTime(spacecraft) }}</span>
+            </div>
             <p class="text-sm text-muted-foreground">
-              {{ spacecraft.details.spacecraft_name }} x{{ spacecraft.details.quantity }} Units
+              Producing {{ spacecraft.details.quantity }} Units
             </p>
           </div>
         </div>
@@ -326,7 +339,7 @@ const displayQueueTime = (item: RawQueueItem) => {
 }
 
 .grid {
-  --grid-min-col-size: 160px;
+  --grid-min-col-size: 180px;
 
   grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }

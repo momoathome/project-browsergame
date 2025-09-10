@@ -37,4 +37,9 @@ readonly class ResourceService
     {
         return $this->resourceRepository->getResourceIdMapping();
     }
+
+    public function getResourceIdByName(string $name): int
+    {
+        return $this->resourceRepository->getResourceIdByName($name);
+    }
 }

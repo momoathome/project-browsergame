@@ -27,7 +27,10 @@ readonly class ActionQueueRepository
     {
         $userQueue = ActionQueue::query()
             ->where('user_id', $userId)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_PENDING,
+                QueueStatusType::STATUS_IN_PROGRESS,
+            ])
             ->orderBy('start_time', 'asc');
 
         $defendQueue = ActionQueue::query()
@@ -40,34 +43,6 @@ readonly class ActionQueueRepository
         $returnObject = $result->map(fn($item) => ActionQueueDTO::fromModel($item));
         
         return $returnObject;
-    }
-
-    public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
-    {
-        return DB::transaction(function () use ($userId, $actionType, $targetId, $duration, $details) {
-            $exists = ActionQueue::where('user_id', $userId)
-                ->where('action_type', $actionType)
-                ->where('target_id', $targetId)
-                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
-                ->lockForUpdate()
-                ->exists();
-    
-            return ActionQueue::create([
-                'user_id' => $userId,
-                'action_type' => $actionType,
-                'target_id' => $targetId,
-                'start_time' => now(),
-                'end_time' => now()->addSeconds($duration),
-                'status' => QueueStatusType::STATUS_IN_PROGRESS,
-                'details' => $details,
-            ]);
-        });
-    }
-
-    public function deleteFromQueue($id)
-    {
-        return ActionQueue::where('id', $id)
-            ->delete();
     }
 
     public function getInProgressQueuesFromUserByType(int $userId, QueueActionType $actionType): Collection
@@ -87,6 +62,78 @@ readonly class ActionQueueRepository
                 QueueStatusType::STATUS_PROCESSING
             ])
             ->get();
+    }
+
+    public function getQueuesFromUserByType(int $userId, QueueActionType $actionType): Collection
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', $actionType)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PENDING
+            ])
+            ->get();
+    }
+
+    public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
+    {
+        return DB::transaction(function () use ($userId, $actionType, $targetId, $duration, $details) {
+            $exists = ActionQueue::where('user_id', $userId)
+                ->where('action_type', $actionType)
+                ->where('target_id', $targetId)
+                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->lockForUpdate()
+                ->exists();
+    
+            $status = $exists ? QueueStatusType::STATUS_PENDING : QueueStatusType::STATUS_IN_PROGRESS;
+    
+            return ActionQueue::create([
+                'user_id' => $userId,
+                'action_type' => $actionType,
+                'target_id' => $targetId,
+                'start_time' => now(),
+                'end_time' => now()->addSeconds($duration),
+                'status' => $status,
+                'details' => $details,
+            ]);
+        });
+    }
+
+    public function promoteNextPending(int $userId, QueueActionType $actionType, int $targetId)
+    {
+        $nextPending = ActionQueue::where('user_id', $userId)
+            ->where('action_type', $actionType)
+            ->where('target_id', $targetId)
+            ->where('status', QueueStatusType::STATUS_PENDING)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if ($nextPending) {
+            $duration = $nextPending->details['duration'] ?? 60;
+            $nextPending->update([
+                'status' => QueueStatusType::STATUS_IN_PROGRESS,
+                'start_time' => now(),
+                'end_time' => now()->addSeconds($duration),
+            ]);
+        }
+    }
+
+    public function deleteFromQueue($id)
+    {
+        return ActionQueue::where('id', $id)
+            ->delete();
+    }
+
+    public function getQueuedUpgradesCount(int $userId, int $targetId, QueueActionType $actionType): int
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', $actionType)
+            ->where('target_id', $targetId)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PENDING
+            ])
+            ->count();
     }
 
     public function processQueue(): Collection

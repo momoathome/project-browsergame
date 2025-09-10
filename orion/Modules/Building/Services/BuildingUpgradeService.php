@@ -11,6 +11,7 @@ use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\Building\Services\BuildingService;
 use Orion\Modules\Resource\Services\ResourceService;
@@ -40,7 +41,10 @@ class BuildingUpgradeService
             })
             ->first();
 
-        if ($coreBuilding && $building->level >= $coreBuilding->level && $building->details->name !== BuildingType::CORE->value) {
+        $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+        $targetLevel = $building->level + $queuedUpgrades + 1;
+
+        if ($coreBuilding && $targetLevel > $coreBuilding->level && $building->details->name !== BuildingType::CORE->value) {
             return [
                 'success' => false,
                 'message' => 'You cannot upgrade buildings beyond the Core building level.'
@@ -48,8 +52,7 @@ class BuildingUpgradeService
         }
 
         try {
-            $currentCosts = $this->getBuildingUpgradeCosts($building);
-
+            $currentCosts = $this->buildingProgressionService->calculateUpgradeCost($building, $targetLevel);
             // Prüfe, ob der User genügend Ressourcen hat
             $this->userResourceService->validateUserHasEnoughResources($user->id, $currentCosts);
 
@@ -89,73 +92,72 @@ class BuildingUpgradeService
 
     public function cancelBuildingUpgrade(User $user, Building $building): array
     {
-        $queueEntry = $this->queueService->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_BUILDING)
-            ->where('target_id', $building->id)
-            ->first();
-
-        if (!$queueEntry) {
+        $queueEntries = $this->queueService->getQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('target_id', $building->id);
+    
+        if ($queueEntries->isEmpty()) {
             return [
                 'success' => false,
-                'message' => 'No active upgrade found for this building.'
+                'message' => 'No active or pending upgrade found for this building.'
             ];
         }
-
+    
         try {
-            DB::transaction(function () use ($user, $building, $queueEntry) {
-                $currentCosts = $this->getBuildingUpgradeCosts($building);
-                $refundCosts = $currentCosts->map(function ($cost) {
-                    return [
-                        'id' => $cost['id'],
-                        'name' => $cost['name'],
-                        'amount' => (int) round($cost['amount'] * 0.8)
-                    ];
-                })->keyBy('id');
-
-                foreach ($refundCosts as $cost) {
-                    $this->userResourceService->addResourceAmount($user, $cost['id'], $cost['amount']);
+            DB::transaction(function () use ($user, $building, $queueEntries) {
+                foreach ($queueEntries as $queueEntry) {
+                    $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($user->id, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+                    $targetLevel = $building->level + $queuedUpgrades;
+    
+                    $currentCosts = collect($this->buildingProgressionService->calculateUpgradeCost($building, $targetLevel));
+                    $refundFactor = $queueEntry->status === QueueStatusType::STATUS_PENDING ? 1.0 : 0.8;
+    
+                    $refundCosts = $currentCosts->map(function ($cost) use ($refundFactor) {
+                        return [
+                            'id' => $cost['id'],
+                            'name' => $cost['name'],
+                            'amount' => (int) round($cost['amount'] * $refundFactor)
+                        ];
+                    })->keyBy('id');
+    
+                    foreach ($refundCosts as $cost) {
+                        $this->userResourceService->addResourceAmount($user, $cost['id'], $cost['amount']);
+                    }
+    
+                    $this->queueService->deleteFromQueue($queueEntry->id);
                 }
-
-                $this->queueService->deleteFromQueue($queueEntry->id);
             });
-
+    
             broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
-                'message' => "Upgrade of {$building->details->name} has been cancelled. 80% of resources have been refunded."
+                'message' => "All upgrades for {$building->details->name} have been cancelled. Resources have been refunded (pending: 100%, active: 80%)."
             ];
         } catch (\Exception $e) {
-            Log::error("Error occurred while cancelling building upgrade:", [
+            Log::error("Error occurred while cancelling building upgrades:", [
                 'user_id' => $user->id,
                 'building_id' => $building->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-
+    
             return [
                 'success' => false,
-                'message' => 'Error occurred while cancelling building upgrade: ' . $e->getMessage()
+                'message' => 'Error occurred while cancelling building upgrades: ' . $e->getMessage()
             ];
         }
     }
 
-    private function getBuildingUpgradeCosts(Building $building): Collection
-    {
-        return $building->resources()->get()->map(function ($resource) {
-            return [
-                'id' => $resource->id,
-                'name' => $resource->name,
-                'amount' => $resource->pivot->amount
-            ];
-        })->keyBy('id');
-    }
-
     private function addBuildingUpgradeToQueue(int $userId, Building $building): void
     {
+        $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+        $targetLevel = $building->level + $queuedUpgrades + 1;
+
         $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);
         $building_produce_speed = config('game.core.building_produce_speed');
 
         $upgrade_multiplier = $core_upgrade_speed ? $core_upgrade_speed->attribute_value : 1;
-        $effective_build_time = floor(($building->build_time / $upgrade_multiplier) / $building_produce_speed);
+        $build_time = $this->buildingProgressionService->calculateBuildTime($targetLevel);
+        $effective_build_time = floor(($build_time / $upgrade_multiplier) / $building_produce_speed);
 
         $this->queueService->addToQueue(
             $userId,
@@ -164,47 +166,23 @@ class BuildingUpgradeService
             $effective_build_time,
             [
                 'building_name' => $building->details->name,
-                'current_level' => $building->level,
-                'next_level' => $building->level + 1,
+                'current_level' => $targetLevel - 1,
+                'next_level' => $targetLevel,
+                'duration' => $effective_build_time
             ]
         );
     }
 
     public function upgradeBuilding(Building $building)
     {
-        $costs = $this->buildingProgressionService->calculateUpgradeCosts($building);
-
-        return DB::transaction(function () use ($building, $costs) {
-            // Gebäude aktualisieren
+        return DB::transaction(function () use ($building) {
             $building->level += 1;
-            $building->effect_value = floor($this->buildingProgressionService->calculateNewEffectValue($building));
-            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building);
+            $building->effect_value = floor($this->buildingProgressionService->calculateEffectValue($building));
+            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building->level);
             $building->save();
-
-            // Neue Kosten für das nächste Level speichern
-            $this->updateBuildingCosts($building, $costs);
 
             return $building;
         });
-    }
-
-    private function updateBuildingCosts(Building $building, Collection $costs): void
-    {
-        // Bestehende Verknüpfungen löschen
-        $building->resources()->detach();
-
-        $resources = $this->resourceService->getResourceIdMapping();
-        $resourceData = collect();
-
-        $costs->each(function ($cost) use ($resources, &$resourceData) {
-            if (isset($resources[$cost['resource_name']])) {
-                $resourceId = $resources[$cost['resource_name']];
-                $resourceData->put($resourceId, ['amount' => $cost['amount']]);
-            }
-        });
-
-        // Neue Verknüpfungen mit Pivot-Daten erstellen
-        $building->resources()->attach($resourceData->toArray());
     }
 
     public function completeUpgrade(int $buildingId, int $userId): array

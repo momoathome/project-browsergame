@@ -43,6 +43,11 @@ class ActionQueueService
         return $this->actionqueueRepository->getInProgressQueuesByUser($userId);
     }
 
+    public function getQueuesFromUserByType($userId, $actionType): Collection
+    {
+        return $this->actionqueueRepository->getQueuesFromUserByType($userId, $actionType);
+    }
+
     public function addToQueue($userId, $actionType, $targetId, $duration, $details)
     {
         $queueEntry = $this->actionqueueRepository->addToQueue(
@@ -70,6 +75,11 @@ class ActionQueueService
     public function getInProgressQueuesFromUserByType($userId, $actionType): Collection
     {
         return $this->actionqueueRepository->getInProgressQueuesFromUserByType($userId, $actionType);
+    }
+
+    public function getQueuedUpgradesCount($userId, $targetId, $actionType): int
+    {
+        return $this->actionqueueRepository->getQueuedUpgradesCount($userId, $targetId, $actionType);
     }
 
     public function processQueue(): int
@@ -167,6 +177,14 @@ class ActionQueueService
         }
 
         $action->save();
+
+        if ($action->status === QueueStatusType::STATUS_COMPLETED) {
+            $this->actionqueueRepository->promoteNextPending(
+                $action->user_id,
+                $actionType,
+                $action->target_id
+            );
+        }
     }
 
     private function archiveCompletedQueue(ActionQueue $action)

@@ -13,7 +13,7 @@ return [
 
     // general resource growth factors per building type
     'growth_factors' => [
-        'Core' => 1.30,
+        'Core' => 1.325,
         'Shipyard' => 1.30,
         'Hangar' => 1.275,
         'Laboratory' => 1.30,

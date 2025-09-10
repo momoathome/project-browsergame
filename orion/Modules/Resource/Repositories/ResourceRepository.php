@@ -36,4 +36,11 @@ readonly class ResourceRepository
     {
         return Resource::pluck('id', 'name')->toArray();
     }
+
+    public function getResourceIdByName(string $name): int
+    {
+        $resource = Resource::where('name', $name)->first();
+
+        return $resource->id;
+    }
 }

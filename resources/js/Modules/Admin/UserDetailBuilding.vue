@@ -30,7 +30,7 @@ const updateBuildingLevel = (building) => {
 
 <template>
     <div class=" w-full p-2">
-        <div class="grid gap-8 grid-cols-2 xl:grid-cols-7">
+        <div class="grid gap-8 grid-cols-2 md:grid-cols-3 2xl:grid-cols-7">
             <div v-for="building in buildings" :key="building.id" class="flex flex-col rounded-xl bg-base py-2 px-4 text-light">
                 <div class="flex justify-between items-center">
                     <div class="flex justify-center px-2 py-2">

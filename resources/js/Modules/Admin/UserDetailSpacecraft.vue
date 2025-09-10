@@ -40,7 +40,7 @@ const unlockSpacecraft = (spacecraftId: number) => {
 
 <template>
     <div class="w-full  p-2">
-        <div class="grid gap-8 grid-cols-2 xl:grid-cols-8">
+        <div class="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-8">
             <div v-for="(spacecraft, index) in spacecrafts" :key="spacecraft.id" class="flex flex-col rounded-xl bg-base py-2 px-4 text-light">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2 px-2 py-2">

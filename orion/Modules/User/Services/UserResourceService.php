@@ -44,25 +44,25 @@ class UserResourceService
         return $this->userResourceRepository->createUserResource($userId, $resourceId, $amount);
     }
 
-    public function validateUserHasEnoughResources(int $userId, Collection $requiredResources): void
+    public function validateUserHasEnoughResources(int $userId, array|Collection $requiredResources): void
     {
         $userResources = $this->getAllUserResourcesByUserId($userId)
             ->keyBy('resource_id');
-
-        $requiredResources->each(function ($resourceCost, $resourceId) use ($userResources) {
+    
+        collect($requiredResources)->each(function ($resourceCost, $resourceId) use ($userResources) {
             $userResource = $userResources->get($resourceId);
             $requiredAmount = $resourceCost['amount'];
-
+    
             if (!$userResource || $userResource->amount < $requiredAmount) {
                 $resourceName = $resourceCost['name'] ?? 'Ressource #' . $resourceId;
                 throw new InsufficientResourceException($resourceName);
             }
         });
     }
-
-    public function decrementUserResources(User $user, Collection $requiredResources): void
+    
+    public function decrementUserResources(User $user, array|Collection $requiredResources): void
     {
-        $requiredResources->each(function ($resource, $resourceId) use ($user): void {
+        collect($requiredResources)->each(function ($resource, $resourceId) use ($user): void {
             $this->subtractResourceAmount($user, $resourceId, $resource['amount']);
         });
     }

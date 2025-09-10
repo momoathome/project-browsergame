@@ -264,6 +264,7 @@ export interface ProcessedQueueItem {
   formattedTime?: string;
   completed: boolean;
   processing: boolean;
+  status: string;
 }
 
 export interface SavedQueueItemState {

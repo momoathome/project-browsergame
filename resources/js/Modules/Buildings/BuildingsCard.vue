@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import Divider from '@/Components/Divider.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -52,7 +52,7 @@ const insufficientResources = computed(() => {
   const buildingResources = props.building.resources;
 
   return buildingResources.map(resource => {
-    const userResource = userResources.find(ur => ur.resource_id === resource.id);
+    const userResource = userResources.find(ur => ur.id === resource.id);
     if (!userResource) return { id: resource.id, sufficient: false };
     return {
       id: resource.id,
@@ -70,7 +70,7 @@ function goToMarketWithMissingResources() {
   const userResources = usePage().props.userResources;
   const missing = props.building.resources
     .map(resource => {
-      const userResource = userResources.find((ur: any) => ur.resource_id === resource.id);
+      const userResource = userResources.find((ur: any) => ur.id === resource.id);
       const missingAmount = resource.amount - (userResource?.amount || 0);
       return missingAmount > 0
         ? { id: resource.id, amount: missingAmount }
@@ -87,12 +87,30 @@ function goToMarketWithMissingResources() {
   }));
 }
 
+const buildingQueueCount = computed(() => {
+  return (queueData.value ?? []).filter(q =>
+    q.targetId === props.building.id &&
+    q.actionType === 'building'
+  ).length;
+});
+
+const nextUpgradeLevel = computed(() => props.building.level + buildingQueueCount.value + 1);
+
 const canUpgrade = computed(() => {
-  return insufficientResources.value.every(resource => resource.sufficient);
+  // Ressourcen müssen reichen UND Core-Check muss bestanden sein
+  return insufficientResources.value.every(resource => resource.sufficient) && !isCoreUpgradeBlocked.value;
+});
+
+const userBuildings = usePage().props.buildings as Building[];
+const coreBuilding = computed(() => userBuildings.find(b => b.name === 'Core'));
+
+const isCoreUpgradeBlocked = computed(() => {
+  if (!coreBuilding.value) return false;
+  return props.building.name !== 'Core' && nextUpgradeLevel.value > coreBuilding.value.level;
 });
 
 function upgradeBuilding() {
-  if (isUpgrading.value || isSubmitting.value) return;
+  if (isSubmitting.value && isCoreUpgradeBlocked.value) return;
   isSubmitting.value = true;
   router.post(
     route('buildings.update', props.building.id),
@@ -181,24 +199,37 @@ function handleCancelUpgrade() {
           @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
           :description="`Up to lv. ${building.level + 1}`" />
         <button
-          class="px-4 py-3 w-full rounded-br-xl border-t border-primary/40 bg-primary/40 text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-          @click="upgradeBuilding" :disabled="isUpgrading || !canUpgrade" type="button">
-          <span>Upgrade to lv. {{ building.level + 1 }}</span>
+          class="px-4 py-2 w-full rounded-br-xl border-t border-primary/40 bg-primary/40 text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="upgradeBuilding" :disabled="!canUpgrade || isCoreUpgradeBlocked" type="button">
+          <span v-if="isCoreUpgradeBlocked">Upgrade Core first</span>
+          <span v-else>Upgrade to lv. {{ nextUpgradeLevel }}</span>
         </button>
       </div>
     </div>
+
   </div>
 
     <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
       <template #title>Cancel Upgrade</template>
       <template #content>
-        <p>Are you sure you want to cancel the upgrade of
-          <span class="font-semibold">
-            {{ building.name }}
+        <p>
+          Are you sure you want to cancel
+          <span class="font-semibold">{{ building.name }}</span>
+          <span v-if="buildingQueueCount > 1">
+            upgrades? This will cancel <b>all {{ buildingQueueCount }}</b> planned upgrades for this building.
           </span>
-          ?
+          <span v-else>
+            the upgrade of <b>{{ building.name }}</b>?
+          </span>
         </p>
-        <p class="text-gray-400 mt-2">You will lose all progress and 80% of resources spent on this upgrade.</p>
+        <p class="text-gray-400 mt-2">
+          <span v-if="buildingQueueCount > 1">
+            You will lose all progress and get 80% of resources back for the active upgrade, and 100% for pending upgrades.
+          </span>
+          <span v-else>
+            You will lose all progress and 80% of resources spent on this upgrade.
+          </span>
+        </p>
       </template>
       <template #footer>
         <div class="flex justify-end gap-4">

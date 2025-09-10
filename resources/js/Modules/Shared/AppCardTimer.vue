@@ -135,7 +135,7 @@ function handleCancelUpgrade() {
         <p class="font-medium text-sm text-light">{{ formattedRemainingTime }}</p>
         <p v-show="isInProgress" class="font-semibold text-xs text-light">{{ description }}</p>
       </div>
-      <div class="absolute top-0 transition left-0 h-11 w-full bg-secondary rounded-bl-xl progress-bar"
+      <div class="absolute top-0 transition left-0 h-full w-full bg-secondary rounded-bl-xl progress-bar"
         :class="{ '!bg-red-600': isInProgress && isHovered }"
         :style="{ width: progress + '%' }">
       </div>

@@ -7,13 +7,15 @@ use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
 use Orion\Modules\Building\Services\BuildingProgressionService;
+use Orion\Modules\Resource\Services\ResourceService;
 
 class BuildingService
 {
     public function __construct(
         private readonly BuildingRepository $buildingRepository,
         private readonly ActionQueueService $queueService,
-        private readonly BuildingProgressionService $buildingProgressionService
+        private readonly BuildingProgressionService $buildingProgressionService,
+        private readonly ResourceService $resourceService
     ) {
     }
     
@@ -66,6 +68,12 @@ class BuildingService
         $formattedBuildings = [];
 
         foreach ($buildings as $building) {
+            $queuedUpgrades = $this->queueService->getQueuedUpgradesCount($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING);
+            $nextUpgradeLevel = $building->level + $queuedUpgrades + 1;
+            // Hole die Ressourcen für das nächste Level
+            $nextLevelResources = $this->buildingProgressionService->calculateUpgradeCost($building, $nextUpgradeLevel);
+            $allResources = $this->resourceService->getAllResources()->keyBy('id');
+
             // Basisinformationen
             $formattedBuilding = [
                 'id' => $building->id,
@@ -84,12 +92,13 @@ class BuildingService
             }
 
             // Ressourcen formatieren
-            foreach ($building->resources as $resource) {
+            foreach ($nextLevelResources as $resource) {
+                $image = $allResources->get($resource['id'])?->image ?? null;
                 $formattedBuilding['resources'][] = [
-                    'id' => $resource->id,
-                    'name' => $resource->name,
-                    'image' => $resource->image,
-                    'amount' => $resource->pivot->amount
+                    'id' => $resource['id'],
+                    'name' => $resource['name'],
+                    'image' => $image,
+                    'amount' => $resource['amount']
                 ];
             }
 

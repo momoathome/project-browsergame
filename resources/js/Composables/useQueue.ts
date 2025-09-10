@@ -105,13 +105,14 @@ export function useQueue(userId: number) {
             completed: false,
             remainingTime: 0,
             formattedTime: '00:00',
-            processing: false
+            processing: false,
+            status: rawItem.status || 'pending', // 'in_progress', 'pending', 'processing'
         }
     }
 
     // Timer-Logik
     const updateItemTimer = (item: ProcessedQueueItem) => {
-        if (!item.rawData.endTime || item.completed) return
+        if (!item.rawData.endTime || item.completed || item.status === 'pending') return
         const endTime = new Date(item.rawData.endTime).getTime()
         const currentTime = new Date().getTime()
         const diff = endTime - currentTime

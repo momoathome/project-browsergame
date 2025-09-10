@@ -35,7 +35,7 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
 
 <template>
     <div class=" w-full p-2">
-        <div class="grid gap-4 grid-cols-2 xl:grid-cols-9">
+        <div class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-9">
             <div v-for="(resource, index) in resources" :key="resource.id" class="flex flex-col rounded-xl bg-base content_card text-light">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2 px-2 py-2">

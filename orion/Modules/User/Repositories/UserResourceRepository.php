@@ -24,6 +24,13 @@ readonly class UserResourceRepository
             ->first();
     }
 
+    public function getResourceIdByName(string $name): string
+    {
+        return UserResource::whereHas('resource', function ($query) use ($name) {
+            $query->where('name', $name);
+        })->first();
+    }
+
     public function updateResourceAmount(int $userId, int $resourceId, int $amount)
     {
         $userResource = $this->getSpecificUserResource($userId, $resourceId);

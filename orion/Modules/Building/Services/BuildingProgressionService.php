@@ -7,9 +7,16 @@ use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\Building\Enums\BuildingEffectType;
 use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\Resource\Services\ResourceService;
 
 class BuildingProgressionService
 {
+
+    public function __construct(
+        private readonly ResourceService $resourceService
+    ) {
+    }
+
     public function getBaseConfig($buildingName)
     {
         $buildings = config('game.buildings.buildings');
@@ -64,69 +71,60 @@ class BuildingProgressionService
         };
     }
 
-    public function calculateUpgradeCost(Building $building)
+    public function calculateUpgradeCost(Building $building , int $targetLevel)
     {
         $buildingName = $building->details->name;
-        $level = $building->level;
-
         $baseConfig = $this->getBaseConfig($buildingName);
         if (!$baseConfig) {
             return [];
         }
 
         $baseCosts = $baseConfig['costs'];
-
         $growthFactor = config('game.building_progression.growth_factors.' . $buildingName, 1.35);
+        // Berechne Level-Wachstum mit Exponentialfunktion
+        $levelMultiplier = pow($growthFactor, $targetLevel - 2); // -2, da Level 1 die Basis ist und (Upgrade von 1 auf 2): Exponent = 0 
+        $milestoneMultiplier = $this->getMilestoneMultiplier($targetLevel);
 
         // Kosten entsprechend des Levels berechnen
         $costs = [];
         foreach ($baseCosts as $baseCost) {
             $resourceName = $baseCost['resource_name'];
             $baseAmount = $baseCost['amount'];
+            $resourceId = $this->resourceService->getResourceIdByName($resourceName);
 
-            // Berechne Level-Wachstum mit Exponentialfunktion
-            $levelMultiplier = pow($growthFactor, $level);
+            if ($targetLevel === 2) {
+                $amount = $baseAmount;
+            } else {
+                // Endgültige Menge berechnen
+                $amount = ceil($baseAmount * $levelMultiplier * $milestoneMultiplier);
+            }
 
-            // Meilenstein-Multiplikator anwenden
-            $milestoneMultiplier = $this->getMilestoneMultiplier($level);
-
-            // Endgültige Menge berechnen
-            $amount = ceil($baseAmount * $levelMultiplier * $milestoneMultiplier);
-
-            $costs[] = [
-                'resource_name' => $resourceName,
-                'amount' => $amount,
+            $costs[$resourceId] = [
+                'id' => $resourceId,
+                'name' => $resourceName,
+                'amount' => (int) $amount,
             ];
         }
 
         // Neue Ressourcen hinzufügen, wenn Level-Schwellenwert erreicht
-        $additionalResources = $this->getAdditionalResources($buildingName, $level + 1, $levelMultiplier, $milestoneMultiplier);
+        $additionalResources = $this->getAdditionalResources($buildingName, $targetLevel, $levelMultiplier, $milestoneMultiplier);
         foreach ($additionalResources as $resourceName => $amount) {
-            $costs[] = [
-                'resource_name' => $resourceName,
-                'amount' => $amount,
+            $resourceId = $this->resourceService->getResourceIdByName($resourceName);
+            $costs[$resourceId] = [
+                'id'=> $resourceId,
+                'name' => $resourceName,
+                'amount' => (int) $amount,
             ];
         }
 
         return $costs;
     }
 
-    public function calculateBuildTime(Building $building): float
+    public function calculateBuildTime(int $level): float
     {
         // Bauzeit je nach Level erhöhen
         $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.35);
-        return floor(60 * pow($buildTimeMultiplier, $building->level - 1));
-    }
-
-    public function calculateUpgradeCosts(Building $building): Collection
-    {
-        $costs = $this->calculateUpgradeCost($building) ?? [];
-        return collect($costs);
-    }
-
-    public function calculateNewEffectValue(Building $building): float
-    {
-        return $this->calculateEffectValue($building);
+        return floor(60 * pow($buildTimeMultiplier, $level - 1));
     }
 
     /**

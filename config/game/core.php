@@ -1,7 +1,7 @@
 <?php
 
-$asteroid_count = 12000;
-$asteroid_density = 25;                                     // kleinere Zahl = dichter besiedelt
+$asteroid_count = 7000;
+$asteroid_density = 30;                                     // kleinere Zahl = dichter besiedelt
 $universe_size = $asteroid_count * $asteroid_density;       // Größe des Universums
 
 return [
@@ -18,10 +18,10 @@ return [
     'asteroid_density' => $asteroid_density,            // Dichte der Asteroiden (kleinere Zahl = dichter besiedelt)
     
     // Stationen
-    'station_distance' => 10000,                         // Minimaler Abstand zwischen Stationen
-    'asteroid_to_station_distance' => 1000,              // Minimaler Abstand von Stationen zu Asteroiden
+    'station_distance' => 15000,                         // Minimaler Abstand zwischen Stationen
+    'asteroid_to_station_distance' => 2000,              // Minimaler Abstand von Stationen zu Asteroiden
     'station_inner_radius' => 1000,                      // Radius um Stationen ohne Asteroiden
-    'station_outer_radius' => 6000,                     // Radius um Stationen mit nur Low-Value Asteroiden
+    'station_outer_radius' => 8000,                     // Radius um Stationen mit nur Low-Value Asteroiden
     
     // Sonstiges
     'default_stations' => 25,                           // Standard-Anzahl von Stationsstandorten

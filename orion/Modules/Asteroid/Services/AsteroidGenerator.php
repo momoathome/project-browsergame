@@ -216,7 +216,7 @@ class AsteroidGenerator
 
     private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = [], string $size = 'small'): array
     {
-        $maxAttempts = 2500;
+        $maxAttempts = 5000;
         $attempts = 0;
         do {
             $angle = mt_rand(0, 360);

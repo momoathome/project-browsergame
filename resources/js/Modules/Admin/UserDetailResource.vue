@@ -35,16 +35,16 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
 
 <template>
     <div class=" w-full p-2">
-        <div class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-9">
+        <div class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-12">
             <div v-for="(resource, index) in resources" :key="resource.id" class="flex flex-col rounded-xl bg-base content_card text-light">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2 px-2 py-2">
                         <img :src="resource.resource.image" class="h-8 w-8 rounded-full object-cover" alt="{{ resource.resource.name }}" />
-                        <p class="font-semibold text-lg">{{ resource.resource.name }}</p>
+                        <p class="font-semibold">{{ resource.resource.name }}</p>
                     </div>
                 </div>
                 <div class="flex flex-col h-full">
-                    <div class="flex flex-col gap-1 px-3 py-2 h-full bg-primary/25">
+                    <div class="flex flex-col gap-1 px-3 py-4 h-full bg-primary/25">
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-secondary">Amount:</span>
                             <span class="font-medium text-sm">{{ numberFormat(resourceForms[index] ? resourceForms[index].amount : resource.amount) }}</span>

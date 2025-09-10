@@ -184,7 +184,7 @@ function handleCancelUpgrade() {
           </div>
         </div>
 
-        <div class="grid grid-cols-4 gap-2 px-2 py-4 min-h-36">
+        <div class="grid grid-cols-4 gap-2 px-2 py-6 min-h-36">
             <div class="relative group flex flex-col gap-1 items-center p-1 h-min" v-for="resource in building.resources"
             :key="resource.name" :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
             @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()">

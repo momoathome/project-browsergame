@@ -164,7 +164,7 @@ onBeforeUnmount(() => {
 });
 
 function initQuadtree() {
-  const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size / 2, height: config.size / 2 };
+  const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size, height: config.size };
   asteroidsQuadtree.value = new Quadtree(universeBounds);
   stationsQuadtree.value = new Quadtree(universeBounds);
 

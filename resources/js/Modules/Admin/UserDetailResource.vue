@@ -38,11 +38,15 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
         <div class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-12">
             <div v-for="(resource, index) in resources" :key="resource.id" class="flex flex-col rounded-xl bg-base content_card text-light">
                 <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2 px-2 py-2">
-                        <img :src="resource.resource.image" class="h-8 w-8 rounded-full object-cover" alt="{{ resource.resource.name }}" />
-                        <p class="font-semibold">{{ resource.resource.name }}</p>
+                    <div class="flex items-center gap-2 px-3 py-2">
+                        <p class="font-semibold text-lg">{{ resource.resource.name }}</p>
                     </div>
                 </div>
+
+                <div class="flex justify-center items-center py-6">
+                    <img :src="resource.resource.image" class="h-12" alt="resource" />
+                </div>
+
                 <div class="flex flex-col h-full">
                     <div class="flex flex-col gap-1 px-3 py-4 h-full bg-primary/25">
                         <div class="flex items-center gap-2">
@@ -50,7 +54,7 @@ const credits = props.attributes.find(attr => attr.attribute_name === 'credits')
                             <span class="font-medium text-sm">{{ numberFormat(resourceForms[index] ? resourceForms[index].amount : resource.amount) }}</span>
                         </div>
                     </div>
-                    <div class="flex px-3 py-2 mt-2">
+                    <div class="flex px-3 py-4">
                         <template v-if="editingResource === index && resourceForms[index]">
                             <div class="flex flex-wrap gap-1">
                                 <input v-model="resourceForms[index].amount" type="number" min="0" class="w-24 px-2 py-1 border rounded-md bg-base-dark text-light mr-2" />

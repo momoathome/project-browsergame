@@ -15,6 +15,7 @@ use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Influence\Services\InfluenceService;
 
 readonly class CombatOrchestrationService
 {
@@ -25,7 +26,8 @@ readonly class CombatOrchestrationService
         private readonly SpacecraftService $spacecraftService,
         private readonly AsteroidExplorer $asteroidExplorer,
         private readonly CombatPlunderService $combatPlunderService,
-        private readonly StationService $stationService
+        private readonly StationService $stationService,
+        private readonly InfluenceService $influenceService
     ) {
     }
 
@@ -138,6 +140,16 @@ readonly class CombatOrchestrationService
             $result,
             $plunderedResources
         );
+
+        $this->influenceService->handleCombatResult(
+            attacker: $attacker,
+            defender: $defender,
+            result: $result,
+            attackerLosses: $result->getLossesCollection('attacker')->toArray(),
+            defenderLosses: $result->getLossesCollection('defender')->toArray(),
+            plunderedResources: $plunderedResources
+        );
+
         
         return $result;
     }

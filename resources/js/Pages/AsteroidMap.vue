@@ -6,6 +6,7 @@ import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import AutoMineModal from '@/Modules/AsteroidMap/AutoMineModal.vue';
 import AsteroidMapSearch from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
+import AsteroidMapInfluence from '@/Modules/AsteroidMap/AsteroidMapInfluence.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
@@ -18,6 +19,7 @@ import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet} f
 const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
+  influenceOfAllUsers: { user_id: number; attribute_value: string; name: string }[];
 }>();
 
 const { queueData } = useQueueStore();
@@ -61,6 +63,9 @@ const ctx = ref<CanvasRenderingContext2D | null>(null);
 
 const canvasStaticRef = ref<HTMLCanvasElement | null>(null);
 const canvasStaticCtx = ref<CanvasRenderingContext2D | null>(null);
+
+const canvasInfluenceRef = ref<HTMLCanvasElement | null>(null);
+const canvasInfluenceCtx = ref<CanvasRenderingContext2D | null>(null);
 
 const asteroidsQuadtree = ref<Quadtree | null>(null);
 const stationsQuadtree = ref<Quadtree | null>(null);
@@ -124,6 +129,11 @@ onMounted(() => {
     if (canvasStaticRef.value) {
       canvasStaticCtx.value = canvasStaticRef.value.getContext('2d');
       adjustStaticCanvasSize();
+    }
+
+    if (canvasInfluenceRef.value) {
+      canvasInfluenceCtx.value = canvasInfluenceRef.value.getContext('2d');
+      adjustInfluenceCanvasSize();
     }
 
     adjustCanvasSize();
@@ -192,14 +202,24 @@ function adjustStaticCanvasSize() {
     canvasStaticRef.value.height = window.innerHeight - 72;
   }
 }
+
+function adjustInfluenceCanvasSize() {
+  if (canvasInfluenceRef.value && canvasInfluenceCtx.value) {
+    canvasInfluenceRef.value.width = window.innerWidth;
+    canvasInfluenceRef.value.height = window.innerHeight - 72;
+  }
+}
+
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
     canvasRef.value.height = window.innerHeight - 72;
 
     adjustStaticCanvasSize();
+    adjustInfluenceCanvasSize();
     drawScene();
     drawMissionLayer();
+    drawInfluenceLayer();
   }
 }
 
@@ -224,6 +244,9 @@ function drawScene() {
   drawScanWave();
   drawFlightPaths();
   drawStationsAndAsteroids(visibleArea);
+  if (showInfluence.value) {
+    drawInfluenceLayer();
+  }
 
   ctx.value.restore();
 }
@@ -234,6 +257,7 @@ function scheduleDraw() {
     requestAnimationFrame(() => {
       drawScene();
       drawMissionLayer();
+      drawInfluenceLayer();
       pendingDraw.value = false;
     });
   }
@@ -247,6 +271,8 @@ const userScanRange = computed(() => {
 });
 
 function drawUserScanRange() {
+  if (showInfluence.value) return;
+
   if (userStation.value && ctx.value) {
     ctx.value.beginPath();
     ctx.value.arc(userStation.value.x, userStation.value.y, userScanRange.value, 0, 2 * Math.PI);
@@ -366,10 +392,12 @@ function drawStation(x: number, y: number, name: string, id: number) {
 
     function drawStationName(ctx) {
       ctx.fillStyle = 'white';
-      ctx.font = `${config.stationNameFontSize * scale.value}px Arial`;
+      // Sanfte Skalierung: z.B. exponentiell
+      const zoomBoost = Math.max(1, 0.2 / zoomLevel.value);
+      ctx.font = `${config.stationNameFontSize * scale.value * zoomBoost}px Arial`;
       const textWidth = ctx.measureText(name).width;
       const textX = x - textWidth / 2;
-      const textY = y - scaledSize / 2 - 24 * scale.value;
+      const textY = y - scaledSize / 2 - 24 * scale.value * zoomBoost;
       ctx.fillText(name, textX, textY);
     }
 
@@ -428,6 +456,36 @@ function drawHighlight(
   ctx.value.globalAlpha = 1;
   ctx.value.fill();
   ctx.value.restore();
+}
+
+function getInfluenceColor(userId) {
+  // Nutze userId als Seed für den Farbkreis (360 Farben)
+  const hue = (userId * 137) % 360; // 137 ist eine Primzahl für bessere Verteilung
+  return `hsla(${hue}, 80%, 60%, 0.18)`;
+}
+
+function drawInfluenceLayer() {
+  if (!canvasInfluenceCtx.value) return;
+  const ctx = canvasInfluenceCtx.value;
+  ctx.clearRect(0, 0, canvasInfluenceRef.value!.width, canvasInfluenceRef.value!.height);
+
+  if (!showInfluence.value) return;
+
+  ctx.save();
+  ctx.translate(pointX.value, pointY.value);
+  ctx.scale(zoomLevel.value, zoomLevel.value);
+
+  const influenceScale = 20;
+
+  playerInfluences.value.forEach(player => {
+    const radius = Math.max(20, Math.sqrt(player.influence) * influenceScale);
+    ctx.beginPath();
+    ctx.arc(player.station.x, player.station.y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = getInfluenceColor(player.userId);
+    ctx.fill();
+  });
+
+  ctx.restore();
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -911,6 +969,37 @@ function onWheel(e: WheelEvent) {
   }, 3000);
 } */
 
+interface PlayerInfluence {
+  userId: number;
+  station: Station;
+  influence: number;
+  name: string;
+}
+
+const playerInfluences = computed<PlayerInfluence[]>(() => {
+  return props.influenceOfAllUsers
+    .map(inf => {
+      const station = props.stations.find(s => s.user_id === inf.user_id);
+      if (!station) return null;
+      return {
+        userId: inf.user_id,
+        station,
+        influence: Number(inf.attribute_value),
+        name: inf.name
+      } as PlayerInfluence;
+    })
+    .filter(Boolean) as PlayerInfluence[];
+});
+
+const showInfluence = ref(false);
+const showInfluenceSidebar = ref(false);
+
+function toggleInfluence() {
+  showInfluence.value = !showInfluence.value;
+  drawInfluenceLayer();
+  drawScene();
+}
+
 async function getAsteroidResources(asteroid: Asteroid) {
   const { data, error } = await api.asteroids.getResources(asteroid.id);
 
@@ -1042,11 +1131,13 @@ watch(() => queueData.value, () => {
 
 <template>
   <AppLayout title="AsteroidMap">
-    <div class="relative" @click.prevent="">
+    <div class="relative overflow-hidden" @click.prevent="">
       <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
         @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
       </canvas>
-      <canvas ref="canvasStaticRef" class="block w-full absolute z-10 top-0 left-0 pointer-events-none">
+      <canvas ref="canvasStaticRef" class="block w-full absolute top-0 left-0 pointer-events-none">
+      </canvas>
+      <canvas ref="canvasInfluenceRef" class="block w-full absolute top-0 left-0 pointer-events-none">
       </canvas>
 
       <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
@@ -1065,16 +1156,27 @@ watch(() => queueData.value, () => {
         auto mine
       </button>
 
-      <div class="absolute top-2 right-2 z-100 flex items-center">
-        <span class="text-light bg-[hsl(263,45%,7%)] ring-[#bfbfbf] border border-[#6b7280] px-3 py-2 rounded-lg transition-transform duration-200 me-1">zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%</span>
+      <div class="absolute top-2 right-2 z-100 flex flex-col gap-1 min-w-28 transition-all duration-300"
+        :class="{ 'right-72': showInfluenceSidebar }">
         <button type="button" 
           class="text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
           @click="focusOnObject(null, usePage().props.auth.user.id)"
         >
           reset
         </button>
+        <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
+          zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
+        </span>
       </div>
 
+      <!-- Sidebar -->
+      <AsteroidMapInfluence
+        :influence-of-all-users="props.influenceOfAllUsers"
+        :show="showInfluenceSidebar"
+        @toggle="showInfluenceSidebar = !showInfluenceSidebar, toggleInfluence()"
+        @focus-player="focusOnObject(null, $event)"
+      />
+      
     </div>
 
     <Modal :content="{

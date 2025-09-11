@@ -14,6 +14,11 @@ class UserAttributeService
         private readonly UserAttributeHandler $userAttributeHandler
     ) {
     }
+
+    public function getInfluenceOfAllUsers(): Collection
+    {
+        return $this->userAttributeRepository->getInfluenceOfAllUsers();
+    }
     
     public function getAllUserAttributesByUserId($userId): Collection
     {

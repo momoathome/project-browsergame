@@ -38,7 +38,13 @@ readonly class CombatService
         $winner = $this->defineWinner($totalCombatPower['attacker'], $totalCombatPower['defender']);
         $losses = $this->calculateLosses($attackerShips, $defenderShips, $totalCombatPower['attacker'], $totalCombatPower['defender']);
 
-        return new CombatResult($winner, $losses['attacker']->toArray(), $losses['defender']->toArray());
+        return new CombatResult(
+            $winner, 
+            $losses['attacker']->toArray(), 
+            $losses['defender']->toArray(),
+            $totalCombatPower['attacker'],
+            $totalCombatPower['defender']
+        );
     }
 
     /**
@@ -243,7 +249,12 @@ readonly class CombatService
         $calculateLosses = function (Collection $spacecrafts, bool $isWinner) use ($lossRatio) {
             return $spacecrafts->map(function (Spacecraft $ship) use ($lossRatio, $isWinner) {
                 $losses = $ship->count === 0 ? 0 : round($ship->count * $lossRatio);
-                return new Losses($ship->name, $ship->count, $isWinner ? $losses : $ship->count);
+                return new Losses(
+                    $ship->name,
+                    $ship->count,
+                    $isWinner ? $losses : $ship->count,
+                    $ship->combat
+                );
             });
         };
 

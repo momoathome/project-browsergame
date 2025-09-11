@@ -22,4 +22,13 @@ readonly class UserAttributeRepository
             ->where('attribute_name', $attributeName)
             ->first();
     }
+    public function getInfluenceOfAllUsers(): Collection
+    {
+        return UserAttribute::query()
+            ->select('user_attributes.user_id', 'user_attributes.attribute_value', 'users.name')
+            ->join('users', 'users.id', '=', 'user_attributes.user_id')
+            ->where('attribute_name', UserAttributeType::INFLUENCE->value)
+            ->orderBy('attribute_value', 'desc')
+            ->get();
+    }
 }

@@ -8,7 +8,7 @@ const NavigationLinks = [
   { name: 'buildings', label: 'Buildings', image: '/images/navigation/buildings.png' },
   { name: 'shipyard', label: 'Shipyard', image: '/images/navigation/shipyard.png' },
   // { name: 'research', label: 'Research', image: '/images/navigation/research.png' },
-  { name: 'asteroidMap', label: 'AsteroidMap', image: '/images/navigation/asteroidmap.png' },
+  { name: 'asteroidMap', label: 'Cosmic Map', image: '/images/navigation/asteroidmap.png' },
   { name: 'market', label: 'Market', image: '/images/navigation/market.png' },
   { name: 'logbook', label: 'Logbook', image: '/images/navigation/logbook.png' },
   // { name: 'influence', label: 'Influence', image: '/images/attributes/influence.png' },

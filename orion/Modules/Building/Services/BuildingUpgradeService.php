@@ -20,6 +20,7 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingProgressionService;
 use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
+use Orion\Modules\Influence\Services\InfluenceService;
 
 class BuildingUpgradeService
 {
@@ -29,7 +30,8 @@ class BuildingUpgradeService
         private readonly UserAttributeService $userAttributeService,
         private readonly BuildingProgressionService $buildingProgressionService,
         private readonly ActionQueueService $queueService,
-        private readonly ResourceService $resourceService
+        private readonly ResourceService $resourceService,
+        private readonly InfluenceService $influenceService
     ) {
     }
 
@@ -215,6 +217,8 @@ class BuildingUpgradeService
 
                 // 3. Benutzerattribute aktualisieren
                 $attributeUpdates = $this->updateUserAttributesForBuilding($userId, $upgradedBuilding, $buildingType);
+
+                $this->influenceService->handleBuildingUpgradeCompleted($userId, $this->buildingProgressionService->calculateUpgradeCost($building, $building->level));
 
                 return [
                     'success' => true,

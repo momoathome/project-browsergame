@@ -12,7 +12,9 @@ class CombatResult
     public function __construct(
         public readonly string $winner,
         public readonly array $attackerLosses,
-        public readonly array $defenderLosses
+        public readonly array $defenderLosses,
+        public readonly float $attackerTotalCombatPower = 0,
+        public readonly float $defenderTotalCombatPower = 0
     ) {}
 
     /**

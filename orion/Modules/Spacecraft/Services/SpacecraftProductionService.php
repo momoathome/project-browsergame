@@ -19,6 +19,7 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
 use Orion\Modules\Spacecraft\Exceptions\InsufficientCrewCapacityException;
+use Orion\Modules\Influence\Services\InfluenceService;
 
 
 class SpacecraftProductionService
@@ -29,7 +30,8 @@ class SpacecraftProductionService
         private readonly UserAttributeService $userAttributeService,
         private readonly UserResourceService $userResourceService,
         private readonly ResourceService $resourceService,
-        private readonly UserService $userService
+        private readonly UserService $userService,
+        private readonly InfluenceService $influenceService
     ) {
     }
 
@@ -42,7 +44,6 @@ class SpacecraftProductionService
             });
 
         $targetQuantity = $spacecraft->count + $queuedQuantity + $quantity;
-        Log::info("Starting production of {$quantity} x {$spacecraft->details->name} for user {$user->id}. Target quantity after production: {$targetQuantity}. Currently queued: {$queuedQuantity}.");
 
         try {
             DB::transaction(function () use ($user, $spacecraft, $quantity, $targetQuantity) {
@@ -194,7 +195,6 @@ class SpacecraftProductionService
         // Gesamter Crewbedarf inkl. aktueller Produktion
         $usedCrew = $queuedCrew + $requiredCapacity;
 
-        Log::info("Validating crew: Crew Limit = {$crewLimit}, Queued Crew = {$queuedCrew}, Required Capacity = {$requiredCapacity}, Used Crew = {$usedCrew}");
         if ($usedCrew > $crewLimit) {
             throw new InsufficientCrewCapacityException();
         }
@@ -239,6 +239,8 @@ class SpacecraftProductionService
                 $this->userAttributeService->subtractAttributeAmount($userId, UserAttributeType::RESEARCH_POINTS, $spacecraft->research_cost);
                 $spacecraft->unlocked = true;
                 $spacecraft->save();
+
+                $this->influenceService->handleResearchUnlock($userId, $spacecraft->research_cost);
             });
 
             return [

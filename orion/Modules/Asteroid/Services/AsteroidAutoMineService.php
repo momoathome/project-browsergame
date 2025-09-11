@@ -5,7 +5,7 @@ namespace Orion\Modules\Asteroid\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use \Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Asteroid\Services\AsteroidService;

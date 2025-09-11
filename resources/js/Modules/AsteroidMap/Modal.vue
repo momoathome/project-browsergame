@@ -55,6 +55,8 @@ const station = computed<Station>(() => props.content.data as Station);
 const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id
 );
+const { refreshQueue } = useQueueStore();
+const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 
 // Auswahl (Mengen pro Schiff)
 const form = useForm({
@@ -62,8 +64,6 @@ const form = useForm({
   station_user_id: null as number | null,
   spacecrafts: {} as Record<string, number>
 });
-
-(props.spacecrafts ?? []).forEach(s => (form.spacecrafts[s.name] = 0))
 
 const actionType = computed(() =>
   props.content.type === 'asteroid'
@@ -74,7 +74,7 @@ const actionType = computed(() =>
 const { miningDuration } = useAsteroidMining(
   asteroid,
   form.spacecrafts,
-  props.spacecrafts,
+  spacecrafts.value,
   actionType
 );
 
@@ -82,7 +82,7 @@ const {
   setMaxAvailableUnits,
   setMinNeededUnits,
 } = useSpacecraftUtils(
-  computed(() => props.spacecrafts),
+  computed(() => spacecrafts.value),
   form.spacecrafts,
   computed(() => props.content),
   actionType,
@@ -98,11 +98,11 @@ watch(actionType, (val) => {
   activeTab.value = val === QueueActionType.MINING ? 'Miner' : 'Fighter';
 });
 
-const filtered = computed(() => props.spacecrafts.filter(s => s.type === activeTab.value))
+const filtered = computed(() => spacecrafts.value.filter(s => s.type === activeTab.value))
 
 const totals = computed(() => {
   let combat = 0, cargo = 0, speedWeighted = 0, unitCount = 0
-  for (const s of props.spacecrafts) {
+  for (const s of spacecrafts.value) {
     const qty = form.spacecrafts[s.name] || 0
     combat += s.combat * qty
     cargo += s.cargo * qty
@@ -142,8 +142,6 @@ const canScanAsteroid = computed(() => {
   return false;
 });
 
-const { refreshQueue } = useQueueStore();
-const { refreshSpacecrafts } = useSpacecraftStore();
 const isSubmitting = ref(false);
 
 async function exploreAsteroid() {
@@ -248,6 +246,7 @@ watch(() => props.open, (open) => {
   if (open) {
     resetForm();
     if (props.content.data && props.content.type === 'asteroid') {
+      (spacecrafts.value ?? []).forEach(s => (form.spacecrafts[s.name] = 0));
       setMinUnits();
     }
     document.body.style.overflow = 'hidden';
@@ -263,7 +262,9 @@ const closeOnEscape = (e) => {
   }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
+onMounted(() => {
+  document.addEventListener('keydown', closeOnEscape);
+});
 
 onUnmounted(() => {
   document.removeEventListener('keydown', closeOnEscape);
@@ -280,7 +281,7 @@ function availableCount(s) {
   // Cargo berechnen
   let totalCargo = 0;
   let hasMiner = false;
-  (props.spacecrafts ?? []).forEach(s => {
+  (spacecrafts.value ?? []).forEach(s => {
     const qty = form.spacecrafts[s.name] || 0;
     totalCargo += s.cargo * qty;
     if (s.type === 'Miner' && qty > 0) hasMiner = true;

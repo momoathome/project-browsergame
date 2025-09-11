@@ -1150,23 +1150,23 @@ watch(() => queueData.value, () => {
 
       <button type="button" 
         class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
-        :class="{ 'translate-x-48 ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
+        :class="{ 'translate-x-48 -ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
         @click="isAutoMineModalOpen = true"
       >
         auto mine
       </button>
 
-      <div class="absolute top-2 right-2 z-100 flex flex-col gap-1 min-w-28 transition-all duration-300"
-        :class="{ 'right-72': showInfluenceSidebar }">
+      <div class="absolute top-2 right-2 z-100 flex min-w-28 transition-all duration-300"
+        :class="{ 'right-72 me-2': showInfluenceSidebar }">
+        <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
+          zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
+        </span>
         <button type="button" 
-          class="text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+          class="relative z-10 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
           @click="focusOnObject(null, usePage().props.auth.user.id)"
         >
           reset
         </button>
-        <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
-          zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
-        </span>
       </div>
 
       <!-- Sidebar -->

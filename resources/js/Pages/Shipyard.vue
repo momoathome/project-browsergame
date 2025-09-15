@@ -3,8 +3,13 @@ import { computed, ref } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import type { Spacecraft } from '@/types/types';
 
 const { spacecrafts } = useSpacecraftStore();
+
+const props = defineProps<{
+  spacecrafts: Spacecraft[]
+}>()
 
 </script>
 

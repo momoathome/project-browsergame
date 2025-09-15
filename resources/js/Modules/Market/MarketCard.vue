@@ -16,8 +16,11 @@ const formattedAmount = computed(() => numberFormat(props.marketData.amount ?? 0
 
 <template>
   <div
-    class="h-44 w-44 rounded-xl flex flex-col justify-between bg-base text-light content_card cursor-pointer transition hover:scale-[1.03] hover:shadow-lg hover:bg-base/80"
-    :class="{ '!border-secondary !ring-2 !ring-secondary': selected }"
+    class="h-44 w-44 rounded-xl flex flex-col justify-between bg-base text-light cursor-pointer transition hover:bg-base/80"
+    :class="{
+      'disabled': (showAmount && marketData.amount === 0) || (showStock && marketData.stock === 0),
+      '!border-secondary !ring-2 !ring-secondary': selected
+    }"
     @click="$emit('select', marketData)"
   >
     <!-- Name oben -->
@@ -36,4 +39,11 @@ const formattedAmount = computed(() => numberFormat(props.marketData.amount ?? 0
   </div>
 </template>
 
-
+<style scoped>
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+</style>

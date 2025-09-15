@@ -112,18 +112,24 @@ const tradeTooltip = computed(() => {
       </div>
 
       <!-- Middle: Trade Panel mit Platzhaltern -->
-      <div class="flex flex-col justify-center items-center p-8">
+      <div class="my-auto p-8">
         <div class="flex gap-8 items-center mb-8">
           <div class="flex flex-col items-center gap-2">
-            <MarketCard v-if="selectedGive" :marketData="selectedGive" :showAmount="true"
-              style="pointer-events: none;" />
-
-            <MarketPlaceholder class="!border-primary/30" v-else>
-              <span class="text-xs text-nowrap">Select Resource</span>
-            </MarketPlaceholder>
+            <Transition name="fade-slide" mode="out-in">
+              <MarketCard
+                v-if="selectedGive"
+                :key="selectedGive.id"
+                :marketData="selectedGive"
+                :showAmount="true"
+                style="pointer-events: none;"
+              />
+              <MarketPlaceholder v-else class="!border-primary/30">
+                <span class="text-xs text-nowrap">Select Resource</span>
+              </MarketPlaceholder>
+            </Transition>
           </div>
 
-          <div class="relative group flex flex-col items-center gap-1 min-w-[70px]">
+          <div class="relative group flex flex-col items-center gap-1 min-w-[80px]">
             <span v-if="tradeRatio" class="text-lg font-bold text-light text-nowrap bg-primary/10 px-3 py-2 rounded-md">{{ tradeRatio }}</span>
             <span class="text-3xl font-bold text-secondary">→</span>
 
@@ -134,19 +140,25 @@ const tradeTooltip = computed(() => {
           </div>
 
           <div class="flex flex-col items-center gap-2">
-            <MarketCard v-if="selectedReceive" :marketData="selectedReceive" :showStock="true"
-              style="pointer-events: none;" />
-
-            <MarketPlaceholder v-else class="!border-secondary/20">
-              <span class="text-xs text-nowrap">Select Resource</span>
-            </MarketPlaceholder>
+            <Transition name="fade-slide" mode="out-in">
+              <MarketCard
+                v-if="selectedReceive" 
+                :key="selectedReceive.id"
+                :marketData="selectedReceive" 
+                :showStock="true"
+                style="pointer-events: none;" 
+                />
+              <MarketPlaceholder v-else class="!border-secondary/20">
+                <span class="text-xs text-nowrap">Select Resource</span>
+              </MarketPlaceholder>
+            </Transition>
           </div>
 
         </div>
 
         <hr class="w-full border-t border-primary/30 mb-6" />
 
-        <div v-if="selectedGive && selectedReceive" class="flex flex-col gap-6 items-center w-full">
+        <div v-if="selectedGive && selectedReceive" class="flex flex-col gap-6 items-center w-full h-32">
           <div class="flex items-center">
             <button
               class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-r border-primary/60 rounded-l-md focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -197,7 +209,7 @@ const tradeTooltip = computed(() => {
           </div>
 
         </div>
-        <p v-else class="text-secondary mt-4">Select Ressources you want to exchange </p>
+        <p v-else class="text-secondary mt-4 h-32">Select Ressources you want to exchange </p>
       </div>
 
       <!-- Right: Market Resources -->
@@ -228,4 +240,20 @@ const tradeTooltip = computed(() => {
     margin-right: auto;
   }
 }
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.3s, transform 0.3s;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.fade-slide-enter-to,
+.fade-slide-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 </style>
+

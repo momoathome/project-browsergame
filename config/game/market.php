@@ -4,9 +4,9 @@ return [
 
     'market_category_values' => [
         'low_value' => 1,
-        'medium_value' => 5,
-        'high_value' => 15,
-        'extreme_value' => 40,
+        'medium_value' => 10,
+        'high_value' => 100,
+        'extreme_value' => 500,
     ],
 
     'markets' => [

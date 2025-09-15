@@ -41,8 +41,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::delete('/shipyard/{spacecraft}/cancel', [SpacecraftController::class, 'cancel'])->name('shipyard.cancel');
 
     Route::get('/market', [MarketController::class, 'index'])->name('market');
-    Route::post('/market/{marketRes}/buy', [MarketController::class, 'buy'])->name('market.buy');
-    Route::post('/market/{marketRes}/sell', [MarketController::class, 'sell'])->name('market.sell');
+    Route::post('/market/trade', [MarketController::class, 'trade'])->name('market.trade');
 
     Route::get('/research', function () {
         return Inertia::render('Research'); })->name('research');

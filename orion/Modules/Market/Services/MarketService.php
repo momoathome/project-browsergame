@@ -5,29 +5,42 @@ namespace Orion\Modules\Market\Services;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
-use Illuminate\Support\Facades\Log;
 use Orion\Modules\Market\Models\Market;
-use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Market\Repositories\MarketRepository;
-use Orion\Modules\Market\Exceptions\InsufficientCreditsException;
-use Orion\Modules\Market\Exceptions\InsufficientStorageException;
 use Orion\Modules\Market\Exceptions\InsufficientResourceException;
 
 readonly class MarketService
 {
+    public readonly array $resourceCategoryMap;
+
     public function __construct(
         private readonly MarketRepository $marketRepository,
         private readonly AuthManager $authManager,
         private readonly UserAttributeService $userAttributeService,
         private readonly UserResourceService $userResourceService
     ) {
+        $resourcePools = config('game.asteroids.resource_pools');
+        $map = [];
+        foreach ($resourcePools as $category => $data) {
+            foreach ($data['resources'] as $resName) {
+                $map[$resName] = $category;
+            }
+        }
+        $this->resourceCategoryMap = $map;
     }
 
     public function getMarketData()
     {
-        return $this->marketRepository->getMarketData();
+        $marketData = $this->marketRepository->getMarketData();
+
+        // Füge die Kategorie zu jedem Eintrag hinzu
+        foreach ($marketData as &$entry) {
+            $entry['category'] = $this->getCategory($entry['resource']['name']);
+        }
+
+        return $marketData;
     }
 
     public function updateResourceAmount($resourceId, $stock, $cost)
@@ -35,86 +48,129 @@ readonly class MarketService
         $this->marketRepository->updateResourceAmount($resourceId, $stock, $cost);
     }
 
-    public function buyResource($user, Market $marketRes, $quantity)
+    protected function getCategory(string $resourceName): ?string
     {
-        $totalCost = $marketRes->cost * $quantity;
+        return $this->resourceCategoryMap[$resourceName] ?? null;
+    }
+
+    /**
+     * Tauscht eine Ressource gegen eine andere auf Basis ihrer Kostenwerte
+     */
+    public function tradeResources($user, Market $giveRes, int $giveQty, Market $receiveRes): array
+    {
+        // ==========================================================
+        // Resource Trade Calculation
+        //
+        // FORMEL:
+        //  1. Berechne Punkte für abgegebene Ressource:
+        //        givePoints = giveQty * categoryValues[giveCategory]
+        //
+        //  2. Berechne Punktewert der Zielressource:
+        //        receiveQtyRaw = givePoints / categoryValues[receiveCategory]
+        //
+        //  3. Wende Marktgebühr an (z. B. 5%):
+        //        fee = floor(receiveQtyRaw * 0.05)
+        //        receiveQty = max(receiveQtyRaw - fee, 0)
+        //
+        //  4. Wenn receiveQty <= 0 → Trade nicht möglich
+        //
+        // BEISPIELE:
+        //  - 100 Carbon (low_value=1) → Cobalt (medium_value=4)
+        //        givePoints = 100 * 1 = 100
+        //        receiveQtyRaw = 100 / 4 = 25
+        //        receiveQty = 25 - 1 (5%) = 24
+        //
+        //  - 10 Cobalt (medium_value=4) → Carbon (low_value=1)
+        //        givePoints = 10 * 4 = 40
+        //        receiveQtyRaw = 40 / 1 = 40
+        //        receiveQty = 38 nach Fee
+        //
+        //  - 250 Carbon (low_value=1) → Dilithium (extreme_value=25)
+        //        givePoints = 250
+        //        receiveQtyRaw = 250 / 25 = 10
+        //        receiveQty = 9 nach Fee
+        //
+        // FAUSTREGELN FÜR BALANCING:
+        //  - Je höher der categoryValue, desto teurer/selten ist die Ressource.
+        //  - Werte können angepasst werden, um das Ökosystem auszugleichen:
+        //        - 'low_value' hochsetzen => "billige" Ressourcen wertvoller
+        //        - 'extreme_value' hochsetzen => extreme Ressourcen schwerer zu bekommen
+        // ==========================================================
+
+        // Kategorie-Basiswerte
+        $categoryValues = config('game.market.market_category_values');
+
+        if (!$categoryValues || count($categoryValues) === 0) {
+            return [
+                'success' => false,
+                'message' => 'Market category values not configured.'
+            ];
+        }
+
+        $giveCategory = $this->getCategory($giveRes->resource->name);
+        $receiveCategory = $this->getCategory($receiveRes->resource->name);
+
+        if (!$giveCategory || !$receiveCategory) {
+            return [
+                'success' => false,
+                'message' => 'Kategorie not found for one of the resources.'
+            ];
+        }
+
+        $giveValue = $giveQty * $categoryValues[$giveCategory];
+        $receiveQty = (int) floor($giveValue / $categoryValues[$receiveCategory]);
+
+        // 5% Marktgebühr
+        $fee = (int) floor($receiveQty * 0.05);
+        $finalQty = max($receiveQty - $fee, 0);
+
+        if ($finalQty <= 0) {
+            return [
+                'success' => false,
+                'message' => 'Trade not possible: Amount too low after fees.'
+            ];
+        }
+
         try {
-            DB::transaction(function () use ($marketRes, $quantity, $user, $totalCost) {
-
-                // Validate user can afford the purchase
-                $userCreditsAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::CREDITS);
-                if (!$userCreditsAttribute || $userCreditsAttribute->attribute_value < $totalCost) {
-                    throw new InsufficientCreditsException();
-                }
-
-                // Validate market has enough stock
-                if ($marketRes->stock < $quantity) {
+            DB::transaction(function () use ($user, $giveRes, $giveQty, $receiveRes, $finalQty) {
+                $userGiveRes = $this->userResourceService->getSpecificUserResource($user->id, $giveRes->resource_id);
+                if (!$userGiveRes || $userGiveRes->amount < $giveQty) {
                     throw new InsufficientResourceException();
                 }
 
-                // Validate user has enough storage
-                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketRes->resource_id);
-                $userStorageAttribute = $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::STORAGE);
-                if ($userResource && $userStorageAttribute && $userResource->amount + $quantity > $userStorageAttribute->attribute_value) {
-                    throw new InsufficientStorageException();
-                }
-
-                // Update market stock
-                $this->marketRepository->decreaseStock($marketRes->resource_id, $quantity);
-
-                // Update user credits
-                $this->userAttributeService->subtractAttributeAmount($user->id, UserAttributeType::CREDITS, $totalCost);
-
-                if ($userResource) {
-                    $this->userResourceService->addResourceAmount($user, $marketRes->resource_id, $quantity);
-                } else {
-                    $this->userResourceService->createUserResource($user->id, $marketRes->resource_id, $quantity);
-                }
-            });
-
-            broadcast(new UpdateUserResources($user));
-            $totalCostFormatted = number_format($totalCost, 0, ',', '.');
-            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} purchased successfully for {$totalCostFormatted} credits");
-        } catch (InsufficientCreditsException $e) {
-            return redirect()->route('market')->dangerBanner('Not enough credits');
-        } catch (InsufficientResourceException $e) {
-            return redirect()->route('market')->dangerBanner('Not enough stock');
-        } catch (InsufficientStorageException $e) {
-            return redirect()->route('market')->dangerBanner('Not enough storage');
-        } catch (\Exception $e) {
-            return redirect()->route('market')->dangerBanner('Transaction failed: ' . $e->getMessage());
-        }
-    }
-
-    public function sellResource($user, $marketRes, $quantity)
-    {
-        $totalEarnings = $marketRes->cost * $quantity;
-
-        try {
-            DB::transaction(function () use ($marketRes, $quantity, $user, $totalEarnings) {
-                // Check if user has enough resources
-                $userResource = $this->userResourceService->getSpecificUserResource($user->id, $marketRes->resource_id);
-                if (!$userResource || $userResource->amount < $quantity) {
+                if ($receiveRes->stock < $finalQty) {
                     throw new InsufficientResourceException();
                 }
 
-                // Subtract resources from user
-                $this->userResourceService->subtractResourceAmount($user, $marketRes->resource_id, $quantity);
+                // Spieler gibt Ressource ab
+                $this->userResourceService->subtractResourceAmount($user, $giveRes->resource_id, $giveQty);
 
-                // Update market stock
-                $this->marketRepository->increaseStock($marketRes->resource_id, $quantity);
+                // Marktstock aktualisieren
+                $this->marketRepository->increaseStock($giveRes->resource_id, $giveQty);
+                $this->marketRepository->decreaseStock($receiveRes->resource_id, $finalQty);
 
-                // Add credits to user
-                $this->userAttributeService->addAttributeAmount($user->id, UserAttributeType::CREDITS, $totalEarnings);
+                // Spieler erhält Zielressource
+                $this->userResourceService->addResourceAmount($user, $receiveRes->resource_id, $finalQty);
             });
 
             broadcast(new UpdateUserResources($user));
-            $totalEarningsFormatted = number_format($totalEarnings, 0, ',', '.');
-            return redirect()->route('market')->banner("Resource {$marketRes->resource->name} x{$quantity} sold successfully for {$totalEarningsFormatted} credits");
+
+            return [
+                'success' => true,
+                'message' => "Successfully exchanged {$giveQty} {$giveRes->resource->name} for {$finalQty} {$receiveRes->resource->name}."
+            ];
         } catch (InsufficientResourceException $e) {
-            return redirect()->route('market')->dangerBanner('Not enough resources');
+            return [
+                'success' => false,
+                'message' => 'Not enough resources for the player or market.'
+            ];
         } catch (\Exception $e) {
-            return redirect()->route('market')->dangerBanner('Transaction failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Trade failed: ' . $e->getMessage()
+            ];
         }
     }
+
 }
+

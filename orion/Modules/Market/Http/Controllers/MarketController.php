@@ -22,9 +22,11 @@ class MarketController extends Controller
     public function index(Request $request)
     {
         $market = $this->marketService->getMarketData();
+        $categoryValues = config('game.market.market_category_values');
 
         return Inertia::render('Market', [
             'market' => $market,
+            'categoryValues' => $categoryValues,
             'prefill_resource_ids' => $request->input('resource_ids'),
             'prefill_amounts' => $request->input('amounts'),
         ]);
@@ -44,31 +46,29 @@ class MarketController extends Controller
         $this->marketService->updateResourceAmount($id, $validated['stock'], $validated['cost']);
     }
 
-    public function buy(Request $request, Market $marketRes)
+    public function trade(Request $request)
     {
-        $marketRes->load('resource');
         $validated = $request->validate([
-            'amount' => 'required|integer|min:1',
+            'give_resource_id' => 'required|integer|different:receive_resource_id',
+            'receive_resource_id' => 'required|integer',
+            'give_amount' => 'required|integer|min:1',
         ]);
+
         $user = $this->authManager->user();
         if (!$user instanceof \App\Models\User) {
             throw new \LogicException('Authenticated user is not of type App\Models\User');
         }
 
-        $this->marketService->buyResource($user, $marketRes, $validated['amount']);
-    }
+        $giveRes = Market::with('resource')->findOrFail($validated['give_resource_id']);
+        $receiveRes = Market::with('resource')->findOrFail($validated['receive_resource_id']);
 
-    public function sell(Request $request, Market $marketRes)
-    {
-        $marketRes->load('resource');
-        $validated = $request->validate([
-            'amount' => 'required|integer|min:1',
-        ]);
-        $user = $this->authManager->user();
-        if (!$user instanceof \App\Models\User) {
-            throw new \LogicException('Authenticated user is not of type App\Models\User');
+        $result = $this->marketService->tradeResources($user, $giveRes, $validated['give_amount'], $receiveRes);
+
+        if ($result['success']) {
+            return redirect()->route('market')->banner($result['message']);
         }
 
-        $this->marketService->sellResource($user, $marketRes, $validated['amount']);
+        return redirect()->route('market')->dangerBanner($result['message']);
     }
+
 }

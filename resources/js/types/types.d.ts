@@ -196,6 +196,7 @@ export interface Market {
   resource_id: number
   cost: number
   stock: number
+  category: string
   resource: Resource;
 }
 
@@ -206,8 +207,9 @@ export interface formattedMarketResource {
   description: string
   image: string
   cost: number
-  stock: number;
-  prefill: number | undefined;
+  category: string
+  stock?: number;
+  amount?: number;
 }
 
 export type BattleResult = {

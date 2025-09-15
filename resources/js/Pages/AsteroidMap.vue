@@ -14,16 +14,25 @@ import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import * as config from '@/config';
-import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet} from '@/types/types';
+import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft } from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
+  spacecrafts: Spacecraft[];
   influenceOfAllUsers: { user_id: number; attribute_value: string; name: string }[];
 }>();
 
 const { queueData } = useQueueStore();
-const { spacecrafts } = useSpacecraftStore();
+const spacecraftStore = useSpacecraftStore();
+const { spacecrafts } = spacecraftStore;
+
+// Store immer mit aktuellen Props initialisieren
+onMounted(() => {
+  if (Array.isArray(usePage().props.spacecrafts)) {
+    spacecrafts.value = usePage().props.spacecrafts;
+  }
+});
 
 const asteroidImages = [
   '/images/asteroids/Asteroid2.webp',

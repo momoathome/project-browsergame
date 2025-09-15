@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/vue3';
 import { timeFormat } from '@/Utils/format';
-import type { Asteroid, SpacecraftSimple } from '@/types/types';
+import type { Asteroid } from '@/types/types';
 import { QueueActionType } from '@/types/actionTypes';
 import type { Ref, ComputedRef } from 'vue';
 import { ref, computed } from 'vue';

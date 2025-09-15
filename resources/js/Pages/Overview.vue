@@ -14,6 +14,7 @@ const { spacecrafts } = useSpacecraftStore();
 
 const props = defineProps<{
   buildings: Building[],
+  spacecrafts: Spacecraft[]
 }>()
 
 const page = usePage()
@@ -104,7 +105,12 @@ onMounted(() => {
   } else {
     console.log(queueData.value);
   }
+
+  if (Array.isArray(page.props.spacecrafts)) {
+    spacecrafts.value = page.props.spacecrafts;
+  }
 });
+
 </script>
 
 <template>

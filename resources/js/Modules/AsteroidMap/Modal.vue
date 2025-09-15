@@ -10,7 +10,7 @@ import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
-import type { Station, SpacecraftSimple, Asteroid } from '@/types/types';
+import type { Station, Spacecraft, Asteroid } from '@/types/types';
 
 type Role = 'Fighter' | 'Miner' | 'Transporter'
 
@@ -23,7 +23,7 @@ export type ModalContent = {
 const props = defineProps<{
   open: boolean,
   content: ModalContent,
-  spacecrafts: SpacecraftSimple[] | undefined,
+  spacecrafts: Spacecraft[] | undefined,
   userScanRange: number,
 }>();
 
@@ -56,7 +56,7 @@ const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id
 );
 const { refreshQueue } = useQueueStore();
-const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
+const { refreshSpacecrafts } = useSpacecraftStore();
 
 // Auswahl (Mengen pro Schiff)
 const form = useForm({
@@ -95,11 +95,11 @@ watch(actionType, (val) => {
   activeTab.value = val === QueueActionType.MINING ? 'Miner' : 'Fighter';
 });
 
-const filtered = computed(() => spacecrafts.value.filter(s => s.type === activeTab.value))
+const filtered = computed(() => props.spacecrafts.filter(s => s.type === activeTab.value))
 
 const totals = computed(() => {
   let attack = 0, cargo = 0, speedWeighted = 0, unitCount = 0
-  for (const s of spacecrafts.value) {
+  for (const s of props.spacecrafts) {
     const qty = form.spacecrafts[s.name] || 0
     attack += s.attack * qty
     cargo += s.cargo * qty
@@ -242,8 +242,8 @@ const close = () => {
 watch(() => props.open, (open) => {
   if (open) {
     resetForm();
-    if (props.content.data && props.content.type === 'asteroid' && spacecrafts.value) {
-      (spacecrafts.value ?? []).forEach(s => (form.spacecrafts[s.name] = 0));
+    if (props.content.data && props.content.type === 'asteroid' && props.spacecrafts) {
+      (props.spacecrafts ?? []).forEach(s => (form.spacecrafts[s.name] = 0));
       setMinUnits();
     }
     document.body.style.overflow = 'hidden';

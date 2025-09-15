@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import type { SpacecraftSimple, Asteroid, Station } from '@/types/types';
+import type { Spacecraft, Asteroid, Station } from '@/types/types';
 import type { ComputedRef } from 'vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 
@@ -24,7 +24,7 @@ export function useSpacecraftUtils(
     const MaxAvailableUnits = {};
     const allowedTypes = getAllowedTypes();
 
-    spacecrafts.value.forEach((spacecraft: SpacecraftSimple) => {
+    spacecrafts.value.forEach((spacecraft: Spacecraft) => {
       if (allowedTypes.includes(spacecraft.type)) {
         MaxAvailableUnits[spacecraft.name] = spacecraft.count - (spacecraft.locked_count || 0);
       }
@@ -56,10 +56,10 @@ export function useSpacecraftUtils(
       }
     }
 
-    const processSpacecrafts = (filterFn: (spacecraft: SpacecraftSimple) => boolean) => {
+    const processSpacecrafts = (filterFn: (spacecraft: Spacecraft) => boolean) => {
       spacecrafts.value
         .filter(filterFn)
-        .forEach((spacecraft: SpacecraftSimple) => {
+        .forEach((spacecraft: Spacecraft) => {
           if (remainingResources <= 0) {
             MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
             return;

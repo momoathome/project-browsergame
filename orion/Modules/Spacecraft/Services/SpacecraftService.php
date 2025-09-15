@@ -153,30 +153,4 @@ readonly class SpacecraftService
 
         return $formattedSpacecrafts;
     }
-
-    public function formatSpacecraftsSimple(int $userId): array 
-    {
-        $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId);
-        $formattedSpacecrafts = [];
-
-        foreach ($spacecrafts as $spacecraft) {
-            $formattedSpacecrafts[] = [
-                'id' => $spacecraft->id,
-                'name' => $spacecraft->details->name,
-                'image' => $spacecraft->details->image,
-                'type' => $spacecraft->details->type,
-                'attack' => $spacecraft->attack,
-                'defense' => $spacecraft->defense,
-                'combat' => $spacecraft->combat,
-                'count' => $spacecraft->count,
-                'locked_count' => $spacecraft->locked_count,
-                'cargo' => $spacecraft->cargo,
-                'speed' => $spacecraft->speed,
-                'operation_speed' => $spacecraft->operation_speed,
-                'unlocked' => $spacecraft->unlocked,
-            ];
-        }
-
-        return $formattedSpacecrafts;
-    }
 }

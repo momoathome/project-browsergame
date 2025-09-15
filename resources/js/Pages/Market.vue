@@ -94,7 +94,7 @@ function executeTrade() {
 }
 
 const tradeTooltip = computed(() => {
-  return 'You pay ' + tradeForm.give_amount + ' ' + (selectedGive.value?.name || '') + ' for ' + calculatedReceiveAmount.value + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee is applied on each trade.';
+  return 'You exchange ' + tradeForm.give_amount + ' ' + (selectedGive.value?.name || '') + ' for ' + calculatedReceiveAmount.value + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee is applied on each trade.';
 });
 </script>
 

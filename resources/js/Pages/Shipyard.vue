@@ -1,16 +1,21 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import type { Spacecraft } from '@/types/types';
 
-const { spacecrafts } = useSpacecraftStore();
+const spacecraftStore = useSpacecraftStore();
+const { spacecrafts } = spacecraftStore;
+const page = usePage();
 
-const props = defineProps<{
-  spacecrafts: Spacecraft[]
-}>()
-
+// Store immer mit aktuellen Props initialisieren
+onMounted(() => {
+  if (Array.isArray(page.props.spacecrafts)) {
+    spacecrafts.value = page.props.spacecrafts;
+  }
+});
 </script>
 
 <template>

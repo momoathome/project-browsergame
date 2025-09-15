@@ -46,11 +46,13 @@ class AsteroidService
     {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
+        $spaceCrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
         $influenceOfAllUsers = $this->userAttributeService->getInfluenceOfAllUsers();
 
         return [
             'asteroids' => $asteroids,
             'stations' => $stations,
+            'spacecrafts' => $spaceCrafts,
             'influenceOfAllUsers' => $influenceOfAllUsers,
         ];
     }

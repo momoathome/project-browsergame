@@ -55,24 +55,6 @@ export interface Spacecraft {
   }>;
 }
 
-export interface SpacecraftSimple {
-  id: number;
-  name: string;
-  image: string;
-  type: string;
-  attack: number;
-  defense: number;
-  combat: number;
-  count: number;
-  locked_count: number;
-  cargo: number;
-  speed: number;
-  operation_speed: number;
-  crew_limit: number;
-  build_time: number;
-  unlocked: boolean;
-}
-
 export interface ShipRenderObject {
   shipX: number;
   shipY: number;

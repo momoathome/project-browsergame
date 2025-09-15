@@ -4,13 +4,15 @@ import type { Asteroid, SpacecraftSimple } from '@/types/types';
 import { QueueActionType } from '@/types/actionTypes';
 import type { Ref, ComputedRef } from 'vue';
 import { ref, computed } from 'vue';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 
 export function useAsteroidMining(
   asteroid: Ref<Asteroid> | ComputedRef<Asteroid>,
   spacecraftsForm: any,
-  spacecrafts: SpacecraftSimple[],
   actionType: Ref<QueueActionType> | ComputedRef<QueueActionType> = ref(QueueActionType.MINING)
 ) {
+  const { spacecrafts } = useSpacecraftStore();
+
   const applyDiminishingReturns = (speed: number) => {
     const baseValue = Math.min(1, speed);
     let remainingValue = 0;
@@ -31,7 +33,7 @@ export function useAsteroidMining(
     for (const spacecraftName in spacecraftsForm) {
       const count = spacecraftsForm[spacecraftName];
       if (count > 0) {
-        const spacecraft = spacecrafts.find(s => s.name === spacecraftName);
+        const spacecraft = spacecrafts.value.find(s => s.name === spacecraftName);
         if (spacecraft && spacecraft.speed > 0 && (lowestSpeed === 0 || spacecraft.speed < lowestSpeed)) {
           lowestSpeed = spacecraft.speed;
         }
@@ -66,7 +68,7 @@ export function useAsteroidMining(
     for (const spacecraftName in spacecraftsForm) {
       const count = spacecraftsForm[spacecraftName];
       if (count > 0) {
-        const spacecraft = spacecrafts.find(s => s.name === spacecraftName);
+        const spacecraft = spacecrafts.value.find(s => s.name === spacecraftName);
         if (spacecraft && spacecraft.type === 'Miner') {
           const opSpeed = spacecraft.operation_speed || 1;
           totalMiningSpeed += count * opSpeed;

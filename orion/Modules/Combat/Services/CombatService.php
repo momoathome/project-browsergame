@@ -88,6 +88,8 @@ readonly class CombatService
 
                 return [
                     'name' => $name,
+                    'attack' => $spacecraft ? $spacecraft->attack : 0,
+                    'defense' => $spacecraft ? $spacecraft->defense : 0,
                     'combat' => $spacecraft ? $spacecraft->combat : 0,
                     'count' => $count,
                 ];
@@ -108,6 +110,8 @@ readonly class CombatService
             ->filter(fn($spacecraft) => $spacecraft->available_count > 0)
             ->map(fn($spacecraft) => [
                 'name' => $spacecraft->details->name,
+                'attack' => $spacecraft->attack,
+                'defense' => $spacecraft->defense,
                 'combat' => $spacecraft->combat,
                 'count' => $spacecraft->count,
             ])
@@ -163,13 +167,19 @@ readonly class CombatService
     private function convertToShipCollection(array $ships): Collection
     {
         return collect($ships)->map(function ($ship) {
-            return new Spacecraft($ship['name'], $ship['combat'], $ship['count']);
-        });
+                return new Spacecraft(
+                    $ship['name'],
+                    $ship['attack'],
+                    $ship['defense'],
+                    $ship['count']
+                );
+            });
     }
 
     private function calculateTotalCombatPower(Collection $attacker, Collection $defender, $userId): array
     {
-        $calculateCombatPower = fn($ships) => $ships->sum(fn($ship) => $ship->combat * $ship->count);
+        $calculateAttackPower = fn($ships) => $ships->sum(fn($ship) => $ship->attack * $ship->count);
+        $calculateDefensePower = fn($ships) => $ships->sum(fn($ship) => $ship->defense * $ship->count);
 
         /* check if simulation or real fight */
         if ($userId) {
@@ -180,8 +190,8 @@ readonly class CombatService
         }
 
         return [
-            'attacker' => $calculateCombatPower($attacker),
-            'defender' => $calculateCombatPower($defender) * $defense_multiplier,
+            'attacker' => $calculateAttackPower($attacker),
+            'defender' => $calculateDefensePower($defender) * $defense_multiplier,
         ];
     }
 
@@ -253,7 +263,8 @@ readonly class CombatService
                     $ship->name,
                     $ship->count,
                     $isWinner ? $losses : $ship->count,
-                    $ship->combat
+                    $ship->attack,
+                    $ship->defense
                 );
             });
         };

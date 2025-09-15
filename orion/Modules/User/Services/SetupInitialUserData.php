@@ -30,7 +30,14 @@ class SetupInitialUserData
         $this->userAttributeService->create($userId);
         $this->buildingService->create($userId);
         if ($isNewUser) {
-            $this->userStationService->create($userId, $userName);
+            $station = $this->userStationService->create($userId, $userName);
+
+            app(\Orion\Modules\Asteroid\Services\AsteroidGenerator::class)
+                ->generateStrategicLowValueAsteroids(
+                    config('game.core.strategic_asteroid_count'),
+                    config('game.core.strategic_asteroid_outer_radius'),
+                    [$station]
+                );
         }
     }
 }

@@ -30,6 +30,8 @@ const form = useForm({
 function transformSpacecrafts(spacecrafts) {
   return spacecrafts.map(spacecraft => ({
     name: spacecraft.details.name,
+    attack: spacecraft.attack,
+    defense: spacecraft.defense,
     combat: spacecraft.combat,
     count: 0
   }));

@@ -1,15 +1,15 @@
 import { ref, watch } from 'vue'
 import { api } from '@/Services/api'
 import { usePage } from '@inertiajs/vue3'
-import type { SpacecraftSimple } from '@/types/types'
+import type { Spacecraft } from '@/types/types'
 
-let spacecrafts: ReturnType<typeof ref<SpacecraftSimple[]>> | null = null
+let spacecrafts: ReturnType<typeof ref<Spacecraft[]>> | null = null
 
 export function useSpacecraftStore() {
 	const page = usePage()
 	if (!spacecrafts) {
 		// Initialisiere mit Page-Props, falls vorhanden
-		spacecrafts = ref<SpacecraftSimple[]>(Array.isArray(page.props.spacecrafts) ? page.props.spacecrafts : [])
+		spacecrafts = ref<Spacecraft[]>(Array.isArray(page.props.spacecrafts) ? page.props.spacecrafts : [])
 	}
 
 	// Watch auf page.props.spacecrafts, um bei Inertia-Redirects zu aktualisieren
@@ -24,6 +24,7 @@ export function useSpacecraftStore() {
 		// Hole aktuelle Spacecrafts vom Backend (API muss existieren)
 		const { data, error } = await api.spacecrafts.getSpacecrafts()
 		if (!error) {
+			console.log('Spacecrafts refreshed', data);
 			if (Array.isArray(data)) {
 				spacecrafts!.value = data
 			} else if (data && Array.isArray(data.spacecrafts)) {

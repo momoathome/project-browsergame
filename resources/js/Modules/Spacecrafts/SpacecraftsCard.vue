@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
-import Divider from '@/Components/Divider.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
@@ -12,37 +11,29 @@ import DialogModal from '@/Components/DialogModal.vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import type { Spacecraft } from '@/types/types';
 
-const { queueData, refreshQueue } = useQueueStore();
-
 const props = defineProps<{
   spacecraft: Spacecraft
 }>();
 
 // --- State & Helpers ---
 const isSubmitting = ref(false);
-const form = useForm({ amount: 0 });
 const showCancelModal = ref(false);
+const { queueData, refreshQueue } = useQueueStore();
+const form = useForm({ amount: 0 });
 
 // --- Computed Properties ---
 const userAttributes = computed(() => usePage().props.userAttributes);
 const userResources = computed(() => usePage().props.userResources);
-// Typisierung für bessere IDE-Unterstützung und Fehlervermeidung
-const spacecrafts = computed<any[]>(() => usePage().props.spacecrafts as any[]);
+const productionEndTime = computed(() => props.spacecraft.end_time || null);
+const isProducing = computed(() => props.spacecraft.is_producing || false);
+const formattedAttack = computed(() => numberFormat(props.spacecraft.attack));
+const formattedDefense = computed(() => numberFormat(props.spacecraft.defense));
+const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
 
 const getAttribute = (name: string) => {
   const attr = userAttributes.value.find((a: any) => a.attribute_name === name);
   return attr ? Number(attr.attribute_value) : 0;
 };
-
-const isProducing = computed(() => props.spacecraft.is_producing || false);
-const productionEndTime = computed(() => props.spacecraft.end_time || null);
-
-const formattedCombat = computed(() => numberFormat(props.spacecraft.combat));
-const formattedCargo = computed(() => numberFormat(props.spacecraft.cargo));
-const formattedBuildTime = computed(() => {
-  const speed = getAttribute('production_speed') || 1;
-  return timeFormat(Math.floor(props.spacecraft.build_time / speed));
-});
 
 const actualBuildTime = computed(() => {
   const speed = getAttribute('production_speed') || 1;
@@ -58,13 +49,6 @@ const activeProduction = computed(() => {
     return props.spacecraft.currently_producing;
   }
   return form.amount;
-});
-
-const activeProductionCount = computed(() => {
-  return (queueData.value ?? []).filter(q =>
-    q.targetId === props.spacecraft.id &&
-    q.actionType === 'produce'
-  ).length;
 });
 
 const resourceStatus = computed(() => {
@@ -91,13 +75,13 @@ const crewStatus = computed(() => {
   const totalUnits = getAttribute('total_units');
   const queuedCrew = queueData.value.reduce((acc: number, item: any) => {
     if (item.actionType === 'produce' && item.details?.quantity && (item.status === 'in_progress' || item.status === 'pending')) {
-      const queuedSpacecraft = spacecrafts.value.find((s: any) => s.id === item.targetId);
-      if (queuedSpacecraft) {
-        return acc + (queuedSpacecraft.crew_limit * item.details.quantity);
+      if (props.spacecraft.id === item.targetId) {
+        return acc + (props.spacecraft.crew_limit * item.details.quantity);
       }
     }
     return acc;
   }, 0);
+
   const availableUnitSlots = crewLimit - totalUnits - queuedCrew;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
   return {
@@ -149,13 +133,6 @@ function produceSpacecraft() {
   );
 }
 
-function handleProduceComplete() {
-  setTimeout(() => {
-    router.reload({ only: ['spacecrafts', 'userAttributes'] });
-    refreshQueue();
-  }, 500);
-}
-
 function goToMarketWithMissingResources() {
   const missing = props.spacecraft.resources
     .map(resource => {
@@ -205,6 +182,7 @@ function handleCancelProduction() {
   form.reset();
   showCancelModal.value = false;
 }
+
 </script>
 
 <template>
@@ -236,8 +214,13 @@ function handleCancelProduction() {
           <div class="flex justify-between gap-4 px-4 py-4 bg-primary/25">
             <div class="flex relative group items-center gap-1">
               <img src="/images/combat.png" class="h-5" alt="combat" />
-              <p class="font-medium text-sm">{{ formattedCombat }}</p>
+              <p class="font-medium text-sm">{{ formattedAttack }}</p>
               <AppTooltip :label="'combat'" position="bottom" class="!mt-1" />
+            </div>
+            <div class="flex relative group items-center gap-1">
+              <img src="/images/defense.png" class="h-5" alt="defense" />
+              <p class="font-medium text-sm">{{ formattedDefense }}</p>
+              <AppTooltip :label="'defense'" position="bottom" class="!mt-1" />
             </div>
             <div class="flex relative group items-center gap-1">
               <img src="/images/cargo.png" class="h-5" alt="cargo" />
@@ -263,11 +246,11 @@ function handleCancelProduction() {
               </p>
               <AppTooltip :label="'crew limit'" position="bottom" class="!mt-1" />
             </div>
-            <div class="flex relative group items-center gap-1">
+<!--             <div class="flex relative group items-center gap-1">
               <img src="/images/speed.png" class="h-5" alt="speed" />
               <p class="font-medium text-sm">{{ spacecraft.speed }}</p>
               <AppTooltip :label="'speed'" position="bottom" class="!mt-1" />
-            </div>
+            </div> -->
           </div>
 
           <div class="grid grid-cols-4 gap-2 px-2 py-4 min-h-36">
@@ -354,14 +337,13 @@ function handleCancelProduction() {
 
             <div class="flex">
 
-            <AppCardTimer
-              :buildTime="actualBuildTime"
-              @upgrade-complete="handleProduceComplete"
+            <AppCardTimer 
+              :build-time="actualBuildTime"
+              :end-time="productionEndTime"
               :isInProgress="isProducing"
-              :endTime="productionEndTime"
               :description="`${activeProduction} Units`"
-              @cancel-upgrade="showCancelModal = true"
               :disabled="!canProduce && !isProducing"
+              @cancel-upgrade="showCancelModal = true"
             />
 
             <button

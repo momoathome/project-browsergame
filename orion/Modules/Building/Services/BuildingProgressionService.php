@@ -107,7 +107,7 @@ class BuildingProgressionService
         }
 
         // Neue Ressourcen hinzufügen, wenn Level-Schwellenwert erreicht
-        $additionalResources = $this->getAdditionalResources($buildingName, $targetLevel, $levelMultiplier, $milestoneMultiplier);
+        $additionalResources = $this->getAdditionalResources($buildingName, $targetLevel - 1, $levelMultiplier, $milestoneMultiplier);
         foreach ($additionalResources as $resourceName => $amount) {
             $resourceId = $this->resourceService->getResourceIdByName($resourceName);
             $costs[$resourceId] = [
@@ -120,11 +120,17 @@ class BuildingProgressionService
         return $costs;
     }
 
-    public function calculateBuildTime(int $level): float
+    public function calculateBuildTime(Building $building, int $targetLevel): float
     {
         // Bauzeit je nach Level erhöhen
-        $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.35);
-        return floor(60 * pow($buildTimeMultiplier, $level - 1));
+        $baseConfig = $this->getBaseConfig($building->details->name);
+        $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.25);
+        if ($targetLevel === 2) {
+            $buildTime = $baseConfig['build_time'];
+        } else {
+            $buildTime = floor($baseConfig['build_time'] * pow($buildTimeMultiplier, $targetLevel - 2));
+        }
+        return $buildTime;
     }
 
     /**

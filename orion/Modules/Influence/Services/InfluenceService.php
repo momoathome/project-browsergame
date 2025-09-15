@@ -45,7 +45,6 @@ class InfluenceService
             $attackerDelta -= $attackerLossCombatPower / 75;
         }
 
-
         Log::info("Combat Influence Change: Attacker {$attacker->id} delta: {$attackerDelta}, Defender {$defender->id} delta: {$defenderDelta}");
         Log::info("Combat Losses: Attacker CP lost: {$attackerLossCombatPower}, Defender CP lost: {$defenderLossCombatPower}");
 
@@ -71,9 +70,7 @@ class InfluenceService
     public function handleBuildingUpgradeCompleted(int $userId, array $upgradeCosts): void
     {
         $totalCost = collect($upgradeCosts)->sum('amount');
-        $delta = $totalCost / 500; // Beispiel: 1 Punkt pro 500 Ressourcen
-
-        Log::info("Building Upgrade Influence Change: User {$userId} delta: {$delta}, Upgrade Costs: " . json_encode($upgradeCosts));
+        $delta = $totalCost / 100; // Beispiel: 1 Punkt pro 500 Ressourcen
 
         $this->applyInfluenceChange($userId, $delta, 'building_upgrade', [
             'costs' => $upgradeCosts

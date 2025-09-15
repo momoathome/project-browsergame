@@ -2,9 +2,6 @@
 import { usePage, router } from '@inertiajs/vue3'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQueue } from '@/Composables/useQueue'
-import { api } from '@/Services/api'
-import { useQueueStore } from '@/Composables/useQueueStore'
-import { useSpacecraftStore } from '@/Composables/useSpacecraftStore'
 import type { ProcessedQueueItem } from '@/types/types'
 
 declare global {
@@ -16,64 +13,39 @@ declare global {
 const page = usePage()
 const userId = page.props.auth.user.id
 
-
-const { refreshQueue } = useQueueStore()
-const { refreshSpacecrafts } = useSpacecraftStore()
-
 const {
-    processedQueueItems,
-    toggleInfo,
-    removeQueueItem,
-    isDefendCombatAction,
-    onTimerComplete,
+  processedQueueItems,
+  toggleInfo,
+  removeQueueItem,
+  isDefendCombatAction,
+  onTimerComplete,
+  refresh,
+  processQueueThrottled, // throttled API call
+  startProcessInterval,
+  stopProcessInterval
 } = useQueue(userId)
 
-let processTimeout: ReturnType<typeof setTimeout> | null = null;
-function scheduleRefreshQueue(item: ProcessedQueueItem): void {
-  if (processTimeout) return;
-  processTimeout = setTimeout(async () => {
-    removeQueueItem(item.id);
-    await refreshQueue();
-    await refreshSpacecrafts();
+onMounted(async () => {
+  // wenn Timer von einem Item endet → Composable triggert Refresh selbst
+  onTimerComplete(async (item) => {
+    //
+  })
 
-    processTimeout = null;
-  }, 10000);
-}
+  await refresh()
 
-async function handleTimerComplete(item: ProcessedQueueItem): Promise<void> {
-    scheduleRefreshQueue(item);
-}
+  window.Echo.private(`user.combat.${userId}`)
+    .listen('.user.attacked', refresh)
 
-let processInterval: ReturnType<typeof setInterval> | null = null
-onMounted(() => {
-    onTimerComplete(handleTimerComplete)
-    refreshQueue();
-    refreshSpacecrafts();
-    window.Echo.private(`user.combat.${userId}`)
-        .listen('.user.attacked', () => {
-            refreshQueue();
-        })
+  // Falls schon aktive Items → sofort manuell anstoßen
+  if (processedQueueItems.value.some(i => i.processing && i.rawData.actionType !== 'mining')) {
+    await processQueueThrottled()
+  }
 
-    if (!processInterval) {
-        processInterval = setInterval(async () => {
-            // Prüfe, ob mindestens ein Item im Status processing ist
-            if (processedQueueItems.value.some(item => item.processing)) {
-                await api.queue.processQueue()
-                await refreshQueue()
-            }
-        }, 15000)
-    }
+  startProcessInterval()
 })
 
 onUnmounted(() => {
-    if (processTimeout) {
-        clearTimeout(processTimeout)
-        processTimeout = null
-    }
-    if (processInterval) {
-        clearInterval(processInterval)
-        processInterval = null
-    }
+  stopProcessInterval()
 })
 
 const sortedQueueItems = computed(() =>
@@ -88,15 +60,14 @@ const miningItems = computed(() =>
 )
 
 const visibleMiningItems = computed(() => {
-    const notProcessing = miningItems.value
-        .filter(item => !item.processing)
-        .sort((a, b) => a.rawData.endTime - b.rawData.endTime)
-    // Zeige das mit der frühesten endTime an
-    if (notProcessing.length > 0) {
-        return [notProcessing[0]]
-    }
-    // Falls alle processing sind, zeige das erste Mining-Item
-    return miningItems.value.length ? [miningItems.value[0]] : []
+  const notProcessing = miningItems.value
+    .filter(item => !item.processing)
+    .sort((a, b) => a.rawData.endTime - b.rawData.endTime)
+  return notProcessing.length
+    ? [notProcessing[0]]
+    : miningItems.value.length
+      ? [miningItems.value[0]]
+      : []
 })
 
 const defendItems = computed(() =>
@@ -128,7 +99,7 @@ const nonMiningNonDefendItems = computed(() =>
                             <p class="text-xs text-gray-400 whitespace-nowrap">{{ item.details }}</p>
                         </div>
                         <p class="text-xs text-gray-400 ml-2 self-end">
-                            <span v-if="item.status === 'pending'">queued</span>
+                            <span v-if="item.status === 'pending'">pending...</span>
                             <span v-else-if="item.status === 'processing'">processing...</span>
                             <span v-else>{{ item.formattedTime }}</span>
                         </p>
@@ -155,7 +126,7 @@ const nonMiningNonDefendItems = computed(() =>
                             </p>
                         </div>
                         <p class="text-xs text-gray-400 ml-2 self-end">
-                            <span v-if="item.status === 'pending'">queued</span>
+                            <span v-if="item.status === 'pending'">pending...</span>
                             <span v-else-if="item.status === 'processing'">processing...</span>
                             <span v-else>{{ item.formattedTime }}</span>
                         </p>
@@ -181,7 +152,7 @@ const nonMiningNonDefendItems = computed(() =>
                                 <p class="text-xs text-gray-400 whitespace-nowrap">{{ item.details }}</p>
                             </div>
                             <p class="text-xs text-gray-400 ml-2 self-end">
-                                <span v-if="item.status === 'pending'">queued</span>
+                                <span v-if="item.status === 'pending'">pending...</span>
                                 <span v-else-if="item.status === 'processing'">processing...</span>
                                 <span v-else>{{ item.formattedTime }}</span>
                             </p>

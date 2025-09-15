@@ -27,6 +27,14 @@ class GenerateAsteroids extends Command
             $this->info('Alle Asteroiden und Ressourcen wurden gelöscht.');
         }
 
+        $asteroidGenerator = app(AsteroidGenerator::class);
+
+        $strategicCount = config('game.core.strategic_asteroid_count');
+        $outerRadius = config('game.core.strategic_asteroid_outer_radius');
+        $generatedStrategicAsteroids = $asteroidGenerator->generateStrategicLowValueAsteroids($strategicCount, $outerRadius);
+
+        $this->info("Es wurden " . count($generatedStrategicAsteroids) . " strategische Anfänger-Asteroiden generiert.");
+
         $totalAsteroids = (int)$this->option('count');
         $batchSize = (int)$this->option('batch');
         $batches = ceil($totalAsteroids / $batchSize);
@@ -36,8 +44,6 @@ class GenerateAsteroids extends Command
 
         $progressBar = $this->output->createProgressBar($batches);
         $progressBar->start();
-
-        $asteroidGenerator = app(AsteroidGenerator::class);
 
         $startTime = microtime(true);
 

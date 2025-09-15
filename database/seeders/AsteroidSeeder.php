@@ -31,6 +31,12 @@ class AsteroidSeeder extends Seeder
 
     $this->universeService->reserveStationRegions($this->config['default_stations'], true);
 
+    // Strategische Anfänger-Asteroiden erzeugen
+    $this->asteroidGenerator->generateStrategicLowValueAsteroids(
+        $this->config['strategic_asteroid_count'],
+        $this->config['strategic_asteroid_outer_radius']
+    );
+
     // Dann Asteroiden generieren
     $count = $this->config['asteroid_count'];
     $this->command->info("Generate {$count} Asteroids...");

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { usePage, Link } from '@inertiajs/vue3';
 import { numberFormat } from '@/Utils/format';
 
 interface Resource {
@@ -28,19 +29,17 @@ const props = defineProps<{
 }>()
 
 const formattedResources = computed(() => {
-  const resources = Object.entries(props.universeResources);
-  const totalResourceAmount = resources.reduce((acc, [_, amounts]) =>
-    acc + amounts.reduce((sum, amount) => sum + amount, 0), 0);
+  const resources = props.universeResources;
+  const totalResourceAmount = resources.reduce((acc, res) => acc + res.amount, 0);
 
   const formattedData = resources
-    .map(([name, amounts]) => {
-      const amount = amounts.reduce((acc, amount) => acc + amount, 0);
-      const percentage = Number(((amount / totalResourceAmount) * 100).toFixed(2));
-      const color = resourceColors[name] || 'grey';
+    .map(res => {
+      const percentage = Number(((res.amount / totalResourceAmount) * 100).toFixed(2));
+      const color = resourceColors[res.name] || 'grey';
 
       return {
-        name,
-        amount,
+        name: res.name,
+        amount: res.amount,
         percentage,
         color,
       };
@@ -58,19 +57,35 @@ const formattedResources = computed(() => {
 </script>
 
 <template>
-  <div class="bg-base rounded-xl p-4 text-light font-medium">
+  <div class="bg-base h-dvh p-4 text-light font-medium">
+    <div class="flex items-center mb-4">
+      <Link :href="route('admin.dashboard')"
+          class="bg-primary text-white py-2 px-4 rounded-md hover:bg-base-dark transition">
+      Zurück
+      </Link>
+    </div>
+
     <div class="flex gap-2 font-bold">
       <span>Total Resources</span>
       <span>{{ numberFormat(formattedResources.totalResourceAmount) }}</span>
     </div>
     <div class="flex flex-col py-4">
-      <div v-for="res in formattedResources.resources" :key="res.name" class="hover:bg-base transition duration-300 px-4 py-1 rounded-3xl">
-        <div class="flex gap-2 text-sm">
+      <div
+        v-for="res in formattedResources.resources"
+        :key="res.name"
+        class="relative mb-2"
+        style="height: 32px;"
+      >
+        <div
+          :style="`background-color: ${res.color}; width: ${res.percentage * 2}%`"
+          class="h-full rounded-lg transition-all duration-300"
+          :title="`${res.name}: ${numberFormat(res.amount)} (${res.percentage}%)`"
+        ></div>
+        <div class="absolute left-2 top-1 text-sm font-bold flex gap-2 items-center">
           <span>{{ res.name }}</span>
           <span>{{ numberFormat(res.amount) }}</span>
-          <span>{{ res.percentage }}%</span>
+          <span>({{ res.percentage }}%)</span>
         </div>
-        <div :style="`background-color: ${res.color}; width: ${res.percentage * 2}%`" class="h-2 rounded-lg"></div>
       </div>
     </div>
   </div>

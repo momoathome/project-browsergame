@@ -74,7 +74,6 @@ const actionType = computed(() =>
 const { miningDuration } = useAsteroidMining(
   asteroid,
   form.spacecrafts,
-  spacecrafts.value,
   actionType
 );
 
@@ -82,8 +81,6 @@ const {
   setMaxAvailableUnits,
   setMinNeededUnits,
 } = useSpacecraftUtils(
-  computed(() => spacecrafts.value),
-  form.spacecrafts,
   computed(() => props.content),
   actionType,
 );
@@ -101,16 +98,16 @@ watch(actionType, (val) => {
 const filtered = computed(() => spacecrafts.value.filter(s => s.type === activeTab.value))
 
 const totals = computed(() => {
-  let combat = 0, cargo = 0, speedWeighted = 0, unitCount = 0
+  let attack = 0, cargo = 0, speedWeighted = 0, unitCount = 0
   for (const s of spacecrafts.value) {
     const qty = form.spacecrafts[s.name] || 0
-    combat += s.combat * qty
+    attack += s.attack * qty
     cargo += s.cargo * qty
     speedWeighted += s.speed * qty
     unitCount += qty
   }
   const avgSpeed = unitCount ? Math.round(speedWeighted / unitCount) : 0
-  return { combat, cargo, avgSpeed }
+  return { attack, cargo, avgSpeed }
 })
 
 function inc(name: string, max: number) {
@@ -245,7 +242,7 @@ const close = () => {
 watch(() => props.open, (open) => {
   if (open) {
     resetForm();
-    if (props.content.data && props.content.type === 'asteroid') {
+    if (props.content.data && props.content.type === 'asteroid' && spacecrafts.value) {
       (spacecrafts.value ?? []).forEach(s => (form.spacecrafts[s.name] = 0));
       setMinUnits();
     }
@@ -369,11 +366,18 @@ function availableCount(s) {
                 <!-- Header -->
                 <div class="flex items-center justify-between py-4 border-b border-white/5 mb-4">
                   <div class="flex items-center gap-6">
-                    <div class="px-3 py-1 text-light">Combat: <span class="text-cyan-300">{{ numberFormat(totals.combat)
-                        }}</span>
+                    <div class="px-3 py-1 text-light">
+                      Attack: 
+                      <span class="text-cyan-300">
+                      {{ numberFormat(totals.attack) }}
+                    </span>
                     </div>
-                    <div class="px-3 py-1 text-light">Cargo: <span class="text-cyan-300">{{ numberFormat(totals.cargo)
-                        }}</span></div>
+                    <div class="px-3 py-1 text-light">
+                      Cargo: 
+                      <span class="text-cyan-300">
+                      {{ numberFormat(totals.cargo) }}
+                    </span>
+                    </div>
                     <div class="px-3 py-1 text-light">
                       Travel Time: <span class="text-cyan-300">{{ miningDuration }}</span>
                     </div>
@@ -445,14 +449,17 @@ function availableCount(s) {
                         {{ availableCount(s) }}
                       </span>
                     </div>
-
                     <div class="spacecraftImage relative bg-[#101d2c] flex items-center justify-center">
                       <img :src="s.image" class="h-[90px] w-full" />
                     </div>
                     <div class="flex justify-between px-3 pt-2">
                       <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Combat</span>
-                        <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.combat) }}</p>
+                        <span class="text-sm text-secondary">Attack</span>
+                        <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.attack) }}</p>
+                      </div>
+                      <div class="flex flex-col items-center">
+                        <span class="text-sm text-secondary">Defense</span>
+                        <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.defense) }}</p>
                       </div>
                       <div class="flex flex-col items-center">
                         <span class="text-sm text-secondary">Cargo</span>

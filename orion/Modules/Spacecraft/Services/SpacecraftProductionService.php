@@ -17,7 +17,7 @@ use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
-use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
+use Orion\Modules\User\Exceptions\InsufficientResourceException;
 use Orion\Modules\Spacecraft\Exceptions\InsufficientCrewCapacityException;
 use Orion\Modules\Influence\Services\InfluenceService;
 

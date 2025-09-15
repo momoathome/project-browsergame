@@ -34,7 +34,7 @@ async function finishQueue() {
         <div class="text-light">
             <div class="flex flex-col mb-6">
                 <!-- breadcrumb with back button -->
-                <div class="flex items">
+                <div class="flex items-center">
                     <Link :href="route('admin.dashboard')"
                         class="bg-primary text-white py-2 px-4 rounded-md hover:bg-base-dark transition">
                     Zurück

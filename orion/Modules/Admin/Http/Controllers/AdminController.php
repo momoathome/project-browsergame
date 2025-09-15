@@ -233,6 +233,26 @@ class AdminController extends Controller
         return redirect()->back()->with('message', 'Alle Marktdaten zurückgesetzt');
     }
 
+    public function resourceDistribution()
+    {
+        // Aggregiere alle Ressourcen aus AsteroidResource
+        $resources = \Orion\Modules\Asteroid\Models\AsteroidResource::query()
+            ->select('resource_type')
+            ->selectRaw('SUM(amount) as amount')
+            ->groupBy('resource_type')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'name' => $item->resource_type,
+                    'amount' => $item->amount,
+                ];
+            });
+    
+        return Inertia::render('Admin/ResourceDistribution', [
+            'universeResources' => $resources,
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      */

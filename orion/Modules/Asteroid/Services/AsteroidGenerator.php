@@ -102,10 +102,10 @@ class AsteroidGenerator
         }
     }
 
-    private function generateAsteroid(): array
+    private function generateAsteroid(?string $asteroidSize = null): array
     {
         $asteroidBaseFaktor = rand($this->asteroidConfig['asteroid_faktor']['min'], $this->asteroidConfig['asteroid_faktor']['max']);
-        $asteroidSize = $this->generateAsteroidSize($this->asteroidConfig['asteroid_size']);
+        $asteroidSize = $asteroidSize ?? $this->generateAsteroidSize($this->asteroidConfig['asteroid_size']);
         $asteroidFaktorMultiplier = $this->asteroidConfig['asteroid_faktor_multiplier'][$asteroidSize];
         $asteroidBaseMultiplier = rand($asteroidFaktorMultiplier['min'] * 100, $asteroidFaktorMultiplier['max'] * 100) / 100;
         $asteroidValue = floor($asteroidBaseFaktor * $asteroidBaseMultiplier);
@@ -118,6 +118,56 @@ class AsteroidGenerator
             'value' => $asteroidValue,
             'pixel_size' => $this->asteroidConfig['asteroid_img_size'][$asteroidSize] ?? 4,
         ];
+    }
+
+    public function generateStrategicLowValueAsteroids(int $count, int $outerRadius, ?array $regions = null): array
+    {
+        $asteroids = [];
+        $resourceBatch = [];
+        $targetRegions = $regions ?? $this->stationService->getReservedStationRegions();
+        $lowValueResources = $this->asteroidConfig['resource_pools']['low_value']['resources'];
+        $asteroidSize = 'small';
+
+        foreach ($targetRegions as $region) {
+            $centerX = $region['x'] ?? 0;
+            $centerY = $region['y'] ?? 0;
+    
+            for ($i = 0; $i < $count; $i++) {
+                $resources = [];
+                $numResources = rand(1, min(2, count($lowValueResources)));
+                $selectedResources = array_rand(array_flip($lowValueResources), $numResources);
+                foreach ((array)$selectedResources as $resource) {
+                    $resources[$resource] = rand($this->config['strategic_asteroid_min_value'], $this->config['strategic_asteroid_max_value']);
+                }
+    
+                $minStationDistance = $this->calculateMinStationDistance($asteroidSize, $resources);
+    
+                $coordinate = $this->generateAsteroidCoordinateInRadius(
+                    $centerX,
+                    $centerY,
+                    $outerRadius,
+                    $minStationDistance,
+                    $resources,
+                    $asteroidSize
+                );
+    
+                $asteroid = $this->generateAsteroid($asteroidSize);
+                $asteroid['size'] = $asteroidSize;
+                $asteroid['x'] = $coordinate['x'];
+                $asteroid['y'] = $coordinate['y'];
+    
+                $asteroids[] = $asteroid;
+                $resourceBatch[] = $resources;
+            }
+        }
+    
+        // Batch-Speicherung wie im Hauptgenerator
+        if (count($asteroids) > 0) {
+            $createdAsteroids = $this->saveBatchedAsteroids($asteroids);
+            $this->saveBatchedResources($createdAsteroids, $resourceBatch);
+        }
+    
+        return $asteroids;
     }
 
     private function generateAsteroidSize(array $asteroidSize): string
@@ -157,18 +207,34 @@ class AsteroidGenerator
         $poolWeights = $this->asteroidConfig['pool_weights'];
         $num_resource_range = $this->asteroidConfig['num_resource_range'];
         $resource_ratio_range = $this->asteroidConfig['resource_ratio_range'];
-        $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
 
-        if ($size === 'extreme') {
+        // extreme_value: Nur bei small und nur als Einzelressource
+        if ($size === 'small') {
+            $extremePool = $this->asteroidConfig['resource_pools']['extreme_value']['resources'];
+            if (mt_rand() / mt_getrandmax() < $poolWeights['extreme_value']) {
+                $resource = $extremePool[array_rand($extremePool)];
+                return [$resource => $asteroidValue];
+            }
+        } else {
+            // In allen anderen Fällen extreme_value aus den Pool-Gewichten entfernen
+            unset($poolWeights['extreme_value']);
+            $total = array_sum($poolWeights);
+            $poolWeights = array_map(fn($w) => $w / $total, $poolWeights);
+        }
+
+        // Für große/extreme Asteroiden keine high/extreme Ressourcen
+        if ($size === 'extreme' || $size === 'large') {
             unset($poolWeights['extreme_value'], $poolWeights['high_value']);
             $total = array_sum($poolWeights);
             $poolWeights = array_map(fn($w) => $w / $total, $poolWeights);
         }
 
+        $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
         $resource_ratios = [];
         for ($i = 0; $i < $num_resources; $i++) {
             $pool = $this->getRandomPool($poolWeights);
-            $resource = $this->asteroidConfig['resource_pools'][$pool]['resources'][array_rand($this->asteroidConfig['resource_pools'][$pool]['resources'])];
+            $resources = $this->asteroidConfig['resource_pools'][$pool]['resources'];
+            $resource = $resources[array_rand($resources)];
             $resource_ratios[$resource] = ($resource_ratios[$resource] ?? 0) + rand($resource_ratio_range[0], $resource_ratio_range[1]);
         }
 
@@ -202,7 +268,7 @@ class AsteroidGenerator
         if (empty($resources)) return 0;
         $baseDistance = $this->asteroidConfig['resource_min_distances']['base'];
         $maxModifier = 0;
-        foreach ($resources as $resourceType) {
+        foreach (array_keys($resources) as $resourceType) {
             foreach ($this->asteroidConfig['resource_pools'] as $poolName => $pool) {
                 if (in_array($resourceType, $pool['resources'])) {
                     $modifier = $this->asteroidConfig['resource_min_distances'][$poolName] ?? 1.0;
@@ -361,14 +427,14 @@ class AsteroidGenerator
         $reservedRegions = $this->stationService->getReservedStationRegions();
 
         foreach ($reservedRegions as $region) {
-            $stationX = $region['station_x'] ?? $region['x'] ?? 0;
-            $stationY = $region['station_y'] ?? $region['y'] ?? 0;
+            $stationX = $region['x'] ?? 0;
+            $stationY = $region['y'] ?? 0;
             $distance = sqrt(pow($stationX - $x, 2) + pow($stationY - $y, 2));
-            $innerRadius = $region['inner_radius'] ?? $this->config['station_inner_radius'] ?? 450;
+            $innerRadius = $this->config['station_inner_radius'] ?? 450;
             if ($distance <= $innerRadius) {
                 return true;
             }
-            $outerRadius = $region['outer_radius'] ?? $this->config['station_outer_radius'] ?? 4000;
+            $outerRadius = $this->config['station_outer_radius'] ?? 4000;
             if ($distance <= $outerRadius && $resourceLevel !== 'low') {
                 return true;
             }
@@ -379,22 +445,20 @@ class AsteroidGenerator
     private function determineResourceLevel(array $resources): string
     {
         if (empty($resources)) return 'low';
-        $valueHints = [];
-        foreach ($this->asteroidConfig['resource_pools'] as $poolName => $pool) {
-            if (strpos($poolName, 'high_value') !== false || strpos($poolName, 'extreme') !== false) {
-                $valueHints[$poolName] = 'high';
-            } else if (strpos($poolName, 'medium_value') !== false) {
-                $valueHints[$poolName] = 'medium';
-            } else {
-                $valueHints[$poolName] = 'low';
-            }
-        }
-        $highestLevel = 'low';
+
+        $poolLevels = [
+            'low_value' => 'low',
+            'medium_value' => 'medium',
+            'high_value' => 'high',
+            'extreme_value' => 'high',
+        ];
         $levelRanking = ['low' => 1, 'medium' => 2, 'high' => 3];
+        $highestLevel = 'low';
+
         foreach ($resources as $resourceType) {
             foreach ($this->asteroidConfig['resource_pools'] as $poolName => $pool) {
                 if (in_array($resourceType, $pool['resources'])) {
-                    $level = $valueHints[$poolName];
+                    $level = $poolLevels[$poolName] ?? 'low';
                     if ($levelRanking[$level] > $levelRanking[$highestLevel]) {
                         $highestLevel = $level;
                     }

@@ -1,7 +1,6 @@
 <?php
 
-$config = config('game.core');
-$asteroid_to_station_distance = $config['asteroid_to_station_distance'] ?? 300;
+$asteroid_to_station_distance = 1500;
 
 return [
     'asteroid_img_size' => [
@@ -13,16 +12,16 @@ return [
 
     /* chance to generate of asteroid sizes */
     'asteroid_size' => [
-        'small' => 743, // Gewicht für die Zufallsauswahl sollte gesamt 1000 ergeben
+        'small' => 745, // Gewicht für die Zufallsauswahl sollte gesamt 1000 ergeben
         'medium' => 220,
         'large' => 25,
-        'extreme' => 12,
+        'extreme' => 10,
     ],
 
     /* base amount */
     'asteroid_faktor' => [
-        'min' => 125,
-        'max' => 150,
+        'min' => 45,
+        'max' => 60,
     ],
 
     /* base multiplier */
@@ -37,17 +36,17 @@ return [
     'size_min_distance' => [
         'base' => $asteroid_to_station_distance,
         'small_asteroid' => 1.0,
-        'medium_asteroid' => 4.0,
-        'large_asteroid' => 20.0,
-        'extreme_asteroid' => 37.0,
+        'medium_asteroid' => 5.0,
+        'large_asteroid' => 10.0,
+        'extreme_asteroid' => 18.0,
     ],
 
     'resource_min_distances' => [
         'base' => $asteroid_to_station_distance,
         'low_value' => 1.0,
-        'medium_value' => 15.0,
-        'high_value' => 30.0,
-        'extreme_value' => 45.0,
+        'medium_value' => 7.0,
+        'high_value' => 15.0,
+        'extreme_value' => 22.0,
     ],
 
     'resource_pools' => [
@@ -66,10 +65,10 @@ return [
     ],
 
     'pool_weights' => [
-        'low_value' => 0.73, //75%
-        'medium_value' => 0.23, //21%
-        'high_value' => 0.03, //3%
-        'extreme_value' => 0.01, //1%
+        'low_value' => 0.7575, //75.75%
+        'medium_value' => 0.20, //20%
+        'high_value' => 0.035, //3.5%
+        'extreme_value' => 0.0075, //0.75%
     ],
 
     'num_resource_range' => [1, 4],

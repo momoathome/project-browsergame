@@ -20,8 +20,16 @@ const prefillMap = computed(() => {
   }, {} as Record<number, number>);
 });
 
+// filter deuterium and dilithium out of market for now
+const filteredMarket = computed(() => {
+  return props.market.filter(market => {
+    const resourceName = market.resource.name.toLowerCase();
+    return !resourceName.includes('deuterium') && !resourceName.includes('dilithium');
+  });
+});
+
 const formattedResources = computed(() => {
-  return props.market.map((market: Market): formattedMarketResource => ({
+  return filteredMarket.value.map((market: Market): formattedMarketResource => ({
     id: market.id,
     resource_id: market.resource_id,
     name: market.resource.name,

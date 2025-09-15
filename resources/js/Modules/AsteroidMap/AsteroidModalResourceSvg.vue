@@ -18,8 +18,8 @@ const resourceColors: Record<string, string> = {
   Thorium: 'yellowgreen',
   Astatine: 'gold',
   Hyperdiamond: 'navy',
-  Dilithium: 'purple',
-  Deuterium: 'orangered',
+  Dilithium: 'orangered',
+  Deuterium: 'steelblue',
 };
 
 const circleRadius = 40;

@@ -6,7 +6,8 @@ class Spacecraft
 {
     public function __construct(
         public readonly string $name,
-        public readonly int $combat,
+        public readonly int $attack,
+        public readonly int $defense,
         public readonly int $count,
         // public readonly int $cargo
     ) {}

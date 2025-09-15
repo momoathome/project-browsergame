@@ -32,6 +32,8 @@ export interface Spacecraft {
   description: string;
   image: string;
   type: string;
+  attack: number;
+  defense: number;
   combat: number;
   cargo: number;
   speed: number;
@@ -58,6 +60,8 @@ export interface SpacecraftSimple {
   name: string;
   image: string;
   type: string;
+  attack: number;
+  defense: number;
   combat: number;
   count: number;
   locked_count: number;
@@ -142,6 +146,8 @@ export interface FormattedSpacecraft {
   name: string;
   description: string;
   type: string;
+  attack: number;
+  defense: number;
   combat: number;
   cargo: number;
   speed: number;

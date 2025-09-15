@@ -12,16 +12,21 @@ import { useQueueStore } from '@/Composables/useQueueStore';
 import { numberFormat } from '@/Utils/format';
 import type { Building } from '@/types/types';
 
-const { queueData, refreshQueue } = useQueueStore();
-
 const props = defineProps<{
   building: Building
 }>();
 
-const isUpgrading = computed(() => props.building.is_upgrading || false);
-const upgradeEndTime = computed(() => props.building.end_time || null);
 const isSubmitting = ref(false)
 const showCancelModal = ref(false);
+const { queueData, refreshQueue } = useQueueStore();
+
+// --- Computed Properties ---
+const isUpgrading = computed(() => props.building.is_upgrading || false);
+const upgradeEndTime = computed(() => props.building.end_time || null);
+const userBuildings = usePage().props.buildings as Building[];
+const userResources = computed(() => usePage().props.userResources);
+const userAttributes = computed(() => usePage().props.userAttributes);
+const coreBuilding = computed(() => userBuildings.find(b => b.name === 'Core'));
 
 const currentEffect = computed(() => {
   const effects = props.building.effect?.current;
@@ -48,11 +53,10 @@ const formattedNextLevelValue = computed(() => {
 });
 
 const insufficientResources = computed(() => {
-  const userResources = usePage().props.userResources;
   const buildingResources = props.building.resources;
 
   return buildingResources.map(resource => {
-    const userResource = userResources.find(ur => ur.resource_id === resource.id);
+    const userResource = userResources.value.find(ur => ur.resource_id === resource.id);
     if (!userResource) return { id: resource.id, sufficient: false };
     return {
       id: resource.id,
@@ -67,10 +71,9 @@ function isResourceSufficient(resourceId: number): boolean {
 }
 
 function goToMarketWithMissingResources() {
-  const userResources = usePage().props.userResources;
   const missing = props.building.resources
     .map(resource => {
-      const userResource = userResources.find((ur: any) => ur.id === resource.id);
+      const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
       const missingAmount = resource.amount - (userResource?.amount || 0);
       return missingAmount > 0
         ? { id: resource.id, amount: missingAmount }
@@ -97,19 +100,24 @@ const buildingQueueCount = computed(() => {
 const nextUpgradeLevel = computed(() => props.building.level + buildingQueueCount.value + 1);
 
 const canUpgrade = computed(() => {
-  // Ressourcen müssen reichen UND Core-Check muss bestanden sein
-  console.log('insufficientResources', insufficientResources.value);
-  console.log('userResources', usePage().props.userResources);
-  console.log('buildingResources', props.building.resources);
   return insufficientResources.value.every(resource => resource.sufficient) && !isCoreUpgradeBlocked.value;
 });
-
-const userBuildings = usePage().props.buildings as Building[];
-const coreBuilding = computed(() => userBuildings.find(b => b.name === 'Core'));
 
 const isCoreUpgradeBlocked = computed(() => {
   if (!coreBuilding.value) return false;
   return props.building.name !== 'Core' && nextUpgradeLevel.value > coreBuilding.value.level;
+});
+
+const getAttribute = (name: string) => {
+  const attr = userAttributes.value.find((a: any) => a.attribute_name === name);
+  return attr ? Number(attr.attribute_value) : 0;
+};
+
+const buildingProduceSpeed = Number(usePage().props.buildingProduceSpeed) || 1;
+const actualBuildTime = computed(() => {
+  const speed = getAttribute('upgrade_speed') || 1;
+  const trueBuildTime = Math.floor(props.building.build_time / speed / buildingProduceSpeed);
+  return trueBuildTime;
 });
 
 function upgradeBuilding() {
@@ -198,7 +206,7 @@ function handleCancelUpgrade() {
       </div>
 
       <div class="flex border-t border-primary/50">
-        <AppCardTimer :buildTime="building.build_time" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
+        <AppCardTimer :buildTime="actualBuildTime" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
           @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
           :description="`Up to lv. ${building.level + 1}`" />
         <button
@@ -262,6 +270,5 @@ function handleCancelUpgrade() {
   inset: 0;
   box-shadow: inset 0px -20px 20px 4px #1E2D3B,
     inset 0px -30px 45px 0px #1E2D3B;
-  border-radius: 24px 24px 0 0;
 }
 </style>

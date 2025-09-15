@@ -291,11 +291,14 @@ onMounted(() => {
         <div v-for="mining in queueMining" :key="mining.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
           <img :src="getTypeIcon(mining.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
-            <p class="text-sm font-medium leading-none">
-              Mining
-            </p>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-sm font-medium leading-none">
+                Mining
+              </p>
+              <span class="text-sm">{{ displayQueueTime(mining) }}</span>
+            </div>
             <p class="text-sm text-muted-foreground text-pretty">
-              {{ mining.rawData.details.asteroid_name }} • {{ displayQueueTime(mining) }}
+              {{ mining.rawData.details.asteroid_name }}
             </p>
           </div>
         </div>

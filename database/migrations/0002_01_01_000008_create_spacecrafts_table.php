@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignId('details_id')
                   ->constrained('spacecraft_details')
                   ->onDelete('cascade');
+            $table->integer('attack')->default(0);
+            $table->integer('defense')->default(0);
             $table->integer('combat')->default(0);
             $table->integer('cargo')->default(0);
             $table->integer('speed')->default(0);

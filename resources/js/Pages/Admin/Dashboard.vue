@@ -74,7 +74,15 @@ function regenerateAsteroids() {
       </div> -->
 
       <div class="grid grid-cols-2 gap-4">
-        <DashboardUserOverview :users="users" />
+        <div class="flex flex-col gap-4">
+          <div class="bg-base rounded-xl w-full h-max border border-primary/40 shadow-xl">
+            <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
+              Actions
+            </h2>
+            <Link :href="route('admin.resourceDistribution')" class="text-light block py-4 px-3 hover:underline">Ressourcenverteilung</Link>
+          </div>
+          <DashboardUserOverview :users="users" />
+        </div>
         <DashboardMarket :market="market" />
       </div>
       <!-- <DashboardQueue :action-queue="gameQueue" /> -->

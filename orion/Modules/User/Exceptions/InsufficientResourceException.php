@@ -1,7 +1,6 @@
 <?php
 
-namespace Orion\Modules\Resource\Exceptions;
-
+namespace Orion\Modules\User\Exceptions;
 class InsufficientResourceException extends \Exception
 {
     private string $resourceName;

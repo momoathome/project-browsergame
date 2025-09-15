@@ -11,7 +11,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  'upgrade-complete': []
   'cancel-upgrade': []
 }>();
 
@@ -36,8 +35,6 @@ function updateTimerAndProgress() {
     remainingTime.value = 0;
     progress.value = 100;
     clearInterval(timer.value);
-
-    emit('upgrade-complete');
     return;
   }
 
@@ -87,6 +84,8 @@ watch(() => props.isInProgress, (newValue) => {
     startTimer();
   } else {
     stopTimer();
+    progress.value = 0; // Fortschritt zurücksetzen!
+    remainingTime.value = 0;
   }
 });
 

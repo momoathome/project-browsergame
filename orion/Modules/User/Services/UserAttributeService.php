@@ -39,7 +39,7 @@ class UserAttributeService
     public function updateUserAttribute($userId, $attributeName, $value, $multiply = false, $replace = false)
     {
         $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);
-    
+
         if ($userAttribute) {
             if ($replace) {
                 // Komplett ersetzen

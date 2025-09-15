@@ -19,7 +19,7 @@ use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingProgressionService;
-use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
+use Orion\Modules\User\Exceptions\InsufficientResourceException;
 use Orion\Modules\Influence\Services\InfluenceService;
 
 class BuildingUpgradeService
@@ -158,7 +158,7 @@ class BuildingUpgradeService
         $building_produce_speed = config('game.core.building_produce_speed');
 
         $upgrade_multiplier = $core_upgrade_speed ? $core_upgrade_speed->attribute_value : 1;
-        $build_time = $this->buildingProgressionService->calculateBuildTime($targetLevel);
+        $build_time = $this->buildingProgressionService->calculateBuildTime($building, $targetLevel);
         $effective_build_time = floor(($build_time / $upgrade_multiplier) / $building_produce_speed);
 
         $this->queueService->addToQueue(
@@ -179,8 +179,8 @@ class BuildingUpgradeService
     {
         return DB::transaction(function () use ($building) {
             $building->level += 1;
-            $building->effect_value = floor($this->buildingProgressionService->calculateEffectValue($building));
-            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building->level);
+            $building->effect_value = $this->buildingProgressionService->calculateEffectValue($building);
+            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building, $building->level);
             $building->save();
 
             return $building;

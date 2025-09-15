@@ -12,7 +12,7 @@ return [
         ],
         [
             'attribute_name' => 'credits',
-            'attribute_value' => 350_000,
+            'attribute_value' => 25_000,
         ],
         [
             'attribute_name' => 'research_points',

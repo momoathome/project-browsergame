@@ -1,13 +1,14 @@
 import { computed } from 'vue';
 import type { SpacecraftSimple, Asteroid, Station } from '@/types/types';
 import type { ComputedRef } from 'vue';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 
 export function useSpacecraftUtils(
-  spacecrafts: ComputedRef<SpacecraftSimple[]>, 
-  formSpacecrafts: any, 
   content: ComputedRef<any>,
   actionType: ComputedRef<string>
 ) {
+
+  const { spacecrafts } = useSpacecraftStore();
 
   const getAllowedTypes = () => {
     if (actionType.value === 'mining') {

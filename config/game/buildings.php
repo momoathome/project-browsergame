@@ -10,10 +10,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 250],
-                ['resource_name' => 'Titanium', 'amount' => 375],
-                ['resource_name' => 'Hydrogenium', 'amount' => 450],
-                ['resource_name' => 'Kyberkristall', 'amount' => 425],
+                ['resource_name' => 'Carbon', 'amount' => 125],
+                ['resource_name' => 'Titanium', 'amount' => 180],
+                ['resource_name' => 'Hydrogenium', 'amount' => 225],
+                ['resource_name' => 'Kyberkristall', 'amount' => 200],
             ],
         ],
         [
@@ -24,10 +24,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 300],
-                ['resource_name' => 'Titanium', 'amount' => 400],
-                ['resource_name' => 'Hydrogenium', 'amount' => 250],
-                ['resource_name' => 'Kyberkristall', 'amount' => 150],
+                ['resource_name' => 'Carbon', 'amount' => 150],
+                ['resource_name' => 'Titanium', 'amount' => 200],
+                ['resource_name' => 'Hydrogenium', 'amount' => 125],
+                ['resource_name' => 'Kyberkristall', 'amount' => 75],
             ],
         ],
         [
@@ -38,10 +38,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 250],
-                ['resource_name' => 'Titanium', 'amount' => 350],
-                ['resource_name' => 'Hydrogenium', 'amount' => 350],
-                ['resource_name' => 'Kyberkristall', 'amount' => 175],
+                ['resource_name' => 'Carbon', 'amount' => 125],
+                ['resource_name' => 'Titanium', 'amount' => 175],
+                ['resource_name' => 'Hydrogenium', 'amount' => 175],
+                ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
         [
@@ -52,10 +52,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 300],
-                ['resource_name' => 'Titanium', 'amount' => 250],
-                ['resource_name' => 'Hydrogenium', 'amount' => 350],
-                ['resource_name' => 'Kyberkristall', 'amount' => 325],
+                ['resource_name' => 'Carbon', 'amount' => 150],
+                ['resource_name' => 'Titanium', 'amount' => 175],
+                ['resource_name' => 'Hydrogenium', 'amount' => 175],
+                ['resource_name' => 'Kyberkristall', 'amount' => 150],
             ],
         ],
         [
@@ -66,10 +66,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 350],
-                ['resource_name' => 'Titanium', 'amount' => 300],
-                ['resource_name' => 'Hydrogenium', 'amount' => 200],
-                ['resource_name' => 'Kyberkristall', 'amount' => 200],
+                ['resource_name' => 'Carbon', 'amount' => 175],
+                ['resource_name' => 'Titanium', 'amount' => 150],
+                ['resource_name' => 'Hydrogenium', 'amount' => 100],
+                ['resource_name' => 'Kyberkristall', 'amount' => 100],
             ],
         ],
         [
@@ -80,10 +80,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 200],
-                ['resource_name' => 'Titanium', 'amount' => 250],
-                ['resource_name' => 'Hydrogenium', 'amount' => 250],
-                ['resource_name' => 'Kyberkristall', 'amount' => 300],
+                ['resource_name' => 'Carbon', 'amount' => 100],
+                ['resource_name' => 'Titanium', 'amount' => 125],
+                ['resource_name' => 'Hydrogenium', 'amount' => 125],
+                ['resource_name' => 'Kyberkristall', 'amount' => 150],
             ],
         ],
         [
@@ -94,10 +94,10 @@ return [
             'is_active' => true,
             'level' => 1,
             'costs' => [
-                ['resource_name' => 'Carbon', 'amount' => 275],
-                ['resource_name' => 'Titanium', 'amount' => 300],
-                ['resource_name' => 'Hydrogenium', 'amount' => 400],
-                ['resource_name' => 'Kyberkristall', 'amount' => 425],
+                ['resource_name' => 'Carbon', 'amount' => 150],
+                ['resource_name' => 'Titanium', 'amount' => 150],
+                ['resource_name' => 'Hydrogenium', 'amount' => 200],
+                ['resource_name' => 'Kyberkristall', 'amount' => 200],
             ],
         ],
         /*         [

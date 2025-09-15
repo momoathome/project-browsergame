@@ -1,7 +1,13 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useQueueStore } from '@/Composables/useQueueStore'
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore'
 import { timeFormat } from '@/Utils/format'
 import type { SavedQueueItemState, RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
+import { api } from '@/Services/api'
+
+const PROCESS_INTERVAL = 15_000
+const REFRESH_TIMEOUT = 10_000
+const PROCESS_THROTTLE = 5_000 // min. Abstand zwischen zwei processQueue() Calls
 
 function loadQueueItemStates(userId: number): SavedQueueItemState[] {
     const key = `queueItemStates_${userId}`
@@ -15,17 +21,37 @@ function saveQueueItemStates(userId: number, states: SavedQueueItemState[]) {
 }
 
 export function useQueue(userId: number) {
-    const { queueData } = useQueueStore()
+    const { queueData, refreshQueue } = useQueueStore()
+    const { refreshSpacecrafts } = useSpacecraftStore()
+
+    // ---- REACTIVE STATE ----
     const queueItemStates = ref<SavedQueueItemState[]>(loadQueueItemStates(userId))
     const processedQueueItems = ref<ProcessedQueueItem[]>([])
+    
     let timerInterval: number | undefined
+    let processInterval: number | undefined
+    let processTimeout: number | undefined
+    let lastProcessCall = 0
 
-    // Callback-Handling für Timer-Ende
+
+    // ---- API HELFER MIT THROTTLING ----
+    const processQueueThrottled = async () => {
+        const now = Date.now()
+        if (now - lastProcessCall < PROCESS_THROTTLE) return
+        lastProcessCall = now
+
+        await api.queue.processQueue()
+        await refreshQueue()
+        await refreshSpacecrafts()
+    }
+
+    // ---- CALLBACKS ----
     const timerCompleteCallbacks: ((item: ProcessedQueueItem) => void)[] = []
     const onTimerComplete = (cb: (item: ProcessedQueueItem) => void) => {
         timerCompleteCallbacks.push(cb)
     }
 
+    // ---- ITEM STATE HELFER ----
     const findState = (id: number) => queueItemStates.value.find(s => s.id === id)
     const upsertState = (state: SavedQueueItemState) => {
         const idx = queueItemStates.value.findIndex(s => s.id === state.id)
@@ -36,6 +62,69 @@ export function useQueue(userId: number) {
     const removeState = (id: number) => {
         queueItemStates.value = queueItemStates.value.filter(s => s.id !== id)
         saveQueueItemStates(userId, queueItemStates.value)
+    }
+
+      // ---- TIMER ----
+    const updateItemTimer = (item: ProcessedQueueItem) => {
+        if (!item.rawData.endTime || item.completed || item.status === 'pending') return
+        const endTime = new Date(item.rawData.endTime).getTime()
+        const currentTime = Date.now()
+        const diff = endTime - currentTime
+        if (diff <= 0) {
+            item.remainingTime = 0
+            item.formattedTime = '00:00'
+            item.completed = true
+            item.processing = true
+
+            if (!item._callbackFired) { 
+                item._callbackFired = true
+                scheduleRefresh(item)
+                timerCompleteCallbacks.forEach(cb => cb(item))
+            }
+
+            return
+        }
+        item.remainingTime = diff
+        item.formattedTime = timeFormat(Math.floor(diff / 1000))
+    }
+
+    const updateTimers = () => {
+        if (!processedQueueItems.value.length) return
+        processedQueueItems.value.forEach(updateItemTimer)
+        const hasActiveItems = processedQueueItems.value.some(item => !item.completed)
+        if (!hasActiveItems && timerInterval) {
+        clearInterval(timerInterval)
+        timerInterval = undefined
+        }
+    }
+
+      // ---- QUEUE REFRESH ----
+    async function refresh() {
+        processQueueData()
+        await refreshQueue()
+    }
+
+    function scheduleRefresh(item: ProcessedQueueItem) {
+        if (processTimeout) return
+        processTimeout = window.setTimeout(async () => {
+            removeQueueItem(item.id)
+            await refresh()
+            processTimeout = undefined
+        }, REFRESH_TIMEOUT)
+    }
+
+    function startProcessInterval() {
+        stopProcessInterval()
+        processInterval = window.setInterval(async () => {
+        if (processedQueueItems.value.some(item => item.processing)) {
+            await processQueueThrottled()
+        }
+        }, PROCESS_INTERVAL)
+    }
+
+    function stopProcessInterval() {
+        if (processInterval) clearInterval(processInterval)
+        processInterval = undefined
     }
 
     const createOrUpdateItemState = (itemId: number): { itemState: SavedQueueItemState; isNew: boolean; hasChanged: boolean } => {
@@ -89,94 +178,61 @@ export function useQueue(userId: number) {
         return ''
     }
 
-    const createProcessedItem = (
-        rawItem: RawQueueItem,
-        itemState: SavedQueueItemState,
-        isNew: boolean
-    ): ProcessedQueueItem => {
-        return {
-            id: rawItem.id,
-            name: getNameByActionType(rawItem.actionType, rawItem.details),
-            image: getImageByActionType(rawItem.actionType),
-            details: getDetailsByActionType(rawItem.actionType, rawItem.details),
-            showInfos: itemState.showInfos,
-            isNew,
-            rawData: rawItem,
-            completed: false,
-            remainingTime: 0,
-            formattedTime: '00:00',
-            processing: false,
-            status: rawItem.status || 'pending', // 'in_progress', 'pending', 'processing'
-        }
+    // ---- DATEN VERARBEITEN ----
+    function processQueueData(): void {
+    if (!(queueData.value?.length)) {
+        processedQueueItems.value = []
+        return
     }
 
-    // Timer-Logik
-    const updateItemTimer = (item: ProcessedQueueItem) => {
-        if (!item.rawData.endTime || item.completed || item.status === 'pending') return
-        const endTime = new Date(item.rawData.endTime).getTime()
-        const currentTime = new Date().getTime()
-        const diff = endTime - currentTime
-        if (diff <= 0) {
-            item.remainingTime = 0
-            item.formattedTime = '00:00'
-            item.completed = true
-            item.processing = true
+    const newItems: ProcessedQueueItem[] = []
 
-            timerCompleteCallbacks.forEach(cb => cb(item))
-            return
+    queueData.value.forEach(rawItem => {
+        const { itemState, isNew, hasChanged } = createOrUpdateItemState(rawItem.id)
+
+        const processedItem: ProcessedQueueItem = {
+        id: rawItem.id,
+        name: getNameByActionType(rawItem.actionType, rawItem.details),
+        image: getImageByActionType(rawItem.actionType),
+        details: getDetailsByActionType(rawItem.actionType, rawItem.details),
+        showInfos: itemState.showInfos,
+        isNew,
+        rawData: rawItem,
+        completed: false,
+        remainingTime: 0,
+        formattedTime: '00:00',
+        processing: false,
+        status: rawItem.status ?? 'pending'
         }
-        item.remainingTime = diff
-        item.formattedTime = timeFormat(Math.floor(diff / 1000))
+
+        if (rawItem.endTime) {
+            updateItemTimer(processedItem)
+        }
+
+        // Wenn das Item bereits abgeschlossen ist, sofort Callbacks ausführen
+        if (processedItem.completed) {
+            timerCompleteCallbacks.forEach(cb => cb(processedItem))
+        }
+
+        newItems.push(processedItem)
+    })
+
+    // Reset des "isNew"-Flags nach kurzer Verzögerung (für Animationen)
+    newItems.forEach(item => {
+        if (item.isNew) {
+        setTimeout(() => {
+            const foundItem = processedQueueItems.value.find(i => i.id === item.id)
+            if (foundItem) foundItem.isNew = false
+        }, 1000)
+        }
+    })
+
+    processedQueueItems.value = newItems
     }
 
-    const updateTimers = () => {
-        if (!processedQueueItems.value.length) return
-        processedQueueItems.value.forEach(updateItemTimer)
-        const hasActiveItems = processedQueueItems.value.some(item => !item.completed)
-        if (!hasActiveItems && timerInterval) {
-            clearInterval(timerInterval)
-            timerInterval = undefined
-        }
-    }
-
-    // Items verarbeiten
-    const processQueueData = (): void => {
-        if (!(queueData.value?.length)) {
-            processedQueueItems.value = []
-            return
-        }
-
-        let hasStateChanges = false
-        const newItems: ProcessedQueueItem[] = []
-
-        queueData.value.forEach(rawItem => {
-            const { itemState, isNew, hasChanged } = createOrUpdateItemState(rawItem.id)
-            hasStateChanges = hasStateChanges || hasChanged
-
-            const processedItem = createProcessedItem(rawItem, itemState, isNew)
-            if (rawItem.endTime) {
-                updateItemTimer(processedItem)
-            }
-
-            if (processedItem.completed) {
-                timerCompleteCallbacks.forEach(cb => cb(processedItem))
-            }
-            
-            newItems.push(processedItem)
-        })
-
-        newItems.forEach(item => {
-            if (item.isNew) {
-                setTimeout(() => {
-                    const foundItem = processedQueueItems.value.find(i => i.id === item.id)
-                    if (foundItem) {
-                        foundItem.isNew = false
-                    }
-                }, 1000)
-            }
-        })
-
-        processedQueueItems.value = newItems
+    function removeQueueItem(id: number) {
+        removeState(id)
+        processedQueueItems.value = processedQueueItems.value.filter(i => i.id !== id)
     }
 
     const toggleInfo = (item: ProcessedQueueItem): void => {
@@ -191,22 +247,21 @@ export function useQueue(userId: number) {
         }
     }
 
-    const removeQueueItem = (id: number) => {
-        removeState(id)
-        processedQueueItems.value = processedQueueItems.value.filter(i => i.id !== id)
-    }
-
     const isDefendCombatAction = (item: RawQueueItem): boolean => {
         return item.actionType === 'combat' && item.details?.defender_id === userId
     }
 
-    // Lifecycle
+    // ---- LIFECYCLE ----
     onMounted(() => {
         processQueueData()
-        timerInterval = setInterval(updateTimers, 1000)
+        timerInterval = window.setInterval(updateTimers, 1000)
+        startProcessInterval()
     })
+
     onUnmounted(() => {
         if (timerInterval) clearInterval(timerInterval)
+        stopProcessInterval()
+        if (processTimeout) clearTimeout(processTimeout)
     })
 
     watch(queueData, processQueueData, { deep: true })
@@ -215,6 +270,10 @@ export function useQueue(userId: number) {
         queueItemStates,
         processedQueueItems,
         processQueueData,
+        processQueueThrottled,
+        startProcessInterval,
+        stopProcessInterval,
+        refresh,
         updateTimers,
         updateItemTimer,
         toggleInfo,

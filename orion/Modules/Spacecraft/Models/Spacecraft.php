@@ -16,6 +16,8 @@ class Spacecraft extends Model
     protected $fillable = [
         'user_id',
         'details_id',
+        'attack',
+        'defense',
         'combat',
         'cargo',
         'speed',

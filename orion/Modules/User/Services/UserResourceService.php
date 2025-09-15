@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use App\Events\UpdateUserResources;
 use Orion\Modules\User\Repositories\UserResourceRepository;
-use Orion\Modules\Resource\Exceptions\InsufficientResourceException;
+use Orion\Modules\User\Exceptions\InsufficientResourceException;
 
 class UserResourceService
 {

@@ -75,9 +75,10 @@ readonly class ActionQueueRepository
             ->get();
     }
 
-    public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details)
+    public function addToQueue(int $userId, QueueActionType $actionType, int $targetId, int $duration, array $details, QueueStatusType $status = QueueStatusType::STATUS_IN_PROGRESS): ActionQueue
     {
-        return DB::transaction(function () use ($userId, $actionType, $targetId, $duration, $details) {
+        return DB::transaction(function () use ($userId, $actionType, $targetId, $duration, $details, $status) {
+            // Prüfe, ob bereits ein IN_PROGRESS für das Ziel existiert
             $exists = ActionQueue::where('user_id', $userId)
                 ->where('action_type', $actionType)
                 ->where('target_id', $targetId)
@@ -85,8 +86,10 @@ readonly class ActionQueueRepository
                 ->lockForUpdate()
                 ->exists();
     
-            $status = $exists ? QueueStatusType::STATUS_PENDING : QueueStatusType::STATUS_IN_PROGRESS;
-    
+            if ($exists) {
+                $status = QueueStatusType::STATUS_PENDING;
+            }
+
             return ActionQueue::create([
                 'user_id' => $userId,
                 'action_type' => $actionType,
@@ -99,11 +102,10 @@ readonly class ActionQueueRepository
         });
     }
 
-    public function promoteNextPending(int $userId, QueueActionType $actionType, int $targetId)
+    public function promoteNextPending(int $userId, QueueActionType $actionType)
     {
         $nextPending = ActionQueue::where('user_id', $userId)
             ->where('action_type', $actionType)
-            ->where('target_id', $targetId)
             ->where('status', QueueStatusType::STATUS_PENDING)
             ->orderBy('created_at', 'asc')
             ->first();

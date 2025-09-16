@@ -43,9 +43,9 @@ readonly class MarketService
         return $marketData;
     }
 
-    public function updateResourceAmount($resourceId, $stock, $cost)
+    public function updateResourceAmount($resourceId, $stock)
     {
-        $this->marketRepository->updateResourceAmount($resourceId, $stock, $cost);
+        $this->marketRepository->updateResourceAmount($resourceId, $stock);
     }
 
     protected function getCategory(string $resourceName): ?string

@@ -16,6 +16,7 @@ class Building extends Model
         'user_id',
         'details_id', // Referenz auf BuildingDetails
         'effect_value',
+        'effects',
         'level',
         'build_time',
     ];

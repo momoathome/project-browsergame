@@ -20,6 +20,7 @@ return new class extends Migration
                   ->constrained('building_details')
                   ->onDelete('cascade');
             $table->decimal('effect_value', 12, 2)->nullable();
+            $table->json('effects')->nullable();
             $table->integer('level')->default(1);
             $table->integer('build_time')->nullable();
             $table->timestamps();

@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('markets', function (Blueprint $table) {
+        Schema::create('building_levels', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('resource_id')->constrained('resources')->onDelete('cascade');
-            $table->string('category');
-            $table->integer('stock');
+            $table->string('building_key');
+            $table->integer('level');
+            $table->json('effects');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('markets');
+        Schema::dropIfExists('building_levels');
     }
 };

@@ -3,11 +3,12 @@
 namespace Orion\Modules\Building\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
+use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Repositories\BuildingRepository;
 use Orion\Modules\Building\Services\BuildingProgressionService;
-use Orion\Modules\Resource\Services\ResourceService;
 
 class BuildingService
 {

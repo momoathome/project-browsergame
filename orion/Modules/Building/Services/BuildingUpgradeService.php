@@ -154,6 +154,28 @@ class BuildingUpgradeService
         $queuedUpgrades = $this->queueService->getQueuedUpgrades($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
         $targetLevel = $building->level + $queuedUpgrades + 1;
 
+        $coreBuilding = Building::where('user_id', $userId)
+        ->whereHas('details', function ($query) {
+            $query->where('name', BuildingType::CORE->value);
+        })
+        ->first();
+
+        $buildingSlots = 1;
+        if ($coreBuilding) {
+            $extra = app(BuildingEffectService::class)->getEffects('Core', $coreBuilding->level);
+            $buildingSlots = $extra['building_slots'] ?? 1;
+        }
+
+        $inProgressUpgrades = $this->queueService->getInProgressQueuesFromUserByType(
+            $userId,
+            QueueActionType::ACTION_TYPE_BUILDING
+        )->count();
+
+        // Status bestimmen
+        $status = $inProgressUpgrades < $buildingSlots
+            ? QueueStatusType::STATUS_IN_PROGRESS
+            : QueueStatusType::STATUS_PENDING;
+
         $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);
         $building_produce_speed = config('game.core.building_produce_speed');
 
@@ -171,7 +193,8 @@ class BuildingUpgradeService
                 'current_level' => $targetLevel - 1,
                 'next_level' => $targetLevel,
                 'duration' => $effective_build_time
-            ]
+            ],
+            $status
         );
     }
 
@@ -179,7 +202,14 @@ class BuildingUpgradeService
     {
         return DB::transaction(function () use ($building) {
             $building->level += 1;
-            $building->effect_value = $this->buildingProgressionService->calculateEffectValue($building);
+            $baseEffects = $this->buildingProgressionService->calculateBaseEffectValue($building);
+            $allEffects = $this->buildingProgressionService->calculateEffectValue($building);
+
+            // Extrahiere den ersten Wert aus dem Array
+            $effectValue = is_array($baseEffects) ? reset($baseEffects) : $baseEffects;
+
+            $building->effect_value = $effectValue;
+            $building->effects = $allEffects;
             $building->build_time = $this->buildingProgressionService->calculateBuildTime($building, $building->level);
             $building->save();
 

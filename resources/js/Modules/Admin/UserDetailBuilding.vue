@@ -1,17 +1,13 @@
 <script lang="ts" setup>
+import { defineProps, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import type { Building } from '@/types/types';
+import { numberFormat } from '@/utils/format';
 
 const props = defineProps<{
     buildings: Building[];
     user: { id: number };
 }>();
-
-const getBuildingEffectDisplay = (building) => {
-  if (building.effect?.current) {
-    return building.effect.current[0].effect.text + ': ' + building.effect.current[0].effect.value;
-  }
-};
 
 const updateBuildingLevel = (building) => {
     const form = useForm({
@@ -25,6 +21,30 @@ const updateBuildingLevel = (building) => {
             router.reload({ only: ['buildings'] });
         }
     });
+};
+
+
+const getCurrentEffect = (building: Building) => {
+  return building.effect?.current ?? null;
+};
+
+const getNextLevelEffect = (building: Building) => {
+  return building.effect?.next_level ?? null;
+};
+
+const getEffectKey = (effect: any) => {
+  return effect ? Object.keys(effect)[0] : '';
+};
+
+const formatEffectText = (key: string) => {
+  if (!key) return '';
+  return key.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
+};
+
+const formatEffectValue = (effect: any, key: string) => {
+  return effect && key && Number.isFinite(effect[key])
+    ? numberFormat(effect[key])
+    : effect[key];
 };
 </script>
 
@@ -48,10 +68,10 @@ const updateBuildingLevel = (building) => {
                     <div class="flex flex-col gap-1 px-3 py-2 mt-1 h-full">
                         <div class="flex items-center gap-1">
                             <span class="text-sm text-secondary">
-                                {{ building.effect && building.effect.current && building.effect.current[0] ? building.effect.current[0].effect.text : '' }}:
+                                {{ formatEffectText(getEffectKey(getCurrentEffect(building))) }}:
                             </span>
                             <span class="font-medium text-sm">
-                                {{ building.effect && building.effect.current && building.effect.current[0] ? building.effect.current[0].effect.value : '' }}
+                                {{ formatEffectValue(getCurrentEffect(building), getEffectKey(getCurrentEffect(building))) }}
                             </span>
                         </div>
                     </div>

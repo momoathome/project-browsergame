@@ -176,7 +176,6 @@ export interface Station {
 export interface Market {
   id: number
   resource_id: number
-  cost: number
   stock: number
   category: string
   resource: Resource;
@@ -188,7 +187,6 @@ export interface formattedMarketResource {
   name: string
   description: string
   image: string
-  cost: number
   category: string
   stock?: number;
   amount?: number;

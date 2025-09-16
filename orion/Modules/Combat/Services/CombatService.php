@@ -183,8 +183,8 @@ readonly class CombatService
 
         /* check if simulation or real fight */
         if ($userId) {
-            $shield_base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
-            $defense_multiplier = $shield_base_defense ? $shield_base_defense->attribute_value : 1;
+            $base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
+            $defense_multiplier = $base_defense ? $base_defense->attribute_value : 1;
         } else {
             $defense_multiplier = 1;
         }

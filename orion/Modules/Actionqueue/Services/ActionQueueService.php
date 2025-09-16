@@ -48,14 +48,15 @@ class ActionQueueService
         return $this->actionqueueRepository->getQueuesFromUserByType($userId, $actionType);
     }
 
-    public function addToQueue($userId, $actionType, $targetId, $duration, $details)
+    public function addToQueue($userId, $actionType, $targetId, $duration, $details, $status = QueueStatusType::STATUS_IN_PROGRESS)
     {
         $queueEntry = $this->actionqueueRepository->addToQueue(
             $userId,
             $actionType,
             $targetId,
             $duration,
-            $details
+            $details,
+            $status
         );
 
         // Wenn es sich um einen Kampf handelt, informiere den Verteidiger

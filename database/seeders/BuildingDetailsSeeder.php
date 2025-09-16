@@ -69,9 +69,9 @@ class BuildingDetailsSeeder extends Seeder
         ]); */
 
         BuildingDetails::create([
-            'name' => 'Shield',
+            'name' => 'Guardian',
             'description' => 'Increases defense against attackers.',
-            'image' => '/images/buildings/shield.webp',
+            'image' => '/images/buildings/Guardian.webp',
             'effect' => 'Defense',
         ]);
 

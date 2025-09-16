@@ -10,7 +10,7 @@ enum BuildingType: string
     case WAREHOUSE = 'Warehouse';
     case LABORATORY = 'Laboratory';
     case SCANNER = 'Scanner';
-    case SHIELD = 'Shield';
+    case GUARDIAN = 'Guardian';
 
     public function getEffectAttributes(): array
     {

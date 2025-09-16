@@ -51,6 +51,28 @@ const queueBuildings = computed(() => (sortedQueueItems.value ?? []).filter(item
 const queueSpacecrafts = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'produce'))
 const queueMining = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'mining'));
 const queueCombat = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'combat'));
+
+const activeBuildingQueue = computed(() =>
+  queueBuildings.value.filter(q => q.status === 'in_progress' || q.status === 'processing')
+);
+const pendingBuildingQueue = computed(() =>
+  queueBuildings.value.filter(q => q.status === 'pending')
+);
+
+const activeProductionQueue = computed(() =>
+  queueSpacecrafts.value.filter(q => q.status === 'in_progress' || q.status === 'processing')
+);
+const pendingProductionQueue = computed(() =>
+  queueSpacecrafts.value.filter(q => q.status === 'pending')
+);
+
+const activeDockQueue = computed(() =>
+  queueMining.value.filter(q => q.status === 'in_progress' || q.status === 'processing')
+);
+const pendingDockQueue = computed(() =>
+  queueMining.value.filter(q => q.status === 'pending')
+);
+
 const totalMiningOperations = computed(() => (sortedQueueItems.value ?? []).reduce((acc, item) => {
   if (item.rawData.actionType === 'mining') {
     acc++;
@@ -64,25 +86,39 @@ const totalCombatOperations = computed(() => (sortedQueueItems.value ?? []).redu
   return acc;
 }, 0));
 
-const getBuildingQueueItem = computed(() => (buildingId: number) => {
-  return queueBuildings.value.find(item => item.targetId === buildingId);
+const buildingSlots = computed(() => {
+  const core = props.buildings.find(b => b.effect?.current?.building_slots);
+  return core?.effect?.current?.building_slots ?? 0;
+});
+const productionSlots = computed(() => {
+  const shipyard = props.buildings.find(b => b.effect?.current?.production_slots);
+  return shipyard?.effect?.current?.production_slots ?? 0;
+});
+const dockSlots = computed(() => {
+  const hangar = props.buildings.find(b => b.effect?.current?.dock_slots);
+  return hangar?.effect?.current?.dock_slots ?? 0;
 });
 
-const getSpacecraftsQueueItem = computed(() => (spacecraftId: number) => {
-  return queueSpacecrafts.value.find(item => item.targetId === spacecraftId);
-});
-
-// Neue Funktion zur Anzeige formatierter Effekte
 const getBuildingEffectValue = (building) => {
   if (building.effect?.current) {
-    return building.effect.current[0].effect.value;
+    const keys = Object.keys(building.effect.current);
+    if (keys.length === 0) return '';
+    const key = keys[0];
+    const value = building.effect.current[key];
+    return value;
   }
+  return '';
 };
 
 const getBuildingEffectText = (building) => {
   if (building.effect?.current) {
-    return building.effect.current[0].effect.text;
+    const keys = Object.keys(building.effect.current);
+    if (keys.length === 0) return '';
+    const key = keys[0];
+    // Ersetze "_" durch Leerzeichen und mache den ersten Buchstaben groß
+    return key.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
   }
+  return '';
 };
 
 const fleetSummary = computed(() => ({
@@ -109,6 +145,8 @@ onMounted(() => {
   if (Array.isArray(page.props.spacecrafts)) {
     spacecrafts.value = page.props.spacecrafts;
   }
+
+  console.log(props.buildings);
 });
 
 </script>
@@ -229,10 +267,10 @@ onMounted(() => {
             </div>
           </div>
          </div>
-
       </div>
 
-      <div class="flex flex-col gap-4 w-4/12 xl:w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 -my-4 rounded-xl text-light">
+      <!-- sidebar -->
+      <div class="flex flex-col gap-2 w-4/12 xl:w-1/5 min-h-full max-h-dvh fancy-scroll overflow-y-auto bg-base/20 p-4 -my-4 rounded-xl text-light">
         <div class="flex flex-col gap-2 border-b border-primary/50 pb-4">
           <div class="flex items-center gap-2">
             <img src="/images/space-craft.png" alt="spacecraft" class="h-5" />
@@ -247,7 +285,8 @@ onMounted(() => {
             <h2 class="font-semibold text-sm">in Combat • {{ totalCombatOperations }}</h2>
           </div>
         </div>
-        <div v-for="combat in queueCombat" :key="combat.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4"
+
+        <div v-for="combat in queueCombat" :key="combat.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4 mt-2"
           :class="{ 'border-red-600 !bg-red-900': combat.rawData.details.defender_name === page.props.auth.user.name }">
           <img :src="getTypeIcon(combat.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">
@@ -262,38 +301,81 @@ onMounted(() => {
             </p>
           </div>
         </div>
-        <div v-for="building in queueBuildings" :key="building.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(building.rawData.actionType)" alt="type icon" class="h-6 w-6" />
-          <div class="flex-1 space-y-1">
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-sm font-medium leading-none">
-                {{ building.rawData.details.building_name }}
-              </p>
-              <span class="text-sm">{{ displayQueueTime(building) }}</span>
+
+        <template v-for="n in buildingSlots">
+          <div class="bg-root/70 rounded-lg p-1 w-full min-h-16">
+            <div class="border border-white/10 border-dashed h-full rounded-md flex gap-2 justify-center items-center relative">
+              <template v-if="activeBuildingQueue[n-1]">
+                <!-- Aktiver Queue-Item -->
+                <div class="flex items-center space-x-4 rounded-md px-4 py-2 w-full relative">
+                  <img :src="getTypeIcon(activeBuildingQueue[n-1].rawData.actionType)" alt="type icon" class="h-6 w-6" />
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="text-sm font-medium leading-none">
+                        {{ activeBuildingQueue[n-1].rawData.details.building_name }}
+                      </p>
+                      <span class="text-sm">{{ displayQueueTime(activeBuildingQueue[n-1]) }}</span>
+                    </div>
+                    <p class="text-sm text-muted-foreground flex items-center gap-1">
+                      Upgrade lv. {{ activeBuildingQueue[n-1].rawData.details.current_level }} 
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M16.15 13H5q-.425 0-.712-.288T4 12t.288-.712T5 11h11.15L13.3 8.15q-.3-.3-.288-.7t.288-.7q.3-.3.713-.312t.712.287L19.3 11.3q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.575 4.575q-.3.3-.712.288t-.713-.313q-.275-.3-.288-.7t.288-.7z"/>
+                      </svg>
+                      lv. {{ activeBuildingQueue[n-1].rawData.details.next_level }}
+                    </p>
+                  </div>
+                  <!-- Pending-Badge -->
+                  <template v-if="pendingBuildingQueue.length > 0">
+                    <span class="absolute bottom-1 right-2 bg-primary/50 text-light rounded-full px-2 py-1 text-xs font-medium">
+                      +{{ pendingBuildingQueue.length }}
+                    </span>
+                  </template>
+                </div>
+              </template>
+              <template v-else>
+                <!-- Freier Slot -->
+                <img src="/images/buildings.png" class="opacity-40" width="28" height="28" alt="">
+                <p class="text-lg text-gray-500 font-semibold">Slot {{ n }}</p>
+              </template>
             </div>
-            <p class="text-sm text-muted-foreground flex items-center gap-1">
-              Upgrade lv. {{ building.rawData.details.current_level }} 
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M16.15 13H5q-.425 0-.712-.288T4 12t.288-.712T5 11h11.15L13.3 8.15q-.3-.3-.288-.7t.288-.7q.3-.3.713-.312t.712.287L19.3 11.3q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.575 4.575q-.3.3-.712.288t-.713-.313q-.275-.3-.288-.7t.288-.7z"/>
-              </svg>
-              lv. {{ building.rawData.details.next_level }}
-            </p>
           </div>
-        </div>
-        <div v-for="spacecraft in queueSpacecrafts" :key="spacecraft.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-          <img :src="getTypeIcon(spacecraft.rawData.actionType)" alt="type icon" class="h-6 w-6" />
-          <div class="flex-1 space-y-1">
-            <div class="flex items-center justify-between gap-2">
-              <p class="text-sm font-medium leading-none">
-                {{ spacecraft.rawData.details.spacecraft_name }}
-              </p>
-              <span class="text-sm">{{ displayQueueTime(spacecraft) }}</span>
+        </template>
+
+        <template v-for="n in productionSlots">
+          <div class="bg-root/70 rounded-lg p-1 w-full min-h-16">
+            <div class="border border-white/10 border-dashed h-full rounded-md flex gap-2 justify-center items-center relative">
+              <template v-if="activeProductionQueue[n-1]">
+                <!-- Aktiver Queue-Item -->
+                <div class="flex items-center space-x-4 rounded-md px-4 py-2 w-full relative">
+                  <img :src="getTypeIcon(activeProductionQueue[n-1].rawData.actionType)" alt="type icon" class="h-6 w-6" />
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="text-sm font-medium leading-none">
+                        {{ activeProductionQueue[n-1].rawData.details.spacecraft_name }}
+                      </p>
+                      <span class="text-sm">{{ displayQueueTime(activeProductionQueue[n-1]) }}</span>
+                    </div>
+                    <p class="text-sm text-muted-foreground flex items-center gap-1">
+                      Producing {{ activeProductionQueue[n-1].rawData.details.quantity }} Units
+                    </p>
+                  </div>
+                  <!-- Pending-Badge für Production -->
+                  <template v-if="pendingProductionQueue.length > 0">
+                    <span class="absolute bottom-1 right-2 bg-primary/50 text-light rounded-full px-2 py-1 text-xs font-medium">
+                      +{{ pendingProductionQueue.length }}
+                    </span>
+                  </template>
+                </div>
+              </template>
+              <template v-else>
+                <!-- Freier Slot -->
+                <img src="/images/space-craft.png" class="opacity-40" width="28" height="28" alt="">
+                <p class="text-lg text-gray-500 font-semibold">Slot {{ n }}</p>
+              </template>
             </div>
-            <p class="text-sm text-muted-foreground">
-              Producing {{ spacecraft.rawData.details.quantity }} Units
-            </p>
           </div>
-        </div>
+        </template>
+          
         <div v-for="mining in queueMining" :key="mining.id" class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
           <img :src="getTypeIcon(mining.rawData.actionType)" alt="type icon" class="h-6 w-6" />
           <div class="flex-1 space-y-1">

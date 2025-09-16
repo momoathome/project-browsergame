@@ -39,11 +39,10 @@ class MarketController extends Controller
         }
 
         $validated = $request->validate([
-            'cost' => 'required|integer|min:1',
             'stock' => 'required|integer|min:1',
         ]);
 
-        $this->marketService->updateResourceAmount($id, $validated['stock'], $validated['cost']);
+        $this->marketService->updateResourceAmount($id, $validated['stock']);
     }
 
     public function trade(Request $request)

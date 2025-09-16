@@ -24,7 +24,6 @@ export function useSpacecraftStore() {
 		// Hole aktuelle Spacecrafts vom Backend (API muss existieren)
 		const { data, error } = await api.spacecrafts.getSpacecrafts()
 		if (!error) {
-			console.log('Spacecrafts refreshed', data);
 			if (Array.isArray(data)) {
 				spacecrafts!.value = data
 			} else if (data && Array.isArray(data.spacecrafts)) {

@@ -14,7 +14,6 @@ const props = defineProps<{
 const editingResource = ref<number | null>(null);
 const resourceForms = ref(props.market.map(resource => useForm({
     stock: resource.stock,
-    cost: resource.cost
 })));
 
 const toggleEditResource = (index: number | null) => {
@@ -65,10 +64,6 @@ function resetMarketData() {
                 <div class="flex flex-col h-full">
                     <div class="flex flex-col gap-1 px-3 py-2 h-full bg-primary/25">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm text-secondary">Price:</span>
-                            <span class="font-medium text-sm">{{ resourceForms[index] ? numberFormat(resourceForms[index].cost) : numberFormat(resource.cost) }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
                             <span class="text-sm text-secondary">Stock:</span>
                             <span class="">{{ resourceForms[index] ? numberFormat(resourceForms[index].stock) : numberFormat(resource.stock) }}</span>
                         </div>
@@ -76,7 +71,6 @@ function resetMarketData() {
                     <div class="flex flex-col gap-2 px-3 py-2 mt-1">
                         <template v-if="editingResource === index && resourceForms[index]">
                             <div class="flex justify-between items-center gap-1">
-                                <input v-model="resourceForms[index].cost" type="number" min="0" class="w-20 px-1 py-1 border rounded-md bg-base-dark text-light" />
                                 <input v-model="resourceForms[index].stock" type="number" min="0" class="w-20 px-1 py-1 border rounded-md bg-base-dark text-light" />
                             </div>
                             <div class="flex gap-2">

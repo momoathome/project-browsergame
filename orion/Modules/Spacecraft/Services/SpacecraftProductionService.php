@@ -8,18 +8,21 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
 use Illuminate\Support\Facades\Log;
+use Orion\Modules\Building\Models\Building;
+use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\Spacecraft\Models\Spacecraft;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Resource\Services\ResourceService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Influence\Services\InfluenceService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
 use Orion\Modules\User\Exceptions\InsufficientResourceException;
 use Orion\Modules\Spacecraft\Exceptions\InsufficientCrewCapacityException;
-use Orion\Modules\Influence\Services\InfluenceService;
 
 
 class SpacecraftProductionService
@@ -202,9 +205,41 @@ class SpacecraftProductionService
 
     private function addSpacecraftUpgradeToQueue(int $userId, Spacecraft $spacecraft, int $quantity, int $targetQuantity): void
     {
+        $shipyardBuilding = Building::where('user_id', $userId)
+        ->whereHas('details', function ($query) {
+            $query->where('name', BuildingType::SHIPYARD->value);
+        })
+        ->first();
+
+        $productionSlots = 1;
+        if ($shipyardBuilding) {
+            $extra = app(BuildingEffectService::class)->getEffects('Shipyard', $shipyardBuilding->level);
+            $productionSlots = $extra['production_slots'] ?? 1;
+        }
+
+        $inProgressProduction = $this->queueService->getInProgressQueuesFromUserByType(
+            $userId,
+            QueueActionType::ACTION_TYPE_PRODUCE
+        )->count();
+
+        // Status bestimmen
+        $status = $inProgressProduction < $productionSlots
+            ? QueueStatusType::STATUS_IN_PROGRESS
+            : QueueStatusType::STATUS_PENDING;
+
+        Log::info("Adding spacecraft production to queue", [
+            'user_id' => $userId,
+            'spacecraft_id' => $spacecraft->id,
+            'quantity' => $quantity,
+            'target_quantity' => $targetQuantity,
+            'production_slots' => $productionSlots,
+            'in_progress_production' => $inProgressProduction,
+            'status' => $status
+        ]);
+    
         $shipyard_production_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::PRODUCTION_SPEED);
         $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
-    
+
         $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
         $effective_build_time = floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed);
     
@@ -219,7 +254,8 @@ class SpacecraftProductionService
                 'next_quantity' => $targetQuantity,
                 'quantity' => $quantity,
                 'duration' => $effective_build_time
-            ]
+            ],
+            $status
         );
     }
 

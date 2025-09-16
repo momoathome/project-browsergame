@@ -1,9 +1,9 @@
 <?php
 
 $build_time_multiplier = 1.25;
-$additional_resource_base_value = 15;
+$additional_resource_base_value = 10;
 $additional_resources_multiplier = 1;
-$additional_resource_referenz = 1000;
+$additional_resource_referenz = 50;
 
 return [
     'build_time_multiplier' => $build_time_multiplier,
@@ -19,7 +19,7 @@ return [
         'Laboratory' => 1.275,
         'Warehouse' => 1.275,
         'Scanner' => 1.25,
-        'Shield' => 1.30,
+        'Guardian' => 1.30,
         // Weitere Gebäude...
     ],
 
@@ -101,7 +101,7 @@ return [
             'level_25' => ['Dilithium'],
             'level_30' => ['Deuterium'],
         ],
-        'Shield' => [
+        'Guardian' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
             'level_5' => ['Cobalt'],
             'level_8' => ['Iridium'],
@@ -117,12 +117,12 @@ return [
 
     'effect_configs' => [
         'Core' => [
-            'type' => 'multiplicative',
+            'type' => 'additive',
             'base_value' => 1.0,
             'increment' => 0.05,
         ],
         'Shipyard' => [
-            'type' => 'multiplicative',
+            'type' => 'additive',
             'base_value' => 1.0,
             'increment' => 0.05,
         ],
@@ -146,8 +146,8 @@ return [
             'base_value' => 4000,
             'increment' => 2000,
         ],
-        'Shield' => [
-            'type' => 'multiplicative',
+        'Guardian' => [
+            'type' => 'additive',
             'base_value' => 1.0,
             'increment' => 0.03,
         ],
@@ -160,6 +160,6 @@ return [
         'Warehouse' => ['storage'],
         'Laboratory' => ['research_points'],
         'Scanner' => ['scan_range'],
-        'Shield' => ['base_defense'],
+        'Guardian' => ['base_defense'],
     ],
 ];

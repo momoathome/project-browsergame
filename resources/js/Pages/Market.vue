@@ -30,7 +30,6 @@ const formattedResources = computed(() => props.market.map(m => ({
   description: m.resource.description ?? '',
   image: m.resource.image,
   stock: m.stock,
-  cost: m.cost,
   category: m.category // Add category property
 })));
 const userFormattedResources = computed(() => {

@@ -87,7 +87,7 @@ return [
             ],
         ],
         [
-            'name' => 'Shield',
+            'name' => 'Guardian',
             'details_id' => 7,
             'effect_value' => 1,
             'build_time' => 160,

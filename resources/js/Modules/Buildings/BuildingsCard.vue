@@ -29,27 +29,34 @@ const userAttributes = computed(() => usePage().props.userAttributes);
 const coreBuilding = computed(() => userBuildings.find(b => b.name === 'Core'));
 
 const currentEffect = computed(() => {
-  const effects = props.building.effect?.current;
-  if (!effects || effects.length === 0) return null;
-  return effects[0].effect;
+  return props.building.effect?.current ?? null;
 });
 
 const nextLevelEffect = computed(() => {
-  const effects = props.building.effect?.next_level;
-  if (!effects || effects.length === 0) return null;
-  return effects[0].effect;
+  return props.building.effect?.next_level ?? null;
+});
+
+const effectKey = computed(() => {
+  // Hole den ersten Key aus current (z.B. "production_speed")
+  return currentEffect.value ? Object.keys(currentEffect.value)[0] : '';
 });
 
 const formattedEffectText = computed(() => {
-  return currentEffect.value ? currentEffect.value.text : '';
+  // Ersetze "_" durch Leerzeichen und mache den ersten Buchstaben groß
+  if (!effectKey.value) return '';
+  return effectKey.value.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
 });
 
 const formattedEffectValue = computed(() => {
-  return currentEffect.value ? currentEffect.value.value : '';
+  return currentEffect.value && effectKey.value && Number.isFinite(currentEffect.value[effectKey.value])
+    ? numberFormat(currentEffect.value[effectKey.value])
+    : currentEffect.value[effectKey.value];
 });
 
 const formattedNextLevelValue = computed(() => {
-  return nextLevelEffect.value ? nextLevelEffect.value.value : '';
+  return nextLevelEffect.value && effectKey.value && Number.isFinite(currentEffect.value[effectKey.value])
+    ? numberFormat(nextLevelEffect.value[effectKey.value])
+    : nextLevelEffect.value[effectKey.value];
 });
 
 const insufficientResources = computed(() => {

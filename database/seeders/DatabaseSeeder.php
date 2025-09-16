@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Orion\Modules\Building\Models\BuildingLevel;
 
 class DatabaseSeeder extends Seeder
 {
@@ -19,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UserAttributeSeeder::class);
         $this->call(UserResourceSeeder::class);
         $this->call(BuildingSeeder::class);
+        $this->call(BuildingLevelSeeder::class);
         $this->call(SpacecraftSeeder::class);
         $this->call(AsteroidSeeder::class);
         $this->call(StationSeeder::class);

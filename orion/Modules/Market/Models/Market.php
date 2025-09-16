@@ -12,7 +12,7 @@ class Market extends Model
 
     protected $fillable = [
         'resource_id',
-        'cost',
+        'category',
         'stock'
     ];
 

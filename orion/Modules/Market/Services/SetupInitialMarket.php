@@ -15,7 +15,7 @@ class SetupInitialMarket
         foreach ($marketsConfig as $marketConfig) {
             Market::create([
                 'resource_id' => $resources[$marketConfig['resource_name']],
-                'cost' => $marketConfig['cost'],
+                'category' => $marketConfig['category'],
                 'stock' => $marketConfig['stock'],
             ]);
         }

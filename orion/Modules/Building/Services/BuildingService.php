@@ -71,6 +71,9 @@ class BuildingService
         foreach ($buildings as $building) {
             $queuedUpgrades = $this->queueService->getQueuedUpgrades($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
             $nextUpgradeLevel = $building->level + $queuedUpgrades + 1;
+
+            $buildTime = $this->buildingProgressionService->calculateBuildTime($userId, $building, $nextUpgradeLevel);
+
             // Hole die Ressourcen für das nächste Level
             $nextLevelResources = $this->buildingProgressionService->calculateUpgradeCost($building, $nextUpgradeLevel);
             $allResources = $this->resourceService->getAllResources()->keyBy('id');
@@ -82,7 +85,7 @@ class BuildingService
                 'description' => $building->details->description,
                 'image' => $building->details->image,
                 'level' => $building->level,
-                'build_time' => $building->build_time,
+                'build_time' => $buildTime,
                 'is_upgrading' => $building->is_upgrading,
                 'resources' => []
             ];
@@ -90,6 +93,7 @@ class BuildingService
             // Füge Endzeit hinzu, wenn upgrading
             if ($building->is_upgrading) {
                 $formattedBuilding['end_time'] = $building->end_time;
+                $formattedBuilding['old_build_time'] = $this->buildingProgressionService->calculateBuildTime($userId, $building, $building->level + 1);
             }
 
             // Ressourcen formatieren

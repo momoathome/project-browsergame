@@ -16,6 +16,10 @@ const props = defineProps<{
   building: Building
 }>();
 
+const emit = defineEmits<{
+  (e: 'upgrade-building'): void
+}>();
+
 const isSubmitting = ref(false)
 const showCancelModal = ref(false);
 const { queueData, refreshQueue } = useQueueStore();
@@ -115,37 +119,23 @@ const isCoreUpgradeBlocked = computed(() => {
   return props.building.name !== 'Core' && nextUpgradeLevel.value > coreBuilding.value.level;
 });
 
-const getAttribute = (name: string) => {
-  const attr = userAttributes.value.find((a: any) => a.attribute_name === name);
-  return attr ? Number(attr.attribute_value) : 0;
-};
-
-const buildingProduceSpeed = Number(usePage().props.buildingProduceSpeed) || 1;
-const actualBuildTime = computed(() => {
-  const speed = getAttribute('upgrade_speed') || 1;
-  const trueBuildTime = Math.floor(props.building.build_time / speed / buildingProduceSpeed);
-  return trueBuildTime;
-});
-
 function upgradeBuilding() {
   if (isSubmitting.value && isCoreUpgradeBlocked.value) return;
   isSubmitting.value = true;
+
   router.post(
     route('buildings.update', props.building.id),
     {},
     {
       preserveState: true,
-      onFinish: () => { isSubmitting.value = false, refreshQueue(); },
+      onFinish: () => { 
+        isSubmitting.value = false, 
+        emit('upgrade-building');
+        refreshQueue();
+      },
       onError: () => { isSubmitting.value = false; }
     }
   );
-}
-
-function handleUpgradeComplete() {
-  setTimeout(() => {
-    router.reload({ only: ['buildings', 'userAttributes'] });
-    refreshQueue();
-  }, 500);
 }
 
 function handleCancelUpgrade() {
@@ -157,8 +147,9 @@ function handleCancelUpgrade() {
     onFinish: () => {
       isSubmitting.value = false;
       showCancelModal.value = false;
+      emit('upgrade-building');
       refreshQueue();
-      router.reload({ only: ['buildings', 'userAttributes'] });
+      router.reload({ only: ['userAttributes'] });
     },
     onError: () => { isSubmitting.value = false; }
   });
@@ -213,8 +204,11 @@ function handleCancelUpgrade() {
       </div>
 
       <div class="flex border-t border-primary/50">
-        <AppCardTimer :buildTime="actualBuildTime" :endTime="upgradeEndTime" :isInProgress="isUpgrading"
-          @upgrade-complete="handleUpgradeComplete" @cancel-upgrade="showCancelModal = true"
+        <AppCardTimer 
+          :buildTime="isUpgrading ? building.old_build_time : building.build_time" 
+          :endTime="upgradeEndTime" 
+          :isInProgress="isUpgrading"
+          @cancel-upgrade="showCancelModal = true"
           :description="`Up to lv. ${building.level + 1}`" />
         <button
           class="px-4 py-2 w-full rounded-br-xl border-t border-primary/40 bg-primary/40 text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"

@@ -109,6 +109,11 @@ readonly class SpacecraftService
         $formattedSpacecrafts = [];
 
         foreach ($spacecrafts as $spacecraft) {
+            // instantiate SpacecraftProductionService here
+            $spacecraftProductionService = app(SpacecraftProductionService::class);
+
+            $buildTime = $spacecraftProductionService->calculateSpacecraftBuildTime($userId, $spacecraft, 1);
+
             // Basisinformationen
             $formattedSpacecraft = [
                 'id' => $spacecraft->id,
@@ -124,7 +129,7 @@ readonly class SpacecraftService
                 'cargo' => $spacecraft->cargo,
                 'speed' => $spacecraft->speed,
                 'operation_speed' => $spacecraft->operation_speed,
-                'build_time' => $spacecraft->build_time,
+                'build_time' => $buildTime,
                 'crew_limit' => $spacecraft->crew_limit,
                 'unlocked' => $spacecraft->unlocked,
                 'research_cost' => $spacecraft->research_cost,

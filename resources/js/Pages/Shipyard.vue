@@ -2,12 +2,12 @@
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 
-const { spacecrafts } = useSpacecraftStore();
+const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 </script>
 
 <template>
   <div class="grid gap-4 lg:gap-x-8">
-    <SpacecraftsCard v-for="spacecraft in spacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" />
+    <SpacecraftsCard v-for="spacecraft in spacecrafts" :key="spacecraft.id" :spacecraft="spacecraft" @production-started="refreshSpacecrafts" />
   </div>
 </template>
 

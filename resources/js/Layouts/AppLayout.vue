@@ -20,7 +20,7 @@ declare global {
 }
 
 const page = usePage()
-const userId = page.props.auth.user.id
+const userId = page.props.auth?.user?.id ?? null;
 const mainRef = ref<HTMLElement | null>(null)
 const showSideOverview = ref(true)
 let observer: MutationObserver | null = null
@@ -118,7 +118,7 @@ onUnmounted(() => {
   grid-area: appheader;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 50;
 }
 
 .sideoverview {
@@ -150,7 +150,7 @@ onUnmounted(() => {
 
 .fancy-scroll::-webkit-scrollbar { width: 6px; }
 .fancy-scroll::-webkit-scrollbar-thumb {
-  background: #67e8f930;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
 </style>

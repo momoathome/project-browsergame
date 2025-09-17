@@ -2,12 +2,12 @@
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 
-const { buildings } = useBuildingStore();
+const { buildings, refreshBuildings } = useBuildingStore();
 </script>
 
 <template>
   <div class="grid gap-4 lg:gap-8">
-    <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" />
+    <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" @upgrade-building="refreshBuildings" />
   </div>
 </template>
 

@@ -11,12 +11,14 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 const appName = import.meta.env.VITE_APP_NAME || 'Orions Frontier';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => `${appName}`,
     resolve: name => {
         const pages = import.meta.glob('./Pages/**/*.vue');
         return resolvePageComponent(`./Pages/${name}.vue`, pages).then(page => {
             // Setze das Default Layout, falls nicht explizit gesetzt
-            page.default.layout = page.default.layout || AppLayout;
+            if (typeof page.default.layout === 'undefined') {
+                page.default.layout = AppLayout;
+            }
             return page;
         });
     },

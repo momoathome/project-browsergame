@@ -15,6 +15,10 @@ const props = defineProps<{
   spacecraft: Spacecraft
 }>();
 
+const emit = defineEmits<{
+  'production-started': []
+}>();
+
 // --- State & Helpers ---
 const isSubmitting = ref(false);
 const showCancelModal = ref(false);
@@ -34,15 +38,6 @@ const getAttribute = (name: string) => {
   const attr = userAttributes.value.find((a: any) => a.attribute_name === name);
   return attr ? Number(attr.attribute_value) : 0;
 };
-
-const actualBuildTime = computed(() => {
-  const speed = getAttribute('production_speed') || 1;
-  const trueBuildTime = Math.floor(props.spacecraft.build_time / speed);
-  if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
-    return trueBuildTime * props.spacecraft.currently_producing;
-  }
-  return trueBuildTime * form.amount || trueBuildTime;
-});
 
 const activeProduction = computed(() => {
   if (props.spacecraft.is_producing && props.spacecraft.currently_producing) {
@@ -117,22 +112,6 @@ const crewLimitReachedNext = computed(() => {
   return crewStatus.value.available < crewStatus.value.required * (form.amount + 1);
 });
 
-// --- Actions ---
-function produceSpacecraft() {
-  if (form.amount <= 0 || isSubmitting.value) return;
-  isSubmitting.value = true;
-  form.post(
-    route('shipyard.update', props.spacecraft.id),
-    {
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => form.reset(),
-      onFinish: () => { isSubmitting.value = false, refreshQueue(); },
-      onError: () => { isSubmitting.value = false; }
-    }
-  );
-}
-
 function goToMarketWithMissingResources() {
   const missing = props.spacecraft.resources
     .map(resource => {
@@ -169,6 +148,26 @@ function unlockSpacecraft() {
     preserveState: true,
     preserveScroll: true
   });
+}
+
+// --- Actions ---
+function produceSpacecraft() {
+  if (form.amount <= 0 || isSubmitting.value) return;
+  isSubmitting.value = true;
+  form.post(
+    route('shipyard.update', props.spacecraft.id),
+    {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => form.reset(),
+      onFinish: () => { 
+        isSubmitting.value = false,
+        emit('production-started'),
+        refreshQueue(); 
+      },
+      onError: () => { isSubmitting.value = false; }
+    }
+  );
 }
 
 function handleCancelProduction() {
@@ -338,7 +337,7 @@ function handleCancelProduction() {
             <div class="flex">
 
             <AppCardTimer 
-              :build-time="actualBuildTime"
+              :build-time="spacecraft.currently_producing ? spacecraft.build_time * (spacecraft.currently_producing || 1) : spacecraft.build_time * (form.amount || 1)"
               :end-time="productionEndTime"
               :isInProgress="isProducing"
               :description="`${activeProduction} Units`"

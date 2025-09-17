@@ -45,7 +45,6 @@ const queueSpacecrafts = computed(() => (sortedQueueItems.value ?? []).filter(it
 const queueMining = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'mining'));
 const queueCombat = computed(() => (sortedQueueItems.value ?? []).filter(item => item.rawData.actionType === 'combat'));
 
-
 const activeBuildingQueue = computed(() =>
   queueBuildings.value.filter(q => q.status === 'in_progress' || q.status === 'processing')
 );
@@ -93,19 +92,42 @@ const dockSlots = computed(() => {
   return hangar?.effect?.current?.dock_slots ?? 0;
 });
 
+const miningSlotsCollapsed = ref(true);
+function handleMiningCollapse() {
+  miningSlotsCollapsed.value = !miningSlotsCollapsed.value;
+}
+
 const fleetSummary = computed(() => ({
   totalCount: spacecrafts.value.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
   totalCombat: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
   totalCargo: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
   totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
-  totalInOrbit: spacecrafts.value.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0)
+  totalInOrbit: spacecrafts.value.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0),
 }));
+
+const totalInCombat = computed(() => {
+  return (processedQueueItems.value ?? [])
+    .filter(item => item.name === 'Combat' && item.rawData?.details?.attacker_formatted)
+    .reduce((sum, item) => {
+      const attackerUnits = item.rawData.details.attacker_formatted;
+      return sum + attackerUnits.reduce((acc, unit) => acc + (unit.count || 0), 0);
+    }, 0);
+});
+
+const totalMinersInOperation = computed(() => {
+  return (processedQueueItems.value ?? [])
+    .filter(item => item.name === 'Mining' && item.rawData?.details?.spacecrafts)
+    .reduce((sum, item) => {
+      const spacecrafts = item.rawData.details.spacecrafts;
+      // Summe aller Werte im spacecrafts-Objekt
+      return sum + Object.values(spacecrafts).reduce((acc, val) => acc + (val || 0), 0);
+    }, 0);
+});
 
 const displayQueueTime = (item) => {
   if (item.status === 'pending') return 'pending...'
   return item.formattedTime
 }
-
 </script>
 
 <template>
@@ -123,28 +145,25 @@ const displayQueueTime = (item) => {
             </div>
             <div class="flex items-center gap-2">
                 <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
-                <h2 class="font-semibold text-sm">Mining Operations • {{ totalMiningOperations }}</h2>
+                <h2 class="font-semibold text-sm">active Miner • {{ totalMinersInOperation }}</h2>
             </div>
             <div class="flex items-center gap-2">
                 <img src="/images/combat.png" alt="combat" class="h-5" />
-                <h2 class="font-semibold text-sm">in Combat • {{ totalCombatOperations }}</h2>
+                <h2 class="font-semibold text-sm">in Combat • {{ totalInCombat }}</h2>
             </div>
         </div>
 
         <div v-for="combat in queueCombat" :key="combat.id"
-            class="flex items-center space-x-4 rounded-md border border-white/5 p-4 mt-4"
+            class="flex items-center space-x-4 rounded-md bg-root border border-white/10 px-3 py-3 mb-2 transition"
             :class="{ 'border-red-600 !bg-red-900': combat.rawData.details.defender_name === page.props.auth.user.name }">
             <img :src="getTypeIcon(combat.rawData.actionType)" alt="type icon" class="h-6 w-6" />
-            <div class="flex-1 space-y-1">
+            <div class="flex-1">
+              <div class="flex items-center justify-between gap-2">
                 <p class="text-sm font-medium leading-none">
-                    Attack on
-                    <span>
-                        {{ combat.rawData.details.defender_name }}
-                    </span>
+                    Attack {{ combat.rawData.details.defender_name === page.props.auth.user.name ? 'on you' : 'on ' + combat.rawData.details.defender_name }}
                 </p>
-                <p class="text-sm text-muted-foreground">
-                    • {{ displayQueueTime(combat) }}
-                </p>
+                <span class="text-sm">{{ displayQueueTime(combat) }}</span>
+              </div>
             </div>
         </div>
 
@@ -228,21 +247,56 @@ const displayQueueTime = (item) => {
             </template>
         </div>
 
-        <div v-for="mining in queueMining" :key="mining.id"
-            class="flex items-center space-x-4 rounded-md border border-white/5 p-4">
-            <img :src="getTypeIcon(mining.rawData.actionType)" alt="type icon" class="h-6 w-6" />
-            <div class="flex-1 space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                    <p class="text-sm font-medium leading-none">
-                        Mining
-                    </p>
-                    <span class="text-sm">{{ displayQueueTime(mining) }}</span>
+        <div class="flex flex-col gap-2 mt-4 relative">
+          <div class="flex justify-between items-center gap-2 mb-1">
+            <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
+            <h2 class="font-semibold text-sm">Mining Operations</h2>
+            <span class="text-xs text-muted-foreground">
+              ({{ totalMiningOperations }}/{{ dockSlots }})
+            </span>
+            <button
+              @click.stop="handleMiningCollapse"
+              class="ml-auto rounded-full bg-white/10 hover:bg-primary/30 transition p-1 flex items-center"
+              style="opacity:0.7;"
+              aria-label="Mining ein-/ausklappen"
+            >
+              <svg :style="{ transform: miningSlotsCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }" width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <transition name="fade">
+            <div v-show="!miningSlotsCollapsed" class="flex flex-col gap-2">
+              <template v-for="n in dockSlots">
+                <div class="bg-root rounded-lg w-full min-h-[56px]">
+                  <div class="border border-white/10 border-dashed h-full rounded-md flex gap-2 justify-center items-center relative">
+                    <template v-if="activeDockQueue[n - 1]">
+                      <div class="flex items-center space-x-3 rounded-md px-3 w-full">
+                        <img :src="getTypeIcon(activeDockQueue[n - 1].rawData.actionType)" alt="type icon" class="h-6 w-6" />
+                        <div class="flex-1">
+                          <div class="flex items-center justify-between gap-2">
+                            <p class="text-sm font-medium leading-none">
+                              Mining
+                            </p>
+                            <span class="text-sm">{{ displayQueueTime(activeDockQueue[n - 1]) }}</span>
+                          </div>
+                          <p class="text-sm text-muted-foreground text-pretty">
+                            {{ activeDockQueue[n - 1].rawData.details.asteroid_name }}
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <img src="/images/asteroid.png" class="opacity-40" width="26" height="26" alt="">
+                      <p class="text-gray-500 font-semibold">Slot {{ n }}</p>
+                    </template>
+                  </div>
                 </div>
-                <p class="text-sm text-muted-foreground text-pretty">
-                    {{ mining.rawData.details.asteroid_name }}
-                </p>
+              </template>
             </div>
+          </transition>
         </div>
+
     </div>
 </template>
 
@@ -263,9 +317,15 @@ const displayQueueTime = (item) => {
   }
 }
 
-.fancy-scroll::-webkit-scrollbar { width: 6px; }
-.fancy-scroll::-webkit-scrollbar-thumb {
-  background: #67e8f930;
-  border-radius: 9999px;
+.fade {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.fade-enter-to,
+.fade-leave-from {
+  opacity: 1;
 }
 </style>

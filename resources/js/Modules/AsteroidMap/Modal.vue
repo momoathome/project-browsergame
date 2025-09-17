@@ -176,7 +176,7 @@ function fastExploreAsteroid() {
 
 function setMaxUnits() {
   const maxUnits = setMaxAvailableUnits();
-  Object.keys(form.spacecrafts).forEach(key => {
+  Object.keys(maxUnits).forEach(key => {
     form.spacecrafts[key] = maxUnits[key] || 0;
   });
 }

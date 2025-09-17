@@ -74,8 +74,6 @@ class BuildingEffectService
         $effects = [];
         $unlocks = [];
 
-        Log::info("Lade DB-Effekte für {$buildingKey} bis Level {$level}: Gefundene Level: " . $levels->count());
-
         foreach ($levels as $entry) {
             foreach ($entry->effects as $key => $value) {
                 if ($key === 'unlock') {

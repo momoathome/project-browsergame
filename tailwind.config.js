@@ -17,6 +17,9 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            screens: {
+                '3xl': '2160px',
+            },
             colors: {
                 primary: {
                     DEFAULT: '#325166',

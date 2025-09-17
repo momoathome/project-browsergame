@@ -1,8 +1,10 @@
-export interface BuildingEffectObject {
-  effect: {
-    text: string;
-    value: string;
-  };
+export type BuildingEffectLevel = {
+  [key: string]: string | number;
+};
+
+export interface BuildingEffect {
+  current: BuildingEffectLevel;
+  next_level: BuildingEffectLevel;
 }
 
 export interface Building {
@@ -12,10 +14,7 @@ export interface Building {
   image: string;
   level: number;
   build_time: number;
-  effect: {
-    current: BuildingEffectObject[];
-    next_level: BuildingEffectObject[];
-  };
+  effect: BuildingEffect | null;
   is_upgrading: boolean;
   end_time: string;
   resources: Array<{

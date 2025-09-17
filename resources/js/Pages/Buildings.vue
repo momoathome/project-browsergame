@@ -1,21 +1,14 @@
 <script lang="ts" setup>
-
-import AppLayout from '@/Layouts/AppLayout.vue';
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
-import type { Building} from '@/types/types';
+import { useBuildingStore } from '@/Composables/useBuildingStore';
 
-const props = defineProps<{
-  buildings: Building[]
-}>()
-
+const { buildings } = useBuildingStore();
 </script>
 
 <template>
-  <AppLayout title="buildings">
-    <div class="grid gap-4 lg:gap-8">
-      <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" />
-    </div>
-  </AppLayout>
+  <div class="grid gap-4 lg:gap-8">
+    <BuildingsCard v-for="building in buildings" :key="building.id" :building="building" />
+  </div>
 </template>
 
 <style scoped>
@@ -23,15 +16,5 @@ const props = defineProps<{
   --grid-min-col-size: 280px;
 
   grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
-}
-
-
-@media (min-width: 2600px) {
-  .grid {
-    grid-template-columns: repeat(6, 1fr);
-    max-width: 2600px; 
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 </style>

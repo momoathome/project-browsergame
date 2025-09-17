@@ -1,21 +1,18 @@
-<script setup>
+<script setup lang="ts">
 import ApiTokenManager from '@/Pages/API/Partials/ApiTokenManager.vue';
-import AppLayout from '@/Layouts/AppLayout.vue';
 
-defineProps({
-    tokens: Array,
-    availablePermissions: Array,
-    defaultPermissions: Array,
-});
+const props = defineProps<{
+    tokens: any[],
+    availablePermissions: any[],
+    defaultPermissions: any[],
+}>();
 </script>
 
 <template>
-    <AppLayout title="API Tokens">
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                API Tokens
-            </h2>
-        </template>
+    <div>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            API Tokens
+        </h2>
 
         <div>
             <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
@@ -26,5 +23,5 @@ defineProps({
                 />
             </div>
         </div>
-    </AppLayout>
+    </div>
 </template>

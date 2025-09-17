@@ -25,12 +25,12 @@ const sortedPlayers = computed(() => {
 
 <template>
   <div
-    class="fixed right-0 top-[104px] h-[calc(100vh-104px)] flex z-100 transition-transform duration-300"
-    :style="show ? 'transform: translateX(0)' : 'transform: translateX(calc(100% - 64px))'"
+    class="fixed right-0 2xl:top-[56px] 2xl:h-[calc(100vh-56px)] top-[96px] h-[calc(100vh-96px)] flex transition-transform duration-300"
+    :style="show ? 'transform: translateX(0)' : 'transform: translateX(100%)'"
   >
       <!-- Toggle Button (immer sichtbar, fährt mit dem Container) -->
     <button
-      class="h-16 w-16 px-3 mt-28 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(263,20%,8%)]"
+      class="h-16 w-16 px-3 absolute top-28 -left-16 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition"
       @click="emit('toggle')"
     >
         <img v-show="!show" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
@@ -41,7 +41,7 @@ const sortedPlayers = computed(() => {
 
     <!-- Sidebar -->
     <div
-      class="w-60 xl:w-72 bg-root text-light p-4 fancy-scroll overflow-y-auto"
+      class="sidebarInfluence bg-root text-light p-4 fancy-scroll overflow-y-auto"
     >
       <div class="flex items-center mb-6 gap-3">
         <img src="/images/attributes/influence.png" alt="Influence" class="h-8 w-8" />
@@ -82,8 +82,23 @@ const sortedPlayers = computed(() => {
   </div>
 </template>
 
-
 <style scoped>
+.sidebarInfluence {
+  width: 16vw;
+}
+
+@media (max-width: 1700px) {
+  .sidebarInfluence {
+    width: 18vw;
+  }
+}
+
+@media (min-width: 2160px) {
+  .sidebarInfluence {
+    width: 12vw;
+  }
+}
+
 .slide-enter-active,
 .slide-leave-active {
   transition: transform 0.3s ease;

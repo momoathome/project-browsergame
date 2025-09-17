@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import BattleSimulatorTable from '@/Modules/Simulator/BattleSimulatorTable.vue';
 import BattleSimulatorLosses from '@/Modules/Simulator/BattleSimulatorLosses.vue';
 import { numberFormat } from '@/Utils/format';
@@ -76,7 +75,6 @@ const isResultEmpty = computed(() => {
 </script>
 
 <template>
-  <AppLayout title="simulator">
     <div class="flex flex-col gap-12 text-light">
       <div>
         <div class="mb-4">
@@ -105,6 +103,4 @@ const isResultEmpty = computed(() => {
         <BattleSimulatorLosses :result="result" />
       </div>
     </div>
-
-  </AppLayout>
 </template>

@@ -29,6 +29,16 @@ class BuildingController extends Controller
         ]);
     }
 
+    public function getAllBuildings()
+    {
+        $user = $this->authManager->user();
+        $buildings = $this->buildingService->formatBuildingsForDisplay($user->id);
+
+        return response()->json([
+            'buildings' => $buildings,
+        ], 200);
+    }
+
     public function update(Building $building)
     {
         $user = $this->authManager->user();

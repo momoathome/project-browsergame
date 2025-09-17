@@ -1,14 +1,77 @@
 <script lang="ts" setup>
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import Banner from '@/Components/Banner.vue';
 import AppHeader from '@/Modules/App/AppHeader.vue';
 import AppSidebar from '@/Modules/App/AppSidebar.vue';
+import AppSideOverview from '@/Modules/App/AppSideOverview.vue';
+import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import { useBuildingStore } from '@/Composables/useBuildingStore';
+import { useQueue } from '@/Composables/useQueue'
 
 const props = defineProps<{
   title: string
 }>()
 
+declare global {
+    interface Window {
+        Echo: any
+    }
+}
 
+const page = usePage()
+const userId = page.props.auth.user.id
+const mainRef = ref<HTMLElement | null>(null)
+const showSideOverview = ref(true)
+let observer: MutationObserver | null = null
+
+const {
+  processedQueueItems,
+  isDefendCombatAction,
+  onTimerComplete,
+  refresh,
+  processQueueThrottled, // throttled API call
+  startProcessInterval,
+  stopProcessInterval
+} = useQueue(userId)
+
+onMounted(async () => {
+  // wenn Timer von einem Item endet → Composable triggert Refresh selbst
+  onTimerComplete(async (item) => {
+    //
+  })
+
+  await refresh()
+  await useSpacecraftStore().refreshSpacecrafts();
+  await useBuildingStore().refreshBuildings();
+
+  window.Echo.private(`user.combat.${userId}`)
+    .listen('.user.attacked', refresh)
+
+  // Falls schon aktive Items → sofort manuell anstoßen
+  if (processedQueueItems.value.some(i => i.processing && i.rawData.actionType !== 'mining')) {
+    await processQueueThrottled()
+  }
+
+  startProcessInterval()
+})
+
+function checkCanvas() {
+  showSideOverview.value = !(mainRef.value?.querySelector('canvas'))
+}
+
+onMounted(() => {
+  checkCanvas()
+  observer = new MutationObserver(checkCanvas)
+  if (mainRef.value) {
+    observer.observe(mainRef.value, { childList: true, subtree: true })
+  }
+})
+
+onUnmounted(() => {
+  stopProcessInterval()
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -24,9 +87,11 @@ const props = defineProps<{
       <AppSidebar class="sidebar" />
 
       <!-- Page Content -->
-      <main class="background main">
+      <main ref="mainRef" class="background main fancy-scroll">
         <slot />
       </main>
+
+      <AppSideOverview v-if="showSideOverview" class="sideoverview" />
 
     </div>
   </div>
@@ -43,8 +108,8 @@ const props = defineProps<{
   grid-template-columns: 70px 1fr;
   grid-template-rows: auto 1fr;
   grid-template-areas:
-    "appheader appheader"
-    "sidebar main";
+    "appheader appheader appheader"
+    "sidebar main sideoverview";
   height: 100vh;
   overflow: hidden;
 }
@@ -53,6 +118,14 @@ const props = defineProps<{
   grid-area: appheader;
   position: sticky;
   top: 0;
+  z-index: 10;
+}
+
+.sideoverview {
+  grid-area: sideoverview;
+  top: 0;
+  right: 0;
+  height: 100%;
   z-index: 10;
 }
 
@@ -68,11 +141,16 @@ const props = defineProps<{
   grid-area: main;
   overflow-y: auto;
   height: 100%;
-  padding: 1rem;
+  padding: 1.5rem;
 }
 
 .main:has(canvas) {
   padding: 0;
 }
 
+.fancy-scroll::-webkit-scrollbar { width: 6px; }
+.fancy-scroll::-webkit-scrollbar-thumb {
+  background: #67e8f930;
+  border-radius: 9999px;
+}
 </style>

@@ -16,7 +16,6 @@ class BuildingLevelSeeder extends Seeder
             ['Core', 3, ['building_slots' => 2]],
             ['Core', 5, ['building_slots' => 3]],
             ['Core', 10, ['building_slots' => 4]],
-            ['Core', 15, ['building_slots' => 5]],
 
             // 🛠 Shipyard
             ['Shipyard', 1, ['production_slots' => 1, 'unlock' => ['Mole']]],
@@ -31,7 +30,7 @@ class BuildingLevelSeeder extends Seeder
             ['Shipyard', 10, ['production_slots' => 5, 'unlock' => ['Ares']]],
             ['Shipyard', 12, ['unlock' => ['Nova']]],
             ['Shipyard', 15, ['production_slots' => 6, 'unlock' => ['Horus']]],
-            ['Shipyard', 20, ['production_slots' => 7, 'unlock' => ['Reaper']]],
+            ['Shipyard', 20, ['unlock' => ['Reaper']]],
 
             // 🛩 Hangar
             ['Hangar', 1, ['dock_slots' => 2]],

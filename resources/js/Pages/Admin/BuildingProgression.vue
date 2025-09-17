@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
 
 // Daten aus dem Backend empfangen
 const props = defineProps({
@@ -174,7 +173,6 @@ const formatTime = (timeInSeconds) => {
 </script>
 
 <template>
-    <AppLayout title="Building Progression">
         <Head title="Building Progression" />
 
         <div class="py-6">
@@ -267,7 +265,6 @@ const formatTime = (timeInSeconds) => {
                 </div>
             </div>
         </div>
-    </AppLayout>
 </template>
 
 <style scoped>

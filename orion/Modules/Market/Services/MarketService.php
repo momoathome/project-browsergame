@@ -5,6 +5,7 @@ namespace Orion\Modules\Market\Services;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Market\Models\Market;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
@@ -134,6 +135,9 @@ readonly class MarketService
         try {
             DB::transaction(function () use ($user, $giveRes, $giveQty, $receiveRes, $finalQty) {
                 $userGiveRes = $this->userResourceService->getSpecificUserResource($user->id, $giveRes->resource_id);
+
+                Log::info("Trading {$giveQty} of {$giveRes->resource->name} is {$userGiveRes->amount} for {$finalQty} of {$receiveRes->resource->name}");
+
                 if (!$userGiveRes || $userGiveRes->amount < $giveQty) {
                     throw new InsufficientResourceException();
                 }

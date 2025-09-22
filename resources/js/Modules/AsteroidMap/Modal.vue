@@ -4,12 +4,15 @@ import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue'
 import AppInput from '@/Modules/Shared/AppInput.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { QueueActionType } from '@/types/actionTypes';
 import { numberFormat } from '@/Utils/format';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
+import { useBuildingStore } from '@/Composables/useBuildingStore';
+import { useQueue } from '@/Composables/useQueue'
 import type { Station, Spacecraft, Asteroid } from '@/types/types';
 
 type Role = 'Fighter' | 'Miner' | 'Transporter'
@@ -57,6 +60,20 @@ const userStation = usePage().props.stations.find(station =>
 );
 const { refreshQueue } = useQueueStore();
 const { refreshSpacecrafts } = useSpacecraftStore();
+const { buildings } = useBuildingStore();
+
+const { processedQueueItems } = useQueue(usePage().props.auth.user.id)
+
+const dockSlots = computed(() => {
+  const hangar = buildings.value.find(b => b.effect?.current?.dock_slots);
+  return hangar?.effect?.current?.dock_slots ?? 0;
+});
+const totalMiningOperations = computed(() => (processedQueueItems.value ?? []).reduce((acc, item) => {
+  if (item.rawData.actionType === 'mining') {
+    acc++;
+  }
+  return acc;
+}, 0));
 
 // Auswahl (Mengen pro Schiff)
 const form = useForm({
@@ -98,16 +115,17 @@ watch(actionType, (val) => {
 const filtered = computed(() => props.spacecrafts.filter(s => s.type === activeTab.value))
 
 const totals = computed(() => {
-  let attack = 0, cargo = 0, speedWeighted = 0, unitCount = 0
+  let attack = 0, defense = 0, cargo = 0, speedWeighted = 0, unitCount = 0
   for (const s of props.spacecrafts) {
     const qty = form.spacecrafts[s.name] || 0
     attack += s.attack * qty
+    defense += s.defense * qty
     cargo += s.cargo * qty
     speedWeighted += s.speed * qty
     unitCount += qty
   }
   const avgSpeed = unitCount ? Math.round(speedWeighted / unitCount) : 0
-  return { attack, cargo, avgSpeed }
+  return { attack, defense, cargo, avgSpeed }
 })
 
 function inc(name: string, max: number) {
@@ -176,7 +194,7 @@ function fastExploreAsteroid() {
 
 function setMaxUnits() {
   const maxUnits = setMaxAvailableUnits();
-  Object.keys(form.spacecrafts).forEach(key => {
+  Object.keys(maxUnits).forEach(key => {
     form.spacecrafts[key] = maxUnits[key] || 0;
   });
 }
@@ -366,43 +384,54 @@ function availableCount(s) {
                 <!-- Header -->
                 <div class="flex items-center justify-between py-4 border-b border-white/5 mb-4">
                   <div class="flex items-center gap-6">
-                    <div class="px-3 py-1 text-light">
-                      Attack: 
-                      <span class="text-cyan-300">
-                      {{ numberFormat(totals.attack) }}
-                    </span>
+                    <div class="flex relative group items-center gap-2">
+                      <img src="/images/combat.png" class="h-5" alt="combat" />
+                      <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.attack) }}</p>
+                      <AppTooltip :label="'combat'" position="bottom" class="!mt-1" />
                     </div>
-                    <div class="px-3 py-1 text-light">
-                      Cargo: 
-                      <span class="text-cyan-300">
-                      {{ numberFormat(totals.cargo) }}
-                    </span>
+                    <div class="flex relative group items-center gap-2">
+                      <img src="/images/defense.png" class="h-5" alt="defense" />
+                      <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.defense) }}</p>
+                      <AppTooltip :label="'defense'" position="bottom" class="!mt-1" />
                     </div>
-                    <div class="px-3 py-1 text-light">
-                      Travel Time: <span class="text-cyan-300">{{ miningDuration }}</span>
+                    <div class="flex relative group items-center gap-2">
+                      <img src="/images/cargo.png" class="h-5" alt="cargo" />
+                      <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.cargo) }}</p>
+                      <AppTooltip :label="'cargo'" position="bottom" class="!mt-1" />
+                    </div>
+                    <div class="flex relative group items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 text-light" width="20" height="20" viewBox="0 0 24 24">
+                        <g fill="none" fill-rule="evenodd">
+                          <path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"/><path fill="currentColor" d="M10.975 3.002a1 1 0 0 1-.754 1.196a8 8 0 0 0-.583.156a1 1 0 0 1-.59-1.911q.36-.112.73-.195a1 1 0 0 1 1.197.754m2.05 0a1 1 0 0 1 1.196-.754c4.454 1.01 7.78 4.992 7.78 9.752c0 5.523-4.478 10-10 10c-4.761 0-8.743-3.325-9.753-7.779a1 1 0 0 1 1.95-.442a8 8 0 1 0 9.58-9.58a1 1 0 0 1-.753-1.197M6.614 4.72a1 1 0 0 1-.053 1.414q-.222.205-.427.426A1 1 0 0 1 4.668 5.2q.255-.276.532-.533a1 1 0 0 1 1.414.053M12 6a1 1 0 0 1 1 1v4.586l2.707 2.707a1 1 0 0 1-1.414 1.414l-3-3A1 1 0 0 1 11 12V7a1 1 0 0 1 1-1M3.693 8.388a1 1 0 0 1 .661 1.25a8 8 0 0 0-.156.583a1 1 0 0 1-1.95-.442q.084-.37.195-.73a1 1 0 0 1 1.25-.661"/></g>
+                      </svg>
+                      <p class="font-medium text-sm text-slate-400">{{ miningDuration }}</p>
+                      <AppTooltip :label="'mining duration'" position="bottom" class="!mt-1" />
                     </div>
                   </div>
 
-                  <button @click="startMission" @shift.click="fastExploreAsteroid"
-                    class="px-4 py-2 bg-cyan-700 text-light rounded-xl font-semibold transition border border-cyan-700/30 hover:bg-cyan-600 hover:text-cyan-100 text-base shadow disabled:cursor-not-allowed disabled:opacity-40">
-                    <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
-                    <span v-else>Start Attack</span>
-                  </button>
+                  <div class="flex gap-2">
+                    <div class="flex items-center gap-2">
+                    <!-- img -->
+                     <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
+                      <span class="text-slate-400 text-sm font-medium">
+                      {{ totalMiningOperations }} / {{ dockSlots }}
+                      </span>
+                    </div>
+                    <button @click="startMission" @shift.click="fastExploreAsteroid"
+                      :disabled="isSubmitting || (Number(dockSlots) > 0 && totalMiningOperations >= Number(dockSlots))"
+                      class="px-4 py-2 bg-cyan-700 text-light rounded-xl font-semibold transition border border-cyan-700/30 hover:bg-cyan-600 hover:text-cyan-100 text-base shadow disabled:cursor-not-allowed disabled:opacity-40">
+                      <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
+                      <span v-else>Start Attack</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Tabs -->
                 <div class="relative flex justify-between pb-4 border-b border-white/10 mb-4">
                   <div class="flex gap-1">
-                    <button v-for="t in tabs" :key="t" class="relative px-5 py-2 font-semibold text-sm transition
-                        rounded-t-xl
-                        flex items-center gap-2
-                        focus:outline-none
-                        hover:bg-cyan-400/10
-                        text-light
-                        " :class="{
-                          'bg-cyan-500/10 shadow text-cyan-200': t === activeTab,
-                          '': t !== activeTab
-                        }" @click="activeTab = t">
+                    <button v-for="t in tabs" :key="t" class="relative px-5 py-2 font-semibold text-sm transition rounded-t-xl flex items-center gap-2 focus:outline-none hover:bg-cyan-400/10 text-light" 
+                      :class="{'bg-cyan-500/10 shadow text-cyan-200': t === activeTab, '': t !== activeTab }" 
+                      @click="activeTab = t">
                       <img :src="`/images/spacecraftTypes/${t}.png`" alt="" width="20" height="20" />
                       {{ t }}
                       <span v-if="t === activeTab"
@@ -439,7 +468,7 @@ function availableCount(s) {
                 </div>
 
                 <!-- Grid -->
-                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-2 fancy-scroll">
+                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto overflow-x-hidden pr-2 fancy-scroll">
                   <div v-for="s in filtered" :key="s.id"
                     class="rounded-xl border border-white/5 bg-slate-900/5 shadow-lg">
                     <div class="flex justify-between items-center px-3 py-1 border-b-slate-950 border-b">
@@ -452,18 +481,21 @@ function availableCount(s) {
                     <div class="spacecraftImage relative bg-[#101d2c] flex items-center justify-center">
                       <img :src="s.image" class="h-[90px] w-full" />
                     </div>
-                    <div class="flex justify-between px-3 pt-2">
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Attack</span>
+                    <div class="flex justify-between px-2 pt-3">
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/combat.png" class="h-5" alt="combat" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.attack) }}</p>
+                        <AppTooltip :label="'combat'" position="bottom" class="!mt-1" />
                       </div>
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Defense</span>
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/defense.png" class="h-5" alt="defense" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.defense) }}</p>
+                        <AppTooltip :label="'defense'" position="bottom" class="!mt-1" />
                       </div>
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Cargo</span>
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/cargo.png" class="h-5" alt="cargo" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.cargo) }}</p>
+                        <AppTooltip :label="'cargo capacity'" position="bottom" class="!mt-1" />
                       </div>
                     </div>
 

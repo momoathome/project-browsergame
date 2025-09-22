@@ -1,8 +1,10 @@
-export interface BuildingEffectObject {
-  effect: {
-    text: string;
-    value: string;
-  };
+export type BuildingEffectLevel = {
+  [key: string]: string | number;
+};
+
+export interface BuildingEffect {
+  current: BuildingEffectLevel;
+  next_level: BuildingEffectLevel;
 }
 
 export interface Building {
@@ -12,10 +14,8 @@ export interface Building {
   image: string;
   level: number;
   build_time: number;
-  effect: {
-    current: BuildingEffectObject[];
-    next_level: BuildingEffectObject[];
-  };
+  old_build_time: number;
+  effect: BuildingEffect | null;
   is_upgrading: boolean;
   end_time: string;
   resources: Array<{
@@ -34,7 +34,6 @@ export interface Spacecraft {
   type: string;
   attack: number;
   defense: number;
-  combat: number;
   cargo: number;
   speed: number;
   operation_speed: number;
@@ -130,7 +129,6 @@ export interface FormattedSpacecraft {
   type: string;
   attack: number;
   defense: number;
-  combat: number;
   cargo: number;
   speed: number;
   count: number;
@@ -253,6 +251,7 @@ export interface ProcessedQueueItem {
   completed: boolean;
   processing: boolean;
   status: string;
+  _callbackFired?: boolean;
 }
 
 export interface SavedQueueItemState {

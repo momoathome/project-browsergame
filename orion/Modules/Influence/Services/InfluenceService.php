@@ -30,7 +30,7 @@ class InfluenceService
 
         if ($result->winner === 'attacker') {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            $winBonus = ($totalCombatPower / 1000) + ($defenderLossCombatPower * 0.1);
+            $winBonus = ($totalCombatPower / 100) + ($defenderLossCombatPower * 0.1);
 
             $attackerDelta += $defenderLossCombatPower / 50;
             $attackerDelta -= $attackerLossCombatPower / 75;
@@ -39,7 +39,7 @@ class InfluenceService
             $defenderDelta -= $defenderLossCombatPower / 100;
         } else {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            $defenseBonus = ($totalCombatPower / 900) + ($attackerLossCombatPower * 0.1);
+            $defenseBonus = ($totalCombatPower / 90) + ($attackerLossCombatPower * 0.1);
 
             $defenderDelta += $defenseBonus;
             $attackerDelta -= $attackerLossCombatPower / 75;
@@ -70,7 +70,7 @@ class InfluenceService
     public function handleBuildingUpgradeCompleted(int $userId, array $upgradeCosts): void
     {
         $totalCost = collect($upgradeCosts)->sum('amount');
-        $delta = $totalCost / 100; // Beispiel: 1 Punkt pro 500 Ressourcen
+        $delta = $totalCost / 20; // Beispiel: 1 Punkt pro 20 Ressourcen
 
         $this->applyInfluenceChange($userId, $delta, 'building_upgrade', [
             'costs' => $upgradeCosts
@@ -83,7 +83,7 @@ class InfluenceService
     public function handleResearchUnlock(int $userId, int $researchCost): void
     {
         $baseFactor = 10; // Basis-Influence pro Research Point
-        $scalingFactor = 3; // je kleiner, desto stärker der Bonus bei hohen Kosten
+        $scalingFactor = 4; // je kleiner, desto stärker der Bonus bei hohen Kosten
 
         $delta = $researchCost * $baseFactor * (1 + ($researchCost / $scalingFactor));
 
@@ -94,6 +94,7 @@ class InfluenceService
 
     /**
      * Einfluss durch Mining. Hier kannst du entscheiden ob pro Session oder pro 100 Ressourcen.
+     * Not Used yet.
      */
     public function handleMining(int $userId, int $resourcesMined): void
     {

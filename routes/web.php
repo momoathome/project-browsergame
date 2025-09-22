@@ -28,9 +28,11 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', HandleExceptionsForJetstream::class,])->group(function () {
-    Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
+    // Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
 
+    Route::get('/buildings/api', [BuildingController::class, 'getAllBuildings'])->name('buildings.api');
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');
+    Route::get('/buildings/{building}/info', [BuildingController::class, 'getBuildingInfo'])->name('buildings.info');
     Route::post('/buildings/{building}/update', [BuildingController::class, 'update'])->name('buildings.update');
     Route::delete('/buildings/{building}/cancel', [BuildingController::class, 'cancel'])->name('buildings.cancel');
 

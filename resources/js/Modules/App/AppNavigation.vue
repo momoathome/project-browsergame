@@ -1,10 +1,15 @@
 <script lang="ts" setup>
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { is, can } from 'laravel-permission-to-vuejs'
 
+const page = usePage();
+
+const currentRoute = computed(() => page.url);
+
 const NavigationLinks = [
-  { name: 'overview', label: 'Overview', image: '/images/navigation/overview.png' },
+  // { name: 'overview', label: 'Overview', image: '/images/navigation/overview.png' },
   { name: 'buildings', label: 'Buildings', image: '/images/navigation/buildings.png' },
   { name: 'shipyard', label: 'Shipyard', image: '/images/navigation/shipyard.png' },
   // { name: 'research', label: 'Research', image: '/images/navigation/research.png' },
@@ -20,8 +25,9 @@ const NavigationLinks = [
   <div>
     <nav class="flex flex-col">
       <Link v-for="link in NavigationLinks" :key="link.name" :href="route(link.name)"
-        :class="[route().current(link.name) ? 'border-opacity-100 ' : '']"
-        class="relative group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition border-l-2 border-opacity-0 border-l-[#bfbfbf]">
+        :class="[currentRoute.includes(link.name) ? 'border-opacity-100 ' : '']"
+        class="relative group inline-flex justify-center px-4 py-3 hover:border-opacity-100 transition border-l-2 border-opacity-0 border-l-[#bfbfbf]"
+      >
       <img :src="link.image" class="w-8 h-8" alt="" />
 
       <AppTooltip :label="link.label" position="right" />

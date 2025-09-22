@@ -29,6 +29,16 @@ class SpacecraftController extends Controller
         ]);
     }
 
+    public function getAllSpacecrafts()
+    {
+        $user = $this->authManager->user();
+        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
+
+        return response()->json([
+            'spacecrafts' => $spacecrafts,
+        ], 200);
+    }
+
     public function update(Request $request, Spacecraft $spacecraft)
     {
         $validated = $request->validate([
@@ -70,16 +80,6 @@ class SpacecraftController extends Controller
         } else {
             return redirect()->route('shipyard')->dangerBanner($result['message']);
         }
-    }
-
-    public function getAllSpacecrafts()
-    {
-        $user = $this->authManager->user();
-        $spacecrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
-
-        return response()->json([
-            'spacecrafts' => $spacecrafts,
-        ], 200);
     }
 
     /**

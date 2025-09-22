@@ -18,7 +18,6 @@ class Spacecraft extends Model
         'details_id',
         'attack',
         'defense',
-        'combat',
         'cargo',
         'speed',
         'operation_speed',

@@ -2,25 +2,28 @@
 
 namespace Orion\Modules\Asteroid\Services;
 
-use App\Events\UpdateUserResources;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Events\UpdateUserResources;
 use Illuminate\Support\Facades\Log;
 use App\Events\ReloadFrontendCanvas;
 use Orion\Modules\Asteroid\Models\Asteroid;
+use Orion\Modules\Building\Models\Building;
+use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
-use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 
 
 class AsteroidService
@@ -98,6 +101,27 @@ class AsteroidService
 
         if ($spaceCrafts->isEmpty()) {
             throw new \Exception("No spacecrafts selected");
+        }
+
+        $hangarBuilding = Building::where('user_id', $user->id)
+        ->whereHas('details', function ($query) {
+            $query->where('name', BuildingType::HANGAR->value);
+        })
+        ->first();
+
+        $dockSlots = 1;
+        if ($hangarBuilding) {
+            $extra = app(BuildingEffectService::class)->getEffects('Hangar', $hangarBuilding->level);
+            $dockSlots = $extra['dock_slots'] ?? 1;
+        }
+
+        $currentMiningOperations = $this->queueService->getInProgressQueuesFromUserByType(
+            $user->id,
+            QueueActionType::ACTION_TYPE_MINING
+        )->count();
+
+        if ($currentMiningOperations >= $dockSlots) {
+            throw new \Exception("Not enough dock slots available. Current: $currentMiningOperations, Max: $dockSlots");
         }
 
         // Prüfe, ob der User genug freie (nicht gelockte) Spacecrafts besitzt

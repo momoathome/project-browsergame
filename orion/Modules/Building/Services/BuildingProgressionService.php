@@ -2,15 +2,19 @@
 
 namespace Orion\Modules\Building\Services;
 
-use Orion\Modules\Building\Services\BuildingEffectService;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Building\Models\Building;
+use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Resource\Services\ResourceService;
+use Orion\Modules\User\Services\UserattributeService;
+use Orion\Modules\Building\Services\BuildingEffectService;
 
 class BuildingProgressionService
 {
     public function __construct(
         private readonly ResourceService $resourceService,
-        private readonly BuildingEffectService $effectService
+        private readonly BuildingEffectService $effectService,
+        private readonly UserAttributeService $userAttributeService
     ) {}
 
     public function getBaseConfig($buildingName)
@@ -36,7 +40,7 @@ class BuildingProgressionService
     }
 
     /**
-     * ⬅️ NEU: Holt Effekt-Werte über den BuildingEffectService
+     * Holt Effekt-Werte über den BuildingEffectService
      */
     public function calculateEffectValue(Building $building): array
     {
@@ -108,14 +112,19 @@ class BuildingProgressionService
         return $costs;
     }
 
-    public function calculateBuildTime(Building $building, int $targetLevel): float
+    public function calculateBuildTime(int $userId, Building $building, int $targetLevel): float
     {
         $baseConfig = $this->getBaseConfig($building->details->name);
         $buildTimeMultiplier = config('game.building_progression.build_time_multiplier', 1.25);
+        $building_produce_speed = config('game.core.building_produce_speed');
+        $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);
+        $upgrade_multiplier = $core_upgrade_speed ? $core_upgrade_speed->attribute_value : 1;
 
-        return ($targetLevel === 2)
+        $build_time = ($targetLevel === 2)
             ? $baseConfig['build_time']
             : floor($baseConfig['build_time'] * pow($buildTimeMultiplier, $targetLevel - 2));
+
+        return floor(($build_time / $upgrade_multiplier) / $building_produce_speed);
     }
 
     private function getAdditionalResources($buildingName, $level, $levelMultiplier, $milestoneMultiplier)
@@ -173,7 +182,7 @@ class BuildingProgressionService
     }
 
     /**
-     * ⬅️ NEU: Vorschau für UI, nutzt ebenfalls BuildingEffectService
+     * Vorschau für UI, nutzt BuildingEffectService
      */
     public function getEffectPreview(Building $building, bool $nextLevel = false): array
     {

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { Link, useForm, router } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import DashboardUserOverview from '@/Modules/Admin/DashboardUserOverview.vue';
 import DashboardQueue from '@/Modules/Admin/DashboardQueue.vue';
 import DashboardMarket from '@/Modules/Admin/DashboardMarket.vue';
@@ -38,7 +37,6 @@ function regenerateAsteroids() {
 </script>
 
 <template>
-  <AppLayout title="dashboard">
     <div>
       <h1 class="text-3xl mb-4 font-bold text-light">
         Dashboard
@@ -87,8 +85,4 @@ function regenerateAsteroids() {
       </div>
       <!-- <DashboardQueue :action-queue="gameQueue" /> -->
     </div>
-
-
-
-  </AppLayout>
 </template>

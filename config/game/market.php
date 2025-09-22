@@ -5,69 +5,69 @@ return [
     'market_category_values' => [
         'low_value' => 1,
         'medium_value' => 10,
-        'high_value' => 100,
-        'extreme_value' => 500,
+        'high_value' => 50,
+        'extreme_value' => 250,
     ],
 
     'markets' => [
         [
             'resource_name' => 'Carbon',
-            'stock' => 15000,
+            'stock' => 150000,
             'category' => 'low_value',
         ],
         [
             'resource_name' => 'Titanium',
-            'stock' => 15000,
+            'stock' => 150000,
             'category' => 'low_value',
         ],
         [
             'resource_name' => 'Hydrogenium',
-            'stock' => 15000,
+            'stock' => 150000,
             'category' => 'low_value',
         ],
         [
             'resource_name' => 'Kyberkristall',
-            'stock' => 12000,
+            'stock' => 120000,
             'category' => 'low_value',
         ],
         [
             'resource_name' => 'Cobalt',
-            'stock' => 10000,
+            'stock' => 100000,
             'category' => 'medium_value',
         ],
         [
             'resource_name' => 'Iridium',
-            'stock' => 7500,
+            'stock' => 75000,
             'category' => 'medium_value',
         ],
         [
             'resource_name' => 'Uraninite',
-            'stock' => 5000,
+            'stock' => 50000,
             'category' => 'medium_value',
         ],
         [
             'resource_name' => 'Thorium',
-            'stock' => 2500,
+            'stock' => 12000,
             'category' => 'high_value',
         ],
         [
             'resource_name' => 'Astatine',
-            'stock' => 1000,
+            'stock' => 10000,
             'category' => 'high_value',
         ],
         [
             'resource_name' => 'Hyperdiamond',
-            'stock' => 750,
+            'stock' => 10000,
             'category' => 'high_value',
         ],
         [
             'resource_name' => 'Dilithium',
-            'stock' => 500,
+            'stock' => 3500,
             'category' => 'extreme_value',
         ],
         [
             'resource_name' => 'Deuterium',
-            'stock' => 250,
+            'stock' => 2500,
             'category' => 'extreme_value',
         ],
     ],

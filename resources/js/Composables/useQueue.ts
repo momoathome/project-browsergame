@@ -1,6 +1,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useQueueStore } from '@/Composables/useQueueStore'
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore'
+import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { timeFormat } from '@/Utils/format'
 import type { SavedQueueItemState, RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
 import { api } from '@/Services/api'
@@ -23,6 +24,7 @@ function saveQueueItemStates(userId: number, states: SavedQueueItemState[]) {
 export function useQueue(userId: number) {
     const { queueData, refreshQueue } = useQueueStore()
     const { refreshSpacecrafts } = useSpacecraftStore()
+    const { refreshBuildings } = useBuildingStore()
 
     // ---- REACTIVE STATE ----
     const queueItemStates = ref<SavedQueueItemState[]>(loadQueueItemStates(userId))
@@ -43,6 +45,7 @@ export function useQueue(userId: number) {
         await api.queue.processQueue()
         await refreshQueue()
         await refreshSpacecrafts()
+        await refreshBuildings()
     }
 
     // ---- CALLBACKS ----

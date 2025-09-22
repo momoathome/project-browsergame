@@ -90,7 +90,6 @@ readonly class CombatService
                     'name' => $name,
                     'attack' => $spacecraft ? $spacecraft->attack : 0,
                     'defense' => $spacecraft ? $spacecraft->defense : 0,
-                    'combat' => $spacecraft ? $spacecraft->combat : 0,
                     'count' => $count,
                 ];
             })
@@ -112,7 +111,6 @@ readonly class CombatService
                 'name' => $spacecraft->details->name,
                 'attack' => $spacecraft->attack,
                 'defense' => $spacecraft->defense,
-                'combat' => $spacecraft->combat,
                 'count' => $spacecraft->count,
             ])
             ->values()

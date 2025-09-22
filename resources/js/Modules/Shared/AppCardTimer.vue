@@ -43,7 +43,7 @@ function updateTimerAndProgress() {
   // Berechne die verstrichene Zeit und den Fortschritt
   const startTime = endTime - totalDuration.value;
   const elapsed = now - startTime;
-  progress.value = Math.min(100, Math.floor((elapsed / totalDuration.value) * 100));
+  progress.value = Math.max(0, Math.min(100, Math.floor((elapsed / totalDuration.value) * 100)));
 }
 
 const formattedRemainingTime = computed(() => {

@@ -21,6 +21,7 @@ use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingProgressionService;
 use Orion\Modules\User\Exceptions\InsufficientResourceException;
 use Orion\Modules\Influence\Services\InfluenceService;
+use Orion\Modules\Spacecraft\Services\ShipyardEffectHandlerService;
 
 class BuildingUpgradeService
 {
@@ -31,7 +32,8 @@ class BuildingUpgradeService
         private readonly BuildingProgressionService $buildingProgressionService,
         private readonly ActionQueueService $queueService,
         private readonly ResourceService $resourceService,
-        private readonly InfluenceService $influenceService
+        private readonly InfluenceService $influenceService,
+        private readonly ShipyardEffectHandlerService $shipyardEffectHandlerService
     ) {
     }
 
@@ -59,12 +61,12 @@ class BuildingUpgradeService
             $this->userResourceService->validateUserHasEnoughResources($user->id, $currentCosts);
 
             // Führe das Upgrade durch
-            DB::transaction(function () use ($user, $building, $currentCosts) {
+            DB::transaction(function () use ($user, $building, $currentCosts, $targetLevel) {
                 // Ressourcen abziehen
                 $this->userResourceService->decrementUserResources($user, $currentCosts);
 
                 // Upgrade zur Queue hinzufügen
-                $this->addBuildingUpgradeToQueue($user->id, $building);
+                $this->addBuildingUpgradeToQueue($user->id, $building, $targetLevel);
             });
 
             broadcast(new UpdateUserResources($user));
@@ -149,11 +151,8 @@ class BuildingUpgradeService
         }
     }
 
-    private function addBuildingUpgradeToQueue(int $userId, Building $building): void
+    private function addBuildingUpgradeToQueue(int $userId, Building $building, int $targetLevel): void
     {
-        $queuedUpgrades = $this->queueService->getQueuedUpgrades($userId, $building->id, QueueActionType::ACTION_TYPE_BUILDING)->count();
-        $targetLevel = $building->level + $queuedUpgrades + 1;
-
         $coreBuilding = Building::where('user_id', $userId)
         ->whereHas('details', function ($query) {
             $query->where('name', BuildingType::CORE->value);
@@ -176,31 +175,34 @@ class BuildingUpgradeService
             ? QueueStatusType::STATUS_IN_PROGRESS
             : QueueStatusType::STATUS_PENDING;
 
-        $core_upgrade_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::UPGRADE_SPEED);
-        $building_produce_speed = config('game.core.building_produce_speed');
+        $build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $targetLevel);
 
-        $upgrade_multiplier = $core_upgrade_speed ? $core_upgrade_speed->attribute_value : 1;
-        $build_time = $this->buildingProgressionService->calculateBuildTime($building, $targetLevel);
-        $effective_build_time = floor(($build_time / $upgrade_multiplier) / $building_produce_speed);
+        Log::info("Adding building upgrade to queue", [
+            'building_name' => $building->details->name,
+            'current_level' => $building->level,
+            'target_level' => $targetLevel,
+            'base_build_time' => $build_time,
+            'build_time' => $build_time,
+        ]);
 
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_BUILDING,
             $building->id,
-            $effective_build_time,
+            $build_time,
             [
                 'building_name' => $building->details->name,
                 'current_level' => $targetLevel - 1,
                 'next_level' => $targetLevel,
-                'duration' => $effective_build_time
+                'duration' => $build_time
             ],
             $status
         );
     }
 
-    public function upgradeBuilding(Building $building)
+    public function upgradeBuilding(int $userId, Building $building)
     {
-        return DB::transaction(function () use ($building) {
+        return DB::transaction(function () use ($userId, $building) {
             $building->level += 1;
             $baseEffects = $this->buildingProgressionService->calculateBaseEffectValue($building);
             $allEffects = $this->buildingProgressionService->calculateEffectValue($building);
@@ -210,7 +212,7 @@ class BuildingUpgradeService
 
             $building->effect_value = $effectValue;
             $building->effects = $allEffects;
-            $building->build_time = $this->buildingProgressionService->calculateBuildTime($building, $building->level);
+            $building->build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $building->level);
             $building->save();
 
             return $building;
@@ -232,7 +234,7 @@ class BuildingUpgradeService
         try {
             $result = DB::transaction(function () use ($building, $userId) {
                 // 1. Upgrade durchführen
-                $upgradedBuilding = $this->upgradeBuilding($building);
+                $upgradedBuilding = $this->upgradeBuilding($userId, $building);
 
                 if (!$upgradedBuilding) {
                     throw new \Exception("Fehler beim Upgrade des Gebäudes");
@@ -249,6 +251,10 @@ class BuildingUpgradeService
                 $attributeUpdates = $this->updateUserAttributesForBuilding($userId, $upgradedBuilding, $buildingType);
 
                 $this->influenceService->handleBuildingUpgradeCompleted($userId, $this->buildingProgressionService->calculateUpgradeCost($building, $building->level));
+
+                if ($building->details->name === BuildingType::SHIPYARD->value) {
+                    $this->shipyardEffectHandlerService->handleShipyardUpgrade($userId, $upgradedBuilding);
+                }
 
                 return [
                     'success' => true,

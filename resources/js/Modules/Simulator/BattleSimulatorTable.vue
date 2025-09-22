@@ -7,9 +7,11 @@ type Role = "attacker" | "defender";
 
 interface SimpleSpacecraft {
   name: string;
-  combat: number;
+  attack: number;
+  defense: number;
   count: number;
-  totalCombatPower: string;
+  totalAttack: number;
+  totalDefense: number;
 }
 
 const props = defineProps<{
@@ -44,9 +46,10 @@ function updateQuantity(index: number, event: Event) {
         <template v-for="(ship, shipIndex) in ships" :key="shipIndex">
           <td class="px-4 py-3 border-t border-primary/50">
             <span v-if="property === 'name'" class="font-medium">{{ ship.name }}</span>
-            <span v-else-if="property === 'combat'" class="">{{ numberFormat(ship.combat) }}</span>
+            <span v-else-if="property === 'attack'" class="">{{ numberFormat(ship.attack) }}</span>
+            <span v-else-if="property === 'defense'" class="">{{ numberFormat(ship.defense) }}</span>
             <AppInput v-else-if="property === 'count'"
-              class="h-10"
+              class="h-10 !bg-primary/20"
               v-model="ship.count"
               :maxlength="4"
               @input="updateQuantity(shipIndex, $event)"

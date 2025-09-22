@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import { usePage, useForm, router } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import Modal from '@/Modules/AsteroidMap/Modal.vue';
 import AutoMineModal from '@/Modules/AsteroidMap/AutoMineModal.vue';
 import AsteroidMapSearch from '@/Modules/AsteroidMap/AsteroidMapSearch.vue';
 import AsteroidMapDropdown from '@/Modules/AsteroidMap/AsteroidMapDropdown.vue';
 import AsteroidMapInfluence from '@/Modules/AsteroidMap/AsteroidMapInfluence.vue';
+import AppSideOverview from '@/Modules/App/AppSideOverview.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
 import { api } from '@/Services/api';
@@ -96,6 +96,10 @@ const userStation = computed(() => {
   return props.stations.find(station => station.user_id === usePage().props.auth.user.id);
 });
 
+const unlockedSpacecrafts = computed(() => {
+  return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
+});
+
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
 
@@ -160,7 +164,7 @@ onMounted(() => {
 
   initQuadtree();
   window.addEventListener('resize', adjustCanvasSize);
-/*   window.addEventListener('keydown', onKeyDown); */
+  /*   window.addEventListener('keydown', onKeyDown); */
 
   window.Echo.channel('canvas')
     .listen('.reload.canvas', (data) => {
@@ -175,7 +179,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', adjustCanvasSize);
-/*   window.removeEventListener('keydown', onKeyDown); */
+  /*   window.removeEventListener('keydown', onKeyDown); */
 
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);
@@ -208,21 +212,21 @@ function focusUserStationOnInitialLoad() {
 function adjustStaticCanvasSize() {
   if (canvasStaticRef.value && canvasStaticCtx.value) {
     canvasStaticRef.value.width = window.innerWidth;
-    canvasStaticRef.value.height = window.innerHeight - 72;
+    canvasStaticRef.value.height = window.innerHeight - 16;
   }
 }
 
 function adjustInfluenceCanvasSize() {
   if (canvasInfluenceRef.value && canvasInfluenceCtx.value) {
     canvasInfluenceRef.value.width = window.innerWidth;
-    canvasInfluenceRef.value.height = window.innerHeight - 72;
+    canvasInfluenceRef.value.height = window.innerHeight - 16;
   }
 }
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
-    canvasRef.value.height = window.innerHeight - 72;
+    canvasRef.value.height = window.innerHeight - 16;
 
     adjustStaticCanvasSize();
     adjustInfluenceCanvasSize();
@@ -524,8 +528,8 @@ function updateShipPool() {
   const activeMissionIds = new Set<number>();
 
   // 1. Sammle alle relevanten Missionen
-  const missions = queueItems.filter((item) => 
-    (item.actionType === 'mining' || item.actionType === 'combat') && 
+  const missions = queueItems.filter((item) =>
+    (item.actionType === 'mining' || item.actionType === 'combat') &&
     item.details?.target_coordinates !== undefined
   );
 
@@ -561,7 +565,7 @@ function initializeNewMission(mission: QueueItem, missionId: number, missionType
 
   // Zähle die Gesamtzahl der Schiffe basierend auf dem Missionstyp
   let totalShips = 0;
-  
+
   if (missionType === 'mining') {
     const spacecrafts: SpacecraftFleet = mission.details.spacecrafts || {};
     totalShips = Object.values(spacecrafts).reduce(
@@ -575,8 +579,8 @@ function initializeNewMission(mission: QueueItem, missionId: number, missionType
   }
 
   // Ermittle den Zielnamen je nach Missionstyp
-  const targetName = missionType === 'mining' 
-    ? mission.details.asteroid_name || '' 
+  const targetName = missionType === 'mining'
+    ? mission.details.asteroid_name || ''
     : mission.details.defender_name || 'Gegner';
 
   // Prüfe, ob Angriff auf mich
@@ -667,25 +671,25 @@ function drawFlightPaths() {
 
   context.setLineDash([10 * scale.value * 4, 12 * scale.value * 4]);
   context.lineWidth = 2 * scale.value;
-  
+
   // Zeichne Missionslinien
   missions.forEach(mission => {
     const targetCoords = mission.details.target_coordinates;
     const attackerCoords = mission.details.attacker_coordinates;
-  
+
     // Prüfe, ob das Ziel die eigene Station ist (Angriff auf mich)
     const isAttackOnMe = mission.actionType === 'combat'
       && mission.targetId === usePage().props.auth.user.id;
-  
+
     // Setze Farbe je nach Missionstyp und Ziel
     context.strokeStyle = isAttackOnMe
       ? 'rgba(255, 0, 0, 0.7)' // rot für Angriffe auf mich
       : mission.actionType === 'combat'
         ? 'rgba(0, 255, 255, 0.4)' // cyan für andere Kampfmissionen
         : 'rgba(255, 255, 255, 0.4)'; // weiß für Mining-Missionen
-  
+
     context.beginPath();
-  
+
     if (isAttackOnMe && attackerCoords) {
       context.moveTo(attackerCoords.x, attackerCoords.y);
       context.lineTo(targetCoords.x, targetCoords.y);
@@ -693,7 +697,7 @@ function drawFlightPaths() {
       context.moveTo(userStation.value!.x, userStation.value!.y);
       context.lineTo(targetCoords.x, targetCoords.y);
     }
-  
+
     context.stroke();
   });
 
@@ -784,8 +788,8 @@ function drawShip(ctx, ship, currentScale) {
 }
 
 function drawShipLabel(ctx, ship, currentScale) {
-  const labelText = ship.missionType === 'combat' 
-    ? `${ship.targetName} (Attack)` 
+  const labelText = ship.missionType === 'combat'
+    ? `${ship.targetName} (Attack)`
     : ship.targetName;
 
   const textWidth = ctx.measureText(labelText).width;
@@ -1002,6 +1006,8 @@ const playerInfluences = computed<PlayerInfluence[]>(() => {
 
 const showInfluence = ref(false);
 const showInfluenceSidebar = ref(false);
+const showSideOverview = ref(false);
+const activeSidebar = ref<'influence' | 'overview' | null>(null);
 
 function toggleInfluence() {
   showInfluence.value = !showInfluence.value;
@@ -1047,7 +1053,7 @@ const scanAnimation = ref({
   asteroidsToHighlight: [] as number[],
   animationFrame: 0,
   startTime: 0,
-  duration: 1000, 
+  duration: 1000,
 });
 
 function searchAndFocus() {
@@ -1132,6 +1138,23 @@ function selectAsteroid(asteroid: Asteroid) {
   selectedAsteroid.value = asteroid;
 }
 
+function openInfluenceSidebar() {
+  showInfluenceSidebar.value = true;
+  activeSidebar.value = 'influence';
+}
+function openSideOverview() {
+  showSideOverview.value = true;
+  activeSidebar.value = 'overview';
+}
+function closeInfluenceSidebar() {
+  showInfluenceSidebar.value = false;
+  if (activeSidebar.value === 'influence') activeSidebar.value = null;
+}
+function closeSideOverview() {
+  showSideOverview.value = false;
+  if (activeSidebar.value === 'overview') activeSidebar.value = null;
+}
+
 watch(() => queueData.value, () => {
   updateShipPool();
   scheduleDraw();
@@ -1139,73 +1162,98 @@ watch(() => queueData.value, () => {
 </script>
 
 <template>
-  <AppLayout title="AsteroidMap">
-    <div class="relative overflow-hidden" @click.prevent="">
-      <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown"
-        @mousemove="onMouseMove" @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
-      </canvas>
-      <canvas ref="canvasStaticRef" class="block w-full absolute top-0 left-0 pointer-events-none">
-      </canvas>
-      <canvas ref="canvasInfluenceRef" class="block w-full absolute top-0 left-0 pointer-events-none">
-      </canvas>
+  <div class="relative overflow-hidden" @click.prevent="">
+    <canvas ref="canvasRef" class="block w-full bg-[hsl(263,45%,7%)]" @mousedown="onMouseDown" @mousemove="onMouseMove"
+      @mouseup="onMouseUp" @wheel="onWheel" @click="onMouseClick">
+    </canvas>
+    <canvas ref="canvasStaticRef" class="block w-full absolute top-0 left-0 pointer-events-none">
+    </canvas>
+    <canvas ref="canvasInfluenceRef" class="block w-full absolute top-0 left-0 pointer-events-none">
+    </canvas>
 
-      <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
-        <AsteroidMapSearch v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
-      </div>
-
-      <AsteroidMapDropdown v-if="highlightedAsteroids && highlightedAsteroids.length > 0"
-        class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="highlightedAsteroids"
-        :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
-
-      <button type="button" 
-        class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
-        :class="{ 'translate-x-48 -ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
-        @click="isAutoMineModalOpen = true"
-      >
-        auto mine
-      </button>
-
-      <div class="absolute top-2 right-2 z-100 flex min-w-28 transition-all duration-300"
-        :class="{ 'right-72 me-2': showInfluenceSidebar }">
-        <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
-          zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
-        </span>
-        <button type="button" 
-          class="relative z-10 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
-          @click="focusOnObject(null, usePage().props.auth.user.id)"
-        >
-          reset
-        </button>
-      </div>
-
-      <!-- Sidebar -->
-      <AsteroidMapInfluence
-        :influence-of-all-users="props.influenceOfAllUsers"
-        :show="showInfluenceSidebar"
-        @toggle="showInfluenceSidebar = !showInfluenceSidebar, toggleInfluence()"
-        @focus-player="focusOnObject(null, $event)"
-      />
-      
+    <div class="absolute top-2 left-0 z-100 flex gap-2 ms-4 bg-[hsl(263,45%,7%)]">
+      <AsteroidMapSearch v-model="searchForm.query" @clear="clearSearchAndUpdate" @search="searchAndFocus" />
     </div>
 
-    <Modal :content="{
-      type: selectedObject?.type,
-      data: selectedObject?.data as Asteroid | Station,
-      title: selectedObject?.data?.name,
-    }"
-      :open="isModalOpen"
-      @close="closeModal"
-      :spacecrafts="spacecrafts" 
-      :user-scan-range="userScanRange" 
-      @redraw="drawScene" 
+    <AsteroidMapDropdown v-if="highlightedAsteroids && highlightedAsteroids.length > 0"
+      class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="highlightedAsteroids"
+      :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
+
+    <button type="button"
+      class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+      :class="{ 'translate-x-48 -ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
+      @click="isAutoMineModalOpen = true">
+      auto mine
+    </button>
+
+    <div class="absolute top-2 right-2 z-100 flex min-w-28 transition-all duration-300"
+      :class="{ 'right-[18vw] 3xl:right-[12vw] me-2': showInfluenceSidebar || showSideOverview }">
+      <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
+        zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
+      </span>
+      <button type="button"
+        class="relative z-10 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
+        @click="focusOnObject(null, usePage().props.auth.user.id)">
+        reset
+      </button>
+    </div>
+
+    <!-- Influence Toggle Button -->
+    <button
+      class="fixed top-48 right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
+      :style="(showInfluenceSidebar || showSideOverview) ? 'transform: translateX(-12vw)' : ''"
+      @click="[showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar(), toggleInfluence()]"
+    >
+      <img v-show="!showInfluenceSidebar" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
+      <svg v-show="showInfluenceSidebar" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
+      </svg>
+    </button>
+
+    <!-- Overview Toggle Button -->
+    <button
+      class="fixed top-[272px] right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
+      :style="(showSideOverview || showInfluenceSidebar) ? 'transform: translateX(-12vw)' : ''"
+      @click="showSideOverview ? closeSideOverview() : openSideOverview()"
+    >
+      <img v-show="!showSideOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
+      <svg v-show="showSideOverview" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
+      </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <AsteroidMapInfluence
+      :influence-of-all-users="props.influenceOfAllUsers"
+      :show="showInfluenceSidebar"
+      @toggle="showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar()"
+      @focus-player="focusOnObject(null, $event)"
+      :style="{
+        zIndex: activeSidebar === 'influence' ? 30 : 20
+      }"
     />
 
-    <AutoMineModal
-      :open="isAutoMineModalOpen"
-      @close="closeAutoMineModal"
-      @redraw="drawScene"
-    />
-  </AppLayout>
+    <!-- Sidebar Overview -->
+    <div
+      class="fixed right-0 top-[56px] h-[calc(100vh-56px)] flex transition-transform duration-300"
+      :style="[
+        showSideOverview ? 'transform: translateX(0)' : 'transform: translateX(100%)',
+        { zIndex: activeSidebar === 'overview' ? 30 : 20 }
+      ]"
+    >
+      <AppSideOverview />
+    </div>
+
+  </div>
+
+  <Modal :content="{
+    type: selectedObject?.type,
+    data: selectedObject?.data as Asteroid | Station,
+    title: selectedObject?.data?.name,
+  }" :open="isModalOpen" @close="closeModal" :spacecrafts="unlockedSpacecrafts" :user-scan-range="userScanRange"
+    @redraw="drawScene" />
+
+  <AutoMineModal :open="isAutoMineModalOpen" @close="closeAutoMineModal" @redraw="drawScene" />
 </template>
 
 <style scoped>
@@ -1223,5 +1271,11 @@ ul::-webkit-scrollbar-thumb {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #bfbfbf;
+}
+
+.fancy-scroll::-webkit-scrollbar { width: 6px; }
+.fancy-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
 }
 </style>

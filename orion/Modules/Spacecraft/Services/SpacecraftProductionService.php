@@ -237,42 +237,37 @@ class SpacecraftProductionService
             'status' => $status
         ]);
     
-        $shipyard_production_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::PRODUCTION_SPEED);
-        $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
+        $build_time = $this->calculateSpacecraftBuildTime($userId, $spacecraft, $quantity);
 
-        $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
-        $effective_build_time = floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed);
-    
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
-            $effective_build_time,
+            $build_time,
             [
                 'spacecraft_name' => $spacecraft->details->name,
                 'current_quantity' => $targetQuantity - $quantity,
                 'next_quantity' => $targetQuantity,
                 'quantity' => $quantity,
-                'duration' => $effective_build_time
+                'duration' => $build_time
             ],
             $status
         );
     }
 
+    public function calculateSpacecraftBuildTime(int $userId, Spacecraft $spacecraft, int $quantity): float
+    {
+        $shipyard_production_speed = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::PRODUCTION_SPEED);
+        $spacecraft_produce_speed = config('game.core.spacecraft_produce_speed');
+
+        $production_multiplier = $shipyard_production_speed ? $shipyard_production_speed->attribute_value : 1;
+        return floor((($spacecraft->build_time * $quantity) / $production_multiplier) / $spacecraft_produce_speed);
+    }
+
     public function unlockSpacecraft(int $userId, Spacecraft $spacecraft): array
     {
-        $researchPointsAttribute = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::RESEARCH_POINTS);
-
-        if (!$researchPointsAttribute || $researchPointsAttribute->attribute_value < $spacecraft->research_cost) {
-            return [
-                'success' => false,
-                'message' => 'Not enough research points'
-            ];
-        }
-
         try {
             DB::transaction(function () use ($userId, $spacecraft) {
-                $this->userAttributeService->subtractAttributeAmount($userId, UserAttributeType::RESEARCH_POINTS, $spacecraft->research_cost);
                 $spacecraft->unlocked = true;
                 $spacecraft->save();
 

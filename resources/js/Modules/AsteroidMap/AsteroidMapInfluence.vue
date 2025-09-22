@@ -25,23 +25,23 @@ const sortedPlayers = computed(() => {
 
 <template>
   <div
-    class="fixed right-0 top-[104px] h-[calc(100vh-104px)] flex z-100 transition-transform duration-300"
-    :style="show ? 'transform: translateX(0)' : 'transform: translateX(calc(100% - 64px))'"
+    class="fixed right-0 2xl:top-[56px] 2xl:h-[calc(100vh-56px)] top-[96px] h-[calc(100vh-96px)] flex transition-transform duration-300"
+    :style="show ? 'transform: translateX(0)' : 'transform: translateX(100%)'"
   >
       <!-- Toggle Button (immer sichtbar, fährt mit dem Container) -->
-    <button
-      class="h-16 w-16 px-3 mt-28 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(263,20%,8%)]"
+<!--     <button
+      class="h-16 w-16 px-3 absolute top-28 -left-16 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition"
       @click="emit('toggle')"
     >
         <img v-show="!show" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
         <svg v-show="show" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
             <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
         </svg>
-    </button>
+    </button> -->
 
     <!-- Sidebar -->
     <div
-      class="w-60 xl:w-72 bg-root text-light p-4 fancy-scroll overflow-y-auto"
+      class="sidebarInfluence bg-root text-light p-4 fancy-scroll overflow-y-auto"
     >
       <div class="flex items-center mb-6 gap-3">
         <img src="/images/attributes/influence.png" alt="Influence" class="h-8 w-8" />
@@ -82,8 +82,23 @@ const sortedPlayers = computed(() => {
   </div>
 </template>
 
-
 <style scoped>
+.sidebarInfluence {
+  width: 16vw;
+}
+
+@media (max-width: 1700px) {
+  .sidebarInfluence {
+    width: 18vw;
+  }
+}
+
+@media (min-width: 2160px) {
+  .sidebarInfluence {
+    width: 12vw;
+  }
+}
+
 .slide-enter-active,
 .slide-leave-active {
   transition: transform 0.3s ease;

@@ -1,25 +1,17 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import AppLayout from '@/Layouts/AppLayout.vue';
 import BattleSimulatorTable from '@/Modules/Simulator/BattleSimulatorTable.vue';
 import BattleSimulatorLosses from '@/Modules/Simulator/BattleSimulatorLosses.vue';
 import { numberFormat } from '@/Utils/format';
 import { useForm } from '@inertiajs/vue3'
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import type { BattleResult } from '@/types/types';
+import type { BattleResult, Spacecraft } from '@/types/types';
 
 type Role = "attacker" | "defender";
 
-interface SimpleSpacecraft {
-  name: string;
-  combat: number;
-  count: number;
-  totalCombatPower: string;
-}
-
 const props = defineProps<{
   result: BattleResult
-  spacecrafts?: Array<{ details: { name: string; combat: number } }>
+  spacecrafts?: Array<{ details: { name: string; combat: number }, attack: number, defense: number }>
 }>()
 
 const form = useForm({
@@ -32,25 +24,26 @@ function transformSpacecrafts(spacecrafts) {
     name: spacecraft.details.name,
     attack: spacecraft.attack,
     defense: spacecraft.defense,
-    combat: spacecraft.combat,
-    count: 0
+    count: 0,
+    totalAttack: 0,
+    totalDefense: 0
   }));
 }
 
-const attacker = ref(transformSpacecrafts(props.spacecrafts).map(addTotalCombatPower));
-const defender = ref(transformSpacecrafts(props.spacecrafts).map(addTotalCombatPower));
+const attacker = ref(transformSpacecrafts(props.spacecrafts));
+const defender = ref(transformSpacecrafts(props.spacecrafts));
 
-function addTotalCombatPower(ship: SimpleSpacecraft) {
-  return {
-    ...ship,
-    totalCombatPower: numberFormat(ship.combat * ship.count)
-  };
+function updateTotals(list) {
+  list.forEach(ship => {
+    ship.totalAttack = ship.attack * ship.count;
+    ship.totalDefense = ship.defense * ship.count;
+  });
 }
 
 function updateShipQuantity(role: Role, index: number, newCount: number) {
   const target = role === 'attacker' ? attacker : defender;
   target.value[index].count = newCount;
-  target.value[index].totalCombatPower = numberFormat(target.value[index].combat * newCount);
+  updateTotals(target.value);
 }
 
 function simulateBattle() {
@@ -73,10 +66,13 @@ function simulateBattle() {
 const isResultEmpty = computed(() => {
   return props.result.length === 0;
 });
+
+// Initial totals setzen
+updateTotals(attacker.value);
+updateTotals(defender.value);
 </script>
 
 <template>
-  <AppLayout title="simulator">
     <div class="flex flex-col gap-12 text-light">
       <div>
         <div class="mb-4">
@@ -105,6 +101,4 @@ const isResultEmpty = computed(() => {
         <BattleSimulatorLosses :result="result" />
       </div>
     </div>
-
-  </AppLayout>
 </template>

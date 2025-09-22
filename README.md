@@ -17,16 +17,17 @@ Das Spiel ist live: [https://game.nimbuscms.app/](https://game.nimbuscms.app/)
 - **Raumschiffe:** Schalte neue Schiffe frei und stelle eine mächtige Flotte zusammen.
 - **Raumstationen:** Erweitere und upgrade deine Raumstation mit verschiedenen Modulen, um neue Funktionen und Vorteile zu erhalten.
 - **Ressourcenabbau:** Baue Asteroiden auf einer interaktiven Karte ab und sichere dir wertvolle Rohstoffe.
-- **PvP:** Kämpfe gegen andere Spieler und beweise dich im Universum.
+- **PvP:** Kämpfe gegen andere Spieler und beweise dich im Orion-Gürtel.
 - **Handel:** Tausche Ressourcen und Waren mit anderen Spielern.
+- **Einfluss sammeln & Ranking:**  
+  Sammle Einfluss, indem du dein Imperium ausbaust, neue Sektoren eroberst und dich gegen andere Spieler behauptest.  
+  Dein gesammelter Einfluss bestimmt deinen Rang im Universum – miss dich mit anderen Spielern und kämpfe um die Spitzenplätze im globalen Ranking!
+- **Logbook:** Protokolliert wichtige Ereignisse wie Asteroidenabbau, Kämpfe und mehr.
 
 ## Roadmap
 
-- [ ] **Ranking:** Spieler-Ranking basierend auf gesammeltem Einfluss.
-- [ ] **Einfluss sammeln:** Erweitere deinen Machtbereich im Universum.
-- [ ] **PvE:** Stelle dich KI-Herausforderungen.
-- [ ] **Logbook:** Protokolliert wichtige Ereignisse wie Asteroidenabbau, Kämpfe und mehr.
-- [ ] **Forschung:** Forsche an neuen Technologien und verbessere deine Flotte.
+- [ ] **PvE:** Stelle dich KI Gegnern und verteidige dein Imperium gegen Rebellenangriffe.
+- [ ] **Forschung:** Erforsche neue Technologien, um deine Flotte und Raumstation gezielt zu verbessern. Triff strategische Entscheidungen, wähle deinen eigenen Entwicklungsweg und spezialisiere dein Imperium!
 - [ ] **Salvaging:** Gewinne zusätzliche Ressourcen, indem du Trümmerfelder nach Kämpfen plünderst.
 
 ## Tech Stack

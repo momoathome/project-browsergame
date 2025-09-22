@@ -14,7 +14,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'upgrade-building', building: Building): void,
-  (e: 'open-cancel-modal', building: Building): void
+  (e: 'open-cancel-modal', building: Building): void,
+  (e: 'open-info-modal', building: Building): void
 }>();
 
 // --- Computed Properties ---
@@ -127,10 +128,10 @@ function upgradeBuilding() {
 
     <div class="flex flex-col h-full">
       <div class="flex flex-col h-full">
-        <div class="flex flex-col gap-1 px-3 py-2 bg-primary/25">
+        <div class="flex justify-between items-center gap-1 px-3 py-2 bg-primary/25">
 
-          <p class="text-sm text-gray">{{ building.description }}</p>
-
+           <p class="text-sm text-gray">{{ building.description }}</p>
+<!--
           <div class="flex flex-col gap-1">
             <div class="flex items-center gap-1">
               <span class="text-sm text-secondary">{{ formattedEffectText }}:</span>
@@ -140,10 +141,20 @@ function upgradeBuilding() {
               </svg>
               <span class="text-green-500 text-sm">{{ formattedNextLevelValue }}</span>
             </div>
-          </div>
+          </div> -->
+
+          <button class="flex items-center gap-1 cursor-pointer hover:bg-primary/40 group rounded-md px-2 py-1 w-max transition border-transparent border-solid outline-none" 
+            @click="$emit('open-info-modal', building)"
+            type="button"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 text-secondary" width="20" height="20" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11t-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/>
+            </svg>
+<!--             <p class="text-gray text-sm group-hover:text-light transition-colors">details</p> -->
+          </button>
         </div>
 
-        <div class="grid grid-cols-4 gap-2 px-2 py-6 min-h-36">
+        <div class="grid grid-cols-4 gap-2 px-2 py-4 min-h-36">
             <div class="relative group flex flex-col gap-1 items-center p-1 h-min" v-for="resource in building.resources"
             :key="resource.name" :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) }"
             @click="!isResourceSufficient(resource.id) && goToMarketWithMissingResources()">

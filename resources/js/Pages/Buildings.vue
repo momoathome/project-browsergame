@@ -1,16 +1,15 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import type { Building } from '@/types/types';
 
-import Divider from '@/Components/Divider.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
 import DialogModal from '@/Components/DialogModal.vue';
+import BuildingsInfoModal from '@/Modules/Buildings/BuildingsInfoModal.vue';
 
 const { buildings, refreshBuildings } = useBuildingStore();
 const { queueData, refreshQueue } = useQueueStore();
@@ -35,6 +34,7 @@ function isUpgradeBlocked(building: Building) {
 }
 
 const showCancelModal = ref(false);
+const showInfoModal = ref(false);
 const selectedBuilding = ref<Building | null>(null);
 
 function handleOpenCancelModal(building: Building) {
@@ -87,6 +87,17 @@ function upgradeBuilding() {
     }
   );
 }
+
+function handleOpenInfoModal(building: Building) {
+  showInfoModal.value = true;
+  selectedBuilding.value = building;
+}
+
+function handleCloseInfoModal() {
+  showInfoModal.value = false;
+  selectedBuilding.value = null;
+}
+
 </script>
 
 <template>
@@ -99,9 +110,16 @@ function upgradeBuilding() {
       :next-upgrade-level="nextUpgradeLevel(building)"
       @upgrade-building="handleUpgradeBuilding" 
       @open-cancel-modal="handleOpenCancelModal"
+      @open-info-modal="handleOpenInfoModal"
       />
-
   </div>
+
+  <BuildingsInfoModal 
+    :show="showInfoModal" 
+    :buildings="buildings ?? []" 
+    :initial-building-id="selectedBuilding ? selectedBuilding.id : undefined"
+    @close="handleCloseInfoModal"
+    />
 
   <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
     <template #title>Cancel Upgrade</template>
@@ -136,7 +154,7 @@ function upgradeBuilding() {
 
 <style scoped>
 .grid {
-  --grid-min-col-size: 270px;
+  --grid-min-col-size: 272px;
 
   grid-template-columns: repeat(auto-fill, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }

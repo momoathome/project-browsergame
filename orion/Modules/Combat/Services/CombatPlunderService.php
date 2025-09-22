@@ -6,11 +6,14 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
+use Orion\Modules\Building\Models\Building;
 use Orion\Modules\User\Models\UserResource;
+use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\User\Services\UserAttributeService;
+use Orion\Modules\Building\Services\BuildingEffectService;
 
 class CombatPlunderService
 {
@@ -26,7 +29,17 @@ class CombatPlunderService
      */
     public function plunderResources(User $attacker, User $defender, Collection $attackerSpacecrafts): Collection
     {
+        $warehouseBuilding = Building::where('user_id', $defender->id)
+        ->whereHas('details', function ($query) {
+            $query->where('name', BuildingType::WAREHOUSE->value);
+        })
+        ->first();
+
         $plunderProtectionAmount = 500;
+        if ($warehouseBuilding) {
+            $extra = app(BuildingEffectService::class)->getEffects('Warehouse', $warehouseBuilding->level);
+            $plunderProtectionAmount = $extra['resource_shielding'] ?? 1;
+        }
 
         $formattedSpacecrafts = $this->formatSpacecraftsForCalculation($attackerSpacecrafts);
         $totalCargoCapacity = $this->calculateTotalCargoCapacity($attacker, $formattedSpacecrafts);

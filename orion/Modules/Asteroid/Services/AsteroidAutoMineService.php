@@ -5,6 +5,8 @@ namespace Orion\Modules\Asteroid\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Orion\Modules\Building\Models\Building;
+use Orion\Modules\Building\Enums\BuildingType;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
@@ -13,6 +15,7 @@ use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
 
@@ -95,9 +98,26 @@ class AsteroidAutoMineService
             $spacecraftsInQueuesCounts
         );
 
+        $hangarBuilding = Building::where('user_id', $user->id)
+        ->whereHas('details', function ($query) {
+            $query->where('name', BuildingType::HANGAR->value);
+        })
+        ->first();
+
+        $dockSlots = 1;
+        if ($hangarBuilding) {
+            $extra = app(BuildingEffectService::class)->getEffects('Hangar', $hangarBuilding->level);
+            $dockSlots = $extra['dock_slots'] ?? 1;
+        }
+
+        $currentMiningOperations = $this->queueService->getInProgressQueuesFromUserByType(
+            $user->id,
+            QueueActionType::ACTION_TYPE_MINING
+        )->count();
+
         switch ($filter) {
             case 'overflow':
-                return $this->extractOverflow($asteroids, $trueAvailableSpacecrafts, $user);
+                return $this->extractOverflow($asteroids, $trueAvailableSpacecrafts, $user, $dockSlots, $currentMiningOperations);
             case 'smart':
                 return $this->extractSmart($user, $asteroids, $trueAvailableSpacecrafts, $resourceStorage, $storageLimit);
             case 'minimal':
@@ -221,10 +241,11 @@ class AsteroidAutoMineService
     }
 
     // Overflow: Ignoriere Storage-Limit, extrahiere alles
-    private function extractOverflow($asteroids, $availableSpacecrafts, $user): array
+    private function extractOverflow($asteroids, $availableSpacecrafts, $user, $dockSlots = 1, $currentMiningOperations = 0): array
     {
         $missions = [];
         $minerPool = $this->buildMinerPool($availableSpacecrafts);
+        $missionCount = $currentMiningOperations;
     
         foreach ($asteroids as $asteroid) {
             $totalResources = 0;
@@ -262,6 +283,9 @@ class AsteroidAutoMineService
                 ),
             ];
     
+            $missionCount++;
+            if ($missionCount >= $dockSlots) break;
+
             $totalMinerLeft = array_sum(array_column($minerPool, 'count'));
             if ($totalMinerLeft <= 0) break;
         }

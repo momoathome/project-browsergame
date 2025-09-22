@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import type { AsteroidAutoMineMission, AsteroidAutoMineResponse } from '@/types/api';
 import { api } from '@/Services/api';
@@ -46,7 +47,6 @@ function close() {
   if (isSubmitting.value) return;
   emit('close');
 }
-
 
 const selectedMissionList = computed(() =>
   missions.value.filter(m => selectedMissions.value.has(m.asteroid.id))
@@ -150,6 +150,13 @@ const closeOnEscape = (e) => {
   }
 };
 
+const { buildings } = useBuildingStore();
+
+const dockSlots = computed(() => {
+  const hangar = buildings.value.find(b => b.effect?.current?.dock_slots);
+  return hangar?.effect?.current?.dock_slots ?? 0;
+});
+
 onMounted(() => document.addEventListener('keydown', closeOnEscape));
 
 onUnmounted(() => {
@@ -205,7 +212,8 @@ onUnmounted(() => {
              <div class="flex flex-col">
                 <div class="mb-6 flex flex-wrap gap-y-4 gap-x-8 text-cyan-200">
                   <div>
-                      <span class="font-semibold text-light">Operations:</span> {{ totalOperations }}
+                      <span class="font-semibold text-light">Operations:</span> 
+                      {{ totalOperations }} / {{ dockSlots }}
                   </div>
                   <div>
                       <span class="font-semibold text-light">Total Units:</span> {{ totalUnits }}

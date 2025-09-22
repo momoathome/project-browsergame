@@ -40,7 +40,7 @@ class BuildingProgressionService
     }
 
     /**
-     * ⬅️ NEU: Holt Effekt-Werte über den BuildingEffectService
+     * Holt Effekt-Werte über den BuildingEffectService
      */
     public function calculateEffectValue(Building $building): array
     {
@@ -182,7 +182,7 @@ class BuildingProgressionService
     }
 
     /**
-     * ⬅️ NEU: Vorschau für UI, nutzt ebenfalls BuildingEffectService
+     * Vorschau für UI, nutzt BuildingEffectService
      */
     public function getEffectPreview(Building $building, bool $nextLevel = false): array
     {

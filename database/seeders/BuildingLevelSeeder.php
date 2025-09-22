@@ -37,7 +37,7 @@ class BuildingLevelSeeder extends Seeder
             ['Hangar', 2, ['dock_slots' => 5]],
             ['Hangar', 3, ['dock_slots' => 10]],
             ['Hangar', 4, ['dock_slots' => 15]],
-            ['Hangar', 5, ['dock_slots' => 20, 'unlock' => ['auto_mining']]],
+            ['Hangar', 5, ['dock_slots' => 20, 'unlock' => 'auto_mining']],
             ['Hangar', 6, ['dock_slots' => 30]],
             ['Hangar', 7, ['dock_slots' => 40]],
             ['Hangar', 8, ['dock_slots' => 50]],
@@ -56,9 +56,9 @@ class BuildingLevelSeeder extends Seeder
             ['Warehouse', 1, ['resource_shielding' => '200']],
             ['Warehouse', 3, ['resource_shielding' => '500']],
             ['Warehouse', 5, ['resource_shielding' => '750']],
-            ['Warehouse', 10, ['resource_shielding'=> ['1000']]],
-            ['Warehouse', 15, ['resource_shielding' => ['2000']]],
-            ['Warehouse', 20, ['resource_shielding' => ['4000']]],
+            ['Warehouse', 10, ['resource_shielding'=> '1000']],
+            ['Warehouse', 15, ['resource_shielding' => '2000']],
+            ['Warehouse', 20, ['resource_shielding' => '4000']],
 
             // 📡 Scanner
             ['Scanner', 5, ['unlock' => ['deep_scan']]],

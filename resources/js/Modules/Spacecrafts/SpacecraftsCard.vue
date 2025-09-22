@@ -4,25 +4,21 @@ import { useForm, usePage, router } from '@inertiajs/vue3';
 import { timeFormat, numberFormat } from '@/Utils/format';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
-import TertiaryButton from '@/Components/TertiaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
-import DialogModal from '@/Components/DialogModal.vue';
-import { useQueueStore } from '@/Composables/useQueueStore';
 import type { Spacecraft } from '@/types/types';
 
 const props = defineProps<{
-  spacecraft: Spacecraft
+  spacecraft: Spacecraft,
+  queuedCrew: number
 }>();
 
 const emit = defineEmits<{
-  'production-started': []
+  (e: 'open-cancel-modal', spacecraft: Spacecraft): void,
+  (e: 'produce-spacecraft'): void
 }>();
 
 // --- State & Helpers ---
 const isSubmitting = ref(false);
-const showCancelModal = ref(false);
-const { queueData, refreshQueue } = useQueueStore();
 const form = useForm({ amount: 0 });
 
 // --- Computed Properties ---
@@ -64,20 +60,32 @@ function isResourceSufficient(resourceId: number): boolean {
   const status = resourceStatus.value.find(res => res.id === resourceId);
   return status ? status.sufficient : false;
 }
+function isResourceSufficientForNext(resourceId: number): boolean {
+  const status = resourceStatus.value.find(res => res.id === resourceId);
+  if (!status) return false;
+  return status.userAmount >= status.required * (form.amount + 1);
+}
+
+// TODO: needs refactor because of new market
+function goToMarketWithMissingResources() {
+  const missing = props.spacecraft.resources
+    .map(resource => {
+      const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
+      const missingAmount = resource.amount - (userResource?.amount || 0);
+      return missingAmount > 0 ? { id: resource.id, amount: missingAmount } : null;
+    })
+    .filter((item): item is { id: number; amount: number } => item !== null);
+  if (missing.length === 0) return;
+  router.get(route('market', {
+    resource_ids: missing.map(r => r.id).join(','),
+    amounts: missing.map(r => r.amount).join(',')
+  }));
+}
 
 const crewStatus = computed(() => {
   const crewLimit = getAttribute('crew_limit');
   const totalUnits = getAttribute('total_units');
-  const queuedCrew = queueData.value.reduce((acc: number, item: any) => {
-    if (item.actionType === 'produce' && item.details?.quantity && (item.status === 'in_progress' || item.status === 'pending')) {
-      if (props.spacecraft.id === item.targetId) {
-        return acc + (props.spacecraft.crew_limit * item.details.quantity);
-      }
-    }
-    return acc;
-  }, 0);
-
-  const availableUnitSlots = crewLimit - totalUnits - queuedCrew;
+  const availableUnitSlots = crewLimit - totalUnits - props.queuedCrew;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
   return {
     available: availableUnitSlots,
@@ -97,35 +105,9 @@ const canProduce = computed(() => {
   return resourceStatus.value.every(resource => resource.sufficient) && crewStatus.value.sufficient;
 });
 
-const canUnlockSpacecraft = computed(() => {
-  const researchPoints = getAttribute('research_points');
-  return researchPoints >= props.spacecraft.research_cost;
-});
-
-function isResourceSufficientForNext(resourceId: number): boolean {
-  const status = resourceStatus.value.find(res => res.id === resourceId);
-  if (!status) return false;
-  return status.userAmount >= status.required * (form.amount + 1);
-}
-
 const crewLimitReachedNext = computed(() => {
   return crewStatus.value.available < crewStatus.value.required * (form.amount + 1);
 });
-
-function goToMarketWithMissingResources() {
-  const missing = props.spacecraft.resources
-    .map(resource => {
-      const userResource = userResources.value.find((ur: any) => ur.resource_id === resource.id);
-      const missingAmount = resource.amount - (userResource?.amount || 0);
-      return missingAmount > 0 ? { id: resource.id, amount: missingAmount } : null;
-    })
-    .filter((item): item is { id: number; amount: number } => item !== null);
-  if (missing.length === 0) return;
-  router.get(route('market', {
-    resource_ids: missing.map(r => r.id).join(','),
-    amounts: missing.map(r => r.amount).join(',')
-  }));
-}
 
 function increment() {
   if (form.amount < maxSpacecraftCount.value) form.amount++;
@@ -142,18 +124,11 @@ function decrementBy10() {
   else form.amount = 0;
 }
 
-function unlockSpacecraft() {
-  if (!canUnlockSpacecraft.value) return;
-  router.post(route('shipyard.unlock', props.spacecraft.id), {
-    preserveState: true,
-    preserveScroll: true
-  });
-}
-
 // --- Actions ---
 function produceSpacecraft() {
-  if (form.amount <= 0 || isSubmitting.value) return;
+  if (form.amount <= 0 || isSubmitting.value || !canProduce.value) return;
   isSubmitting.value = true;
+
   form.post(
     route('shipyard.update', props.spacecraft.id),
     {
@@ -162,24 +137,19 @@ function produceSpacecraft() {
       onSuccess: () => form.reset(),
       onFinish: () => { 
         isSubmitting.value = false,
-        emit('production-started'),
-        refreshQueue(); 
+        emit('produce-spacecraft')
       },
-      onError: () => { isSubmitting.value = false; }
+      onError: () => { 
+        isSubmitting.value = false; 
+      }
     }
   );
 }
 
-function handleCancelProduction() {
-  if (!isProducing.value) return;
-
-  router.delete(route('shipyard.cancel', props.spacecraft.id), {
-    preserveState: true,
-    preserveScroll: true,
-    onSuccess: () => refreshQueue()
-  });
-  form.reset();
-  showCancelModal.value = false;
+function openCancelModal() {
+  if (isProducing.value) {
+    emit('open-cancel-modal', props.spacecraft);
+  }
 }
 
 </script>
@@ -259,7 +229,7 @@ function handleCancelProduction() {
                 :class="{ 'cursor-pointer': !isResourceSufficient(resource.id) && spacecraft.unlocked }"
                 @click="!isResourceSufficient(resource.id) && spacecraft.unlocked && goToMarketWithMissingResources()"
             >
-              <img :src="resource.image" class="h-6" alt="resource" />
+              <img :src="resource.image" class="h-7" alt="resource" />
               <p
                 class="font-medium text-sm"
                 :class="{
@@ -335,63 +305,29 @@ function handleCancelProduction() {
             </div>
 
             <div class="flex">
+              <AppCardTimer 
+                :build-time="spacecraft.currently_producing ? spacecraft.build_time * (spacecraft.currently_producing || 1) : spacecraft.build_time * (form.amount || 1)"
+                :end-time="productionEndTime"
+                :isInProgress="isProducing"
+                :description="`${activeProduction} Units`"
+                :disabled="!canProduce && !isProducing"
+                @cancel-upgrade="openCancelModal"
+              />
 
-            <AppCardTimer 
-              :build-time="spacecraft.currently_producing ? spacecraft.build_time * (spacecraft.currently_producing || 1) : spacecraft.build_time * (form.amount || 1)"
-              :end-time="productionEndTime"
-              :isInProgress="isProducing"
-              :description="`${activeProduction} Units`"
-              :disabled="!canProduce && !isProducing"
-              @cancel-upgrade="showCancelModal = true"
-            />
-
-            <button
-              class="px-4 py-2 w-full bg-primary/40 text-light font-semibold rounded-br-xl transition border-t border-primary/40 hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-              :disabled="form.amount == 0 || !canProduce"
-              @click="produceSpacecraft"
-              type="button"
-            >
-              <span>Produce</span>
-            </button>
+              <button
+                class="px-4 py-2 w-full bg-primary/40 text-light font-semibold rounded-br-xl transition border-t border-primary/40 hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="form.amount == 0 || !canProduce"
+                @click="produceSpacecraft"
+                type="button"
+              >
+                Produce
+              </button>
             </div>
-
           </form>
-
         </div>
-
       </div>
     </div>
-
-    <TertiaryButton v-if="!spacecraft.unlocked" @click="unlockSpacecraft"
-      class="mt-4 gap-4 w-36 absolute left-1/2 -translate-x-1/2 bottom-12"
-      :disabled="!canUnlockSpacecraft">
-      Unlock
-      <div class="flex gap-1">
-        <img src="/images/attributes/research_points.png" class="h-5" alt="research icon">
-        <span>{{ spacecraft.research_cost }}</span>
-      </div>
-    </TertiaryButton>
-    
   </div>
-
-    <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
-      <template #title>Cancel Production</template>
-      <template #content>
-        <p>Are you sure you want to cancel the production of
-          <span class="font-semibold">
-            {{ activeProduction }} {{ spacecraft.name }}
-          </span> 
-           ?
-          </p>
-        <p class="text-gray-400 mt-2">You will lose all progress and 80% of resources spent on this production.</p>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-4">
-          <TertiaryButton @click="showCancelModal = false">No, Keep Producing</TertiaryButton>
-          <SecondaryButton @click="handleCancelProduction">Yes, Cancel Production</SecondaryButton>
-        </div>
-      </template>
-    </DialogModal>
 
 </template>
 

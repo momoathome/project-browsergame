@@ -4,6 +4,7 @@ import { computed, reactive, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3';
 import AsteroidModalResourceSvg from './AsteroidModalResourceSvg.vue'
 import AppInput from '@/Modules/Shared/AppInput.vue';
+import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { QueueActionType } from '@/types/actionTypes';
 import { numberFormat } from '@/Utils/format';
 import { useAsteroidMining } from '@/Composables/useAsteroidMining';
@@ -98,16 +99,17 @@ watch(actionType, (val) => {
 const filtered = computed(() => props.spacecrafts.filter(s => s.type === activeTab.value))
 
 const totals = computed(() => {
-  let attack = 0, cargo = 0, speedWeighted = 0, unitCount = 0
+  let attack = 0, defense = 0, cargo = 0, speedWeighted = 0, unitCount = 0
   for (const s of props.spacecrafts) {
     const qty = form.spacecrafts[s.name] || 0
     attack += s.attack * qty
+    defense += s.defense * qty
     cargo += s.cargo * qty
     speedWeighted += s.speed * qty
     unitCount += qty
   }
   const avgSpeed = unitCount ? Math.round(speedWeighted / unitCount) : 0
-  return { attack, cargo, avgSpeed }
+  return { attack, defense, cargo, avgSpeed }
 })
 
 function inc(name: string, max: number) {
@@ -373,6 +375,12 @@ function availableCount(s) {
                     </span>
                     </div>
                     <div class="px-3 py-1 text-light">
+                      Defense: 
+                      <span class="text-cyan-300">
+                      {{ numberFormat(totals.defense) }}
+                    </span>
+                    </div>
+                    <div class="px-3 py-1 text-light">
                       Cargo: 
                       <span class="text-cyan-300">
                       {{ numberFormat(totals.cargo) }}
@@ -439,7 +447,7 @@ function availableCount(s) {
                 </div>
 
                 <!-- Grid -->
-                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto pr-2 fancy-scroll">
+                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 max-h-[520px] overflow-y-auto overflow-x-hidden pr-2 fancy-scroll">
                   <div v-for="s in filtered" :key="s.id"
                     class="rounded-xl border border-white/5 bg-slate-900/5 shadow-lg">
                     <div class="flex justify-between items-center px-3 py-1 border-b-slate-950 border-b">
@@ -452,18 +460,21 @@ function availableCount(s) {
                     <div class="spacecraftImage relative bg-[#101d2c] flex items-center justify-center">
                       <img :src="s.image" class="h-[90px] w-full" />
                     </div>
-                    <div class="flex justify-between px-3 pt-2">
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Attack</span>
+                    <div class="flex justify-between px-2 pt-3">
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/combat.png" class="h-5" alt="combat" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.attack) }}</p>
+                        <AppTooltip :label="'combat'" position="bottom" class="!mt-1" />
                       </div>
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Defense</span>
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/defense.png" class="h-5" alt="defense" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.defense) }}</p>
+                        <AppTooltip :label="'defense'" position="bottom" class="!mt-1" />
                       </div>
-                      <div class="flex flex-col items-center">
-                        <span class="text-sm text-secondary">Cargo</span>
+                      <div class="flex relative group items-center gap-1">
+                        <img src="/images/cargo.png" class="h-5" alt="cargo" />
                         <p class="font-medium text-sm text-slate-400">{{ numberFormat(s.cargo) }}</p>
+                        <AppTooltip :label="'cargo capacity'" position="bottom" class="!mt-1" />
                       </div>
                     </div>
 

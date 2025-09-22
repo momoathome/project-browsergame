@@ -29,7 +29,7 @@ const sortedPlayers = computed(() => {
     :style="show ? 'transform: translateX(0)' : 'transform: translateX(100%)'"
   >
       <!-- Toggle Button (immer sichtbar, fährt mit dem Container) -->
-    <button
+<!--     <button
       class="h-16 w-16 px-3 absolute top-28 -left-16 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition"
       @click="emit('toggle')"
     >
@@ -37,7 +37,7 @@ const sortedPlayers = computed(() => {
         <svg v-show="show" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
             <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
         </svg>
-    </button>
+    </button> -->
 
     <!-- Sidebar -->
     <div

@@ -11,8 +11,9 @@ class SpacecraftResource extends JsonResource
         return [
             'id' => $this->id,
             'count' => $this->count,
+            'atk' => $this->atk,
+            'def' => $this->def,
             'cargo' => $this->cargo,
-            'combat' => $this->combat,
             'unlocked' => $this->unlocked,
             'speed' => $this->speed,
             'build_time' => $this->build_time,

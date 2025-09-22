@@ -22,11 +22,11 @@ class BuildingLevelSeeder extends Seeder
             ['Shipyard', 2, ['unlock' => ['Merlin']]],
             ['Shipyard', 3, ['production_slots' => 2, 'unlock' => ['Comet']]],
             ['Shipyard', 4, ['unlock' => ['Nomad']]],
-            ['Shipyard', 5, ['production_slots' => 3,'unlock' => ['javelin']]],
+            ['Shipyard', 5, ['production_slots' => 3,'unlock' => ['Javelin']]],
             ['Shipyard', 6, ['unlock' => ['Sentinel']]],
             ['Shipyard', 7, ['unlock' => ['Titan']]],
-            ['Shipyard', 8, ['production_slots' => 4, 'unlock' => ['Hercules']]],
-            ['Shipyard', 9, ['unlock' => ['Probe']]],
+            ['Shipyard', 8, ['production_slots' => 4, 'unlock' => ['Probe']]],
+            ['Shipyard', 9, ['unlock' => ['Hercules']]],
             ['Shipyard', 10, ['production_slots' => 5, 'unlock' => ['Ares']]],
             ['Shipyard', 12, ['unlock' => ['Nova']]],
             ['Shipyard', 15, ['production_slots' => 6, 'unlock' => ['Horus']]],
@@ -54,7 +54,8 @@ class BuildingLevelSeeder extends Seeder
 
             // 🏚 Warehouse
             ['Warehouse', 1, ['resource_shielding' => '200']],
-            ['Warehouse', 5, ['resource_shielding' => '500']],
+            ['Warehouse', 3, ['resource_shielding' => '500']],
+            ['Warehouse', 5, ['resource_shielding' => '750']],
             ['Warehouse', 10, ['resource_shielding'=> ['1000']]],
             ['Warehouse', 15, ['resource_shielding' => ['2000']]],
             ['Warehouse', 20, ['resource_shielding' => ['4000']]],
@@ -64,11 +65,14 @@ class BuildingLevelSeeder extends Seeder
             ['Scanner', 7, ['unlock' => ['rebel_scan']]],
             ['Scanner', 10, ['unlock' => ['ghost_scan']]],
 
-            // 🛡 Guardian
-            ['Guardian', 3, ['unlock' => ['defense_drones']]],
-            ['Guardian', 5, ['unlock' => ['shield_dome']]],
-            ['Guardian', 8, ['unlock' => ['orbital_cannon']]],
-            ['Guardian', 10, ['unlock' => ['return_fire_feature']]],
+            // 🛡 Guardian - has base defense each upgrade increases additive the base value
+            ['Guardian', 3, ['unlock' => ['defense_drones']]], // +10% base defense
+            ['Guardian', 5, ['unlock' => ['shield_dome']]], // +15% base defense
+            ['Guardian', 8, ['unlock' => ['laser_turret']]], // +20% base defense
+            ['Guardian', 10, ['unlock' => ['double_tower']]], // x2 defense
+            ['Guardian', 12, ['unlock' => ['guardian_missiles']]], // +30% base defense
+            ['Guardian', 15, ['unlock' => ['triple_tower']]], // x2 defense
+            ['Guardian', 20, ['unlock' => ['last_stand']]], // x2 defense
         ];
 
         foreach ($data as [$building, $level, $effects]) {

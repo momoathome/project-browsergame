@@ -16,7 +16,7 @@ const formattedAmount = computed(() => numberFormat(props.marketData.amount ?? 0
 
 <template>
   <div
-    class="h-44 w-44 rounded-xl flex flex-col justify-between bg-base text-light cursor-pointer transition hover:bg-base/80"
+    class="aspect-square max-w-52 rounded-xl flex flex-col justify-between bg-base text-light cursor-pointer transition hover:bg-base/80 p-3"
     :class="{
       'disabled': (showAmount && marketData.amount === 0) || (showStock && marketData.stock === 0),
       '!border-secondary !ring-2 !ring-secondary': selected
@@ -24,17 +24,19 @@ const formattedAmount = computed(() => numberFormat(props.marketData.amount ?? 0
     @click="$emit('select', marketData)"
   >
     <!-- Name oben -->
-    <div class="relative flex items-center border-b-primary/40 border-b-2 h-12">
-      <p class="font-semibold px-3 py-2">{{ marketData.name }}</p>
+    <div class="relative flex items-center border-b-primary/40 border-b h-[15%]">
+      <p class="font-semibold text-sm sm:text-base !text-light truncate">{{ marketData.name }}</p>
     </div>
-    <!-- Bild mittig -->
+
+    <!-- Bild mittig, skaliert mit Container -->
     <div class="flex justify-center items-center flex-1">
-      <img :src="marketData.image" class="h-14 w-14 object-contain" alt="resource" />
+      <img :src="marketData.image" class="max-h-[70%] max-w-[70%] object-contain" alt="resource" />
     </div>
+
     <!-- Stock/Amount unten als Badges -->
-    <div class="flex justify-center gap-2 pb-3">
-      <span v-if="showStock" class="bg-primary/20 text-secondary text-sm px-3 py-1 rounded-full">Stock: {{ formattedStock }}</span>
-      <span v-if="showAmount" class="bg-primary/20 text-secondary text-sm px-3 py-1 rounded-full">Amount: {{ formattedAmount }}</span>
+    <div class="flex justify-center gap-2">
+      <span v-if="showStock" class="bg-primary/20 text-secondary text-xs sm:text-sm px-2 sm:px-3 py-0.5 rounded-full">Stock: {{ formattedStock }}</span>
+      <span v-if="showAmount" class="bg-primary/20 text-secondary text-xs sm:text-sm px-2 sm:px-3 py-0.5 rounded-full">Amount: {{ formattedAmount }}</span>
     </div>
   </div>
 </template>

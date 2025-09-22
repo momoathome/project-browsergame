@@ -20,8 +20,8 @@ return [
 
     /* base amount */
     'asteroid_faktor' => [
-        'min' => 45,
-        'max' => 60,
+        'min' => 22,
+        'max' => 30,
     ],
 
     /* base multiplier */
@@ -31,6 +31,35 @@ return [
         'large' => ['min' => 34, 'max' => 55],
         'extreme' => ['min' => 89, 'max' => 144],
     ],
+
+    // Anteil der Ressourcen am Asteroiden pro size
+    'max_resource_share' => [
+        'small' => [
+            'low_value' => 1.0,     // 100% erlaubt
+            'medium_value' => 0.8,  // max 80% der Gesamtmenge
+            'high_value' => 0.5,    // max 50%
+            'extreme_value' => 0.075, // max 7.5% auf Extreme
+        ],
+        'medium' => [
+            'low_value' => 1.0,
+            'medium_value' => 0.8,
+            'high_value' => 0.2,
+            'extreme_value' => 0.05, // max 5% auf Medium
+        ],
+        'large' => [
+            'low_value' => 1.0,
+            'medium_value' => 0.8,
+            'high_value' => 0.1,
+            'extreme_value' => 0.025, // max 2.5% auf Large
+        ],
+        'extreme' => [
+            'low_value' => 1.0,
+            'medium_value' => 0.8,
+            'high_value' => 0.05,
+            'extreme_value' => 0.02, // max 2% auf Extreme
+        ],
+    ],
+
 
     // Multiplikator Bestimmt, wie weit Asteroiden von Stationen entfernt sein müssen
     'size_min_distance' => [
@@ -65,9 +94,9 @@ return [
     ],
 
     'pool_weights' => [
-        'low_value' => 0.7575, //75.75%
+        'low_value' => 0.7725, //77.25%
         'medium_value' => 0.20, //20%
-        'high_value' => 0.035, //3.5%
+        'high_value' => 0.02, //2%
         'extreme_value' => 0.0075, //0.75%
     ],
 

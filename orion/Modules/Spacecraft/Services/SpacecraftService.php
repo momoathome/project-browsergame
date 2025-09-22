@@ -123,7 +123,6 @@ readonly class SpacecraftService
                 'type' => $spacecraft->details->type,
                 'attack' => $spacecraft->attack,
                 'defense' => $spacecraft->defense,
-                'combat' => $spacecraft->combat,
                 'count' => $spacecraft->count,
                 'locked_count' => $spacecraft->locked_count,
                 'cargo' => $spacecraft->cargo,

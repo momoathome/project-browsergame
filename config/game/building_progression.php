@@ -1,6 +1,6 @@
 <?php
 
-$build_time_multiplier = 1.25;
+$build_time_multiplier = 1.30;
 $additional_resource_base_value = 10;
 $additional_resources_multiplier = 1;
 $additional_resource_referenz = 50;
@@ -15,10 +15,10 @@ return [
     'growth_factors' => [
         'Core' => 1.275,
         'Shipyard' => 1.30,
-        'Hangar' => 1.25,
+        'Hangar' => 1.275,
         'Laboratory' => 1.275,
         'Warehouse' => 1.275,
-        'Scanner' => 1.25,
+        'Scanner' => 1.275,
         'Guardian' => 1.30,
         // Weitere Gebäude...
     ],
@@ -149,7 +149,7 @@ return [
         'Guardian' => [
             'type' => 'additive',
             'base_value' => 1.0,
-            'increment' => 0.03,
+            'increment' => 0.02,
         ],
     ],
 

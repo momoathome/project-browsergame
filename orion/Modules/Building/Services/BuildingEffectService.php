@@ -49,7 +49,7 @@ class BuildingEffectService
 
         if ($config && !empty($attributes)) {
             foreach ($attributes as $attr) {
-                $effects[$attr] = $this->calculateEffect($config, $level);
+                $effects[$attr] = $this->calculateEffect($config, $level - 1);
             }
         }
 

@@ -1,36 +1,31 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import Divider from '@/Components/Divider.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
-import TertiaryButton from '@/Components/TertiaryButton.vue';
-import DialogModal from '@/Components/DialogModal.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
-import { useQueueStore } from '@/Composables/useQueueStore';
 import { numberFormat } from '@/Utils/format';
 import type { Building } from '@/types/types';
 
 const props = defineProps<{
-  building: Building
+  building: Building,
+  isCoreUpgradeBlocked: boolean,
+  nextUpgradeLevel: number
 }>();
 
 const emit = defineEmits<{
-  (e: 'upgrade-building'): void
+  (e: 'upgrade-building', building: Building): void,
+  (e: 'open-cancel-modal', building: Building): void
 }>();
-
-const isSubmitting = ref(false)
-const showCancelModal = ref(false);
-const { queueData, refreshQueue } = useQueueStore();
 
 // --- Computed Properties ---
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
-const userBuildings = usePage().props.buildings as Building[];
 const userResources = computed(() => usePage().props.userResources);
 const userAttributes = computed(() => usePage().props.userAttributes);
-const coreBuilding = computed(() => userBuildings.find(b => b.name === 'Core'));
+
+const canUpgrade = computed(() => {
+  return insufficientResources.value.every(resource => resource.sufficient) && !props.isCoreUpgradeBlocked;
+});
 
 const currentEffect = computed(() => {
   return props.building.effect?.current ?? null;
@@ -101,58 +96,16 @@ function goToMarketWithMissingResources() {
   }));
 }
 
-const buildingQueueCount = computed(() => {
-  return (queueData.value ?? []).filter(q =>
-    q.targetId === props.building.id &&
-    q.actionType === 'building'
-  ).length;
-});
-
-const nextUpgradeLevel = computed(() => props.building.level + buildingQueueCount.value + 1);
-
-const canUpgrade = computed(() => {
-  return insufficientResources.value.every(resource => resource.sufficient) && !isCoreUpgradeBlocked.value;
-});
-
-const isCoreUpgradeBlocked = computed(() => {
-  if (!coreBuilding.value) return false;
-  return props.building.name !== 'Core' && nextUpgradeLevel.value > coreBuilding.value.level;
-});
-
-function upgradeBuilding() {
-  if (isSubmitting.value && isCoreUpgradeBlocked.value) return;
-  isSubmitting.value = true;
-
-  router.post(
-    route('buildings.update', props.building.id),
-    {},
-    {
-      preserveState: true,
-      onFinish: () => { 
-        isSubmitting.value = false, 
-        emit('upgrade-building');
-        refreshQueue();
-      },
-      onError: () => { isSubmitting.value = false; }
-    }
-  );
+function openCancelModal() {
+  if (isUpgrading.value) {
+    emit('open-cancel-modal', props.building);
+  }
 }
 
-function handleCancelUpgrade() {
-  if (isSubmitting.value) return;
-  isSubmitting.value = true;
+function upgradeBuilding() {
+  if (!canUpgrade || props.isCoreUpgradeBlocked) return;
 
-  router.delete(route('buildings.cancel', props.building.id), {
-    preserveState: true,
-    onFinish: () => {
-      isSubmitting.value = false;
-      showCancelModal.value = false;
-      emit('upgrade-building');
-      refreshQueue();
-      router.reload({ only: ['userAttributes'] });
-    },
-    onError: () => { isSubmitting.value = false; }
-  });
+  emit('upgrade-building', props.building);
 }
 </script>
 
@@ -208,48 +161,18 @@ function handleCancelUpgrade() {
           :buildTime="isUpgrading ? building.old_build_time : building.build_time" 
           :endTime="upgradeEndTime" 
           :isInProgress="isUpgrading"
-          @cancel-upgrade="showCancelModal = true"
+          @cancel-upgrade="openCancelModal"
           :description="`Up to lv. ${building.level + 1}`" />
         <button
           class="px-4 py-2 w-full rounded-br-xl border-t border-primary/40 bg-primary/40 text-light font-semibold transition hover:bg-primary focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
           @click="upgradeBuilding" :disabled="!canUpgrade || isCoreUpgradeBlocked" type="button">
-          <span v-if="isCoreUpgradeBlocked">Upgrade Core first</span>
+          <span v-if="isCoreUpgradeBlocked">Upgrade Core</span>
           <span v-else>Upgrade to lv. {{ nextUpgradeLevel }}</span>
         </button>
       </div>
     </div>
 
   </div>
-
-    <DialogModal :show="showCancelModal" @close="showCancelModal = false" class="bg-slate-950/70 backdrop-blur-sm">
-      <template #title>Cancel Upgrade</template>
-      <template #content>
-        <p>
-          Are you sure you want to cancel
-          <span class="font-semibold">{{ building.name }}</span>
-          <span v-if="buildingQueueCount > 1">
-            upgrades? This will cancel <b>all {{ buildingQueueCount }}</b> planned upgrades for this building.
-          </span>
-          <span v-else>
-            the upgrade of <b>{{ building.name }}</b>?
-          </span>
-        </p>
-        <p class="text-gray-400 mt-2">
-          <span v-if="buildingQueueCount > 1">
-            You will lose all progress and get 80% of resources back for the active upgrade, and 100% for pending upgrades.
-          </span>
-          <span v-else>
-            You will lose all progress and 80% of resources spent on this upgrade.
-          </span>
-        </p>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-4">
-          <TertiaryButton @click="showCancelModal = false">No, Keep Upgrading</TertiaryButton>
-          <SecondaryButton @click="handleCancelUpgrade">Yes, Cancel Upgrade</SecondaryButton>
-        </div>
-      </template>
-    </DialogModal>
 
 </template>
 

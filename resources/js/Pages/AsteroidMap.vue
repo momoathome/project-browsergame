@@ -96,6 +96,10 @@ const userStation = computed(() => {
   return props.stations.find(station => station.user_id === usePage().props.auth.user.id);
 });
 
+const unlockedSpacecrafts = computed(() => {
+  return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
+});
+
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
 
@@ -1003,6 +1007,7 @@ const playerInfluences = computed<PlayerInfluence[]>(() => {
 const showInfluence = ref(false);
 const showInfluenceSidebar = ref(false);
 const showSideOverview = ref(false);
+const activeSidebar = ref<'influence' | 'overview' | null>(null);
 
 function toggleInfluence() {
   showInfluence.value = !showInfluence.value;
@@ -1133,6 +1138,23 @@ function selectAsteroid(asteroid: Asteroid) {
   selectedAsteroid.value = asteroid;
 }
 
+function openInfluenceSidebar() {
+  showInfluenceSidebar.value = true;
+  activeSidebar.value = 'influence';
+}
+function openSideOverview() {
+  showSideOverview.value = true;
+  activeSidebar.value = 'overview';
+}
+function closeInfluenceSidebar() {
+  showInfluenceSidebar.value = false;
+  if (activeSidebar.value === 'influence') activeSidebar.value = null;
+}
+function closeSideOverview() {
+  showSideOverview.value = false;
+  if (activeSidebar.value === 'overview') activeSidebar.value = null;
+}
+
 watch(() => queueData.value, () => {
   updateShipPool();
   scheduleDraw();
@@ -1176,25 +1198,49 @@ watch(() => queueData.value, () => {
       </button>
     </div>
 
+    <!-- Influence Toggle Button -->
+    <button
+      class="fixed top-48 right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
+      :style="(showInfluenceSidebar || showSideOverview) ? 'transform: translateX(-12vw)' : ''"
+      @click="[showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar(), toggleInfluence()]"
+    >
+      <img v-show="!showInfluenceSidebar" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
+      <svg v-show="showInfluenceSidebar" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
+      </svg>
+    </button>
+
+    <!-- Overview Toggle Button -->
+    <button
+      class="fixed top-[272px] right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
+      :style="(showSideOverview || showInfluenceSidebar) ? 'transform: translateX(-12vw)' : ''"
+      @click="showSideOverview ? closeSideOverview() : openSideOverview()"
+    >
+      <img v-show="!showSideOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
+      <svg v-show="showSideOverview" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
+      </svg>
+    </button>
+
     <!-- Sidebar -->
-    <AsteroidMapInfluence :influence-of-all-users="props.influenceOfAllUsers" :show="showInfluenceSidebar"
-      @toggle="showInfluenceSidebar = !showInfluenceSidebar, toggleInfluence()"
+    <AsteroidMapInfluence
+      :influence-of-all-users="props.influenceOfAllUsers"
+      :show="showInfluenceSidebar"
+      @toggle="showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar()"
       @focus-player="focusOnObject(null, $event)"
+      :style="{
+        zIndex: activeSidebar === 'influence' ? 30 : 20
+      }"
     />
 
     <!-- Sidebar Overview -->
-    <div class="fixed right-0 top-[56px] h-[calc(100vh-56px)] flex transition-transform duration-300"
-          :style="showSideOverview ? 'transform: translateX(0)' : 'transform: translateX(100%)'"
+    <div
+      class="fixed right-0 top-[56px] h-[calc(100vh-56px)] flex transition-transform duration-300"
+      :style="[
+        showSideOverview ? 'transform: translateX(0)' : 'transform: translateX(100%)',
+        { zIndex: activeSidebar === 'overview' ? 30 : 20 }
+      ]"
     >
-      <button
-        class="h-16 w-16 px-3 absolute top-48 -left-16 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition"
-        @click="showSideOverview = !showSideOverview"
-      >
-        <img v-show="!showSideOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
-        <svg v-show="showSideOverview" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
-        </svg>
-      </button>
       <AppSideOverview />
     </div>
 
@@ -1205,7 +1251,7 @@ watch(() => queueData.value, () => {
     type: selectedObject?.type,
     data: selectedObject?.data as Asteroid | Station,
     title: selectedObject?.data?.name,
-  }" :open="isModalOpen" @close="closeModal" :spacecrafts="spacecrafts" :user-scan-range="userScanRange"
+  }" :open="isModalOpen" @close="closeModal" :spacecrafts="unlockedSpacecrafts" :user-scan-range="userScanRange"
     @redraw="drawScene" />
 
   <AutoMineModal :open="isAutoMineModalOpen" @close="closeAutoMineModal" @redraw="drawScene" />
@@ -1226,5 +1272,11 @@ ul::-webkit-scrollbar-thumb {
   border-radius: 10px;
   -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
   background-color: #bfbfbf;
+}
+
+.fancy-scroll::-webkit-scrollbar { width: 6px; }
+.fancy-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
 }
 </style>

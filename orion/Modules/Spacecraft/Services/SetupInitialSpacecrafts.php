@@ -42,7 +42,6 @@ class SetupInitialSpacecrafts
             'details_id' => $spacecraftConfig['details_id'],
             'attack' => $spacecraftConfig['attack'],
             'defense' => $spacecraftConfig['defense'],
-            'combat' => $spacecraftConfig['combat'],
             'cargo' => $spacecraftConfig['cargo'],
             'speed' => $spacecraftConfig['speed'],
             'operation_speed' => $spacecraftConfig['operation_speed'],

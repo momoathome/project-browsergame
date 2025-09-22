@@ -266,18 +266,8 @@ class SpacecraftProductionService
 
     public function unlockSpacecraft(int $userId, Spacecraft $spacecraft): array
     {
-        $researchPointsAttribute = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::RESEARCH_POINTS);
-
-        if (!$researchPointsAttribute || $researchPointsAttribute->attribute_value < $spacecraft->research_cost) {
-            return [
-                'success' => false,
-                'message' => 'Not enough research points'
-            ];
-        }
-
         try {
             DB::transaction(function () use ($userId, $spacecraft) {
-                $this->userAttributeService->subtractAttributeAmount($userId, UserAttributeType::RESEARCH_POINTS, $spacecraft->research_cost);
                 $spacecraft->unlocked = true;
                 $spacecraft->save();
 

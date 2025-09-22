@@ -21,6 +21,7 @@ use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingProgressionService;
 use Orion\Modules\User\Exceptions\InsufficientResourceException;
 use Orion\Modules\Influence\Services\InfluenceService;
+use Orion\Modules\Spacecraft\Services\ShipyardEffectHandlerService;
 
 class BuildingUpgradeService
 {
@@ -31,7 +32,8 @@ class BuildingUpgradeService
         private readonly BuildingProgressionService $buildingProgressionService,
         private readonly ActionQueueService $queueService,
         private readonly ResourceService $resourceService,
-        private readonly InfluenceService $influenceService
+        private readonly InfluenceService $influenceService,
+        private readonly ShipyardEffectHandlerService $shipyardEffectHandlerService
     ) {
     }
 
@@ -249,6 +251,10 @@ class BuildingUpgradeService
                 $attributeUpdates = $this->updateUserAttributesForBuilding($userId, $upgradedBuilding, $buildingType);
 
                 $this->influenceService->handleBuildingUpgradeCompleted($userId, $this->buildingProgressionService->calculateUpgradeCost($building, $building->level));
+
+                if ($building->details->name === BuildingType::SHIPYARD->value) {
+                    $this->shipyardEffectHandlerService->handleShipyardUpgrade($userId, $upgradedBuilding);
+                }
 
                 return [
                     'success' => true,

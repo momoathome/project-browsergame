@@ -21,7 +21,6 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->integer('attack')->default(0);
             $table->integer('defense')->default(0);
-            $table->integer('combat')->default(0);
             $table->integer('cargo')->default(0);
             $table->integer('speed')->default(0);
             $table->integer('operation_speed')->default(0);

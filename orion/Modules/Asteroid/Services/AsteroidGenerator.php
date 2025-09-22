@@ -102,7 +102,7 @@ class AsteroidGenerator
         }
     }
 
-    private function generateAsteroid(?string $asteroidSize = null): array
+    public function generateAsteroid(?string $asteroidSize = null): array
     {
         $asteroidBaseFaktor = rand($this->asteroidConfig['asteroid_faktor']['min'], $this->asteroidConfig['asteroid_faktor']['max']);
         $asteroidSize = $asteroidSize ?? $this->generateAsteroidSize($this->asteroidConfig['asteroid_size']);
@@ -201,48 +201,111 @@ class AsteroidGenerator
         }
         return $randomString;
     }
-
-    private function generateResourcesFromPools($asteroidValue, string $size): array
+    
+    public function generateResourcesFromPools($asteroidValue, string $size): array
     {
         $poolWeights = $this->asteroidConfig['pool_weights'];
-        $num_resource_range = $this->asteroidConfig['num_resource_range'];
-        $resource_ratio_range = $this->asteroidConfig['resource_ratio_range'];
-
-        // extreme_value: Nur bei small und nur als Einzelressource
-        if ($size === 'small') {
-            $extremePool = $this->asteroidConfig['resource_pools']['extreme_value']['resources'];
-            if (mt_rand() / mt_getrandmax() < $poolWeights['extreme_value']) {
-                $resource = $extremePool[array_rand($extremePool)];
-                return [$resource => $asteroidValue];
-            }
-        } else {
-            // In allen anderen Fällen extreme_value aus den Pool-Gewichten entfernen
-            unset($poolWeights['extreme_value']);
-            $total = array_sum($poolWeights);
-            $poolWeights = array_map(fn($w) => $w / $total, $poolWeights);
-        }
-
-        // Für große/extreme Asteroiden keine high/extreme Ressourcen
-        if ($size === 'extreme' || $size === 'large') {
-            unset($poolWeights['extreme_value'], $poolWeights['high_value']);
-            $total = array_sum($poolWeights);
-            $poolWeights = array_map(fn($w) => $w / $total, $poolWeights);
-        }
-
-        $num_resources = rand($num_resource_range[0], $num_resource_range[1]);
-        $resource_ratios = [];
-        for ($i = 0; $i < $num_resources; $i++) {
+        $numResourceRange = $this->asteroidConfig['num_resource_range'];
+        $resourceRatioRange = $this->asteroidConfig['resource_ratio_range'];
+        $maxShares = $this->asteroidConfig['max_resource_share'][$size] ?? [];
+    
+        $numResources = rand($numResourceRange[0], $numResourceRange[1]);
+        $resourceRatios = $this->generateRandomResourceRatios($numResources, $poolWeights, $resourceRatioRange);
+    
+        $totalRatio = array_sum(array_map('array_sum', $resourceRatios));
+        if ($totalRatio === 0) return [];
+    
+        $adjustedRatios = $this->adjustPoolShares($resourceRatios, $totalRatio, $maxShares);
+    
+        $finalResources = $this->normalizeRatiosToValue($adjustedRatios, $asteroidValue);
+    
+        $finalResources = $this->enforcePoolLimits($finalResources, $asteroidValue, $maxShares);
+    
+        $finalResources = $this->applyRoundingCorrection($finalResources, $asteroidValue);
+    
+        return $finalResources;
+    }
+    
+    private function generateRandomResourceRatios(int $numResources, array $poolWeights, array $ratioRange): array
+    {
+        $resourceRatios = [];
+        for ($i = 0; $i < $numResources; $i++) {
             $pool = $this->getRandomPool($poolWeights);
             $resources = $this->asteroidConfig['resource_pools'][$pool]['resources'];
             $resource = $resources[array_rand($resources)];
-            $resource_ratios[$resource] = ($resource_ratios[$resource] ?? 0) + rand($resource_ratio_range[0], $resource_ratio_range[1]);
+            $resourceRatios[$pool][$resource] = ($resourceRatios[$pool][$resource] ?? 0)
+                + rand($ratioRange[0], $ratioRange[1]);
         }
-
-        $total_ratio = array_sum($resource_ratios);
-        if ($total_ratio === 0) return [];
-        return array_map(fn($r) => intval($r / $total_ratio * $asteroidValue), $resource_ratios);
+        return $resourceRatios;
     }
-
+    
+    private function adjustPoolShares(array $resourceRatios, int $totalRatio, array $maxShares): array
+    {
+        $adjusted = [];
+        foreach ($resourceRatios as $poolName => $resources) {
+            $poolTotal = array_sum($resources);
+            $poolShare = $poolTotal / $totalRatio;
+            $maxShare = $maxShares[$poolName] ?? 1.0;
+            $adjustFactor = min(1, $poolShare > 0 ? $maxShare / $poolShare : 1);
+    
+            foreach ($resources as $resourceName => $ratio) {
+                $adjusted[$resourceName] = ($adjusted[$resourceName] ?? 0) + $ratio * $adjustFactor;
+            }
+        }
+        return $adjusted;
+    }
+    
+    private function normalizeRatiosToValue(array $ratios, int $asteroidValue): array
+    {
+        $total = array_sum($ratios);
+        if ($total === 0) return [];
+        $final = [];
+        foreach ($ratios as $resourceName => $ratio) {
+            $final[$resourceName] = intval(($ratio / $total) * $asteroidValue);
+        }
+        return $final;
+    }
+    
+    private function enforcePoolLimits(array $finalResources, int $asteroidValue, array $maxShares): array
+    {
+        $resourcePools = $this->asteroidConfig['resource_pools'];
+        foreach ($maxShares as $poolName => $maxShare) {
+            $poolResources = $resourcePools[$poolName]['resources'];
+            $poolSum = array_sum(array_intersect_key($finalResources, array_flip($poolResources)));
+            $maxAmount = intval($asteroidValue * $maxShare);
+            if ($poolSum > $maxAmount && $poolSum > 0) {
+                $overflow = $poolSum - $maxAmount;
+                foreach ($poolResources as $resName) {
+                    if ($overflow <= 0) break;
+                    if (!isset($finalResources[$resName])) continue;
+                    $remove = min($finalResources[$resName], $overflow);
+                    $finalResources[$resName] -= $remove;
+                    $overflow -= $remove;
+                }
+                if ($overflow > 0) {
+                    foreach ($finalResources as $resName => &$val) {
+                        if (!in_array($resName, $poolResources)) {
+                            $val += $overflow;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return $finalResources;
+    }
+    
+    private function applyRoundingCorrection(array $finalResources, int $asteroidValue): array
+    {
+        $sumFinal = array_sum($finalResources);
+        $diff = $asteroidValue - $sumFinal;
+        if ($diff !== 0 && count($finalResources) > 0) {
+            $randomKey = array_rand($finalResources);
+            $finalResources[$randomKey] += $diff;
+        }
+        return $finalResources;
+    }
+    
     private function getRandomPool($pool_weights)
     {
         $rand = mt_rand() / mt_getrandmax();

@@ -28,7 +28,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', HandleExceptionsForJetstream::class,])->group(function () {
-    Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
+    // Route::get('/overview', [OverviewController::class, 'index'])->name('overview');
 
     Route::get('/buildings/api', [BuildingController::class, 'getAllBuildings'])->name('buildings.api');
     Route::get('/buildings', [BuildingController::class, 'index'])->name('buildings');

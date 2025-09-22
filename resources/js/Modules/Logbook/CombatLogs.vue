@@ -24,7 +24,8 @@ const spacecraftMap = computed(() => {
     map[sc.details.name] = {
       type: sc.details.type,
       image: sc.details.image,
-      combat: sc.combat
+      attack: sc.attack,
+      defense: sc.defense,
     };
   });
   return map;

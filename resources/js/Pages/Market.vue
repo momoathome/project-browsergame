@@ -118,6 +118,7 @@ const tradeTooltip = computed(() => {
               :key="selectedGive.id"
               :marketData="selectedGive"
               :showAmount="true"
+              class="w-44 h-44"
               style="pointer-events: none;"
             />
             <MarketPlaceholder v-else class="!border-primary/30">
@@ -143,6 +144,7 @@ const tradeTooltip = computed(() => {
               :key="selectedReceive.id"
               :marketData="selectedReceive" 
               :showStock="true"
+              class="w-44 h-44"
               style="pointer-events: none;" 
               />
             <MarketPlaceholder v-else class="!border-secondary/20">
@@ -222,7 +224,7 @@ const tradeTooltip = computed(() => {
 
 <style scoped>
 .market-grid {
-  --grid-min-col-size: 176px;
+  --grid-min-col-size: 160px;
 
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min-col-size), 100%), 1fr));

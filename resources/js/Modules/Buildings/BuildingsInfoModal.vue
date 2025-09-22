@@ -149,7 +149,11 @@ watch(tabIndex, (idx) => {
                             </thead>
                             <tbody>
                                 <tr v-for="(lvl, idx) in Object.keys(buildingInfo.costs).map(Number).sort((a, b) => a - b)"
-                                    :key="lvl" :class="idx % 2 === 0 ? '' : 'bg-primary/20'"
+                                    :key="lvl" 
+                                    :class="[
+                                        idx % 2 === 0 ? '' : 'bg-primary/20',
+                                        lvl === props.buildings[tabIndex].level ? 'bg-secondary/30 font-bold ring-1 ring-secondary hover:bg-secondary/40' : '',
+                                    ]"
                                     class="hover:bg-primary/30 transition">
                                     <td class="text-center">{{ lvl }}</td>
                                     <td v-for="res in buildingInfo.costs[Math.max(...Object.keys(buildingInfo.costs).map(Number))]"

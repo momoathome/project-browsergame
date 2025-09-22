@@ -28,7 +28,7 @@ class BuildingDetailsSeeder extends Seeder
 
         BuildingDetails::create([
             'name' => 'Hangar',
-            'description' => 'Stores your fleet and adds docking slots.',
+            'description' => 'Stores your fleet, repairs them and adds docking slots.',
             'image' => '/images/buildings/hangar.webp',
             'effect' => 'Crew Limit',
         ]);

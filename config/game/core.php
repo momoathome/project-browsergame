@@ -29,9 +29,9 @@ return [
     /* Asteroid */
     'asteroid_distance' => 800,                         // Minimaler Abstand zwischen Asteroiden
     'extreme_asteroid_distance' => 6000,                // Minimaler Abstand zwischen 'extreme' Asteroiden
-    'strategic_asteroid_count' => 7,                   // Anzahl der strategischen Asteroiden
-    'strategic_asteroid_min_value' => 200,              // Mindestwert für Ressourcen der strategischen Asteroiden
-    'strategic_asteroid_max_value' => 400,              // Maximalwert für Ressourcen der strategischen Asteroiden
+    'strategic_asteroid_count' => 10,                   // Anzahl der strategischen Asteroiden
+    'strategic_asteroid_min_value' => 150,              // Mindestwert für Ressourcen der strategischen Asteroiden
+    'strategic_asteroid_max_value' => 300,              // Maximalwert für Ressourcen der strategischen Asteroiden
     'strategic_asteroid_outer_radius' => 4000,         // Äußerer Radius um Stationen für strategische Asteroiden -- sollte gleich gleich sein mit initial scanner radius
 
 ];

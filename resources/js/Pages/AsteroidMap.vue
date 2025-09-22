@@ -13,6 +13,7 @@ import { api } from '@/Services/api';
 import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import { useBuildingStore } from '@/Composables/useBuildingStore';
 import * as config from '@/config';
 import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft } from '@/types/types';
 
@@ -24,8 +25,8 @@ const props = defineProps<{
 }>();
 
 const { queueData } = useQueueStore();
-const spacecraftStore = useSpacecraftStore();
-const { spacecrafts } = spacecraftStore;
+const { spacecrafts } = useSpacecraftStore();
+const { buildings } = useBuildingStore();
 
 // Store immer mit aktuellen Props initialisieren
 onMounted(() => {
@@ -99,6 +100,13 @@ const userStation = computed(() => {
 const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
 });
+
+const hangar = buildings.value.find(b => b.name.toLowerCase() === 'hangar');
+const unlocks = hangar?.effect?.current?.unlock;
+
+const autoMiningUnlocked = Array.isArray(unlocks)
+  ? unlocks.includes('auto_mining')
+  : unlocks === 'auto_mining';
 
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
@@ -1004,17 +1012,6 @@ const playerInfluences = computed<PlayerInfluence[]>(() => {
     .filter(Boolean) as PlayerInfluence[];
 });
 
-const showInfluence = ref(false);
-const showInfluenceSidebar = ref(false);
-const showSideOverview = ref(false);
-const activeSidebar = ref<'influence' | 'overview' | null>(null);
-
-function toggleInfluence() {
-  showInfluence.value = !showInfluence.value;
-  drawInfluenceLayer();
-  drawScene();
-}
-
 async function getAsteroidResources(asteroid: Asteroid) {
   const { data, error } = await api.asteroids.getResources(asteroid.id);
 
@@ -1138,6 +1135,24 @@ function selectAsteroid(asteroid: Asteroid) {
   selectedAsteroid.value = asteroid;
 }
 
+const showInfluence = ref(false);
+const showInfluenceSidebar = ref(false);
+const showSideOverview = ref(false);
+const activeSidebar = ref<'influence' | 'overview' | null>(null);
+
+onMounted(() => {
+  const stored = localStorage.getItem('sideOverview');
+  if (stored !== null) {
+    showSideOverview.value = stored === 'true';
+  }
+});
+
+function toggleInfluence() {
+  showInfluence.value = !showInfluence.value;
+  drawInfluenceLayer();
+  drawScene();
+}
+
 function openInfluenceSidebar() {
   showInfluenceSidebar.value = true;
   activeSidebar.value = 'influence';
@@ -1145,6 +1160,7 @@ function openInfluenceSidebar() {
 function openSideOverview() {
   showSideOverview.value = true;
   activeSidebar.value = 'overview';
+  localStorage.setItem('sideOverview', showSideOverview.value.toString());
 }
 function closeInfluenceSidebar() {
   showInfluenceSidebar.value = false;
@@ -1153,6 +1169,7 @@ function closeInfluenceSidebar() {
 function closeSideOverview() {
   showSideOverview.value = false;
   if (activeSidebar.value === 'overview') activeSidebar.value = null;
+  localStorage.setItem('sideOverview', showSideOverview.value.toString());
 }
 
 watch(() => queueData.value, () => {
@@ -1179,7 +1196,7 @@ watch(() => queueData.value, () => {
       class="absolute top-2 left-64 ms-2 w-44" :searched-asteroids="highlightedAsteroids"
       :selected-asteroid="selectedAsteroid" @select-asteroid="selectAsteroid" />
 
-    <button type="button"
+    <button type="button" v-if="autoMiningUnlocked"
       class="absolute top-2 left-64 ms-2 text-light bg-[hsl(263,45%,7%)] hover:bg-[hsl(263,20%,8%)] ring-[#bfbfbf] border border-[#6b7280] px-4 py-2 rounded-lg transition-transform duration-200"
       :class="{ 'translate-x-48 -ms-0': highlightedAsteroids && highlightedAsteroids.length > 0 }"
       @click="isAutoMineModalOpen = true">

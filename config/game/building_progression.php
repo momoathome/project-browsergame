@@ -134,7 +134,7 @@ return [
         'Warehouse' => [
             'type' => 'exponential',
             'base_value' => 1500,
-            'increment' => 1.25,
+            'increment' => 1.235,
         ],
         'Laboratory' => [
             'type' => 'additive',

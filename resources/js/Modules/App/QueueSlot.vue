@@ -10,8 +10,6 @@ const props = defineProps<{
   transitionName?: string
   displayQueueTime: (item: any) => string
 }>()
-
-const pendingCount = props.pendingCount ?? 0
 </script>
 
 <template>
@@ -32,9 +30,9 @@ const pendingCount = props.pendingCount ?? 0
                 {{ subtitle }}
               </p>
             </div>
-            <template v-if="pendingCount > 0">
+            <template v-if="props.pendingCount > 0">
               <span class="absolute bottom-1 right-2 bg-primary/50 text-light rounded-full px-2 py-1 text-xs font-medium">
-                +{{ pendingCount }}
+                +{{ props.pendingCount }}
               </span>
             </template>
           </div>

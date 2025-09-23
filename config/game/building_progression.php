@@ -37,8 +37,8 @@ return [
     'building_resources' => [
         'Core' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -48,8 +48,8 @@ return [
         ],
         'Shipyard' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -59,8 +59,8 @@ return [
         ],
         'Hangar' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -70,8 +70,8 @@ return [
         ],
         'Laboratory' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -81,8 +81,8 @@ return [
         ],
         'Warehouse' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -92,8 +92,8 @@ return [
         ],
         'Scanner' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],
@@ -103,8 +103,8 @@ return [
         ],
         'Guardian' => [
             'base' => ['Carbon', 'Titanium', 'Hydrogenium', 'Kyberkristall'],
-            'level_5' => ['Cobalt'],
-            'level_8' => ['Iridium'],
+            'level_4' => ['Cobalt'],
+            'level_7' => ['Iridium'],
             'level_10' => ['Uraninite'],
             'level_15' => ['Thorium'],
             'level_18' => ['Astatine'],

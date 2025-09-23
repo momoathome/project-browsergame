@@ -22,7 +22,6 @@ import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, S
 const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
-  spacecrafts: Spacecraft[];
   influenceOfAllUsers: { user_id: number; attribute_value: string; name: string }[];
 }>();
 

@@ -49,13 +49,11 @@ class AsteroidService
     {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
-        $spaceCrafts = $this->spacecraftService->formatSpacecraftsForDisplay($user->id);
         $influenceOfAllUsers = $this->userAttributeService->getInfluenceOfAllUsers();
 
         return [
             'asteroids' => $asteroids,
             'stations' => $stations,
-            'spacecrafts' => $spaceCrafts,
             'influenceOfAllUsers' => $influenceOfAllUsers,
         ];
     }
@@ -241,6 +239,7 @@ class AsteroidService
             return false;
         }
 
+        // TODO: Refactor this into a dedicated service with live broadcasting
         try {
             $asteroidGenerator = app(AsteroidGenerator::class);
             $radius = 15000;
@@ -254,6 +253,7 @@ class AsteroidService
             Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
         }
 
+        // removes mined asteroid from map in real-time
         broadcast(new ReloadFrontendCanvas($asteroid));
 
         $this->asteroidRepository->saveAsteroidMiningResult(

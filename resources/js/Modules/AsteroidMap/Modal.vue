@@ -264,7 +264,7 @@ watch(() => props.open, (open) => {
       (props.spacecrafts ?? []).forEach(s => (form.spacecrafts[s.name] = 0));
       setMinUnits();
     }
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = '';
   } else {
     document.body.style.overflow = '';
   }

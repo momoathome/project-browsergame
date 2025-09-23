@@ -5,18 +5,31 @@ namespace Orion\Modules\User\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Auth\AuthManager;
 use Orion\Modules\User\Services\UserResourceService;
 
 class UserResourceController extends Controller
 {
     public function __construct(
-        private readonly UserResourceService $userResourceService
+        private readonly UserResourceService $userResourceService,
+        private readonly AuthManager $authManager
     ) {
     }
 
     public function index()
     {
         //
+    }
+
+    public function getAllResources()
+    {
+        // return all user resources for the authenticated user
+        $user = $this->authManager->user();
+        $userResources = $this->userResourceService->getAllUserResourcesByUserId($user->id);
+
+        return response()->json([
+            'userResources' => $userResources,
+        ], 200);
     }
 
     /* For Testing Purposes */

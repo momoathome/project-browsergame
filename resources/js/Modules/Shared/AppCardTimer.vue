@@ -115,7 +115,7 @@ function handleCancelUpgrade() {
     :class="{ 'opacity-40': disabled }">
     <div
       @click="handleCancelUpgrade"
-      class="flex items-center h-11 overflow-hidden transition rounded-bl-xl relative gap-2 min-w-28 max-w-1/2 py-2 px-2"
+      class="flex items-center h-11 overflow-hidden transition duration-300 rounded-bl-xl relative gap-2 min-w-28 max-w-1/2 py-2 px-2"
       :class="{ 'bg-red-600 cursor-pointer': isInProgress && isHovered }" @mouseenter="isHovered = true"
       @mouseleave="isHovered = false">
       <svg v-if="!isHovered || !isInProgress" xmlns="http://www.w3.org/2000/svg"

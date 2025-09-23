@@ -129,7 +129,7 @@ return [
         'Hangar' => [
             'type' => 'exponential',
             'base_value' => 15,
-            'increment' => 1.35,
+            'increment' => 1.375,
         ],
         'Warehouse' => [
             'type' => 'exponential',

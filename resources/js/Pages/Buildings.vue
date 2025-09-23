@@ -4,6 +4,7 @@ import { router, usePage } from '@inertiajs/vue3';
 import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import type { Building } from '@/types/types';
 
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -13,6 +14,7 @@ import BuildingsInfoModal from '@/Modules/Buildings/BuildingsInfoModal.vue';
 
 const { buildings, refreshBuildings } = useBuildingStore();
 const { queueData, refreshQueue } = useQueueStore();
+const { userResources } = useResourceStore();
 
 const coreBuilding = computed(() => buildings.value.find(b => b.name === 'Core'));
 
@@ -106,6 +108,7 @@ function handleCloseInfoModal() {
       v-for="building in buildings" 
       :key="building.id" 
       :building="building"
+      :userResources="userResources"
       :is-core-upgrade-blocked="isUpgradeBlocked(building)"
       :next-upgrade-level="nextUpgradeLevel(building)"
       @upgrade-building="handleUpgradeBuilding" 

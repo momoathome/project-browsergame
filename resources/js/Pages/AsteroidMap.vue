@@ -14,6 +14,8 @@ import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
+import { useAttributeStore } from '@/Composables/useAttributeStore';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import * as config from '@/config';
 import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft } from '@/types/types';
 
@@ -24,15 +26,27 @@ const props = defineProps<{
   influenceOfAllUsers: { user_id: number; attribute_value: string; name: string }[];
 }>();
 
-const { queueData } = useQueueStore();
-const { spacecrafts } = useSpacecraftStore();
-const { buildings } = useBuildingStore();
+const { queueData, refreshQueue } = useQueueStore();
+const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
+const { buildings, refreshBuildings } = useBuildingStore();
+const { userAttributes, refreshAttributes } = useAttributeStore();
+const { userResources, refreshResources } = useResourceStore();
+const autoMiningUnlocked = ref(false)
 
 // Store immer mit aktuellen Props initialisieren
-onMounted(() => {
-  if (Array.isArray(usePage().props.spacecrafts)) {
-    spacecrafts.value = usePage().props.spacecrafts;
-  }
+onMounted(async () => {
+  await refreshQueue();
+  await refreshSpacecrafts();
+  await refreshBuildings();
+  await refreshAttributes();
+  await refreshResources();
+
+  const hangar = buildings.value.find(b => b.name.toLowerCase() === 'hangar');
+  const unlocks = hangar?.effect?.current?.unlock;
+
+  autoMiningUnlocked.value = Array.isArray(unlocks)
+  ? unlocks.includes('auto_mining')
+  : unlocks === 'auto_mining';
 });
 
 const asteroidImages = [
@@ -100,13 +114,6 @@ const userStation = computed(() => {
 const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
 });
-
-const hangar = buildings.value.find(b => b.name.toLowerCase() === 'hangar');
-const unlocks = hangar?.effect?.current?.unlock;
-
-const autoMiningUnlocked = Array.isArray(unlocks)
-  ? unlocks.includes('auto_mining')
-  : unlocks === 'auto_mining';
 
 const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
 const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
@@ -285,7 +292,7 @@ function scheduleDraw() {
 }
 
 const userScanRange = computed(() => {
-  const scanRangeAttribute = usePage().props.userAttributes.find(
+  const scanRangeAttribute = userAttributes.value.find(
     (attr) => attr.attribute_name === 'scan_range'
   );
   return scanRangeAttribute ? +scanRangeAttribute.attribute_value : 5000;

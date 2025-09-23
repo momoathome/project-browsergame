@@ -15,6 +15,7 @@ use Orion\Modules\Logbook\Http\Controllers\LogbookController;
 use Orion\Modules\Asteroid\Http\Controllers\AsteroidController;
 use Orion\Modules\Building\Http\Controllers\BuildingController;
 use Orion\Modules\User\Http\Controllers\UserResourceController;
+use Orion\Modules\User\Http\Controllers\UserAttributeController;
 use Orion\Modules\Spacecraft\Http\Controllers\SpacecraftController;
 use Orion\Modules\Actionqueue\Http\Controllers\ActionQueueController;
 
@@ -42,6 +43,13 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/shipyard/{spacecraft}/unlock', [SpacecraftController::class, 'unlock'])->name('shipyard.unlock');
     Route::delete('/shipyard/{spacecraft}/cancel', [SpacecraftController::class, 'cancel'])->name('shipyard.cancel');
 
+    Route::get('/resources/api', [UserResourceController::class, 'getAllResources'])->name('resources.api');
+    Route::get('/resources', [UserResourceController::class, 'index'])->name('resources');
+    Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
+
+    Route::get('/attributes/api', [UserAttributeController::class, 'getAllAttributes'])->name('attributes.api');
+    Route::get('/attributes', [UserAttributeController::class, 'index'])->name('attributes');
+
     Route::get('/market', [MarketController::class, 'index'])->name('market');
     Route::post('/market/trade', [MarketController::class, 'trade'])->name('market.trade');
 
@@ -66,8 +74,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
     Route::post('/simulator', [CombatController::class, 'simulate'])->name('simulator.simulate');
 
     Route::get('/logbook', [LogbookController::class, 'index'])->name('logbook');
-
-    Route::post('/resources/add', [UserResourceController::class, 'addResource'])->name('resources.add');
 
     Route::group([
         'middleware' => ['role:admin'],

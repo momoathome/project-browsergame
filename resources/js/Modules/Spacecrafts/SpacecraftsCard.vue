@@ -5,11 +5,13 @@ import { timeFormat, numberFormat } from '@/Utils/format';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
-import type { Spacecraft } from '@/types/types';
+import type { Spacecraft, UserAttributes, UserResources } from '@/types/types';
 
 const props = defineProps<{
   spacecraft: Spacecraft,
-  queuedCrew: number
+  queuedCrew: number,
+  userAttributes: UserAttributes[],
+  userResources: UserResources[]
 }>();
 
 const emit = defineEmits<{
@@ -22,8 +24,8 @@ const isSubmitting = ref(false);
 const form = useForm({ amount: 0 });
 
 // --- Computed Properties ---
-const userAttributes = computed(() => usePage().props.userAttributes);
-const userResources = computed(() => usePage().props.userResources);
+const userAttributes = computed(() => props.userAttributes);
+const userResources = computed(() => props.userResources);
 const productionEndTime = computed(() => props.spacecraft.end_time || null);
 const isProducing = computed(() => props.spacecraft.is_producing || false);
 const formattedAttack = computed(() => numberFormat(props.spacecraft.attack));

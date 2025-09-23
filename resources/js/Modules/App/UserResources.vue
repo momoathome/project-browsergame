@@ -2,19 +2,19 @@
 import { usePage, useForm } from '@inertiajs/vue3';
 import { computed, ref, onMounted } from 'vue';
 import { numberFormat } from '@/Utils/format';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { is, can } from 'laravel-permission-to-vuejs'
 
-const page = usePage();
+const { userResources, refreshResources } = useResourceStore();
+
 const form = useForm({
   resource_id: null,
   amount: 1000
 });
 
-const resourcesData = ref(page.props.userResources || []);
-
 const formattedResources = computed(() => {
-  return resourcesData.value.map((resource) => {
+  return userResources.value.map((resource) => {
     return {
       resource_id: resource.resource_id || null,
       name: resource.resource ? resource.resource.name : null,
@@ -39,7 +39,7 @@ function addResource(resourceId) {
 
 function updateResources(resources) {
   resources.forEach((res) => {
-    const found = resourcesData.value.find(r => r.resource_id === res.id);
+    const found = userResources.value.find(r => r.resource_id === res.id);
     if (found) {
       found.amount = res.amount;
     }
@@ -47,7 +47,7 @@ function updateResources(resources) {
 }
 
 onMounted(() => {
-  window.Echo.private(`user.update.${page.props.auth.user.id}`)
+  window.Echo.private(`user.update.${usePage().props.auth.user.id}`)
     .listen('.resources.updated', (data) => {
       if (data.resources) {
         updateResources(data.resources);

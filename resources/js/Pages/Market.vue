@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import MarketPlaceholder from '@/Modules/Market/MarketPlaceholder.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import type { Market, formattedMarketResource } from '@/types/types';
 import { numberFormat } from '@/Utils/format';
 
@@ -13,6 +14,8 @@ const props = defineProps<{
   market: Market[],
   categoryValues: Record<string, number>
 }>();
+
+const { userResources } = useResourceStore();
 
 const selectedGive = ref<formattedMarketResource | null>(null);
 const selectedReceive = ref<formattedMarketResource | null>(null);
@@ -32,10 +35,9 @@ const formattedResources = computed(() => props.market.map(m => ({
   category: m.category // Add category property
 })));
 const userFormattedResources = computed(() => {
-  const userResources = usePage().props.userResources;
   return formattedResources.value.map(r => ({
     ...r,
-    amount: userResources.find(u => u.resource_id === r.resource_id)?.amount ?? 0,
+    amount: userResources.value.find(u => u.resource_id === r.resource_id)?.amount ?? 0,
     description: r.description ?? '',
     category: r.category
   }));

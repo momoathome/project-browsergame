@@ -7,6 +7,8 @@ import AppSidebar from '@/Modules/App/AppSidebar.vue';
 import AppSideOverview from '@/Modules/App/AppSideOverview.vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
+import { useAttributeStore } from '@/Composables/useAttributeStore';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import { useQueue } from '@/Composables/useQueue'
 
 const props = defineProps<{
@@ -44,6 +46,8 @@ onMounted(async () => {
   await refresh()
   await useSpacecraftStore().refreshSpacecrafts();
   await useBuildingStore().refreshBuildings();
+  await useAttributeStore().refreshAttributes();
+  await useResourceStore().refreshResources();
 
   window.Echo.private(`user.combat.${userId}`)
     .listen('.user.attacked', refresh)

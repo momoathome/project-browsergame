@@ -4,12 +4,13 @@ import { router, usePage } from '@inertiajs/vue3';
 import AppCardTimer from '@/Modules/Shared/AppCardTimer.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { numberFormat } from '@/Utils/format';
-import type { Building } from '@/types/types';
+import type { Building, UserResources } from '@/types/types';
 
 const props = defineProps<{
   building: Building,
   isCoreUpgradeBlocked: boolean,
-  nextUpgradeLevel: number
+  nextUpgradeLevel: number,
+  userResources: UserResources[]
 }>();
 
 const emit = defineEmits<{
@@ -21,8 +22,7 @@ const emit = defineEmits<{
 // --- Computed Properties ---
 const isUpgrading = computed(() => props.building.is_upgrading || false);
 const upgradeEndTime = computed(() => props.building.end_time || null);
-const userResources = computed(() => usePage().props.userResources);
-const userAttributes = computed(() => usePage().props.userAttributes);
+const userResources = computed(() => props.userResources);
 
 const canUpgrade = computed(() => {
   return insufficientResources.value.every(resource => resource.sufficient) && !props.isCoreUpgradeBlocked;

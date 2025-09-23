@@ -148,7 +148,7 @@ const displayQueueTime = (item) => {
     <div class="flex flex-col gap-2 border-y border-primary/30 py-3">
       <div class="flex items-center gap-2">
         <img src="/images/space-craft.png" alt="spacecraft" class="h-5" />
-        <h2 class="font-semibold text-sm">in Orbit • {{ fleetSummary.totalInOrbit }}</h2>
+        <h2 class="font-semibold text-sm">in Orbit • {{ fleetSummary.totalInOrbit }} / {{ fleetSummary.totalCount }}</h2>
       </div>
       <div class="flex items-center gap-2">
         <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
@@ -176,7 +176,7 @@ const displayQueueTime = (item) => {
     </div>
 
     <div class="flex flex-col gap-2">
-      <template v-for="n in buildingSlots">
+      <template v-for="n in buildingSlots" :key="n">
         <QueueSlot
           :activeItem="activeBuildingQueue[n - 1]"
           :icon="activeBuildingQueue[n - 1] ? getTypeIcon(activeBuildingQueue[n - 1].rawData.actionType) : '/images/buildings.png'"
@@ -192,7 +192,7 @@ const displayQueueTime = (item) => {
     </div>
 
     <div class="flex flex-col gap-2">
-      <template v-for="n in productionSlots">
+      <template v-for="n in productionSlots" :key="n">
         <QueueSlot
           :activeItem="activeProductionQueue[n - 1]"
           :icon="activeProductionQueue[n - 1] ? getTypeIcon(activeProductionQueue[n - 1].rawData.actionType) : '/images/space-craft.png'"
@@ -226,7 +226,7 @@ const displayQueueTime = (item) => {
       </div>
       <transition name="fade" mode="default">
         <div v-show="!miningSlotsCollapsed" class="flex flex-col gap-2">
-          <template v-for="n in dockSlots">
+          <template v-for="n in dockSlots" :key="Number(n)">
             <QueueSlot
               :activeItem="activeDockQueue[n - 1]"
               :icon="activeDockQueue[n - 1] ? getTypeIcon(activeDockQueue[n - 1].rawData.actionType) : '/images/asteroid.png'"

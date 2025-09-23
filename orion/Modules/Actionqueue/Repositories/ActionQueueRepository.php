@@ -82,11 +82,14 @@ readonly class ActionQueueRepository
             $exists = ActionQueue::where('user_id', $userId)
                 ->where('action_type', $actionType)
                 ->where('target_id', $targetId)
-                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->whereIn('status', [
+                    QueueStatusType::STATUS_IN_PROGRESS,
+                    QueueStatusType::STATUS_PENDING
+                ])
                 ->lockForUpdate()
                 ->exists();
     
-            if ($exists) {
+            if ($exists && $actionType !== QueueActionType::ACTION_TYPE_MINING) {
                 $status = QueueStatusType::STATUS_PENDING;
             }
 
@@ -102,21 +105,34 @@ readonly class ActionQueueRepository
         });
     }
 
-    public function promoteNextPending(int $userId, QueueActionType $actionType)
+    public function promoteNextPending(int $userId, QueueActionType $actionType, int $targetId): void
     {
-        $nextPending = ActionQueue::where('user_id', $userId)
+        // Hole alle Pending-Einträge für den User und ActionType, sortiert nach Erstellungsdatum
+        $pendingEntries = ActionQueue::where('user_id', $userId)
             ->where('action_type', $actionType)
             ->where('status', QueueStatusType::STATUS_PENDING)
             ->orderBy('created_at', 'asc')
-            ->first();
-
-        if ($nextPending) {
-            $duration = $nextPending->details['duration'] ?? 60;
-            $nextPending->update([
-                'status' => QueueStatusType::STATUS_IN_PROGRESS,
-                'start_time' => now(),
-                'end_time' => now()->addSeconds($duration),
-            ]);
+            ->lockForUpdate()
+            ->get();
+    
+        foreach ($pendingEntries as $pending) {
+            // Prüfe, ob für dieses Gebäude bereits ein IN_PROGRESS existiert
+            $exists = ActionQueue::where('user_id', $userId)
+                ->where('action_type', $actionType)
+                ->where('target_id', $pending->target_id)
+                ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+                ->lockForUpdate()
+                ->exists();
+    
+            if (!$exists) {
+                $duration = $pending->details['duration'] ?? 60;
+                $pending->update([
+                    'status' => QueueStatusType::STATUS_IN_PROGRESS,
+                    'start_time' => now(),
+                    'end_time' => now()->addSeconds($duration),
+                ]);
+                break; // Nur das erste passende Pending promoten
+            }
         }
     }
 

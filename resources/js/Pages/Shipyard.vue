@@ -4,6 +4,8 @@ import { useForm, usePage, router } from '@inertiajs/vue3';
 import SpacecraftsCard from '@/Modules/Spacecrafts/SpacecraftsCard.vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useQueueStore } from '@/Composables/useQueueStore';
+import { useAttributeStore } from '@/Composables/useAttributeStore';
+import { useResourceStore } from '@/Composables/useResourceStore';
 import type { Spacecraft } from '@/types/types';
 
 import DialogModal from '@/Components/DialogModal.vue';
@@ -12,6 +14,8 @@ import TertiaryButton from '@/Components/TertiaryButton.vue';
 
 const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 const { queueData, refreshQueue } = useQueueStore();
+const { userAttributes, refreshAttributes } = useAttributeStore();
+const { userResources } = useResourceStore();
 
 const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
@@ -79,6 +83,8 @@ function handleProduceSpacecraft() {
     :key="spacecraft.id" 
     :spacecraft="spacecraft"
     :queued-crew="queuedCrewMap[spacecraft.id] || 0"
+    :userAttributes="userAttributes"
+    :userResources="userResources"
     @open-cancel-modal="handleOpenCancelModal"
     @produce-spacecraft="handleProduceSpacecraft" 
     />

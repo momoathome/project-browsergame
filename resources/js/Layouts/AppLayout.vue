@@ -150,6 +150,7 @@ onUnmounted(() => {
 
 .main:has(canvas) {
   padding: 0;
+  overflow: hidden;
 }
 
 .fancy-scroll::-webkit-scrollbar { width: 6px; }

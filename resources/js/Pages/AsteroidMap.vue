@@ -9,6 +9,10 @@ import AsteroidMapInfluence from '@/Modules/AsteroidMap/AsteroidMapInfluence.vue
 import AppSideOverview from '@/Modules/App/AppSideOverview.vue';
 import useAsteroidSearch from '@/Composables/useAsteroidSearch';
 import useAnimateView from '@/Composables/useAnimateView';
+import useAsteroidMapClick from '@/Composables/useAsteroidMapClick';
+import useShipPool from '@/Composables/useShipPool';
+import useInfluence from '@/Composables/useInfluence';
+import useSidebarOverview from '@/Composables/useSidebarOverview';
 import { api } from '@/Services/api';
 import { Quadtree } from '@/Utils/quadTree';
 import { useQueueStore } from '@/Composables/useQueueStore';
@@ -18,6 +22,12 @@ import { useAttributeStore } from '@/Composables/useAttributeStore';
 import { useResourceStore } from '@/Composables/useResourceStore';
 import * as config from '@/config';
 import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft, Rebel } from '@/types/types';
+import {
+  asteroidImages,
+  asteroidImageElements,
+  calculateVisibleArea,
+  isObjectVisible,
+} from '@/Utils/asteroidMapHelper';
 
 const props = defineProps<{
   asteroids: Asteroid[];
@@ -49,29 +59,12 @@ onMounted(async () => {
   : unlocks === 'auto_mining';
 });
 
-const asteroidImages = [
-  '/images/asteroids/Asteroid2.webp',
-  '/images/asteroids/Asteroid3.webp',
-  '/images/asteroids/Asteroid4.webp',
-  '/images/asteroids/Asteroid5.webp',
-  '/images/asteroids/Asteroid6.webp',
-  '/images/asteroids/Asteroid7.webp',
-  '/images/asteroids/Asteroid8.webp',
-  // ...weitere Bilder
-];
-
 const asteroidsWithImages = computed(() =>
   props.asteroids.map(asteroid => ({
     ...asteroid,
-    imageIndex: asteroid.id % asteroidImages.length // oder Math.floor(Math.random() * asteroidImages.length)
+    imageIndex: asteroid.id % asteroidImages.length
   }))
 );
-
-const asteroidImageElements = asteroidImages.map(src => {
-  const img = new Image();
-  img.src = src;
-  return img;
-});
 
 const stationImageSrc = '/images/station_full.webp';
 const asteroidImageSrc = '/images/asteroids/Asteroid2.webp';
@@ -110,17 +103,34 @@ const isDragging = ref(false);
 const moveSpeed = ref(10);
 const pendingDraw = ref(false);
 
-// static values
 const userStation = computed(() => {
   return props.stations.find(station => station.user_id === usePage().props.auth.user.id);
 });
-
 const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
 });
+const userScanRange = computed(() => {
+  const scanRangeAttribute = userAttributes.value.find(
+    (attr) => attr.attribute_name === 'scan_range'
+  );
+  return scanRangeAttribute ? +scanRangeAttribute.attribute_value : 4000;
+});
 
-const selectedObject = ref<{ type: 'station' | 'asteroid' | 'rebel'; data: Asteroid | Station | Rebel } | null>(null);
-const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
+const selectedObject = ref<{ 
+  type: 'station' | 'asteroid' | 'rebel'; 
+  data: Asteroid | Station | Rebel 
+} | null>(null);
+
+const {
+  shipPool,
+  updateShipPool,
+  renderVisibleShips
+} = useShipPool(queueData, userStation);
+
+watch(() => queueData.value, () => {
+  updateShipPool();
+  scheduleDraw();
+}, { deep: true });
 
 let frameCounter = 0;
 let animationFrameId: number | undefined;
@@ -145,13 +155,33 @@ function animateShips() {
   animationFrameId = requestAnimationFrame(animateShips);
 }
 
+// dropdown / selection
+const selectedAsteroid = ref<Asteroid>();
+function selectAsteroid(asteroid: Asteroid) {
+  focusOnObject(asteroid);
+  selectedAsteroid.value = asteroid;
+}
+
+const { focusOnObject } = useAnimateView(
+  pointX,
+  pointY,
+  zoomLevel,
+  drawScene,
+  props,
+  canvasRef,
+  config
+);
+
 const {
   searchForm,
-  performSearch,
-  clearSearch,
   highlightedAsteroids,
   highlightedStations,
-} = useAsteroidSearch(drawScene);
+  highlightedRebels,
+  scanAnimation,
+  searchAndFocus,
+  clearSearchAndUpdate,
+  currentlyHighlightedAsteroidIds,
+} = useAsteroidSearch(drawScene, props, userStation, userScanRange, focusOnObject);
 
 onMounted(() => {
   if (canvasRef.value) {
@@ -160,12 +190,10 @@ onMounted(() => {
     // Initialisiere den Schiffs-Canvas
     if (canvasStaticRef.value) {
       canvasStaticCtx.value = canvasStaticRef.value.getContext('2d');
-      adjustStaticCanvasSize();
     }
 
     if (canvasInfluenceRef.value) {
       canvasInfluenceCtx.value = canvasInfluenceRef.value.getContext('2d');
-      adjustInfluenceCanvasSize();
     }
 
     adjustCanvasSize();
@@ -233,21 +261,18 @@ function focusUserStationOnInitialLoad() {
   pointY.value = -(userStation.value.y * config.initialZoom - canvasRef.value.height / 2);
   zoomLevel.value = config.initialZoom;
 }
-
 function adjustStaticCanvasSize() {
   if (canvasStaticRef.value && canvasStaticCtx.value) {
     canvasStaticRef.value.width = window.innerWidth;
     canvasStaticRef.value.height = window.innerHeight - 20;
   }
 }
-
 function adjustInfluenceCanvasSize() {
   if (canvasInfluenceRef.value && canvasInfluenceCtx.value) {
     canvasInfluenceRef.value.width = window.innerWidth;
     canvasInfluenceRef.value.height = window.innerHeight - 20;
   }
 }
-
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
@@ -256,8 +281,6 @@ function adjustCanvasSize() {
     adjustStaticCanvasSize();
     adjustInfluenceCanvasSize();
     drawScene();
-    drawMissionLayer();
-    drawInfluenceLayer();
   }
 }
 
@@ -271,17 +294,13 @@ function drawScene() {
   ctx.value.translate(pointX.value, pointY.value);
   ctx.value.scale(zoomLevel.value, zoomLevel.value);
 
-  const visibleArea = {
-    left: -pointX.value / zoomLevel.value,
-    top: -pointY.value / zoomLevel.value,
-    right: (width - pointX.value) / zoomLevel.value,
-    bottom: (height - pointY.value) / zoomLevel.value,
-  };
+  const visibleArea = calculateVisibleArea(width, height, pointX, pointY, zoomLevel);
 
   drawUserScanRange();
   drawScanWave();
   drawFlightPaths();
   drawStationsAndAsteroids(visibleArea);
+  drawMissionLayer();
   if (showInfluence.value) {
     drawInfluenceLayer();
   }
@@ -294,19 +313,10 @@ function scheduleDraw() {
     pendingDraw.value = true;
     requestAnimationFrame(() => {
       drawScene();
-      drawMissionLayer();
-      drawInfluenceLayer();
       pendingDraw.value = false;
     });
   }
 }
-
-const userScanRange = computed(() => {
-  const scanRangeAttribute = userAttributes.value.find(
-    (attr) => attr.attribute_name === 'scan_range'
-  );
-  return scanRangeAttribute ? +scanRangeAttribute.attribute_value : 5000;
-});
 
 function drawUserScanRange() {
   if (showInfluence.value) return;
@@ -338,38 +348,6 @@ function drawScanWave() {
   }
 }
 
-const currentlyHighlightedAsteroidIds = computed(() => {
-  if (scanAnimation.value.active && userStation.value) {
-    // Nur Asteroiden, die von der Welle erreicht wurden
-    return highlightedAsteroids.value
-      .filter(a => {
-        const asteroid = props.asteroids.find(ast => ast.id === a.id);
-        if (!asteroid) return false;
-        const dx = asteroid.x - userStation.value!.x;
-        const dy = asteroid.y - userStation.value!.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        return dist <= scanAnimation.value.radius;
-      })
-      .map(a => a.id);
-  }
-  // Nach der Animation: alle Treffer highlighten
-  return highlightedAsteroids.value.map(a => a.id);
-});
-
-function isObjectVisible(object: { x: number; y: number; pixel_size?: number }, visibleArea: { left: number; top: number; right: number; bottom: number }) {
-  // Berechne den Abstand zum sichtbaren Bereich basierend auf der Pixelgröße
-  const buffer = object.pixel_size ? object.pixel_size * asteroidBaseSize * scale.value : 100;
-
-  if (object.x < visibleArea.left - buffer ||
-    object.x > visibleArea.right + buffer ||
-    object.y < visibleArea.top - buffer ||
-    object.y > visibleArea.bottom + buffer) {
-    return false;
-  }
-
-  return true;
-}
-
 function drawStationsAndAsteroids(visibleArea: { left: number; top: number; right: number; bottom: number }) {
   if (!asteroidsQuadtree.value || !stationsQuadtree.value || !rebelsQuadtree.value) return;
 
@@ -384,8 +362,7 @@ function drawStationsAndAsteroids(visibleArea: { left: number; top: number; righ
   const potentiallyVisibleStations = stationsQuadtree.value.query(queryRange);
   potentiallyVisibleStations.forEach(item => {
     const station = item.data;
-    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
-    if (isObjectVisible(station, visibleArea)) {
+    if (isObjectVisible(station, visibleArea, stationBaseSize, scale)) {
       drawStation(station.x, station.y, station.name, station.id);
     }
   });
@@ -394,8 +371,7 @@ function drawStationsAndAsteroids(visibleArea: { left: number; top: number; righ
   const potentiallyVisibleAsteroids = asteroidsQuadtree.value.query(queryRange);
   potentiallyVisibleAsteroids.forEach(item => {
     const asteroid = item.data;
-    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
-    if (isObjectVisible(asteroid, visibleArea)) {
+    if (isObjectVisible(asteroid, visibleArea, asteroidBaseSize, scale)) {
       drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
     }
   });
@@ -404,8 +380,7 @@ function drawStationsAndAsteroids(visibleArea: { left: number; top: number; righ
   const potentiallyVisibleRebels = rebelsQuadtree.value.query(queryRange);
   potentiallyVisibleRebels.forEach(item => {
     const rebel = item.data;
-    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
-    if (isObjectVisible(rebel, visibleArea)) {
+    if (isObjectVisible(rebel, visibleArea, rebelBaseSize, scale)) {
       drawRebel(rebel.x, rebel.y, rebel.name, rebel.id);
     }
   });
@@ -498,7 +473,7 @@ function drawRebel(x: number, y: number, name: string) {
 
     function drawRebelName(ctx) {
       ctx.fillStyle = 'white';
-      const zoomBoost = Math.max(1, 0.1 / zoomLevel.value);
+      const zoomBoost = Math.max(1, 0.15 / zoomLevel.value);
       ctx.font = `${config.stationNameFontSize * scale.value * zoomBoost}px Arial`;
       const textWidth = ctx.measureText(name).width;
       const textX = x - textWidth / 2;
@@ -533,190 +508,6 @@ function drawHighlight(
   ctx.value.globalAlpha = 1;
   ctx.value.fill();
   ctx.value.restore();
-}
-
-function getInfluenceColor(userId) {
-  // Nutze userId als Seed für den Farbkreis (360 Farben)
-  const hue = (userId * 137) % 360; // 137 ist eine Primzahl für bessere Verteilung
-  return `hsla(${hue}, 80%, 60%, 0.18)`;
-}
-
-function drawInfluenceLayer() {
-  if (!canvasInfluenceCtx.value) return;
-  const ctx = canvasInfluenceCtx.value;
-  ctx.clearRect(0, 0, canvasInfluenceRef.value!.width, canvasInfluenceRef.value!.height);
-
-  if (!showInfluence.value) return;
-
-  ctx.save();
-  ctx.translate(pointX.value, pointY.value);
-  ctx.scale(zoomLevel.value, zoomLevel.value);
-
-  const influenceScale = 20;
-
-  playerInfluences.value.forEach(player => {
-    const radius = Math.max(20, Math.sqrt(player.influence) * influenceScale);
-    ctx.beginPath();
-    ctx.arc(player.station.x, player.station.y, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = getInfluenceColor(player.userId);
-    ctx.fill();
-  });
-
-  ctx.restore();
-}
-
-function onMouseDown(e: MouseEvent) {
-  isDragging.value = true;
-  startDrag.x = e.clientX - pointX.value;
-  startDrag.y = e.clientY - pointY.value;
-}
-
-function onMouseUp() {
-  isDragging.value = false;
-}
-
-function onMouseMove(e: MouseEvent) {
-  const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect || !ctx.value || !canvasRef.value) return;
-
-  if (isDragging.value) {
-    pointX.value = e.clientX - startDrag.x;
-    pointY.value = e.clientY - startDrag.y;
-    scheduleDraw();
-  }
-}
-
-function updateShipPool() {
-  const queueItems = (queueData.value || []) as QueueItem[];
-  const currentTime = new Date().getTime();
-  const activeMissionIds = new Set<number>();
-
-  // 1. Sammle alle relevanten Missionen
-  const missions = queueItems.filter((item) =>
-    (item.actionType === 'mining' || item.actionType === 'combat') &&
-    item.details?.target_coordinates !== undefined
-  );
-
-  // 2. Neue Missionen hinzufügen und bestehende aktualisieren
-  if (missions.length > 0 && userStation.value) {
-    missions.forEach(mission => {
-      const missionId = mission.id;
-      const missionType = mission.actionType as 'mining' | 'combat';
-      activeMissionIds.add(missionId);
-
-      // Nur neue Missionen initialisieren
-      if (!shipPool.value.has(missionId)) {
-        initializeNewMission(mission, missionId, missionType);
-      }
-    });
-  }
-
-  // 3. Bestehende Missionen aktualisieren oder entfernen
-  for (const missionId of shipPool.value.keys()) {
-    if (!activeMissionIds.has(missionId)) {
-      shipPool.value.delete(missionId);
-    } else {
-      updateMissionPosition(missionId, currentTime);
-    }
-  }
-}
-
-function initializeNewMission(mission: QueueItem, missionId: number, missionType: 'mining' | 'combat') {
-  const targetCoords = mission.details.target_coordinates;
-  const attackerCoords = mission.details.attacker_coordinates;
-  const startTime = new Date(mission.startTime).getTime();
-  const endTime = new Date(mission.endTime).getTime();
-
-  // Zähle die Gesamtzahl der Schiffe basierend auf dem Missionstyp
-  let totalShips = 0;
-
-  if (missionType === 'mining') {
-    const spacecrafts: SpacecraftFleet = mission.details.spacecrafts || {};
-    totalShips = Object.values(spacecrafts).reduce(
-      (sum, count) => sum + Number(count), 0
-    );
-  } else { // combat
-    const attackerSpacecrafts = mission.details.attacker_formatted || [];
-    totalShips = attackerSpacecrafts.reduce(
-      (sum, spacecraft) => sum + Number(spacecraft.count), 0
-    );
-  }
-
-  // Ermittle den Zielnamen je nach Missionstyp
-  const targetName = missionType === 'mining'
-    ? mission.details.asteroid_name || ''
-    : mission.details.defender_name || 'Gegner';
-
-  // Prüfe, ob Angriff auf mich
-  const isAttackOnMe = mission.actionType === 'combat'
-    && mission.targetId === usePage().props.auth.user.id;
-
-  // Startkoordinaten setzen
-  let startX, startY;
-  if (isAttackOnMe && attackerCoords) {
-    startX = attackerCoords.x;
-    startY = attackerCoords.y;
-  } else {
-    startX = userStation.value!.x;
-    startY = userStation.value!.y;
-  }
-
-  // Erstelle neues Objekt im Pool
-  shipPool.value.set(missionId, {
-    shipX: startX,
-    shipY: startY,
-    exactX: startX,
-    exactY: startY,
-    missionId,
-    targetName,
-    isAttackOnMe,
-    totalShips,
-    targetX: targetCoords!.x,
-    targetY: targetCoords!.y,
-    startX,
-    startY,
-    startTime,
-    endTime,
-    completed: false,
-    textOffsetY: -30,
-    missionType
-  });
-}
-
-function updateMissionPosition(missionId, currentTime) {
-  const shipObject = shipPool.value.get(missionId);
-  if (!shipObject) return;
-
-  const totalDuration = shipObject.endTime - shipObject.startTime;
-  const elapsedDuration = currentTime - shipObject.startTime;
-  const progressPercent = Math.min(Math.max(elapsedDuration / totalDuration, 0), 1);
-
-  // Flugphasen berechnen
-  if (progressPercent < 0.5) {
-    // Hinflug: Start -> Ziel
-    const flightProgress = progressPercent / 0.5;
-    shipObject.exactX = shipObject.startX + (shipObject.targetX - shipObject.startX) * flightProgress;
-    shipObject.exactY = shipObject.startY + (shipObject.targetY - shipObject.startY) * flightProgress;
-  } else if (progressPercent < 1) {
-    // Rückflug: Ziel -> Start
-    const returnProgress = (progressPercent - 0.5) / 0.5;
-    shipObject.exactX = shipObject.targetX + (shipObject.startX - shipObject.targetX) * returnProgress;
-    shipObject.exactY = shipObject.targetY + (shipObject.startY - shipObject.targetY) * returnProgress;
-  } else {
-    // Mission abgeschlossen, Schiff am Start
-    shipObject.exactX = shipObject.startX;
-    shipObject.exactY = shipObject.startY;
-    shipObject.shipX = shipObject.startX;
-    shipObject.shipY = shipObject.startY;
-    shipObject.completed = true;
-    // Nach kurzer Zeit entfernen
-    if (currentTime >= shipObject.endTime + 1000) {
-      shipPool.value.delete(missionId);
-      return;
-    }
-  }
-  shipObject.shipX = shipObject.exactX;
-  shipObject.shipY = shipObject.exactY;
 }
 
 function drawFlightPaths() {
@@ -787,8 +578,7 @@ function drawMissionLayer() {
   ctx.translate(pointX.value, pointY.value);
   ctx.scale(zoomLevel.value, zoomLevel.value);
 
-  // Sichtbaren Bereich berechnen
-  const visibleArea = calculateVisibleArea(width, height);
+  const visibleArea = calculateVisibleArea(width, height, pointX, pointY, zoomLevel);
 
   // Textformatierung einstellen
   ctx.fillStyle = 'white';
@@ -800,135 +590,59 @@ function drawMissionLayer() {
   ctx.restore();
 }
 
-function calculateVisibleArea(width, height) {
-  return {
-    left: -pointX.value / zoomLevel.value,
-    top: -pointY.value / zoomLevel.value,
-    right: (width - pointX.value) / zoomLevel.value,
-    bottom: (height - pointY.value) / zoomLevel.value,
-  };
+function drawInfluenceLayer() {
+  if (!canvasInfluenceCtx.value) return;
+  const ctx = canvasInfluenceCtx.value;
+  ctx.clearRect(0, 0, canvasInfluenceRef.value!.width, canvasInfluenceRef.value!.height);
+
+  if (!showInfluence.value) return;
+
+  ctx.save();
+  ctx.translate(pointX.value, pointY.value);
+  ctx.scale(zoomLevel.value, zoomLevel.value);
+
+  const influenceScale = 20;
+
+  playerInfluences.value.forEach(player => {
+    const radius = Math.max(20, Math.sqrt(player.influence) * influenceScale);
+    ctx.beginPath();
+    ctx.arc(player.station.x, player.station.y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = getInfluenceColor(player.userId);
+    ctx.fill();
+  });
+
+  ctx.restore();
 }
 
-function renderVisibleShips(ctx, visibleArea, currentScale) {
-  const buffer = 50 * currentScale;
+const {
+  getClickCoordinates,
+  findClickedAsteroid,
+  findClickedStation,
+  findClickedRebel,
+  onMouseDown,
+  onMouseUp,
+  onMouseMove,
+} = useAsteroidMapClick(
+  canvasRef,
+  ctx,
+  pointX,
+  pointY,
+  zoomLevel,
+  scale,
+  asteroidBaseSize,
+  stationBaseSize,
+  rebelBaseSize,
+  props,
+  startDrag,
+  isDragging,
+  scheduleDraw
+);
 
-  for (const ship of shipPool.value.values()) {
-    // Prüfe, ob das Schiff im sichtbaren Bereich liegt
-    if (!isShipVisible(ship, visibleArea, buffer)) continue;
-
-    // Nur nicht abgeschlossene Schiffe zeichnen
-    if (!ship.completed) {
-      // Zeichne das Schiff
-      drawShip(ctx, ship, currentScale);
-      drawShipLabel(ctx, ship, currentScale);
-    }
-  }
-}
-
-function isShipVisible(ship, visibleArea, buffer) {
-  return ship.shipX >= visibleArea.left - buffer &&
-    ship.shipX <= visibleArea.right + buffer &&
-    ship.shipY >= visibleArea.top - buffer &&
-    ship.shipY <= visibleArea.bottom + buffer;
-}
-
-function drawShip(ctx, ship, currentScale) {
-  const displayX = Math.round(ship.shipX);
-  const displayY = Math.round(ship.shipY);
-
-  // Schifffarbe basierend auf Missionstyp
-  if (ship.missionType === 'combat' && ship.isAttackOnMe) {
-    ctx.fillStyle = 'rgba(255, 0, 0, 1)'; // rot für Angriffe auf mich
-  } else if (ship.missionType === 'combat') {
-    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für andere Kampfmissionen
-  } else {
-    ctx.fillStyle = 'white';
-  }
-
-  // Schiff als Kreis darstellen
-  ctx.beginPath();
-  ctx.arc(displayX, displayY, 20 * currentScale, 0, 2 * Math.PI);
-  ctx.fill();
-}
-
-function drawShipLabel(ctx, ship, currentScale) {
-  const labelText = ship.missionType === 'combat'
-    ? `${ship.targetName} (Attack)`
-    : ship.targetName;
-
-  const textWidth = ctx.measureText(labelText).width;
-  const textX = ship.exactX - textWidth / 2;
-  const textY = ship.exactY + ship.textOffsetY * currentScale;
-
-  // Rot für Angriffe auf mich, sonst cyan/weiß
-  if (ship.missionType === 'combat' && ship.isAttackOnMe) {
-    ctx.fillStyle = 'rgba(255, 0, 0, 1)'; // rot für Angriffe auf mich
-  } else if (ship.missionType === 'combat') {
-    ctx.fillStyle = 'rgba(0, 255, 255, 1)'; // cyan für andere Kampfmissionen
-  } else {
-    ctx.fillStyle = 'white';
-  }
-
-  ctx.fillText(labelText, textX, textY);
-}
-
-interface ClickCoordinates {
-  x: number;
-  y: number;
-}
-
-function getClickCoordinates(e: MouseEvent): ClickCoordinates | null {
-  const rect = canvasRef.value?.getBoundingClientRect();
-  if (!rect || !ctx.value || !canvasRef.value) return null;
-
-  const scaleX = canvasRef.value.width / rect.width;
-  const scaleY = canvasRef.value.height / rect.height;
-
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
-
-  return {
-    x: (x - pointX.value) / zoomLevel.value,
-    y: (y - pointY.value) / zoomLevel.value
-  };
-}
-
-function handleCoordinateDisplay(coords: ClickCoordinates, e: MouseEvent) {
+function handleCoordinateDisplay(coords: {x: number, y: number}, e: MouseEvent) {
   console.log(`Koordinaten: x=${Math.round(coords.x)}, y=${Math.round(coords.y)}`);
   // showCoordinatesOverlay(coords.x, coords.y);
   e.stopPropagation();
   return true;
-}
-
-function findClickedAsteroid(coords: ClickCoordinates, radius = 120) {
-  return props.asteroids.find(asteroid => {
-    const dx = coords.x - asteroid.x;
-    const dy = coords.y - asteroid.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const scaledSize = (asteroidBaseSize * asteroid.pixel_size) * scale.value;
-    // Nutze das größere von radius oder halbe Asteroidgröße
-    return distance < Math.max(radius, scaledSize / 2);
-  });
-}
-
-function findClickedStation(coords: ClickCoordinates, radius = 120) {
-  return props.stations.find(station => {
-    const dx = coords.x - station.x;
-    const dy = coords.y - station.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const scaledSize = stationBaseSize * scale.value;
-    return distance < Math.max(radius, scaledSize / 2);
-  });
-}
-
-function findClickedRebel(coords: ClickCoordinates, radius = 120) {
-  return props.rebels.find(rebel => {
-    const dx = coords.x - rebel.x;
-    const dy = coords.y - rebel.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    const scaledSize = rebelBaseSize * scale.value;
-    return distance < Math.max(radius, scaledSize / 2);
-  });
 }
 
 function handleClickedObject(clickedObject: { type: 'station' | 'asteroid' | 'rebel'; data: Station | Asteroid | Rebel }) {
@@ -941,6 +655,20 @@ function handleClickedObject(clickedObject: { type: 'station' | 'asteroid' | 're
     isModalOpen.value = true;
   } else if (clickedObject.type === 'asteroid') {
     getAsteroidResources(clickedObject.data as Asteroid);
+  }
+}
+
+async function getAsteroidResources(asteroid: Asteroid) {
+  const { data, error } = await api.asteroids.getResources(asteroid.id);
+
+  if (!error) {
+    selectedObject.value = {
+      data: data.asteroid,
+      type: 'asteroid',
+    }
+    isModalOpen.value = true;
+  } else {
+    console.error('Fehler beim Abrufen der Asteroidenressourcen:', error);
   }
 }
 
@@ -991,46 +719,6 @@ function onWheel(e: WheelEvent) {
   }
 }
 
-// Funktion zum Verschieben der Karte mit den Pfeiltasten
-/* function onKeyDown(e: KeyboardEvent) {
-  // Keine Aktion, wenn in Eingabefeldern oder Modals
-  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-    return;
-  }
-
-  if (isModalOpen.value) {
-    return;
-  }
-  if (!canvasRef.value || !ctx.value) return;
-
-  // Geschwindigkeit vom Zoomlevel abhängig machen
-  const speedFactor = 2 / zoomLevel.value;
-  const currentSpeed = moveSpeed.value * speedFactor;
-
-  switch (e.key) {
-    case 'ArrowUp':
-      pointY.value += currentSpeed;
-      e.preventDefault();
-      break;
-    case 'ArrowDown':
-      pointY.value -= currentSpeed;
-      e.preventDefault();
-      break;
-    case 'ArrowLeft':
-      pointX.value += currentSpeed;
-      e.preventDefault();
-      break;
-    case 'ArrowRight':
-      pointX.value -= currentSpeed;
-      e.preventDefault();
-      break;
-  }
-
-  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-    requestAnimationFrame(drawScene);
-  }
-} */
-
 /* function showCoordinatesOverlay(x: number, y: number) {
   if (!canvasRef.value) return;
   
@@ -1062,192 +750,36 @@ function onWheel(e: WheelEvent) {
   }, 3000);
 } */
 
-interface PlayerInfluence {
-  userId: number;
-  station: Station;
-  influence: number;
-  name: string;
-}
-
-const playerInfluences = computed<PlayerInfluence[]>(() => {
-  return props.influenceOfAllUsers
-    .map(inf => {
-      const station = props.stations.find(s => s.user_id === inf.user_id);
-      if (!station) return null;
-      return {
-        userId: inf.user_id,
-        station,
-        influence: Number(inf.attribute_value),
-        name: inf.name
-      } as PlayerInfluence;
-    })
-    .filter(Boolean) as PlayerInfluence[];
-});
-
-async function getAsteroidResources(asteroid: Asteroid) {
-  const { data, error } = await api.asteroids.getResources(asteroid.id);
-
-  if (!error) {
-    selectedObject.value = {
-      data: data.asteroid,
-      type: 'asteroid',
-    }
-    isModalOpen.value = true;
-  } else {
-    console.error('Fehler beim Abrufen der Asteroidenressourcen:', error);
-  }
-}
-
-const { animateView } = useAnimateView(pointX, pointY, zoomLevel, drawScene);
-
-function focusOnObject(object: Station | Asteroid, userId?: number) {
-  const targetObject = userId
-    ? props.stations.find(station => station.user_id === userId)
-    : props.asteroids.find(asteroid => asteroid.id === object.id);
-
-  if (!targetObject || !canvasRef.value) return;
-
-  const targetX = -(targetObject.x * zoomLevel.value - canvasRef.value.width / 2);
-  const targetY = -(targetObject.y * zoomLevel.value - canvasRef.value.height / 2);
-  // const targetZoomLevel = config.baseZoomLevel;
-  const targetZoomLevel = zoomLevel.value;
-
-  animateView(targetX, targetY, targetZoomLevel);
-}
-
-const scanAnimation = ref({
-  active: false,
-  radius: 0,
-  maxRadius: 0,
-  asteroidsToHighlight: [] as number[],
-  animationFrame: 0,
-  startTime: 0,
-  duration: 1000,
-});
-
-function searchAndFocus() {
-  performSearch(() => {
-    // Prüfe, ob NUR Stationen gefunden wurden (keine Asteroiden)
-    if (highlightedAsteroids.value.length === 0 && highlightedStations.value.length > 0) {
-      focusOnSingleResult();
-      drawScene();
-      return;
-    }
-
-    if (userStation.value) {
-      scanAnimation.value.asteroidsToHighlight = highlightedAsteroids.value.map(a => a.id);
-      scanAnimation.value.active = true;
-      scanAnimation.value.radius = 0;
-      scanAnimation.value.maxRadius = userScanRange.value;
-      scanAnimation.value.animationFrame = 0;
-      scanAnimation.value.startTime = performance.now();
-      animateScanWave();
-    } else {
-      focusOnSingleResult();
-      drawScene();
-    }
-  });
-}
-
-function clearSearchAndUpdate() {
-  clearSearch();
-  drawScene();
-}
-
-function animateScanWave() {
-  if (!scanAnimation.value.active || !userStation.value) return;
-
-  const now = performance.now();
-  const elapsed = now - scanAnimation.value.startTime;
-  const progress = Math.min(elapsed / scanAnimation.value.duration, 1);
-
-  scanAnimation.value.radius = scanAnimation.value.maxRadius * progress;
-
-  drawScene();
-
-  if (progress < 1) {
-    scanAnimation.value.animationFrame = requestAnimationFrame(animateScanWave);
-  } else {
-    scanAnimation.value.active = false;
-    focusOnSingleResult();
-    drawScene();
-  }
-}
-
-const focusOnSingleResult = () => {
-  if (highlightedAsteroids.value.length === 1) {
-    const asteroid = props.asteroids.find(a => a.id === highlightedAsteroids.value[0]?.id);
-    if (asteroid) {
-      focusOnObject(asteroid);
-    }
-  } else if (highlightedStations.value.length === 1) {
-    const station = props.stations.find(s => s.id === highlightedStations.value[0]);
-    if (station) {
-      focusOnObject(station, station.user_id);
-    }
-  }
-};
-
 const isAutoMineModalOpen = ref(false);
 const isModalOpen = ref(false)
+
 function closeModal() {
   isModalOpen.value = false;
   setTimeout(() => {
     selectedObject.value = null;
   }, 300);
 }
-
 function closeAutoMineModal() {
   isAutoMineModalOpen.value = false;
 }
 
-const selectedAsteroid = ref<Asteroid>();
-function selectAsteroid(asteroid: Asteroid) {
-  focusOnObject(asteroid);
-  selectedAsteroid.value = asteroid;
-}
-
-const showInfluence = ref(false);
-const showInfluenceSidebar = ref(false);
-const showSideOverview = ref(false);
 const activeSidebar = ref<'influence' | 'overview' | null>(null);
 
-onMounted(() => {
-  const stored = localStorage.getItem('sideOverview');
-  if (stored !== null) {
-    showSideOverview.value = stored === 'true';
-  }
-});
+const {
+  showInfluence,
+  showInfluenceSidebar,
+  playerInfluences,
+  getInfluenceColor,
+  toggleInfluence,
+  openInfluenceSidebar,
+  closeInfluenceSidebar,
+} = useInfluence(props, props.stations, activeSidebar, drawInfluenceLayer, scheduleDraw);
 
-function toggleInfluence() {
-  showInfluence.value = !showInfluence.value;
-  drawInfluenceLayer();
-  drawScene();
-}
-
-function openInfluenceSidebar() {
-  showInfluenceSidebar.value = true;
-  activeSidebar.value = 'influence';
-}
-function openSideOverview() {
-  showSideOverview.value = true;
-  activeSidebar.value = 'overview';
-  localStorage.setItem('sideOverview', showSideOverview.value.toString());
-}
-function closeInfluenceSidebar() {
-  showInfluenceSidebar.value = false;
-  if (activeSidebar.value === 'influence') activeSidebar.value = null;
-}
-function closeSideOverview() {
-  showSideOverview.value = false;
-  if (activeSidebar.value === 'overview') activeSidebar.value = null;
-  localStorage.setItem('sideOverview', showSideOverview.value.toString());
-}
-
-watch(() => queueData.value, () => {
-  updateShipPool();
-  scheduleDraw();
-}, { deep: true });
+const {
+  showSidebarOverview,
+  openSidebarOverview,
+  closeSidebarOverview,
+} = useSidebarOverview(activeSidebar);
 </script>
 
 <template>
@@ -1276,7 +808,7 @@ watch(() => queueData.value, () => {
     </button>
 
     <div class="absolute top-2 right-2 z-100 flex min-w-28 transition-all duration-300"
-      :class="{ 'right-[18vw] 3xl:right-[12vw] me-2': showInfluenceSidebar || showSideOverview }">
+      :class="{ 'right-[18vw] 3xl:right-[12vw] me-2': showInfluenceSidebar || showSidebarOverview }">
       <span class="text-light px-3 py-2 rounded-lg transition-transform duration-200">
         zoom: {{ Math.round(zoomLevel * 1000 / 5) }}%
       </span>
@@ -1290,7 +822,7 @@ watch(() => queueData.value, () => {
     <!-- Influence Toggle Button -->
     <button
       class="fixed top-48 right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
-      :style="(showInfluenceSidebar || showSideOverview) ? 'transform: translateX(-12vw)' : ''"
+      :style="(showInfluenceSidebar || showSidebarOverview) ? 'transform: translateX(-12vw)' : ''"
       @click="[showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar(), toggleInfluence()]"
     >
       <img v-show="!showInfluenceSidebar" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
@@ -1302,11 +834,11 @@ watch(() => queueData.value, () => {
     <!-- Overview Toggle Button -->
     <button
       class="fixed top-[272px] right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
-      :style="(showSideOverview || showInfluenceSidebar) ? 'transform: translateX(-12vw)' : ''"
-      @click="showSideOverview ? closeSideOverview() : openSideOverview()"
+      :style="(showSidebarOverview || showInfluenceSidebar) ? 'transform: translateX(-12vw)' : ''"
+      @click="showSidebarOverview ? closeSidebarOverview() : openSidebarOverview()"
     >
-      <img v-show="!showSideOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
-      <svg v-show="showSideOverview" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
+      <img v-show="!showSidebarOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
+      <svg v-show="showSidebarOverview" xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="text-slate-200" viewBox="0 0 24 24">
         <path fill="currentColor" d="M16.95 8.464a1 1 0 0 0-1.414-1.414L12 10.586L8.464 7.05A1 1 0 1 0 7.05 8.464L10.586 12L7.05 15.536a1 1 0 1 0 1.414 1.414L12 13.414l3.536 3.536a1 1 0 1 0 1.414-1.414L13.414 12z"/>
       </svg>
     </button>
@@ -1326,7 +858,7 @@ watch(() => queueData.value, () => {
     <div
       class="fixed right-0 top-[56px] h-[calc(100vh-56px)] flex transition-transform duration-300"
       :style="[
-        showSideOverview ? 'transform: translateX(0)' : 'transform: translateX(100%)',
+        showSidebarOverview ? 'transform: translateX(0)' : 'transform: translateX(100%)',
         { zIndex: activeSidebar === 'overview' ? 30 : 20 }
       ]"
     >

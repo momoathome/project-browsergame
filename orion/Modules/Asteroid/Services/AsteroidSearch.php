@@ -4,6 +4,7 @@ namespace Orion\Modules\Asteroid\Services;
 
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\User\Models\UserAttribute;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -59,8 +60,9 @@ class AsteroidSearch
       });
 
     $searchedStations = Station::search($query)->take(100)->get()->pluck('id');
+    $searchedRebels = Rebel::search($query)->take(100)->get()->pluck('id');
 
-    return [$filteredAsteroids, $searchedStations];
+    return [$filteredAsteroids, $searchedStations, $searchedRebels];
   }
 
   /**

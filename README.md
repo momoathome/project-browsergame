@@ -134,6 +134,8 @@ Perform database migrations with the following command. This will set up your da
 ./vendor/bin/sail artisan scout:index "Orion\Modules\Asteroid\Models\Asteroid"
 ./vendor/bin/sail artisan scout:import "Orion\Modules\Station\Models\Station"
 ./vendor/bin/sail artisan scout:index "Orion\Modules\Station\Models\Station"
+./vendor/bin/sail artisan scout:import "Orion\Modules\Rebel\Models\Rebel"
+./vendor/bin/sail artisan scout:index "Orion\Modules\Rebel\Models\Rebel"
 ./vendor/bin/sail artisan meilisearch:configure
 ```
 

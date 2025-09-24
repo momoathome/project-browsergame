@@ -44,11 +44,12 @@ class AsteroidController extends Controller
         $request->validate(['query' => 'nullable|string']);
         $query = $request->input('query');
 
-        [$searchedAsteroids, $searchedStations] = $this->asteroidSearch->search($query);
+        [$searchedAsteroids, $searchedStations, $searchedRebels] = $this->asteroidSearch->search($query);
         
         return response()->json([
             'searched_asteroids' => $searchedAsteroids,
             'searched_stations' => $searchedStations,
+            'searched_rebels' => $searchedRebels,
         ], 200);
     }
 

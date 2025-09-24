@@ -301,3 +301,11 @@ export interface QueueItem {
   endTime: string;
   details: MissionDetails;
 }
+
+export interface Rebel {
+  id: number;
+  name: string;
+  faction: string;
+  x: number;
+  y: number;
+}

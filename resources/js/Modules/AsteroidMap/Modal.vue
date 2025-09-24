@@ -13,13 +13,13 @@ import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueue } from '@/Composables/useQueue'
-import type { Station, Spacecraft, Asteroid } from '@/types/types';
+import type { Station, Spacecraft, Asteroid, Rebel } from '@/types/types';
 
 type Role = 'Fighter' | 'Miner' | 'Transporter'
 
 export type ModalContent = {
-  type: 'asteroid' | 'station' | 'undefined';
-  data: Asteroid | Station;
+  type: 'asteroid' | 'station' | 'rebel' | 'undefined';
+  data: Asteroid | Station | Rebel;
   title: string;
 }
 
@@ -55,6 +55,7 @@ const asteroidImageSrc = computed(() =>
 
 const asteroid = computed<Asteroid>(() => props.content.data as Asteroid);
 const station = computed<Station>(() => props.content.data as Station);
+const rebel = computed<Rebel>(() => props.content.data as Rebel);
 const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id
 );
@@ -350,8 +351,9 @@ function availableCount(s) {
                 <h1 class="text-2xl flex justify-center text-white mt-2">{{ content.title }}</h1>
 
                 <div class="relative flex items-center justify-center w-[360px] h-[360px] mx-auto">
-                  <img v-if="actionType === QueueActionType.MINING" :src="asteroidImageSrc" class="z-10" />
-                  <img v-else src="/images/station_full.webp" class="z-10" />
+                  <img v-if="props.content.type === 'asteroid'" :src="asteroidImageSrc" class="z-10" />
+                  <img v-else-if="props.content.type === 'station'" src="/images/station_full.webp" class="z-10" />
+                  <img v-else src="/images/rebel_station_full.webp" class="z-10" />
                   <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid"
                     :showResources="canScanAsteroid" class="absolute inset-0" />
                 </div>

@@ -1,6 +1,7 @@
 export const asteroidImageBaseSize = 18;
 export const stationImageBaseSize = 192;
 export const stationNameFontSize = stationImageBaseSize / 4;
+export const rebelImageBaseSize = 192;
 
 // zoom
 export const maxOuterZoomLevel = 0.005; 

@@ -9,6 +9,7 @@ use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Station\Models\StationRegion;
+use Orion\Modules\Rebel\Models\Rebel;
 
 class UniverseService
 {
@@ -200,6 +201,74 @@ class UniverseService
             }
         }
         return false;
+    }
+
+    /**
+     * Findet gültige Koordinaten für einen Rebellen unter Berücksichtigung der Abstandsregeln
+     */
+    public function findValidRebelCoordinates(): ?array
+    {
+        $universeSize = $this->config['size'];
+        $rebelDistance = $this->config['rebel_distance'];
+        $rebelToStationDistance = $this->config['rebel_to_station_distance'];
+        $rebelInnerRadius = $this->config['rebel_inner_radius'];
+
+        $maxAttempts = 1000;
+        $attempts = 0;
+
+        // Lade existierende Rebellen und Stationen
+        $existingRebels = Rebel::all(['x', 'y']);
+        $stations = Station::all(['x', 'y']);
+        $existingRegions = StationRegion::all(['x', 'y'])->toArray();
+
+        while ($attempts < $maxAttempts) {
+            $x = rand(0, $universeSize - 1);
+            $y = rand(0, $universeSize - 1);
+
+            // Abstand zu anderen Rebellen prüfen
+            $tooCloseToRebel = false;
+            foreach ($existingRebels as $rebel) {
+                $distance = sqrt(pow($rebel->x - $x, 2) + pow($rebel->y - $y, 2));
+                if ($distance < $rebelDistance) {
+                    $tooCloseToRebel = true;
+                    break;
+                }
+            }
+            if ($tooCloseToRebel) {
+                $attempts++;
+                continue;
+            }
+
+            // Abstand zu Stationen prüfen
+            $tooCloseToStation = false;
+            foreach ($stations as $station) {
+                $distance = sqrt(pow($station->x - $x, 2) + pow($station->y - $y, 2));
+                if ($distance < $rebelToStationDistance) {
+                    $tooCloseToStation = true;
+                    break;
+                }
+            }
+            if ($tooCloseToStation) {
+                $attempts++;
+                continue;
+            }
+
+            if ($this->isTooCloseToOtherStationRegions($x, $y, $existingRegions, $rebelToStationDistance)) {
+                $attempts++;
+                continue;
+            }
+
+            // Abstand zu Asteroiden prüfen
+            if ($this->isCollidingWithAsteroid($x, $y, $rebelInnerRadius)) {
+                $attempts++;
+                continue;
+            }
+
+            // Gültige Koordinaten gefunden
+            return ['x' => $x, 'y' => $y];
+        }
+
+        return null; // Keine gültigen Koordinaten gefunden
     }
 
 }

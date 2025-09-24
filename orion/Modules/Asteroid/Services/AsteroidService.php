@@ -24,6 +24,7 @@ use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
+use Orion\Modules\Rebel\Services\RebelService;
 
 
 class AsteroidService
@@ -37,6 +38,7 @@ class AsteroidService
         private readonly UserService $userService,
         private readonly UserResourceService $userResourceService,
         private readonly UserAttributeService $userAttributeService,
+        private readonly RebelService $rebelService,
     ) {
     }
 
@@ -50,11 +52,13 @@ class AsteroidService
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
         $influenceOfAllUsers = $this->userAttributeService->getInfluenceOfAllUsers();
+        $rebels = $this->rebelService->getAllRebels();
 
         return [
             'asteroids' => $asteroids,
             'stations' => $stations,
             'influenceOfAllUsers' => $influenceOfAllUsers,
+            'rebels' => $rebels,
         ];
     }
 

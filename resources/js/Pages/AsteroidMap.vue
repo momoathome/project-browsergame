@@ -17,11 +17,12 @@ import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useAttributeStore } from '@/Composables/useAttributeStore';
 import { useResourceStore } from '@/Composables/useResourceStore';
 import * as config from '@/config';
-import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft } from '@/types/types';
+import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft, Rebel } from '@/types/types';
 
 const props = defineProps<{
   asteroids: Asteroid[];
   stations: Station[];
+  rebels: Rebel[];
   influenceOfAllUsers: { user_id: number; attribute_value: string; name: string }[];
 }>();
 
@@ -74,12 +75,15 @@ const asteroidImageElements = asteroidImages.map(src => {
 
 const stationImageSrc = '/images/station_full.webp';
 const asteroidImageSrc = '/images/asteroids/Asteroid2.webp';
+const rebelImageSrc = '/images/rebel_station_full.webp';
 
 const stationImage = new Image();
 const asteroidImage = new Image();
+const rebelImage = new Image();
 
 const asteroidBaseSize = config.asteroidImageBaseSize;
 const stationBaseSize = config.stationImageBaseSize;
+const rebelBaseSize = config.rebelImageBaseSize;
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
@@ -92,6 +96,7 @@ const canvasInfluenceCtx = ref<CanvasRenderingContext2D | null>(null);
 
 const asteroidsQuadtree = ref<Quadtree | null>(null);
 const stationsQuadtree = ref<Quadtree | null>(null);
+const rebelsQuadtree = ref<Quadtree | null>(null);
 
 // config
 const maxOuterZoomLevel = ref(config.maxOuterZoomLevel);
@@ -114,7 +119,7 @@ const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
 });
 
-const selectedObject = ref<{ type: 'station' | 'asteroid'; data: Asteroid | Station } | null>(null);
+const selectedObject = ref<{ type: 'station' | 'asteroid' | 'rebel'; data: Asteroid | Station | Rebel } | null>(null);
 const shipPool = ref<Map<number, ShipRenderObject>>(new Map());
 
 let frameCounter = 0;
@@ -169,8 +174,9 @@ onMounted(() => {
 
     stationImage.src = stationImageSrc;
     asteroidImage.src = asteroidImageSrc;
+    rebelImage.src = rebelImageSrc;
 
-    stationImage.onload = asteroidImage.onload = () => {
+    stationImage.onload = asteroidImage.onload = rebelImage.onload = () => {
       focusUserStationOnInitialLoad();
       drawScene();
     };
@@ -204,6 +210,7 @@ function initQuadtree() {
   const universeBounds = { x: config.size / 2, y: config.size / 2, width: config.size, height: config.size };
   asteroidsQuadtree.value = new Quadtree(universeBounds);
   stationsQuadtree.value = new Quadtree(universeBounds);
+  rebelsQuadtree.value = new Quadtree(universeBounds);
 
   // Füge Asteroiden und Stationen zum Quadtree hinzu
   props.asteroids.forEach(asteroid => {
@@ -212,6 +219,10 @@ function initQuadtree() {
 
   props.stations.forEach(station => {
     stationsQuadtree.value?.insert({ x: station.x, y: station.y, data: station });
+  });
+
+  props.rebels.forEach(rebel => {
+    rebelsQuadtree.value?.insert({ x: rebel.x, y: rebel.y, data: rebel });
   });
 }
 
@@ -360,7 +371,7 @@ function isObjectVisible(object: { x: number; y: number; pixel_size?: number }, 
 }
 
 function drawStationsAndAsteroids(visibleArea: { left: number; top: number; right: number; bottom: number }) {
-  if (!asteroidsQuadtree.value || !stationsQuadtree.value) return;
+  if (!asteroidsQuadtree.value || !stationsQuadtree.value || !rebelsQuadtree.value) return;
 
   const queryRange = {
     x: (visibleArea.left + visibleArea.right) / 2,
@@ -386,6 +397,16 @@ function drawStationsAndAsteroids(visibleArea: { left: number; top: number; righ
     // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
     if (isObjectVisible(asteroid, visibleArea)) {
       drawAsteroid(asteroid.x, asteroid.y, asteroid.id, asteroid.pixel_size);
+    }
+  });
+
+  // Nur sichtbare Rebellen rendern
+  const potentiallyVisibleRebels = rebelsQuadtree.value.query(queryRange);
+  potentiallyVisibleRebels.forEach(item => {
+    const rebel = item.data;
+    // Nutze isObjectVisible für eine präzisere Sichtbarkeitsbestimmung
+    if (isObjectVisible(rebel, visibleArea)) {
+      drawRebel(rebel.x, rebel.y, rebel.name, rebel.id);
     }
   });
 }
@@ -457,6 +478,35 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
         scaledSize, scaledSize
       );
     }
+  }
+}
+
+function drawRebel(x: number, y: number, name: string) {
+  if (ctx.value) {
+    const scaledSize = rebelBaseSize * scale.value;
+    const imageX = x - (scaledSize / 2);
+    const imageY = y - (scaledSize / 2);
+
+    ctx.value.drawImage(
+      rebelImage,
+      0, 0,
+      rebelImage.width,
+      rebelImage.height,
+      imageX, imageY,
+      scaledSize, scaledSize
+    );
+
+    function drawRebelName(ctx) {
+      ctx.fillStyle = 'white';
+      const zoomBoost = Math.max(1, 0.1 / zoomLevel.value);
+      ctx.font = `${config.stationNameFontSize * scale.value * zoomBoost}px Arial`;
+      const textWidth = ctx.measureText(name).width;
+      const textX = x - textWidth / 2;
+      const textY = y - scaledSize / 2 - 24 * scale.value * zoomBoost;
+      ctx.fillText(name, textX, textY);
+    }
+
+    drawRebelName(ctx.value);
   }
 }
 
@@ -871,12 +921,22 @@ function findClickedStation(coords: ClickCoordinates, radius = 120) {
   });
 }
 
-function handleClickedObject(clickedObject: { type: 'station' | 'asteroid'; data: Station | Asteroid }) {
+function findClickedRebel(coords: ClickCoordinates, radius = 120) {
+  return props.rebels.find(rebel => {
+    const dx = coords.x - rebel.x;
+    const dy = coords.y - rebel.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const scaledSize = rebelBaseSize * scale.value;
+    return distance < Math.max(radius, scaledSize / 2);
+  });
+}
+
+function handleClickedObject(clickedObject: { type: 'station' | 'asteroid' | 'rebel'; data: Station | Asteroid | Rebel }) {
   const isOtherUserStation = clickedObject.type === 'station' &&
     'user_id' in clickedObject.data &&
     clickedObject.data.user_id !== usePage().props.auth.user.id;
 
-  if (isOtherUserStation) {
+  if (isOtherUserStation || clickedObject.type === 'rebel') {
     selectedObject.value = clickedObject;
     isModalOpen.value = true;
   } else if (clickedObject.type === 'asteroid') {
@@ -893,6 +953,12 @@ function onMouseClick(e: MouseEvent) {
   const clickedStation = findClickedStation(coords);
   if (clickedStation) {
     handleClickedObject({ type: 'station', data: clickedStation });
+    return;
+  }
+
+  const clickedRebel = findClickedRebel(coords);
+  if (clickedRebel) {
+    handleClickedObject({ type: 'rebel', data: clickedRebel });
     return;
   }
 
@@ -1271,7 +1337,7 @@ watch(() => queueData.value, () => {
 
   <Modal :content="{
     type: selectedObject?.type,
-    data: selectedObject?.data as Asteroid | Station,
+    data: selectedObject?.data as Asteroid | Station | Rebel,
     title: selectedObject?.data?.name,
   }" :open="isModalOpen" @close="closeModal" :spacecrafts="unlockedSpacecrafts" :user-scan-range="userScanRange"
     @redraw="drawScene" />

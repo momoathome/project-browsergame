@@ -28,37 +28,6 @@ const canUpgrade = computed(() => {
   return insufficientResources.value.every(resource => resource.sufficient) && !props.isCoreUpgradeBlocked;
 });
 
-const currentEffect = computed(() => {
-  return props.building.effect?.current ?? null;
-});
-
-const nextLevelEffect = computed(() => {
-  return props.building.effect?.next_level ?? null;
-});
-
-const effectKey = computed(() => {
-  // Hole den ersten Key aus current (z.B. "production_speed")
-  return currentEffect.value ? Object.keys(currentEffect.value)[0] : '';
-});
-
-const formattedEffectText = computed(() => {
-  // Ersetze "_" durch Leerzeichen und mache den ersten Buchstaben groß
-  if (!effectKey.value) return '';
-  return effectKey.value.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase());
-});
-
-const formattedEffectValue = computed(() => {
-  return currentEffect.value && effectKey.value && Number.isFinite(currentEffect.value[effectKey.value])
-    ? numberFormat(currentEffect.value[effectKey.value])
-    : currentEffect.value[effectKey.value];
-});
-
-const formattedNextLevelValue = computed(() => {
-  return nextLevelEffect.value && effectKey.value && Number.isFinite(currentEffect.value[effectKey.value])
-    ? numberFormat(nextLevelEffect.value[effectKey.value])
-    : nextLevelEffect.value[effectKey.value];
-});
-
 const insufficientResources = computed(() => {
   const buildingResources = props.building.resources;
 

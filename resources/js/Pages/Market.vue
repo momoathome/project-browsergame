@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { usePage, useForm } from '@inertiajs/vue3';
 import MarketCard from '@/Modules/Market/MarketCard.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
 import MarketPlaceholder from '@/Modules/Market/MarketPlaceholder.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
@@ -12,13 +11,17 @@ import { numberFormat } from '@/Utils/format';
 
 const props = defineProps<{
   market: Market[],
-  categoryValues: Record<string, number>
+  categoryValues: Record<string, number>,
+  prefill_resource_ids?: string,
+  prefill_amounts?: string,
 }>();
 
 const { userResources } = useResourceStore();
 
 const selectedGive = ref<formattedMarketResource | null>(null);
 const selectedReceive = ref<formattedMarketResource | null>(null);
+const draggedResource = ref<formattedMarketResource | null>(null);
+const prefillReceiveAmount = ref<number | null>(null);
 const tradeForm = useForm({
   give_resource_id: null as number | null,
   receive_resource_id: null as number | null,
@@ -34,6 +37,7 @@ const formattedResources = computed(() => props.market.map(m => ({
   stock: m.stock,
   category: m.category
 })));
+
 const userFormattedResources = computed(() => {
   return formattedResources.value.map(r => ({
     ...r,
@@ -54,8 +58,8 @@ const calculatedReceiveAmount = computed(() => {
 
   if (!giveCategory || !receiveCategory) return 0;
 
-  const giveValue = tradeForm.give_amount * props.categoryValues[giveCategory];
-  const receiveQtyRaw = giveValue / props.categoryValues[receiveCategory];
+  const giveValue = tradeForm.give_amount * (props.categoryValues[giveCategory] ?? 0);
+  const receiveQtyRaw = giveValue / (props.categoryValues[receiveCategory] ?? 1);
   const fee = Math.floor(receiveQtyRaw * 0.05);
   return Math.max(Math.floor(receiveQtyRaw) - fee, 0);
 });
@@ -70,11 +74,76 @@ const tradeRatio = computed(() => {
   const giveValue = props.categoryValues[giveCategory];
   const receiveValue = props.categoryValues[receiveCategory];
 
-  return `${receiveValue} : ${giveValue}`;
+  return {give: giveValue, receive: receiveValue}
 });
 
+const tradeTooltip = computed(() => {
+  return 'You exchange ' + tradeForm.give_amount + ' ' + (selectedGive.value?.name || '') + ' for ' + calculatedReceiveAmount.value + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee is applied on each trade.';
+});
+
+onMounted(() => {
+  if (props.prefill_resource_ids && props.prefill_amounts) {
+    const ids = props.prefill_resource_ids.split(',').map(Number);
+    const amounts = props.prefill_amounts.split(',').map(Number);
+
+    const receiveId = ids[0];
+    const receiveAmount = amounts[0];
+
+    const receiveResource = formattedResources.value.find(r => r.resource_id === receiveId);
+    if (receiveResource) {
+      selectedReceive.value = receiveResource;
+      prefillReceiveAmount.value = receiveAmount;
+    }
+  }
+});
+
+// Watcher für automatische Anpassung
+watch([selectedGive, selectedReceive], ([give, receive]) => {
+  if (give && receive && prefillReceiveAmount.value) {
+    const giveCatValue = props.categoryValues[give.category] ?? 1;
+    const receiveCatValue = props.categoryValues[receive.category] ?? 1;
+    // Formel: gewünschte Menge * Kategorie-Wert / eigener Kategorie-Wert / 0.95 (Fee)
+    tradeForm.give_amount = Math.ceil((prefillReceiveAmount.value * receiveCatValue) / giveCatValue / 0.95);
+  }
+});
+
+// Drag & Drop Functions
+function startDrag(resource: formattedMarketResource) {
+  draggedResource.value = resource;
+}
+
+function onDragOver(event: DragEvent) {
+  event.preventDefault();
+}
+
+function onDropGive(event: DragEvent) {
+  event.preventDefault();
+  if (draggedResource.value && draggedResource.value.amount > 0) {
+    selectedGive.value = draggedResource.value;
+  }
+  draggedResource.value = null;
+}
+
+function onDropReceive(event: DragEvent) {
+  event.preventDefault();
+  if (draggedResource.value && draggedResource.value.stock > 0) {
+    selectedReceive.value = draggedResource.value;
+  }
+  draggedResource.value = null;
+}
+
+function clearGive() {
+  selectedGive.value = null;
+  if (tradeForm.give_amount > 0) {
+    tradeForm.give_amount = 0;
+  }
+}
+
+function clearReceive() {
+  selectedReceive.value = null;
+}
+
 function executeTrade() {
-  // route = market.trade
   if (!selectedGive.value || !selectedReceive.value) return;
   tradeForm.give_resource_id = selectedGive.value.id;
   tradeForm.receive_resource_id = selectedReceive.value.id;
@@ -84,7 +153,6 @@ function executeTrade() {
     preserveScroll: true,
     onSuccess: () => {
       tradeForm.reset('give_resource_id', 'receive_resource_id', 'give_amount');
-      selectedGive.value = null;
       selectedReceive.value = null;
     },
     onError: () => {
@@ -92,80 +160,152 @@ function executeTrade() {
     },
   });
 }
-
-const tradeTooltip = computed(() => {
-  return 'You exchange ' + tradeForm.give_amount + ' ' + (selectedGive.value?.name || '') + ' for ' + calculatedReceiveAmount.value + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee is applied on each trade.';
-});
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-[2fr_1fr_2fr] gap-16 text-light">
-
-    <!-- Left: User Resources -->
+  <div class="grid grid-cols-1 xl:grid-cols-[3fr_1fr] gap-8 text-light overflow-x-hidden">
+    
+    <!-- Resource Inventory -->
     <div class="bg-base/20 pt-4 pb-6 px-8 rounded-lg">
-      <h2 class="text-xl font-bold mb-4">Your Resources</h2>
+      <h2 class="text-xl font-bold mb-4">Resources</h2>
+      <p class="text-sm text-secondary mb-4">Drag resources to the trading panel to start trading</p>
+      
       <div class="market-grid gap-4">
-        <MarketCard v-for="userRes in userFormattedResources" :key="userRes.id" :marketData="userRes"
-          :selected="selectedGive?.id === userRes.id" :showAmount="true" @select="selectedGive = userRes" />
+        <div
+          v-for="resource in userFormattedResources"
+          :key="resource.id"
+          :draggable="resource.amount > 0 || resource.stock > 0"
+          @dragstart="startDrag(resource)"
+          @dragend="draggedResource = null"
+          class="cursor-grab active:cursor-grabbing"
+          :class="{
+            'opacity-50 cursor-not-allowed': resource.amount <= 0 && resource.stock <= 0
+          }"
+        >
+          <MarketCard 
+            :marketData="resource"
+            :selected="selectedGive?.id === resource.id || selectedReceive?.id === resource.id"
+            :showStock="true"
+            :showAmount="true"
+            class="transition-all duration-200"
+            :class="{
+              'ring-2 ring-primary shadow-lg shadow-primary/20': selectedGive?.id === resource.id,
+              'ring-2 ring-secondary shadow-lg shadow-secondary/20': selectedReceive?.id === resource.id,
+            }"
+          />
+        </div>
       </div>
     </div>
 
-    <!-- Middle: Trade Panel mit Platzhaltern -->
-    <div class="my-auto p-8">
-      <div class="flex gap-8 items-center mb-8">
-        <div class="flex flex-col items-center gap-2">
-          <Transition name="fade-slide" mode="out-in">
+    <!-- Trade Panel -->
+    <div class="bg-base/20 pt-4 pb-6 px-8 rounded-lg flex flex-col">
+      <h2 class="text-xl font-bold mb-6">Trading Panel</h2>
+      
+      <!-- Give Card -->
+      <div class="flex items-center justify-center relative bg-base/30 border border-primary/20 rounded-lg p-4">
+        <button
+          v-if="selectedGive"
+          @click="clearGive"
+          class="text-primary/60 hover:text-primary transition-colors absolute top-3 right-3"
+          type="button"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        
+        <div
+          class="border-2 border-dashed border-primary/30 w-48 h-48 flex items-center justify-center rounded-xl shadow-md transition p-1"
+          :class="{
+            'border-primary-lighter bg-primary/5': draggedResource && draggedResource.amount > 0
+          }"
+          @dragover="onDragOver"
+          @drop="onDropGive"
+        >
+          <Transition name="drop-in" mode="out-in">
             <MarketCard
               v-if="selectedGive"
               :key="selectedGive.id"
               :marketData="selectedGive"
               :showAmount="true"
-              class="w-44 h-44"
-              style="pointer-events: none;"
+              class="w-full h-full pointer-events-none"
             />
-            <MarketPlaceholder v-else class="!border-primary/30">
-              <span class="text-xs text-nowrap">Select Resource</span>
-            </MarketPlaceholder>
+            <div v-else class="text-center text-primary-light p-2">
+              <div class="mb-2">
+                <svg class="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                </svg>
+              </div>
+              <p class="text-sm">Drag resource here to give</p>
+            </div>
           </Transition>
         </div>
-
-        <div class="relative group flex flex-col items-center gap-1 min-w-[80px]">
-          <span v-if="tradeRatio" class="text-lg font-bold text-light text-nowrap bg-primary/10 px-3 py-2 rounded-md">{{ tradeRatio }}</span>
-          <span class="text-3xl font-bold text-secondary">→</span>
-
-          <AppTooltip 
-            :label="tradeTooltip" 
-            position="top">
-          </AppTooltip>
-        </div>
-
-        <div class="flex flex-col items-center gap-2">
-          <Transition name="fade-slide" mode="out-in">
-            <MarketCard
-              v-if="selectedReceive" 
-              :key="selectedReceive.id"
-              :marketData="selectedReceive" 
-              :showStock="true"
-              class="w-44 h-44"
-              style="pointer-events: none;" 
-              />
-            <MarketPlaceholder v-else class="!border-secondary/20">
-              <span class="text-xs text-nowrap">Select Resource</span>
-            </MarketPlaceholder>
-          </Transition>
-        </div>
-
       </div>
 
-      <hr class="w-full border-t border-primary/30 mb-6" />
+      <!-- Trade Arrow & Ratio -->
+      <div class="flex items-center justify-center my-4">
+        <div class="relative group flex items-center gap-2">
+          <span v-if="tradeRatio" class="text-lg font-bold text-light text-nowrap bg-primary/10 px-3 py-1 rounded-md">{{ tradeRatio.receive }}</span>
+          <span class="text-3xl font-bold text-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"><
+              <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path d="M8 20V7m8-3v13"/><path stroke-linejoin="round" d="m4 16l4 4l4-4m8-8l-4-4l-4 4"/></g>
+            </svg>
+          </span>
+          <span v-if="tradeRatio" class=" text-lg font-bold text-light text-nowrap bg-secondary/10 px-3 py-1 rounded-md">{{ tradeRatio.give }}</span>
+          <AppTooltip :label="tradeTooltip" position="top"></AppTooltip>
+        </div>
+      </div>
 
-      <div v-if="selectedGive && selectedReceive" class="flex flex-col gap-6 items-center w-full h-32">
-        <div class="flex items-center">
+      <!-- Receive Card -->
+      <div class="flex items-center justify-center relative bg-secondary/10 border border-secondary/20 rounded-lg p-4">
+        <button
+          v-if="selectedReceive"
+          @click="clearReceive"
+          class="text-secondary/60 hover:text-secondary transition-colors absolute top-3 right-3"
+          type="button"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        
+        <div
+          class="border-2 border-dashed border-secondary/30 w-48 h-48 flex items-center justify-center rounded-xl shadow-md transition p-1"
+          :class="{
+            '!border-secondary bg-secondary/5': draggedResource && draggedResource.stock > 0
+          }"
+          @dragover="onDragOver"
+          @drop="onDropReceive"
+        >
+          <Transition name="drop-in" mode="out-in">
+            <MarketCard
+              v-if="selectedReceive"
+              :key="selectedReceive.id"
+              :marketData="selectedReceive"
+              :showStock="true"
+              :receive="true"
+              class="w-full h-full pointer-events-none"
+            />
+            <div v-else class="text-center text-secondary-light p-2">
+              <div class="mb-2">
+                <svg class="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"></path>
+                </svg>
+              </div>
+              <p class="text-sm">Drag resource here to receive</p>
+            </div>
+          </Transition>
+        </div>
+      </div>
+
+      <!-- Trade Controls -->
+      <div v-if="selectedGive && selectedReceive" class="flex flex-col gap-6 items-center mt-8 ">
+        <div class="flex items-center w-full justify-center">
           <button
             class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-r border-primary/60 rounded-l-md focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
             @click="tradeForm.give_amount = 0"
             :disabled="selectedGive.amount == 0 || tradeForm.give_amount <= 0"
-            aria-label="Minimum"
+            aria-label="Clear"
             type="button"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 21 21">
@@ -201,24 +341,17 @@ const tradeTooltip = computed(() => {
           </button>
         </div>
 
-
         <div class="flex flex-col items-center">
-          <p class="text-sm">You receive</p>
+          <p class="text-sm text-secondary">You receive</p>
           <p class="text-xl font-bold text-secondary">
             {{ numberFormat(calculatedReceiveAmount) }} {{ selectedReceive.name }}
           </p>
         </div>
-
       </div>
-      <p v-else class="text-secondary mt-4 h-32">Select Ressources you want to exchange </p>
-    </div>
-
-    <!-- Right: Market Resources -->
-    <div class="bg-base/20 pt-4 pb-6 px-8 rounded-lg">
-      <h2 class="text-xl font-bold mb-4">Market Resources</h2>
-      <div class="market-grid gap-4">
-        <MarketCard v-for="marketRes in formattedResources" :key="marketRes.id" :marketData="marketRes"
-          :selected="selectedReceive?.id === marketRes.id" :showStock="true" @select="selectedReceive = marketRes" />
+      
+      <div v-else class="text-center text-secondary mt-auto py-8">
+        <p class="text-lg">Select resources to start trading</p>
+        <p class="text-sm opacity-70 mt-2">Drag resources to the trading slots above</p>
       </div>
     </div>
   </div>
@@ -226,34 +359,39 @@ const tradeTooltip = computed(() => {
 
 <style scoped>
 .market-grid {
-  --grid-min-col-size: 160px;
-
+  --grid-min-col-size: 180px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min-col-size), 100%), 1fr));
 }
 
-@media (min-width: 2600px) {
-  .market-grid {
-    grid-template-columns: repeat(6, 1fr);
-    max-width: 2600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+.drop-in-enter-active,
+.drop-in-leave-active {
+  transition:
+    opacity 0.15s cubic-bezier(.34,1.56,.64,1),
+    transform 0.15s cubic-bezier(.34,1.56,.64,1);
+}
+.drop-in-enter-from,
+.drop-in-leave-to {
+  opacity: 0;
+  transform: scale(1.10) translateY(-8px);
+}
+.drop-in-enter-to,
+.drop-in-leave-from {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.3s, transform 0.3s;
+/* Drag and Drop visual feedback */
+.cursor-grab {
+  cursor: grab;
 }
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
+
+.cursor-grabbing {
+  cursor: grabbing;
 }
-.fade-slide-enter-to,
-.fade-slide-leave-from {
-  opacity: 1;
-  transform: translateY(0);
+
+[draggable="true"]:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
 }
 </style>
-

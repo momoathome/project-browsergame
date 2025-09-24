@@ -78,7 +78,7 @@ function handleProduceSpacecraft() {
 </script>
 
 <template>
-  <div class="grid gap-6 lg:gap-x-10 lg:gap-y-6">
+  <div class="grid gap-6">
     <SpacecraftsCard v-for="spacecraft in unlockedSpacecrafts" 
     :key="spacecraft.id" 
     :spacecraft="spacecraft"

@@ -226,21 +226,21 @@ function focusUserStationOnInitialLoad() {
 function adjustStaticCanvasSize() {
   if (canvasStaticRef.value && canvasStaticCtx.value) {
     canvasStaticRef.value.width = window.innerWidth;
-    canvasStaticRef.value.height = window.innerHeight - 16;
+    canvasStaticRef.value.height = window.innerHeight - 20;
   }
 }
 
 function adjustInfluenceCanvasSize() {
   if (canvasInfluenceRef.value && canvasInfluenceCtx.value) {
     canvasInfluenceRef.value.width = window.innerWidth;
-    canvasInfluenceRef.value.height = window.innerHeight - 16;
+    canvasInfluenceRef.value.height = window.innerHeight - 20;
   }
 }
 
 function adjustCanvasSize() {
   if (canvasRef.value && ctx.value) {
     canvasRef.value.width = window.innerWidth;
-    canvasRef.value.height = window.innerHeight - 16;
+    canvasRef.value.height = window.innerHeight - 20;
 
     adjustStaticCanvasSize();
     adjustInfluenceCanvasSize();
@@ -700,7 +700,7 @@ function drawFlightPaths() {
       ? 'rgba(255, 0, 0, 0.7)' // rot für Angriffe auf mich
       : mission.actionType === 'combat'
         ? 'rgba(0, 255, 255, 0.4)' // cyan für andere Kampfmissionen
-        : 'rgba(255, 255, 255, 0.4)'; // weiß für Mining-Missionen
+        : 'rgba(255, 255, 255, 0.2)'; // weiß für Mining-Missionen
 
     context.beginPath();
 

@@ -24,6 +24,7 @@ import * as config from '@/config';
 import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft, Rebel } from '@/types/types';
 import {
   asteroidImages,
+  rebelImageMap,
   asteroidImageElements,
   calculateVisibleArea,
   isObjectVisible,
@@ -66,13 +67,11 @@ const asteroidsWithImages = computed(() =>
   }))
 );
 
-const stationImageSrc = '/images/station_full.webp';
+const stationImageSrc = '/images/stations/station2.webp';
 const asteroidImageSrc = '/images/asteroids/Asteroid2.webp';
-const rebelImageSrc = '/images/rebel_station_full.webp';
 
 const stationImage = new Image();
 const asteroidImage = new Image();
-const rebelImage = new Image();
 
 const asteroidBaseSize = config.asteroidImageBaseSize;
 const stationBaseSize = config.stationImageBaseSize;
@@ -202,9 +201,8 @@ onMounted(() => {
 
     stationImage.src = stationImageSrc;
     asteroidImage.src = asteroidImageSrc;
-    rebelImage.src = rebelImageSrc;
 
-    stationImage.onload = asteroidImage.onload = rebelImage.onload = () => {
+    stationImage.onload = asteroidImage.onload = () => {
       focusUserStationOnInitialLoad();
       drawScene();
     };
@@ -381,7 +379,7 @@ function drawStationsAndAsteroids(visibleArea: { left: number; top: number; righ
   potentiallyVisibleRebels.forEach(item => {
     const rebel = item.data;
     if (isObjectVisible(rebel, visibleArea, rebelBaseSize, scale)) {
-      drawRebel(rebel.x, rebel.y, rebel.name, rebel.id);
+      drawRebel(rebel.x, rebel.y, rebel.name, rebel.id, rebel.faction);
     }
   });
 }
@@ -456,23 +454,39 @@ function drawAsteroid(x: number, y: number, id: number, size: number) {
   }
 }
 
-function drawRebel(x: number, y: number, name: string) {
+function drawRebel(x: number, y: number, name: string, id: number, faction: string) {
   if (ctx.value) {
     const scaledSize = rebelBaseSize * scale.value;
     const imageX = x - (scaledSize / 2);
     const imageY = y - (scaledSize / 2);
 
-    ctx.value.drawImage(
-      rebelImage,
-      0, 0,
-      rebelImage.width,
-      rebelImage.height,
-      imageX, imageY,
-      scaledSize, scaledSize
-    );
+    const rebelImage = rebelImageMap[faction] ?? rebelImageMap['Rostwölfe'];
+
+    if (highlightedRebels.value.includes(id)) {
+      const isFocused = selectedObject.value?.type === 'rebel' && selectedObject.value.data.id === id;
+      drawHighlight(x, y, scaledSize, 'rebel', isFocused);
+    }
+
+    if (rebelImage) {
+      ctx.value.drawImage(
+        rebelImage,
+        0, 0,
+        rebelImage.width,
+        rebelImage.height,
+        imageX, imageY,
+        scaledSize, scaledSize
+      );
+    }
+
+    const rebelColors = {
+      'Rostwölfe': 'IndianRed',
+      'Kult der Leere': 'BlueViolet',
+      'Sternenplünderer': 'SteelBlue',
+      'Gravbrecher': 'GreenYellow',
+    };
 
     function drawRebelName(ctx) {
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = rebelColors[faction] || 'white';
       const zoomBoost = Math.max(1, 0.15 / zoomLevel.value);
       ctx.font = `${config.stationNameFontSize * scale.value * zoomBoost}px Arial`;
       const textWidth = ctx.measureText(name).width;
@@ -489,7 +503,7 @@ function drawHighlight(
   x: number,
   y: number,
   scaledSize: number,
-  type: 'station' | 'asteroid' = 'asteroid',
+  type: 'station' | 'asteroid' | 'rebel' = 'asteroid',
   isFocused: boolean = false
 ) {
   if (!ctx.value) return;

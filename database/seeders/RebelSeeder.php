@@ -21,41 +21,67 @@ class RebelSeeder extends Seeder
      */
     public function run(): void
     {
-        $names = [
-            'Blutklingen-Klan',
-            'Schwarze Schwingen',
-            'Kult der Leere',
-            'Die Rostwölfe',
-            'Stahlvipern',
-            'Aschengeborene',
-            'Splitterflotte',
-            'Die Staubgeißel',
-            'Kometenräuber',
-            'Schattenpakt',
-            'Die Brandnarben',
-            'Nova-Hyänen',
-            'Die Eisenzähne',
-            'Sternenplünderer',
-            'Die Leerenkinder',
-            'Falken des Chaos',
-            'Die Redshift-Räuber',
-            'Verlorene Legion',
-            'Die Gravbrecher',
-            'Phantom-Syndikat',
-            'Die Vergessenen',  
-            'Skarn-Piraten',
-            'Kult der schwarzen Sonne',
-            'Die Warpgezeichneten',
-            'Orbit-Schakale',
-            'Die Schattenflotte',
-            'Die Nebelkrieger',
-            'Die Sternenwanderer',
-            'Orion Syndikat',
-            'Die Lichtbringer'
+        $factions = [
+            /* Rostrot / Orange */
+            'Rostwölfe' => [
+                'Korga Eisenklaue',
+                'Brakk der Rostfürst',
+                'Maela Ascheherz',
+                'Vorn Schredderfaust',
+                'Rax die Staubkönigin',
+                'Zarok der Zerstörer',
+                'Thalor der Unermüdliche',
+                'Gorak der Eisenbrecher',
+                'Trax der Schlächter',
+                'Kyra die Blutjägerin',
+            ],
+            /* Lila / Violett */
+            'Kult der Leere' => [
+                'Hohepriester Varuun',
+                'Eira die Leerenmutter',
+                'Archon Zeyth',
+                'Malgor Sternenlos',
+                'Xyra die Nachtflamme',
+                'Draxus der Schattenfürst',
+                'Liora die Seelenbinderin',
+                'Vexis der Dunkelwanderer',
+                'Lyra die Sternenruferin',
+                'Zorin der Leerenlord',
+            ],
+            /* Blau / Blutrot */
+            'Sternenplünderer' => [
+                'Kael Blutklinge',
+                'Sira Schattenfalke',
+                'Torven Rotklaue',
+                'Jax Kometschrecken',
+                'Riana Flammenherz',
+                'Doran der Weltraumräuber',
+                'Luna die Sternenjägerin',
+                'Zane der Galaktische',
+                'Mira die Kosmosdiebin',
+                'Vex der Raumfahrer',
+            ],
+            /* Grün / Gelb */
+            'Gravbrecher' => [
+                'Lyras Redshift',
+                'Kaelen Fluxklinge',
+                'Torga Tachyonfaust',
+                'Veyra Schattenlauf',
+                'Dren Warpreißer',
+                'Zyra Gravbrecherin',
+                'Orin der Raumzerstörer',
+                'Mira die Sternenspringerin',
+                'Tachion der Lichtbrecher',
+                'Xyra die Gravitationsmeisterin',
+            ],
         ];
 
-        foreach ($names as $idx => $name) {
-            $this->rebelService->create($idx + 1, $name);
+
+        foreach ($factions as $factionName => $leaders) {
+            foreach ($leaders as $leader) {
+                $this->rebelService->create($leader, $factionName);
+            }
         }
+
     }
 }

@@ -13,10 +13,25 @@ export const asteroidImages = [
   // ...weitere Bilder
 ];
 
+export const rebelFactionImageMap: Record<string, string> = {
+  'Rostwölfe':   '/images/stations/stationRed.webp',
+  'Kult der Leere':  '/images/stations/stationViolet.webp',
+  'Sternenplünderer': '/images/stations/stationBlue.webp',
+  'Gravbrecher': '/images/stations/stationGreen.webp',
+  // ggf. weitere Fraktionen
+};
+
 export const asteroidImageElements = asteroidImages.map(src => {
   const img = new Image();
   img.src = src;
   return img;
+});
+
+export const rebelImageMap: Record<string, HTMLImageElement> = {};
+Object.entries(rebelFactionImageMap).forEach(([faction, src]) => {
+  const img = new Image();
+  img.src = src;
+  rebelImageMap[faction] = img;
 });
 
 export function calculateVisibleArea(width: number, height: number, pointX: Ref<number>, pointY: Ref<number>, zoomLevel: Ref<number>) {

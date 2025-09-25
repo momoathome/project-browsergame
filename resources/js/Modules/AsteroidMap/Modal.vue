@@ -43,6 +43,14 @@ const asteroidImages = [
   // ...weitere Bilder
 ];
 
+const rebelFactionImageMap: Record<string, string> = {
+  'Standard': '/images/rebel_station_full.webp',
+  'Rostwölfe':   '/images/stations/stationRed_full.webp',
+  'Kult der Leere':  '/images/stations/stationViolet_full.webp',
+  'Sternenplünderer': '/images/stations/stationBlue_full.webp',
+  'Gravbrecher': '/images/stations/stationGreen_full.webp',
+};
+
 const asteroidImageIndex = computed(() =>
   asteroid.value?.id !== undefined
     ? asteroid.value.id % asteroidImages.length
@@ -52,6 +60,12 @@ const asteroidImageIndex = computed(() =>
 const asteroidImageSrc = computed(() =>
   asteroidImages[asteroidImageIndex.value]
 );
+
+const rebelImageSrc = computed(() => {
+  // Fraktion auslesen, falls vorhanden
+  const faction: string = (rebel.value && 'faction' in rebel.value) ? String(rebel.value.faction) : 'Standard';
+  return rebelFactionImageMap[faction] || rebelFactionImageMap['Standard'];
+});
 
 const asteroid = computed<Asteroid>(() => props.content.data as Asteroid);
 const station = computed<Station>(() => props.content.data as Station);
@@ -349,11 +363,12 @@ function availableCount(s) {
               <!-- Left Asteroid -->
               <div class="relative text-center">
                 <h1 class="text-2xl flex justify-center text-white mt-2">{{ content.title }}</h1>
+                <p v-if="props.content.type === 'rebel'" class="text-light">{{ content.data.faction }}</p>
 
                 <div class="relative flex items-center justify-center w-[360px] h-[360px] mx-auto">
                   <img v-if="props.content.type === 'asteroid'" :src="asteroidImageSrc" class="z-10" />
-                  <img v-else-if="props.content.type === 'station'" src="/images/station_full.webp" class="z-10" />
-                  <img v-else src="/images/rebel_station_full.webp" class="z-10" />
+                  <img v-else-if="props.content.type === 'station'" src="/images/stations/station_full.webp" class="z-10" />
+                  <img v-else :src="rebelImageSrc" class="z-10"  />
                   <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid"
                     :showResources="canScanAsteroid" class="absolute inset-0" />
                 </div>

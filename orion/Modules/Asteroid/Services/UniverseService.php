@@ -206,24 +206,25 @@ class UniverseService
     /**
      * Findet gültige Koordinaten für einen Rebellen unter Berücksichtigung der Abstandsregeln
      */
-    public function findValidRebelCoordinates(): ?array
+    public function findValidRebelCoordinates(string $faction): ?array
     {
         $universeSize = $this->config['size'];
         $rebelDistance = $this->config['rebel_distance'];
         $rebelToStationDistance = $this->config['rebel_to_station_distance'];
         $rebelInnerRadius = $this->config['rebel_inner_radius'];
 
-        $maxAttempts = 1000;
+        $area = $this->getFactionSpawnArea($faction, $universeSize);
+
+        $maxAttempts = 2000;
         $attempts = 0;
 
-        // Lade existierende Rebellen und Stationen
         $existingRebels = Rebel::all(['x', 'y']);
         $stations = Station::all(['x', 'y']);
         $existingRegions = StationRegion::all(['x', 'y'])->toArray();
 
         while ($attempts < $maxAttempts) {
-            $x = rand(0, $universeSize - 1);
-            $y = rand(0, $universeSize - 1);
+            $x = rand($area['min_x'], $area['max_x']);
+            $y = rand($area['min_y'], $area['max_y']);
 
             // Abstand zu anderen Rebellen prüfen
             $tooCloseToRebel = false;
@@ -258,17 +259,41 @@ class UniverseService
                 continue;
             }
 
-            // Abstand zu Asteroiden prüfen
             if ($this->isCollidingWithAsteroid($x, $y, $rebelInnerRadius)) {
                 $attempts++;
                 continue;
             }
 
-            // Gültige Koordinaten gefunden
             return ['x' => $x, 'y' => $y];
         }
 
-        return null; // Keine gültigen Koordinaten gefunden
+        return null;
     }
+
+    private function getFactionSpawnArea(string $faction, int $universeSize): array
+    {
+        $factions = $this->config['rebel_faction_distribution'];
+        $index = array_search($faction, $factions);
+
+        if ($index === false) {
+            throw new \Exception("Faction {$faction} not in config.");
+        }
+
+        $count = count($factions);
+        $gridSize = ceil(sqrt($count)); // z.B. 4 Fraktionen = 2x2, 9 = 3x3
+
+        $cellSize = (int) ($universeSize / $gridSize);
+
+        $row = intdiv($index, $gridSize); // z.B. 0,1,2
+        $col = $index % $gridSize;
+
+        return [
+            'min_x' => $col * $cellSize,
+            'max_x' => ($col + 1) * $cellSize - 1,
+            'min_y' => $row * $cellSize,
+            'max_y' => ($row + 1) * $cellSize - 1,
+        ];
+    }
+
 
 }

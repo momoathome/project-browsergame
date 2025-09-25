@@ -37,5 +37,16 @@ return [
     /* Rebel */
     'rebel_distance' => 12000,                            // Minimaler Abstand zwischen Rebellen
     'rebel_to_station_distance' => 16000,                 // Minimaler Abstand von Rebellen zu Stationen
-    'rebel_inner_radius' => 600,                       // Radius um Rebellen ohne Asteroiden
+    'rebel_inner_radius' => 600,                        // Radius um Rebellen ohne Asteroiden
+    'rebel_faction_distance' => 6000,                  // Minimaler Abstand zwischen Rebellen der eigenen Fraktion
+
+    'rebel_faction_distribution' => [
+        'Rostwölfe',
+        'Kult der Leere',
+        'Sternenplünderer',
+        'Gravbrecher',
+        // weitere Fraktionen kannst du einfach anhängen
+    ],
+
+
 ];

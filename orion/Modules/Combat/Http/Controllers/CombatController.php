@@ -10,6 +10,7 @@ use Orion\Modules\Combat\Services\CombatService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Combat\Services\CombatOrchestrationService;
+use Orion\Modules\Rebel\Services\RebelService;
 
 class CombatController extends Controller
 {
@@ -18,7 +19,8 @@ class CombatController extends Controller
         private readonly CombatOrchestrationService $combatOrchestrationService,
         private readonly SpacecraftService $spacecraftService,
         private readonly AuthManager $authManager,
-        private readonly StationService $stationService
+        private readonly StationService $stationService,
+        private readonly RebelService $rebelService,
     ) {
     }
 
@@ -73,6 +75,31 @@ class CombatController extends Controller
             $validated['spacecrafts'],
             $defenderStation
         );
+    }
+
+    /**
+     * Plant einen Kampf gegen eine Rebellenstation und fügt ihn zur Warteschlange hinzu
+     */
+    public function combatRebel(Request $request)
+    {
+        $user = $this->authManager->user();
+
+        $validated = $request->validate([
+            'rebel_id' => 'required|exists:rebels,id',
+            'spacecrafts' => 'required|array',
+        ]);
+
+        $rebel_id = $validated['rebel_id'];
+        $rebel = $this->rebelService->findRebelById($rebel_id);
+
+        // Führe den Kampfplan durch
+        $this->combatOrchestrationService->planAndQueueCombat(
+            $user,
+            null, // Kein Benutzer als Verteidiger
+            $validated['spacecrafts'],
+            $defenderStation,
+            true // Kennzeichne als Kampf gegen Rebellen
+        ); 
     }
 
 }

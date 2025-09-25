@@ -162,4 +162,88 @@ return [
         'Scanner' => ['scan_range'],
         'Guardian' => ['base_defense'],
     ],
+    
+    'building_level_effects' => [
+        'Core' => [
+            1 => ['building_slots' => 1],
+            3 => ['building_slots' => 2],
+            5 => ['building_slots' => 3],
+            10 => ['building_slots' => 4],
+            15 => ['building_slots' => 5],
+        ],
+        'Shipyard' => [
+            1 => ['production_slots' => 1, 'unlock' => ['Mole']],
+            2 => ['unlock' => ['Merlin']],
+            3 => ['production_slots' => 2],
+            4 => ['unlock' => ['Nomad']],
+            5 => ['production_slots' => 3, 'unlock' => ['Comet']],
+            7 => ['unlock' => ['Javelin']],
+            8 => ['production_slots' => 4, 'unlock' => ['Sentinel']],
+            9 => ['unlock' => ['Titan']],
+            10 => ['production_slots' => 5, 'unlock' => ['Probe']],
+            12 => ['unlock' => ['Hercules']],
+            14 => ['unlock' => ['Ares']],
+            15 => ['production_slots' => 6, 'unlock' => ['Nova']],
+            18 => ['unlock' => ['Horus']],
+            20 => ['unlock' => ['Reaper']],
+        ],
+        'Hangar' => [
+            1 => ['dock_slots' => 2],
+            2 => ['dock_slots' => 5],
+            3 => ['dock_slots' => 8],
+            4 => ['dock_slots' => 12],
+            5 => ['dock_slots' => 15, 'unlock' => 'auto_mining'],
+            6 => ['dock_slots' => 20],
+            7 => ['dock_slots' => 25],
+            8 => ['dock_slots' => 30],
+            9 => ['dock_slots' => 40],
+            10 => ['dock_slots' => 50],
+            11 => ['dock_slots' => 60],
+            12 => ['dock_slots' => 75],
+            13 => ['dock_slots' => 90],
+            14 => ['dock_slots' => 105],
+            15 => ['dock_slots' => 120],
+            16 => ['dock_slots' => 140],
+            17 => ['dock_slots' => 160],
+            18 => ['dock_slots' => 180],
+            19 => ['dock_slots' => 200],
+            20 => ['dock_slots' => 225],
+        ],
+        'Laboratory' => [
+            5 => ['unlock' => ['science_branch_industry']],
+            8 => ['unlock' => ['science_branch_speed']],
+            10 => ['unlock' => ['science_branch_control']],
+        ],
+        'Warehouse' => [
+            1 => ['resource_shielding' => '200'],
+            2 => ['resource_shielding' => '250'],
+            3 => ['resource_shielding' => '300'],
+            4 => ['resource_shielding' => '400'],
+            5 => ['resource_shielding' => '500'],
+            6 => ['resource_shielding' => '600'],
+            7 => ['resource_shielding' => '700'],
+            8 => ['resource_shielding' => '800'],
+            9 => ['resource_shielding' => '900'],
+            10 => ['resource_shielding' => '1000'],
+            12 => ['resource_shielding' => '1500'],
+            15 => ['resource_shielding' => '2000'],
+            18 => ['resource_shielding' => '3000'],
+            20 => ['resource_shielding' => '4000'],
+        ],
+        'Scanner' => [
+            5 => ['unlock' => ['deep_scan']],
+            7 => ['unlock' => ['rebel_scan']],
+            10 => ['unlock' => ['ghost_scan']],
+        ],
+        'Guardian' => [
+            3 => ['unlock' => ['defense_drones']], // +10% base defense
+            5 => ['unlock' => ['shield_dome']], // +15% base defense
+            8 => ['unlock' => ['laser_turret']], // +20% base defense
+            10 => ['unlock' => ['double_tower']], // x2 defense
+            12 => ['unlock' => ['guardian_missiles']], // +30% base defense
+            15 => ['unlock' => ['triple_tower']], // x2 defense
+            20 => ['unlock' => ['last_stand']], // x2 defense
+        ],
+    ],
+    
 ];

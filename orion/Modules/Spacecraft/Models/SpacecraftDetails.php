@@ -4,6 +4,7 @@ namespace Orion\Modules\Spacecraft\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orion\Modules\Rebel\Models\RebelSpacecraft;
 
 class SpacecraftDetails extends Model
 {
@@ -16,8 +17,13 @@ class SpacecraftDetails extends Model
         'image',
     ];
 
-    public function buildings()
+    public function spacecrafts()
     {
         return $this->hasMany(Spacecraft::class, 'details_id');
+    }
+
+    public function rebelSpacecrafts()
+    {
+        return $this->hasMany(RebelSpacecraft::class, 'details_id');
     }
 }

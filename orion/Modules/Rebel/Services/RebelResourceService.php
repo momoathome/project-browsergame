@@ -1,0 +1,114 @@
+<?php
+
+namespace Orion\Modules\Rebel\Services;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Rebel\Models\Rebel;
+use Orion\Modules\Rebel\Models\RebelResource;
+use Orion\Modules\Rebel\Models\RebelSpacecraft;
+use Orion\Modules\Resource\Models\Resource;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
+
+class RebelResourceService
+{
+    public function __construct(
+        private readonly SpacecraftService $spacecraftService,
+    ) {
+    }
+
+    public function generateResources(Rebel $rebel, $ticks = null)
+    {
+        $difficulty = $rebel->difficulty_level;
+        $rate = 10 * $difficulty; // Ressourcen pro Tick
+    
+        $last = $rebel->last_interaction ?? now();
+        $now = now();
+        $tickMinutes = 10;
+        $ticks = $ticks ?? max(0, floor($now->diffInMinutes($last) / $tickMinutes));
+    
+        if ($ticks < 1) {
+            return;
+        }
+    
+        $phase = $this->getGamePhase(); // z.B. 'early', 'mid', 'late'
+        $faction = $rebel->faction;
+        $ratios = $this->getScaledRatios($faction, $phase);
+    
+        foreach (config('game.resources.resources') as $resource) {
+            $name = $resource['name'] ?? null;
+            if (!$name) continue;
+    
+            $ratio = $ratios[$name] ?? 0.0;
+            $amount = round($rate * $ticks * $ratio);
+    
+            if ($amount < 1) continue;
+    
+            $resourceId = $this->getResourceId($name);
+            $rebelResource = RebelResource::where('rebel_id', $rebel->id)
+                ->where('resource_id', $resourceId)
+                ->first();
+    
+            if ($rebelResource) {
+                $rebelResource->increment('amount', $amount);
+            } else {
+                RebelResource::create([
+                    'rebel_id' => $rebel->id,
+                    'resource_id' => $resourceId,
+                    'amount' => $amount,
+                ]);
+            }
+        }
+    
+        $rebel->last_interaction = $now;
+        $rebel->save();
+    }
+    
+    // TODO: write gamephase in DB or implement Global difficulty
+    protected function getGamePhase()
+    {
+        $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
+        Log::info("Average Miner spacecrafts per user: $avgMiner");
+
+        if ($avgMiner < 15) return 'early';
+        if ($avgMiner < 75) return 'mid';
+        return 'late';
+    }
+    
+    protected function getScaledRatios($faction, $phase)
+    {
+        $baseRatios = config('game.rebels.resource_ratios')[$faction] ?? [];
+
+        // Hole die Ressourcenkategorien aus der Market-Config
+        $resourceCategories = [];
+        foreach (config('game.market.markets') as $market) {
+            if (isset($market['resource_name'], $market['category'])) {
+                $resourceCategories[$market['resource_name']] = $market['category'];
+            }
+        }
+
+        $allowedCategories = match($phase) {
+            'early' => ['low_value'],
+            'mid'   => ['low_value', 'medium_value'],
+            'late'  => ['low_value', 'medium_value', 'high_value', 'extreme_value'],
+            default => ['low_value'],
+        };
+
+        return collect($baseRatios)
+            ->map(fn($ratio, $name) => in_array($resourceCategories[$name] ?? 'low_value', $allowedCategories) ? $ratio : 0)
+            ->toArray();
+    }
+
+    public function spendResourcesForFleet(Rebel $rebel)
+    {
+        // Flottenzusammenstellung nach Verhalten und Kapazität
+        // Ressourcenverbrauch berechnen und abziehen
+        // Neue Schiffe erstellen oder bestehende erhöhen
+    }
+
+    protected function getResourceId($name)
+    {
+        // Hole die Resource-ID anhand des Namens
+        return Resource::where('name', $name)->value('id');
+    }
+}

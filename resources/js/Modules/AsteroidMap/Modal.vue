@@ -94,6 +94,7 @@ const totalMiningOperations = computed(() => (processedQueueItems.value ?? []).r
 const form = useForm({
   asteroid_id: null as number | null,
   station_user_id: null as number | null,
+  rebel_id: null as number | null,
   spacecrafts: {} as Record<string, number>
 });
 
@@ -240,7 +241,30 @@ async function attackUser() {
   try {
     const { data } = await axios.post('/asteroidMap/combat', form);
     // Zeige Erfolg/Fehler
-    // Aktualisiere gezielt die Queue und ggf. den Asteroiden
+    await refreshQueue();
+    await refreshSpacecrafts();
+    close();
+  } catch (error) {
+    // Fehlerbehandlung
+  } finally {
+    isSubmitting.value = false;
+    emit('redraw');
+  }
+}
+
+async function attackRebel() {
+  if (isSubmitting.value) return;
+  if (rebel.value) {
+    form.rebel_id = rebel.value.id;
+  }
+
+  const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
+  if (noSpacecraftSelected) return;
+
+  isSubmitting.value = true;
+  try {
+    const { data } = await axios.post('/asteroidMap/combatRebel', form); // Angepasster Endpunkt für Rebellen
+    // Zeige Erfolg/Fehler
     await refreshQueue();
     await refreshSpacecrafts();
     close();
@@ -257,6 +281,8 @@ async function startMission() {
     await exploreAsteroid();
   } else if (actionType.value === QueueActionType.COMBAT) {
     await attackUser();
+  } else if (actionType.value === QueueActionType.COMBAT && props.content.type === 'rebel') {
+    await attackRebel();
   }
 }
 

@@ -93,4 +93,12 @@ readonly class SpacecraftRepository
             return true;
         });
     }
+
+    // get all spacecrafts from all users where spacecraft.details.type = $type
+    public function getAllSpacecraftsByType(string $type): Collection
+    {
+        return Spacecraft::whereHas('details', function ($query) use ($type) {
+            $query->where('type', $type);
+        })->get();
+    }
 }

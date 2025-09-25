@@ -13,7 +13,16 @@ class Rebel extends Model
         'name',
         'faction',
         'x',
-        'y'
+        'y',
+        'difficulty_level',
+        'last_interaction',
+        'defeated_count',
+        'fleet_cap',
+        'fleet_growth_rate',
+        'loot_multiplier',
+        'adaptation_level',
+        'behavior',
+        'base_chance',
     ];
 
     public function toSearchableArray(): array
@@ -26,3 +35,4 @@ class Rebel extends Model
         ];
     }
 }
+

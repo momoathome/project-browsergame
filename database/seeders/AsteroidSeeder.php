@@ -37,14 +37,13 @@ class AsteroidSeeder extends Seeder
         $this->config['strategic_asteroid_outer_radius']
     );
 
-    // Dann Asteroiden generieren
     $count = $this->config['asteroid_count'];
-    $this->command->info("Generate {$count} Asteroids...");
+    info("Generate {$count} Asteroids...");
     $this->asteroidGenerator->generateAsteroids($count);
 
     $endTime = microtime(true);
     $executionTime = $endTime - $startTime;
-    $this->command->info("{$count} Asteroids created in " . number_format($executionTime, 2) . " seconds.");
+    info("{$count} Asteroids created in " . number_format($executionTime, 2) . " seconds.");
     // $this->command->info("Indexing asteroids... depending on the amount of asteroids, this may take a few minutes.");
 
     // Index the asteroids 

@@ -15,20 +15,19 @@ class SetupInitialRebel
         $this->universeService = $universeService;
     }
 
-    public function create(string $leaderName, string $faction)
+    public function create(array $data)
     {
-        $coordinate = $this->universeService->findValidRebelCoordinates($faction);
+        $coordinate = $this->universeService->findValidRebelCoordinates($data['faction']);
 
         if ($coordinate === null) {
             throw new \Exception('No available coordinates for rebel placement.');
         }
 
-        return Rebel::create([
-            'name' => $leaderName,
-            'faction' => $faction,
-            'x' => $coordinate['x'],
-            'y' => $coordinate['y'],
-        ]);
+        $data['x'] = $coordinate['x'];
+        $data['y'] = $coordinate['y'];
+
+        return Rebel::create($data);
     }
+
 
 }

@@ -263,7 +263,7 @@ async function attackRebel() {
 
   isSubmitting.value = true;
   try {
-    const { data } = await axios.post('/asteroidMap/combatRebel', form); // Angepasster Endpunkt für Rebellen
+    const { data } = await axios.post('/asteroidMap/combat-rebel', form); // Angepasster Endpunkt für Rebellen
     // Zeige Erfolg/Fehler
     await refreshQueue();
     await refreshSpacecrafts();
@@ -279,7 +279,7 @@ async function attackRebel() {
 async function startMission() {
   if (actionType.value === QueueActionType.MINING) {
     await exploreAsteroid();
-  } else if (actionType.value === QueueActionType.COMBAT) {
+  } else if (actionType.value === QueueActionType.COMBAT && props.content.type === 'station') {
     await attackUser();
   } else if (actionType.value === QueueActionType.COMBAT && props.content.type === 'rebel') {
     await attackRebel();

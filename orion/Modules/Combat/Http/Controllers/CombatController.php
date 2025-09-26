@@ -73,7 +73,8 @@ class CombatController extends Controller
             $user,
             $defender_id,
             $validated['spacecrafts'],
-            $defenderStation
+            $defenderStation,
+            false // Kennzeichne als Kampf gegen user
         );
     }
 
@@ -95,9 +96,9 @@ class CombatController extends Controller
         // Führe den Kampfplan durch
         $this->combatOrchestrationService->planAndQueueCombat(
             $user,
-            null, // Kein Benutzer als Verteidiger
+            $rebel_id,
             $validated['spacecrafts'],
-            $defenderStation,
+            $rebel,
             true // Kennzeichne als Kampf gegen Rebellen
         ); 
     }

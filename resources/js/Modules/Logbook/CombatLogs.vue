@@ -1,12 +1,19 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { numberFormat } from '@/Utils/format';
+import type { Spacecraft, UserResources } from '@/types/types';
 
 const props = defineProps<{
   logs: any[],
-  userResources: any[],
-  spacecrafts: any[],
+  userResources: UserResources[],
+  spacecrafts: Spacecraft[],
 }>()
+
+onMounted(() => {
+  console.log(props.logs);
+  console.log(props.userResources);
+  console.log(props.spacecrafts);
+});
 
 const selectedLog = ref<any | null>(null);
 
@@ -21,9 +28,9 @@ const resourceMap = computed(() => {
 const spacecraftMap = computed(() => {
   const map = {};
   props.spacecrafts.forEach(sc => {
-    map[sc.details.name] = {
-      type: sc.details.type,
-      image: sc.details.image,
+    map[sc.name] = {
+      type: sc.type,
+      image: sc.image,
       attack: sc.attack,
       defense: sc.defense,
     };
@@ -41,6 +48,7 @@ const getTypeIcon = (type) => {
     default: return '';
   }
 };
+
 </script>
 <template>
   <div class="space-y-4">

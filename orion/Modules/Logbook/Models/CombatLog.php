@@ -2,15 +2,18 @@
 
 namespace Orion\Modules\Logbook\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
+use Orion\Modules\Rebel\Models\Rebel;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CombatLog extends Model
 {
     protected $fillable = [
         'attacker_id',
         'defender_id',
+        'defender_type',
         'winner',
         'attacker_losses',
         'defender_losses',
@@ -36,8 +39,16 @@ class CombatLog extends Model
     /**
      * Beziehung zum Verteidiger
      */
-    public function defender(): BelongsTo
+    public function defender()
     {
-        return $this->belongsTo(User::class, 'defender_id');
+        return $this->morphTo(null, 'defender_type', 'defender_id');
+    }
+
+    protected static function booted()
+    {
+        Relation::morphMap([
+            'user' => User::class,
+            'rebel' => Rebel::class,
+        ]);
     }
 }

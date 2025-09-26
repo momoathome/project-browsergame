@@ -89,15 +89,15 @@ return [
         'very defensive' => [
             'attack_multiplier' => 0.5,
             'fleet_bias' => [
-                'defense' => 0.7,
-                'attack'  => 0.3
+                'defense' => 0.9,
+                'attack'  => 0.1
             ]
         ],
         'defensive' => [
             'attack_multiplier' => 0.75,
             'fleet_bias' => [
-                'defense' => 0.6,
-                'attack'  => 0.4
+                'defense' => 0.7,
+                'attack'  => 0.3
             ]
         ],
         'balanced' => [
@@ -110,16 +110,52 @@ return [
         'aggressive' => [
             'attack_multiplier' => 1.25,
             'fleet_bias' => [
-                'defense' => 0.4,
-                'attack'  => 0.6
+                'defense' => 0.3,
+                'attack'  => 0.7
             ]
         ],
         'very aggressive' => [
             'attack_multiplier' => 1.5,
             'fleet_bias' => [
-                'defense' => 0.3,
-                'attack'  => 0.7
+                'defense' => 0.1,
+                'attack'  => 0.9
             ]
+        ],
+    ],
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | faction spacecrafts Definitions
+    |--------------------------------------------------------------------------
+    | Hier sind Raumschiffe für die Fraktionen definiert pro Phase.
+    |
+    | Rostwölfe: Nutzen viele kleine, billige Schiffe (Swarms). Merlin, Comet, Javelin, Ares
+    | Kult der Leere: Nutzen Wenige, aber robuste Schiffe (Tank-orientiert). Sentinel, Probe, Nova
+    | Sternenplünderer: Nutzen ausgewogene Schiffe. Javelin, Sentinel, Probe, Ares, Nova 
+    | Gravbrecher: Nutzen schnelle und vielseitige Schiffe. Merlin, Comet, Javelin, Probe
+    */
+
+    'faction_spacecrafts' => [
+        'Rostwölfe' => [
+            'early' => ['Merlin', 'Comet'],
+            'mid'   => ['Merlin', 'Comet', 'Javelin'],
+            'late'  => ['Merlin', 'Comet', 'Javelin', 'Ares'],
+        ],
+        'Kult der Leere' => [
+            'early' => ['Merlin', 'Comet', 'Sentinel'],
+            'mid'   => ['Merlin', 'Comet', 'Sentinel', 'Probe'],
+            'late'  => ['Merlin', 'Comet', 'Sentinel', 'Probe', 'Nova'],
+        ],
+        'Sternenplünderer' => [
+            'early' => ['Comet', 'Javelin', 'Sentinel'],
+            'mid'   => ['Comet', 'Javelin', 'Sentinel', 'Probe'],
+            'late'  => ['Comet', 'Javelin', 'Sentinel', 'Probe', 'Ares', 'Nova'],
+        ],
+        'Gravbrecher' => [
+            'early' => ['Merlin', 'Comet'],
+            'mid'   => ['Merlin', 'Comet', 'Javelin'],
+            'late'  => ['Comet', 'Javelin', 'Sentinel', 'Probe'],
         ],
     ],
 
@@ -141,17 +177,17 @@ return [
             'Carbon'      => 0.30,
             'Titanium'    => 0.35,
             'Hydrogenium' => 0.25,
-            'Kyberkristall' => 0.10,
+            'Kyberkristall' => 0.15,
             'Cobalt'        => 0.10,
             'Iridium'       => 0.05,
             'Uraninite'     => 0.05,
             'Thorium'       => 0.05,
         ],
         'Kult der Leere' => [
-            'Carbon'      => 0.20,
-            'Titanium'    => 0.20,
-            'Hydrogenium' => 0.25,
-            'Kyberkristall' => 0.40,
+            'Carbon'      => 0.25,
+            'Titanium'    => 0.25,
+            'Hydrogenium' => 0.30,
+            'Kyberkristall' => 0.35,
             'Cobalt'        => 0.10,
             'Iridium'       => 0.15,
             'Uraninite'     => 0.05,
@@ -159,23 +195,23 @@ return [
             'Astatine'      => 0.02,
         ],
         'Sternenplünderer' => [
-            'Carbon'      => 0.2,
-            'Titanium'    => 0.2,
-            'Hydrogenium' => 0.2,
-            'Kyberkristall' => 0.2,
-            'Cobalt'        => 0.2,
-            'Iridium'       => 0.10,
+            'Carbon'      => 0.3,
+            'Titanium'    => 0.3,
+            'Hydrogenium' => 0.3,
+            'Kyberkristall' => 0.3,
+            'Cobalt'        => 0.25,
+            'Iridium'       => 0.15,
             'Uraninite'     => 0.10,
             'Thorium'       => 0.05,
             'Astatine'      => 0.02,
         ],
         'Gravbrecher' => [
-            'Carbon'      => 0.20,
-            'Titanium'    => 0.20,
-            'Hydrogenium' => 0.15,
-            'Kyberkristall' => 0.15,
-            'Cobalt'        => 0.2,
-            'Iridium'       => 0.2,
+            'Carbon'      => 0.30,
+            'Titanium'    => 0.30,
+            'Hydrogenium' => 0.20,
+            'Kyberkristall' => 0.20,
+            'Cobalt'        => 0.20,
+            'Iridium'       => 0.20,
             'Uraninite'     => 0.05,
             'Thorium'       => 0.05,
         ],

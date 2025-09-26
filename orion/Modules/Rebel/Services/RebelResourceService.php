@@ -2,12 +2,13 @@
 
 namespace Orion\Modules\Rebel\Services;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Rebel\Models\Rebel;
+use Orion\Modules\Resource\Models\Resource;
 use Orion\Modules\Rebel\Models\RebelResource;
 use Orion\Modules\Rebel\Models\RebelSpacecraft;
-use Orion\Modules\Resource\Models\Resource;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 
 class RebelResourceService
@@ -65,7 +66,7 @@ class RebelResourceService
     }
     
     // TODO: write gamephase in DB or implement Global difficulty
-    protected function getGamePhase()
+    public function getGamePhase()
     {
         $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
         Log::info("Average Miner spacecrafts per user: $avgMiner");
@@ -99,16 +100,50 @@ class RebelResourceService
             ->toArray();
     }
 
-    public function spendResourcesForFleet(Rebel $rebel)
-    {
-        // Flottenzusammenstellung nach Verhalten und Kapazität
-        // Ressourcenverbrauch berechnen und abziehen
-        // Neue Schiffe erstellen oder bestehende erhöhen
-    }
-
-    protected function getResourceId($name)
+    public function getResourceId($name)
     {
         // Hole die Resource-ID anhand des Namens
         return Resource::where('name', $name)->value('id');
     }
+
+    public function getRebelResource(Rebel $rebel, array $cost)
+    {
+        return RebelResource::where('rebel_id', $rebel->id)
+                ->where('resource_id', $this->getResourceId($cost['resource_name']))
+                ->first();
+    }
+
+    public function getAllRebelResourcesById(int $id): Collection
+    {
+        return RebelResource::with('resource')
+            ->where('rebel_id', $id)
+            ->orderBy('resource_id', 'asc')
+            ->get();
+    }
+
+    public function getSpecificRebelResource(int $id, int $resourceId): RebelResource|null
+    {
+        return RebelResource::with('resource')
+            ->where('rebel_id', $id)
+            ->where('resource_id', $resourceId)
+            ->first();
+    }
+    
+    /**
+     * Zieht Ressourcen für ein Schiff ab.
+     *
+     * @param Rebel $rebel
+     * @param array $costs
+     * @param int $count
+     * @return void
+     */
+    public function spendResources(Rebel $rebel, array $costs, int $count): void
+    {
+        foreach ($costs as $cost) {
+            RebelResource::where('rebel_id', $rebel->id)
+                ->where('resource_id', $this->getResourceId($cost['resource_name']))
+                ->decrement('amount', $cost['amount'] * $count);
+        }
+    }
+
 }

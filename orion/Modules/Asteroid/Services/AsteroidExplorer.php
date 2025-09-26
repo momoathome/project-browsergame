@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Asteroid\Models\Asteroid;
+use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Resource\Services\ResourceService;
@@ -52,12 +53,12 @@ class AsteroidExplorer
     public function calculateTravelDuration(
         Collection $spacecrafts,
         $user,
-        Asteroid|Station $asteroid,
+        Asteroid|Station|Rebel $target,
         ?QueueActionType $actionType = null,
         ?Collection $filteredSpacecrafts = null
     ): int {
         $lowestSpeed = $this->findLowestSpeedOfSpacecrafts($spacecrafts);
-        $distance = $this->calculateDistanceToAsteroid($user, $asteroid);
+        $distance = $this->calculateDistanceToTarget($user, $target);
 
         $spacecraft_flight_speed = config('game.core.spacecraft_flight_speed');
 
@@ -169,13 +170,13 @@ class AsteroidExplorer
         return $totalSpeed;
     }
 
-    private function calculateDistanceToAsteroid(User $user, Asteroid|Station $asteroid): int
+    private function calculateDistanceToTarget(User $user, Asteroid|Station|Rebel $target): int
     {
         $station = $this->stationService->findStationByUserId($user->id);
 
         $distance = sqrt(
-            pow($station->x - $asteroid->x, 2) +
-            pow($station->y - $asteroid->y, 2)
+            pow($station->x - $target->x, 2) +
+            pow($station->y - $target->y, 2)
         );
 
         return (int) round($distance);

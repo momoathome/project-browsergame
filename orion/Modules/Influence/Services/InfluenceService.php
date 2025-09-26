@@ -3,8 +3,9 @@
 namespace Orion\Modules\Influence\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserAttributeService;
 
@@ -17,7 +18,7 @@ class InfluenceService
     /**
      * Berechne und speichere Einfluss nach einem Kampf.
      */
-    public function handleCombatResult(User $attacker, User $defender, $result, array $attackerLosses, array $defenderLosses, array $plunderedResources = []): void
+    public function handleCombatResult(User|Rebel $attacker, User|Rebel $defender, $result, array $attackerLosses, array $defenderLosses, array $plunderedResources = []): void
     {
         $attackerLossCombatPower = $this->calculateLossesCombatPower($attackerLosses);
         $defenderLossCombatPower = $this->calculateLossesCombatPower($defenderLosses);

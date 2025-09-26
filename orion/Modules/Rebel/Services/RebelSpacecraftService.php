@@ -19,39 +19,135 @@ class RebelSpacecraftService
     public function spendResourcesForFleet(Rebel $rebel)
     {
         $phase = $this->rebelResourceService->getGamePhase();
-
-        // Hole erlaubte Schiffe für diese Fraktion & Phase
         $factionShips = $this->getFactionSpacecrafts($rebel->faction, $phase);
 
-        // Hole Verhalten → erst individuell, dann Fallback Fraktion
         $behaviors = config('game.rebels.behaviors');
         $behaviorKey = $rebel->behavior;
         $behavior = $behaviors[$behaviorKey] ?? $behaviors['balanced'];
-
-        // Bias bestimmen (z. B. 90/10 für very aggressive)
         $fleetBias = $behavior['fleet_bias'];
 
-        // Gesamtanzahl Schiffe, die er bauen will
-        $totalShips = rand(5, 20) * $rebel->difficulty_level;
+        $totalResources = $rebel->resources->sum('amount');
 
+        // 1. Reserve abhängig vom Difficulty-Level (Punkt 1 + 3)
+        $reservePercent = match ($rebel->difficulty_level) {
+            1 => 0.50,  // 75% übrig
+            2 => 0.40,
+            3 => 0.30,
+            4 => 0.25,
+            5 => 0.20,
+            default => max(0.3 - ($rebel->difficulty_level * 0.02), 0.15), // Skalierbar >5
+        };
+
+        // Zufälliger Faktor, damit es nicht immer identisch ist
+        $reserveFactor = $reservePercent + rand(0, 5) / 100; 
+
+        $resourceBudget = $totalResources * (1 - $reserveFactor);
+
+        // Durchschnittliche Schiffskosten
+        $avgShipCost = collect($factionShips)->map(fn($ship) =>
+            collect($ship['costs'])->sum('amount')
+        )->avg() ?: 1;
+
+        $fleetCap = $rebel->fleet_cap;
+
+        $totalShips = max(2, min(floor($resourceBudget / $avgShipCost), $fleetCap));
+
+        // Flottenplanung (Bias berücksichtigen)
         $plannedFleet = [
             'attack' => round($fleetBias['attack'] * $totalShips),
             'defense' => round($fleetBias['defense'] * $totalShips),
         ];
 
-        // Kategorisiere Schiffe
         [$attackShips, $defenseShips, $balancedShips] = $this->categorizeShips($factionShips);
-        Log::info("Rebel {$rebel->name} {$rebel->behavior} building fleet: " . json_encode($plannedFleet) .
-            " from " . count($attackShips) . " attack, " . count($defenseShips) . " defense, " . count($balancedShips) . " balanced ships.");
 
-        // Baue Attack-Schiffe
-        $this->buildCategoryShips($rebel, $attackShips, $plannedFleet['attack']);
+        Log::info("Rebel {$rebel->name} {$rebel->behavior} planning: " . json_encode($plannedFleet));
 
-        // Baue Defense-Schiffe
-        $this->buildCategoryShips($rebel, $defenseShips, $plannedFleet['defense']);
+        // 2. Geplante Flotte bauen (mit Effizienz abhängig von Difficulty, Punkt 5)
+        $this->buildCategoryShips($rebel, $attackShips, $plannedFleet['attack'], $fleetCap, $rebel->difficulty_level);
+        $this->buildCategoryShips($rebel, $defenseShips, $plannedFleet['defense'], $fleetCap, $rebel->difficulty_level);
+        $this->buildCategoryShips($rebel, $balancedShips, rand(0, floor($totalShips * 0.1)), $fleetCap, $rebel->difficulty_level);
+    }
 
-        // Optional: Balanced-Schiffe
-        $this->buildCategoryShips($rebel, $balancedShips, rand(0, floor($totalShips * 0.1)));
+    private function calculateBuildCount(int $difficulty, int $targetCount, int $maxBuild): int
+    {
+        // Difficulty 1 = ineffizient, Difficulty 5 = effizient
+        $efficiency = min(1.0, 0.5 + ($difficulty * 0.1)); // 0.6 → 1.0
+
+        $idealBuild = floor($maxBuild * $efficiency);
+        return max(1, min($targetCount, $idealBuild));
+    }
+
+    private function buildCategoryShips(Rebel $rebel, array $ships, int $targetCount, int $fleetCap, int $difficulty)
+    {
+        if ($targetCount <= 0 || empty($ships)) {
+            return;
+        }
+
+        while ($targetCount > 0) {
+            $ship = $ships[array_rand($ships)];
+
+            $maxBuild = $fleetCap - RebelSpacecraft::where('rebel_id', $rebel->id)->sum('count');
+            foreach ($ship['costs'] as $cost) {
+                $resource = $this->rebelResourceService->getRebelResource($rebel, $cost);
+                $possible = $resource ? floor($resource->amount / $cost['amount']) : 0;
+                $maxBuild = min($maxBuild, $possible);
+            }
+
+            if ($maxBuild < 1) {
+                // statt sofort abbrechen → günstige Alternative probieren
+                $fallbackShip = $this->findCheaperAlternative($ships, $rebel);
+                if (!$fallbackShip) {
+                    break; // wirklich nichts baubar
+                }
+                $ship = $fallbackShip;
+                continue;
+            }
+
+            // Effizienz beeinflusst wie „clever“ gebaut wird
+            $buildCount = min(
+                $this->calculateBuildCount($difficulty, $targetCount, $maxBuild),
+                $targetCount
+            );
+
+            $this->rebelResourceService->spendResources($rebel, $ship['costs'], $buildCount);
+
+            $spacecraft = RebelSpacecraft::firstOrNew([
+                'rebel_id' => $rebel->id,
+                'details_id' => $ship['details_id'],
+            ]);
+
+            $spacecraft->count = ($spacecraft->count ?? 0) + $buildCount;
+            $spacecraft->attack = $ship['attack'] ?? 0;
+            $spacecraft->defense = $ship['defense'] ?? 0;
+            $spacecraft->cargo = $ship['cargo'] ?? 0;
+            $spacecraft->save();
+
+            $targetCount -= $buildCount;
+        }
+    }
+
+    private function findCheaperAlternative(array $ships, Rebel $rebel): ?array
+    {
+        // Sortiere nach Kosten
+        $sorted = collect($ships)->sortBy(fn($s) =>
+            collect($s['costs'])->sum('amount')
+        );
+
+        foreach ($sorted as $ship) {
+            $canAfford = true;
+            foreach ($ship['costs'] as $cost) {
+                $res = $this->rebelResourceService->getRebelResource($rebel, $cost);
+                if (!$res || $res->amount < $cost['amount']) {
+                    $canAfford = false;
+                    break;
+                }
+            }
+            if ($canAfford) {
+                return $ship;
+            }
+        }
+
+        return null; // keine Alternative gefunden
     }
 
     private function categorizeShips(array $ships): array
@@ -76,50 +172,7 @@ class RebelSpacecraftService
         return [$attackShips, $defenseShips, $balancedShips];
     }
 
-
-    private function buildCategoryShips(Rebel $rebel, array $ships, int $targetCount)
-    {
-        if ($targetCount <= 0 || empty($ships)) {
-            return;
-        }
-
-        while ($targetCount > 0) {
-            // Zufälliges Schiff aus der Kategorie wählen
-            $ship = $ships[array_rand($ships)];
-
-            // Prüfe, wie viele maximal baubar sind
-            $maxBuild = PHP_INT_MAX;
-            foreach ($ship['costs'] as $cost) {
-                $resource = $this->rebelResourceService->getRebelResource($rebel, $cost);
-                $possible = $resource ? floor($resource->amount / $cost['amount']) : 0;
-                $maxBuild = min($maxBuild, $possible);
-            }
-
-            if ($maxBuild < 1) {
-                $targetCount--; // Kein Bau möglich → skip
-                continue;
-            }
-
-            $buildCount = min(rand(1, 3), $maxBuild, $targetCount); // Variation
-            $this->rebelResourceService->spendResources($rebel, $ship['costs'], $buildCount);
-
-            // Erstelle oder update
-            $spacecraft = RebelSpacecraft::firstOrNew([
-                'rebel_id' => $rebel->id,
-                'details_id' => $ship['details_id'],
-            ]);
-
-            $spacecraft->count = ($spacecraft->count ?? 0) + $buildCount;
-            $spacecraft->attack = $ship['attack'] ?? 0;
-            $spacecraft->defense = $ship['defense'] ?? 0;
-            $spacecraft->cargo = $ship['cargo'] ?? 0;
-            $spacecraft->save();
-
-            $targetCount -= $buildCount;
-        }
-    }
-
-        // Hilfsfunktion: Hole alle Spacecrafts für die Fraktion
+    // Hilfsfunktion: Hole alle Spacecrafts für die Fraktion
     public function getFactionSpacecrafts($faction, $phase)
     {
         $factionConfig = config('game.rebels.faction_spacecrafts');

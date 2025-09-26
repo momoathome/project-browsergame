@@ -77,7 +77,10 @@ function regenerateAsteroids() {
             <h2 class="text-xl font-semibold p-4 border-b border-primary bg-base-dark rounded-t-xl text-light">
               Actions
             </h2>
-            <Link :href="route('admin.resourceDistribution')" class="text-light block py-4 px-3 hover:underline">Ressourcenverteilung</Link>
+            <div class="flex gap-4 items-center p-4">
+              <Link :href="route('admin.resourceDistribution')" class="text-light bg-primary/20 text-base block rounded-md px-4 py-2 hover:bg-primary transition">Ressourcenverteilung</Link>
+              <Link :href="route('admin.rebelOverview')" class="text-light bg-primary/20 text-base block rounded-md px-4 py-2 hover:bg-primary transition">Rebellen</Link>
+            </div>
           </div>
           <DashboardUserOverview :users="users" />
         </div>

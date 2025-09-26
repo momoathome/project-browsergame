@@ -18,8 +18,6 @@ class Rebel extends Model
         'last_interaction',
         'defeated_count',
         'fleet_cap',
-        'fleet_growth_rate',
-        'loot_multiplier',
         'adaptation_level',
         'behavior',
         'base_chance',
@@ -33,6 +31,16 @@ class Rebel extends Model
             'x' => $this->x,
             'y' => $this->y,
         ];
+    }
+
+    public function resources()
+    {
+        return $this->hasMany(RebelResource::class, 'rebel_id');
+    }
+
+    public function spacecrafts()
+    {
+        return $this->hasMany(RebelSpacecraft::class, 'rebel_id');
     }
 }
 

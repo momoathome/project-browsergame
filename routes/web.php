@@ -95,6 +95,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified',
         Route::post('/market/reset', [AdminController::class, 'resetMarketData'])->name('admin.market.reset');
         Route::get('/progression', [AdminController::class, 'progression'])->name('admin.progression');
         Route::get('/resource-distribution', [AdminController::class, 'resourceDistribution'])->name('admin.resourceDistribution');
+        Route::get('/rebel-overview', [AdminController::class, 'rebelOverview'])->name('admin.rebelOverview');
     });
 
     Route::get('/queue', [ActionQueueController::class, 'index'])->name('queue');

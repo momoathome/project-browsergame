@@ -89,8 +89,8 @@ class RebelResourceService
         }
 
         $allowedCategories = match($phase) {
-            'early' => ['low_value'],
-            'mid'   => ['low_value', 'medium_value'],
+            'early' => ['low_value', 'medium_value'],
+            'mid'   => ['low_value', 'medium_value', 'high_value'],
             'late'  => ['low_value', 'medium_value', 'high_value', 'extreme_value'],
             default => ['low_value'],
         };

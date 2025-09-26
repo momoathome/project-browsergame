@@ -12,7 +12,7 @@ class ClearRebelSpacecrafts extends Command
 
     public function handle()
     {
-        $count = RebelSpacecraft::query()->update(['amount' => 0]);
+        $count = RebelSpacecraft::query()->update(['count' => 0]);
         $this->info("Alle Rebel-Spacecrafts wurden zurückgesetzt ($count Einträge).");
     }
 }

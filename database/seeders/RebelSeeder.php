@@ -26,11 +26,17 @@ class RebelSeeder extends Seeder
 
         foreach ($config['factions'] as $faction => $data) {
             foreach ($data['leaders'] as $name) {
-                $difficulty = rand(1, 5);
-
-                $fleetCap = 1000 * $difficulty;
-                $growthRate = 1 + ($difficulty * 0.1);
-                $lootMultiplier = 1 + ($difficulty * 0.05);
+                $weights = [1 => 0.4, 2 => 0.3, 3 => 0.15, 4 => 0.1, 5 => 0.05];
+                $rand = mt_rand() / mt_getrandmax();
+                $sum = 0;
+                foreach ($weights as $level => $weight) {
+                    $sum += $weight;
+                    if ($rand <= $sum) {
+                        $difficulty = $level;
+                        break;
+                    }
+                }
+                $fleetCap = 10 * $difficulty;
 
                 $this->rebelservice->create([
                     'name'              => $name,
@@ -39,8 +45,6 @@ class RebelSeeder extends Seeder
                     'last_interaction'  => now(),
                     'defeated_count'    => 0,
                     'fleet_cap'          => $fleetCap,
-                    'fleet_growth_rate'  => $growthRate,
-                    'loot_multiplier'   => $lootMultiplier,
                     'adaptation_level'  => 0,
                     'behavior'          => $data['base_behavior'],
                     'base_chance'       => $data['base_chance'],

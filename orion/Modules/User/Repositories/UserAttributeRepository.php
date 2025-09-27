@@ -22,6 +22,13 @@ readonly class UserAttributeRepository
             ->where('attribute_name', $attributeName)
             ->first();
     }
+
+    public function getTotalAttributeValueByType(UserAttributeType $attributeType): int
+    {
+        return UserAttribute::where('attribute_name', $attributeType->value)
+            ->sum('attribute_value');
+    }
+
     public function getInfluenceOfAllUsers(): Collection
     {
         return UserAttribute::query()

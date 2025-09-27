@@ -7,17 +7,21 @@ use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\Rebel\Models\RebelSpacecraft;
 use Orion\Modules\Rebel\Services\RebelResourceService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Rebel\Services\RebelDifficultyService;
 
 class RebelSpacecraftService
 {
     public function __construct(
         private readonly SpacecraftService $spacecraftService,
         private readonly RebelResourceService $rebelResourceService,
+        private readonly RebelDifficultyService $difficultyService,
     ) {
     }
 
-    public function spendResourcesForFleet(Rebel $rebel)
+    public function spendResourcesForFleet(Rebel $rebel, int $globalDifficulty = 0)
     {
+        $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
+
         $phase = $this->rebelResourceService->getGamePhase();
         $factionShips = $this->getFactionSpacecrafts($rebel->faction, $phase);
 
@@ -28,54 +32,72 @@ class RebelSpacecraftService
 
         $totalResources = $rebel->resources->sum('amount');
 
-        // 1. Reserve abhängig vom Difficulty-Level (Punkt 1 + 3)
-        $reservePercent = match ($rebel->difficulty_level) {
-            1 => 0.50,  // 75% übrig
-            2 => 0.40,
-            3 => 0.30,
-            4 => 0.25,
-            5 => 0.20,
-            default => max(0.3 - ($rebel->difficulty_level * 0.02), 0.15), // Skalierbar >5
-        };
+        $reservePercent = max(0.30, 0.70 - 0.07 * ($rebel->difficulty_level + $globalDifficulty));
 
-        // Zufälliger Faktor, damit es nicht immer identisch ist
-        $reserveFactor = $reservePercent + rand(0, 5) / 100; 
-
+        $reserveFactor = $reservePercent + rand(0, 5) / 100;
         $resourceBudget = $totalResources * (1 - $reserveFactor);
 
-        // Durchschnittliche Schiffskosten
         $avgShipCost = collect($factionShips)->map(fn($ship) =>
             collect($ship['costs'])->sum('amount')
         )->avg() ?: 1;
 
-        $fleetCap = $rebel->fleet_cap;
+        // FleetCap dynamisch
+        $fleetCap = $this->difficultyService->getFleetCap($rebel, $globalDifficulty);
 
         $totalShips = max(2, min(floor($resourceBudget / $avgShipCost), $fleetCap));
 
-        // Flottenplanung (Bias berücksichtigen)
-        $plannedFleet = [
-            'attack' => round($fleetBias['attack'] * $totalShips),
-            'defense' => round($fleetBias['defense'] * $totalShips),
-        ];
-
         [$attackShips, $defenseShips, $balancedShips] = $this->categorizeShips($factionShips);
+        
+        $plannedFleet = $this->adjustPlannedFleet($fleetBias, $totalShips, $attackShips, $defenseShips);
 
-        Log::info("Rebel {$rebel->name} {$rebel->behavior} planning: " . json_encode($plannedFleet));
-
-        // 2. Geplante Flotte bauen (mit Effizienz abhängig von Difficulty, Punkt 5)
         $this->buildCategoryShips($rebel, $attackShips, $plannedFleet['attack'], $fleetCap, $rebel->difficulty_level);
         $this->buildCategoryShips($rebel, $defenseShips, $plannedFleet['defense'], $fleetCap, $rebel->difficulty_level);
-        $this->buildCategoryShips($rebel, $balancedShips, rand(0, floor($totalShips * 0.1)), $fleetCap, $rebel->difficulty_level);
+        $this->buildCategoryShips($rebel, $balancedShips, $plannedFleet['balanced'], $fleetCap, $rebel->difficulty_level);
     }
 
     private function calculateBuildCount(int $difficulty, int $targetCount, int $maxBuild): int
     {
         // Difficulty 1 = ineffizient, Difficulty 5 = effizient
-        $efficiency = min(1.0, 0.5 + ($difficulty * 0.1)); // 0.6 → 1.0
+        $efficiency = min(1.0, 0.3 + ($difficulty * 0.1));
 
         $idealBuild = floor($maxBuild * $efficiency);
         return max(1, min($targetCount, $idealBuild));
     }
+
+    private function adjustPlannedFleet(array $fleetBias, int $totalShips, array $attackShips, array $defenseShips): array
+    {
+        $attackCount = round($fleetBias['attack'] * $totalShips);
+        $defenseCount = round($fleetBias['defense'] * $totalShips);
+
+        // --- Case 1: Keine Defense-Schiffe verfügbar → auf Balanced schieben
+        if (empty($defenseShips) && $defenseCount > 0) {
+            $balancedExtra = $defenseCount;
+            $defenseCount = 0;
+            $balancedCount = $balancedExtra;
+        }
+        // --- Case 2: Keine Attack-Schiffe verfügbar → auf Balanced schieben
+        elseif (empty($attackShips) && $attackCount > 0) {
+            $balancedExtra = $attackCount;
+            $attackCount = 0;
+            $balancedCount = $balancedExtra;
+        }
+        // --- Case 3: Beide Kategorien verfügbar → normaler Bias
+        else {
+            $balancedCount = round($totalShips - ($attackCount + $defenseCount));
+        }
+
+        // Safety: Keine negativen Werte
+        $attackCount   = max(0, $attackCount);
+        $defenseCount  = max(0, $defenseCount);
+        $balancedCount = max(0, $balancedCount);
+
+        return [
+            'attack'   => $attackCount,
+            'defense'  => $defenseCount,
+            'balanced' => $balancedCount,
+        ];
+    }
+
 
     private function buildCategoryShips(Rebel $rebel, array $ships, int $targetCount, int $fleetCap, int $difficulty)
     {
@@ -83,7 +105,12 @@ class RebelSpacecraftService
             return;
         }
 
-        while ($targetCount > 0) {
+        $maxIterations = 500; // Schutz gegen Endlosschleifen
+        $iterations = 0;
+
+        while ($targetCount > 0 && $iterations < $maxIterations) {
+            $iterations++;
+
             $ship = $ships[array_rand($ships)];
 
             $maxBuild = $fleetCap - RebelSpacecraft::where('rebel_id', $rebel->id)->sum('count');
@@ -94,12 +121,8 @@ class RebelSpacecraftService
             }
 
             if ($maxBuild < 1) {
-                // statt sofort abbrechen → günstige Alternative probieren
-                $fallbackShip = $this->findCheaperAlternative($ships, $rebel);
-                if (!$fallbackShip) {
-                    break; // wirklich nichts baubar
-                }
-                $ship = $fallbackShip;
+                // Kein Schiff baubar, Ziel reduzieren um Endlosschleife zu vermeiden
+                $targetCount--;
                 continue;
             }
 
@@ -122,32 +145,10 @@ class RebelSpacecraftService
             $spacecraft->cargo = $ship['cargo'] ?? 0;
             $spacecraft->save();
 
+            Log::info("Rebel {$rebel->name} built {$buildCount}x {$ship['name']} (now {$spacecraft->count})");
+
             $targetCount -= $buildCount;
         }
-    }
-
-    private function findCheaperAlternative(array $ships, Rebel $rebel): ?array
-    {
-        // Sortiere nach Kosten
-        $sorted = collect($ships)->sortBy(fn($s) =>
-            collect($s['costs'])->sum('amount')
-        );
-
-        foreach ($sorted as $ship) {
-            $canAfford = true;
-            foreach ($ship['costs'] as $cost) {
-                $res = $this->rebelResourceService->getRebelResource($rebel, $cost);
-                if (!$res || $res->amount < $cost['amount']) {
-                    $canAfford = false;
-                    break;
-                }
-            }
-            if ($canAfford) {
-                return $ship;
-            }
-        }
-
-        return null; // keine Alternative gefunden
     }
 
     private function categorizeShips(array $ships): array
@@ -160,9 +161,9 @@ class RebelSpacecraftService
             $attack = $ship['attack'] ?? 0;
             $defense = $ship['defense'] ?? 0;
 
-            if ($attack > $defense * 1.15) {
+            if ($attack > $defense * 1.25) {
                 $attackShips[] = $ship;
-            } elseif ($defense > $attack * 1.15) {
+            } elseif ($defense > $attack * 1.25) {
                 $defenseShips[] = $ship;
             } else {
                 $balancedShips[] = $ship;

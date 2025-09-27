@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('last_interaction');
             $table->integer('defeated_count')->default(0);
             $table->integer('fleet_cap');
+            $table->integer('resource_cap');
             $table->integer('adaptation_level')->default(0);
             $table->string('behavior');
             $table->float('base_chance');

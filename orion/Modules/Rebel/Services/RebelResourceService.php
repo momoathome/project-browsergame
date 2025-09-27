@@ -10,57 +10,70 @@ use Orion\Modules\Resource\Models\Resource;
 use Orion\Modules\Rebel\Models\RebelResource;
 use Orion\Modules\Rebel\Models\RebelSpacecraft;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Rebel\Services\RebelDifficultyService;
 
 class RebelResourceService
 {
     public function __construct(
         private readonly SpacecraftService $spacecraftService,
+        private readonly RebelDifficultyService $difficultyService,
     ) {
     }
 
-    public function generateResources(Rebel $rebel, $ticks = null)
+    public function generateResources(Rebel $rebel, $ticks = null, int $globalDifficulty = 0)
     {
-        $difficulty = $rebel->difficulty_level;
-        $rate = 10 * $difficulty; // Ressourcen pro Tick
-    
+        // Falls globalDifficulty nicht mitgegeben → selbst berechnen
+        $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
+
+        $difficulty = $rebel->difficulty_level + $globalDifficulty;
+        $rate = config('game.rebels.resources_per_tick', 10) * $difficulty; // Ressourcen pro Tick
+
         $last = $rebel->last_interaction ?? now();
         $now = now();
-        $tickMinutes = 10;
+        $tickMinutes = config('game.rebels.tick_interval_minutes', 15); // Minuten pro Tick
         $ticks = $ticks ?? max(0, floor($now->diffInMinutes($last) / $tickMinutes));
-    
+
         if ($ticks < 1) {
             return;
         }
-    
-        $phase = $this->getGamePhase(); // z.B. 'early', 'mid', 'late'
+
+        $phase = $this->getGamePhase();
         $faction = $rebel->faction;
         $ratios = $this->getScaledRatios($faction, $phase);
-    
+
         foreach (config('game.resources.resources') as $resource) {
             $name = $resource['name'] ?? null;
             if (!$name) continue;
-    
+
             $ratio = $ratios[$name] ?? 0.0;
             $amount = round($rate * $ticks * $ratio);
-    
+
             if ($amount < 1) continue;
-    
+
             $resourceId = $this->getResourceId($name);
             $rebelResource = RebelResource::where('rebel_id', $rebel->id)
                 ->where('resource_id', $resourceId)
                 ->first();
-    
+
+            $currentAmount = $rebelResource?->amount ?? 0;
+
+            // Cap über DifficultyService
+            $cap = $this->difficultyService->getResourceCap($rebel, $globalDifficulty);
+
+            $amountToAdd = min($amount, max(0, $cap - $currentAmount));
+            if ($amountToAdd < 1) continue;
+
             if ($rebelResource) {
-                $rebelResource->increment('amount', $amount);
+                $rebelResource->increment('amount', $amountToAdd);
             } else {
                 RebelResource::create([
                     'rebel_id' => $rebel->id,
                     'resource_id' => $resourceId,
-                    'amount' => $amount,
+                    'amount' => $amountToAdd,
                 ]);
             }
         }
-    
+
         $rebel->last_interaction = $now;
         $rebel->save();
     }
@@ -68,7 +81,7 @@ class RebelResourceService
     // TODO: write gamephase in DB or implement Global difficulty
     public function getGamePhase()
     {
-        $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
+        $avgMiner = 50; //$this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count')
         Log::info("Average Miner spacecrafts per user: $avgMiner");
 
         if ($avgMiner < 15) return 'early';

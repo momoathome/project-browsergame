@@ -36,7 +36,9 @@ class RebelSeeder extends Seeder
                         break;
                     }
                 }
-                $fleetCap = 10 * $difficulty;
+                $fleetCap = 10;       // Basiswert
+                $resourceCap = 1000;  // Basiswert
+
 
                 $this->rebelservice->create([
                     'name'              => $name,
@@ -45,6 +47,7 @@ class RebelSeeder extends Seeder
                     'last_interaction'  => now(),
                     'defeated_count'    => 0,
                     'fleet_cap'          => $fleetCap,
+                    'resource_cap'      => $resourceCap,
                     'adaptation_level'  => 0,
                     'behavior'          => $data['base_behavior'],
                     'base_chance'       => $data['base_chance'],

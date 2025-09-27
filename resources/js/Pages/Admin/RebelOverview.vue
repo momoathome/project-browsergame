@@ -11,7 +11,7 @@ const props = defineProps<{
 <template>
     <div>
         <h1 class="text-2xl font-semibold mb-4 text-light">Rebellen Übersicht</h1>
-        <div class="bg-base rounded-xl w-full h-max border border-primary/40 shadow-xl overflow-hidden">
+        <div class="bg-base w-full h-max border border-primary/40 shadow-xl">
             <table class="min-w-full divide-y divide-primary/20">
             <thead class="bg-base-dark">
                 <tr>

@@ -46,7 +46,7 @@ class CombatController extends Controller
         $attacker = $request->input('attacker');
         $defender = $request->input('defender');
 
-        $result = $this->combatService->simulateBattle($attacker, $defender, null);
+        $result = $this->combatService->simulateBattle($attacker, $defender, null, true);
 
         return Inertia::render('Simulator', [
             'result' => $result,

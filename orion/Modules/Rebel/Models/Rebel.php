@@ -18,6 +18,7 @@ class Rebel extends Model
         'last_interaction',
         'defeated_count',
         'fleet_cap',
+        'resource_cap',
         'adaptation_level',
         'behavior',
         'base_chance',

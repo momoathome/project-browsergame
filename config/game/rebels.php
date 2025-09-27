@@ -2,6 +2,11 @@
 
 return [
 
+    'resources_per_tick' => 10,         // Basisrate der Ressourcengenerierung
+    'tick_interval_minutes' => 10,      // Minuten pro Tick
+    'spacecraft_produce_speed' => 1.0,
+    'spacecraft_flight_speed' => 1.0,
+
     /*
     |--------------------------------------------------------------------------
     | Faction Definitions
@@ -206,8 +211,8 @@ return [
             'Astatine'      => 0.02,
         ],
         'Gravbrecher' => [
-            'Carbon'      => 0.65,
-            'Titanium'    => 0.7,
+            'Carbon'      => 0.6,
+            'Titanium'    => 0.6,
             'Hydrogenium' => 0.5,
             'Kyberkristall' => 0.4,
             'Cobalt'        => 0.1,

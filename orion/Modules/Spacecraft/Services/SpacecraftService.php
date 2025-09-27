@@ -97,6 +97,11 @@ readonly class SpacecraftService
         $this->spacecraftRepository->updateSpacecraftsCount($userId, $spacecrafts);
     }
 
+    public function getAllSpacecraftsByType(string $type): Collection
+    {
+        return $this->spacecraftRepository->getAllSpacecraftsByType($type);
+    }
+
     /**
      * Formatiert Raumschiffe für die Anzeige
      * 

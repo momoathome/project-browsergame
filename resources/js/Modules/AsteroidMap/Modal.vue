@@ -13,13 +13,13 @@ import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueue } from '@/Composables/useQueue'
-import type { Station, Spacecraft, Asteroid } from '@/types/types';
+import type { Station, Spacecraft, Asteroid, Rebel } from '@/types/types';
 
 type Role = 'Fighter' | 'Miner' | 'Transporter'
 
 export type ModalContent = {
-  type: 'asteroid' | 'station' | 'undefined';
-  data: Asteroid | Station;
+  type: 'asteroid' | 'station' | 'rebel' | 'undefined';
+  data: Asteroid | Station | Rebel;
   title: string;
 }
 
@@ -43,6 +43,14 @@ const asteroidImages = [
   // ...weitere Bilder
 ];
 
+const rebelFactionImageMap: Record<string, string> = {
+  'Standard': '/images/rebel_station_full.webp',
+  'Rostwölfe':   '/images/stations/stationRed_full.webp',
+  'Kult der Leere':  '/images/stations/stationViolet_full.webp',
+  'Sternenplünderer': '/images/stations/stationBlue_full.webp',
+  'Gravbrecher': '/images/stations/stationGreen_full.webp',
+};
+
 const asteroidImageIndex = computed(() =>
   asteroid.value?.id !== undefined
     ? asteroid.value.id % asteroidImages.length
@@ -53,8 +61,15 @@ const asteroidImageSrc = computed(() =>
   asteroidImages[asteroidImageIndex.value]
 );
 
+const rebelImageSrc = computed(() => {
+  // Fraktion auslesen, falls vorhanden
+  const faction: string = (rebel.value && 'faction' in rebel.value) ? String(rebel.value.faction) : 'Standard';
+  return rebelFactionImageMap[faction] || rebelFactionImageMap['Standard'];
+});
+
 const asteroid = computed<Asteroid>(() => props.content.data as Asteroid);
 const station = computed<Station>(() => props.content.data as Station);
+const rebel = computed<Rebel>(() => props.content.data as Rebel);
 const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id
 );
@@ -79,6 +94,7 @@ const totalMiningOperations = computed(() => (processedQueueItems.value ?? []).r
 const form = useForm({
   asteroid_id: null as number | null,
   station_user_id: null as number | null,
+  rebel_id: null as number | null,
   spacecrafts: {} as Record<string, number>
 });
 
@@ -225,7 +241,30 @@ async function attackUser() {
   try {
     const { data } = await axios.post('/asteroidMap/combat', form);
     // Zeige Erfolg/Fehler
-    // Aktualisiere gezielt die Queue und ggf. den Asteroiden
+    await refreshQueue();
+    await refreshSpacecrafts();
+    close();
+  } catch (error) {
+    // Fehlerbehandlung
+  } finally {
+    isSubmitting.value = false;
+    emit('redraw');
+  }
+}
+
+async function attackRebel() {
+  if (isSubmitting.value) return;
+  if (rebel.value) {
+    form.rebel_id = rebel.value.id;
+  }
+
+  const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
+  if (noSpacecraftSelected) return;
+
+  isSubmitting.value = true;
+  try {
+    const { data } = await axios.post('/asteroidMap/combat-rebel', form); // Angepasster Endpunkt für Rebellen
+    // Zeige Erfolg/Fehler
     await refreshQueue();
     await refreshSpacecrafts();
     close();
@@ -240,8 +279,10 @@ async function attackUser() {
 async function startMission() {
   if (actionType.value === QueueActionType.MINING) {
     await exploreAsteroid();
-  } else if (actionType.value === QueueActionType.COMBAT) {
+  } else if (actionType.value === QueueActionType.COMBAT && props.content.type === 'station') {
     await attackUser();
+  } else if (actionType.value === QueueActionType.COMBAT && props.content.type === 'rebel') {
+    await attackRebel();
   }
 }
 
@@ -348,10 +389,12 @@ function availableCount(s) {
               <!-- Left Asteroid -->
               <div class="relative text-center">
                 <h1 class="text-2xl flex justify-center text-white mt-2">{{ content.title }}</h1>
+                <p v-if="props.content.type === 'rebel'" class="text-light">{{ content.data.faction }}</p>
 
                 <div class="relative flex items-center justify-center w-[360px] h-[360px] mx-auto">
-                  <img v-if="actionType === QueueActionType.MINING" :src="asteroidImageSrc" class="z-10" />
-                  <img v-else src="/images/station_full.webp" class="z-10" />
+                  <img v-if="props.content.type === 'asteroid'" :src="asteroidImageSrc" class="z-10" />
+                  <img v-else-if="props.content.type === 'station'" src="/images/stations/station_full.webp" class="z-10" />
+                  <img v-else :src="rebelImageSrc" class="z-10"  />
                   <AsteroidModalResourceSvg v-if="actionType === QueueActionType.MINING" :asteroid="asteroid"
                     :showResources="canScanAsteroid" class="absolute inset-0" />
                 </div>

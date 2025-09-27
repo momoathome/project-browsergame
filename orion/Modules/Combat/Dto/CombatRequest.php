@@ -12,7 +12,8 @@ class CombatRequest
         public readonly string $attackerName,
         public readonly string $defenderName,
         public readonly array $attackerCoordinates = [],
-        public readonly array $targetCoordinates = []
+        public readonly array $targetCoordinates = [],
+        public readonly bool $isRebelCombat = false,
     ) {
     }
 
@@ -27,6 +28,7 @@ class CombatRequest
             $data['defender_name'],
             $data['attacker_coordinates'] ?? [],
             $data['defender_coordinates'] ?? [],
+            $data['is_rebel_combat'] ?? false,
         );
     }
 
@@ -40,7 +42,8 @@ class CombatRequest
             'attacker_name' => $this->attackerName,
             'defender_name' => $this->defenderName,
             'attacker_coordinates' => $this->attackerCoordinates,
-            'target_coordinates' => $this->targetCoordinates
+            'target_coordinates' => $this->targetCoordinates,
+            'is_rebel_combat' => $this->isRebelCombat,
         ];
     }
 }

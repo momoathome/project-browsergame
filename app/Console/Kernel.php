@@ -2,7 +2,6 @@
 
 namespace App\Console;
 
-use App\Jobs\ProcessActionQueueJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -23,6 +22,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('actionqueue:reset-stuck')->everyFiveMinutes();
 
+        $schedule->command('game:rebel-generate-all')->everyFifteenMinutes();
     }
 
     /**

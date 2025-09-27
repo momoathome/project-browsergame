@@ -47,11 +47,11 @@ readonly class SpacecraftRepository
     public function updateSpacecraftsCount(int $userId, Collection $spacecrafts): void
     {
         DB::transaction(function () use ($userId, $spacecrafts) {
-            $spacecrafts->each(function ($spacecraft) use ($userId) {
-                $this->findSpacecraftById($spacecraft->id, $userId)->update([
-                    'count' => $spacecraft->count
-                ]);
-            });
+            $spacecrafts->each(fn($spacecraft) =>
+                Spacecraft::where('user_id', $userId)
+                    ->where('id', $spacecraft->id)
+                    ->update(['count' => $spacecraft->count])
+            );
         });
     }
 
@@ -92,5 +92,13 @@ readonly class SpacecraftRepository
             }
             return true;
         });
+    }
+
+    // get all spacecrafts from all users where spacecraft.details.type = $type
+    public function getAllSpacecraftsByType(string $type): Collection
+    {
+        return Spacecraft::whereHas('details', function ($query) use ($type) {
+            $query->where('type', $type);
+        })->get();
     }
 }

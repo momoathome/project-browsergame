@@ -10,6 +10,7 @@ use Orion\Modules\Combat\Services\CombatService;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Combat\Services\CombatOrchestrationService;
+use Orion\Modules\Rebel\Services\RebelService;
 
 class CombatController extends Controller
 {
@@ -18,7 +19,8 @@ class CombatController extends Controller
         private readonly CombatOrchestrationService $combatOrchestrationService,
         private readonly SpacecraftService $spacecraftService,
         private readonly AuthManager $authManager,
-        private readonly StationService $stationService
+        private readonly StationService $stationService,
+        private readonly RebelService $rebelService,
     ) {
     }
 
@@ -44,7 +46,7 @@ class CombatController extends Controller
         $attacker = $request->input('attacker');
         $defender = $request->input('defender');
 
-        $result = $this->combatService->simulateBattle($attacker, $defender, null);
+        $result = $this->combatService->simulateBattle($attacker, $defender, null, true);
 
         return Inertia::render('Simulator', [
             'result' => $result,
@@ -71,8 +73,34 @@ class CombatController extends Controller
             $user,
             $defender_id,
             $validated['spacecrafts'],
-            $defenderStation
+            $defenderStation,
+            false // Kennzeichne als Kampf gegen user
         );
+    }
+
+    /**
+     * Plant einen Kampf gegen eine Rebellenstation und fügt ihn zur Warteschlange hinzu
+     */
+    public function combatRebel(Request $request)
+    {
+        $user = $this->authManager->user();
+
+        $validated = $request->validate([
+            'rebel_id' => 'required|exists:rebels,id',
+            'spacecrafts' => 'required|array',
+        ]);
+
+        $rebel_id = $validated['rebel_id'];
+        $rebel = $this->rebelService->findRebelById($rebel_id);
+
+        // Führe den Kampfplan durch
+        $this->combatOrchestrationService->planAndQueueCombat(
+            $user,
+            $rebel_id,
+            $validated['spacecrafts'],
+            $rebel,
+            true // Kennzeichne als Kampf gegen Rebellen
+        ); 
     }
 
 }

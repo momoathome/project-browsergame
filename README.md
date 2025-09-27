@@ -134,6 +134,8 @@ Perform database migrations with the following command. This will set up your da
 ./vendor/bin/sail artisan scout:index "Orion\Modules\Asteroid\Models\Asteroid"
 ./vendor/bin/sail artisan scout:import "Orion\Modules\Station\Models\Station"
 ./vendor/bin/sail artisan scout:index "Orion\Modules\Station\Models\Station"
+./vendor/bin/sail artisan scout:import "Orion\Modules\Rebel\Models\Rebel"
+./vendor/bin/sail artisan scout:index "Orion\Modules\Rebel\Models\Rebel"
 ./vendor/bin/sail artisan meilisearch:configure
 ```
 
@@ -146,12 +148,11 @@ Perform database migrations with the following command. This will set up your da
 ## Commands
 
 ``` bash
-sail artisan db:seed --class=AsteroidSeeder
-sail artisan game:generate-test-stations --count=25 --use-regions
-sail artisan game:cleanup-test-stations --all
+sail artisan game:regenerate-universe
 sail artisan game:generate-asteroids --count=7000 --batch=500 --clear
-sail artisan universe:reserve-regions 50 --refresh
-sail artisan test:station-spawns 50 --refresh --debug --clear-cache --reserve-regions=0 --test-reserved --show-all
+sail artisan game:rebel-generate-resources --ticks=10
+sail artisan game:rebel-clear-resources
+sail artisan actionqueue:processing
 sail artisan make:extended ModelNamen --m --c --r --s
 ```
 

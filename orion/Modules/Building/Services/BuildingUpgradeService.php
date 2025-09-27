@@ -177,14 +177,6 @@ class BuildingUpgradeService
 
         $build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $targetLevel);
 
-        Log::info("Adding building upgrade to queue", [
-            'building_name' => $building->details->name,
-            'current_level' => $building->level,
-            'target_level' => $targetLevel,
-            'base_build_time' => $build_time,
-            'build_time' => $build_time,
-        ]);
-
         $this->queueService->addToQueue(
             $userId,
             QueueActionType::ACTION_TYPE_BUILDING,

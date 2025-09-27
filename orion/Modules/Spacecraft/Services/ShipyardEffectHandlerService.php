@@ -22,11 +22,6 @@ class ShipyardEffectHandlerService
         $effects = $this->buildingEffectService->getEffects('Shipyard', $upgradedBuilding->level);
         $spacecrafts = $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetails($userId);
 
-        Log::info('Handling Shipyard upgrade "' . $upgradedBuilding->level . '"', [
-            'effects' => $effects,
-            'spacecrafts' => $spacecrafts
-        ]);
-
         $unlocks = $effects['unlock'] ?? [];
         foreach ($unlocks as $spacecraftName) {
             $spacecraft = $spacecrafts->first(function ($sc) use ($spacecraftName) {

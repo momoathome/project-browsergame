@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { defineProps, computed } from 'vue';
+import { computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
+import { numberFormat } from '@/Utils/format';
 import type { Building } from '@/types/types';
-import { numberFormat } from '@/utils/format';
 
 const props = defineProps<{
     buildings: Building[];

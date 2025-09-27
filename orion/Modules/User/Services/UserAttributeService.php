@@ -36,6 +36,11 @@ class UserAttributeService
         return $this->userAttributeRepository->getSpecificUserAttribute($userId, $attributeName);
     }
 
+    public function getTotalAttributeValueByType(UserAttributeType $attributeType): int
+    {
+        return $this->userAttributeRepository->getTotalAttributeValueByType($attributeType);
+    }
+
     public function updateUserAttribute($userId, $attributeName, $value, $multiply = false, $replace = false)
     {
         $userAttribute = $this->getSpecificUserAttribute($userId, $attributeName);

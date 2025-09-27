@@ -24,6 +24,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SpacecraftSeeder::class);
         $this->call(AsteroidSeeder::class);
         $this->call(StationSeeder::class);
-
+        $this->call(RebelSeeder::class);
     }
 }

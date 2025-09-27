@@ -6,12 +6,13 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Combat\Dto\Losses;
+use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\Combat\Dto\Spacecraft;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
-use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\User\Enums\UserAttributeType;
+use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Combat\Repositories\CombatRepository;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
@@ -29,12 +30,12 @@ readonly class CombatService
     /**
      * Simuliert einen Kampf zwischen zwei Flotten
      */
-    public function simulateBattle(array $attacker, array $defender, $defenderUserId): CombatResult
+    public function simulateBattle(array $attacker, array $defender, $defenderId, $isRebelCombat): CombatResult
     {
         $attackerShips = $this->convertToShipCollection($attacker);
         $defenderShips = $this->convertToShipCollection($defender);
 
-        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips, $defenderUserId);
+        $totalCombatPower = $this->calculateTotalCombatPower($attackerShips, $defenderShips, $defenderId, $isRebelCombat);
         $winner = $this->defineWinner($totalCombatPower['attacker'], $totalCombatPower['defender']);
         $losses = $this->calculateLosses($attackerShips, $defenderShips, $totalCombatPower['attacker'], $totalCombatPower['defender']);
 
@@ -52,8 +53,8 @@ readonly class CombatService
      */
      public function prepareCombatPlan(CombatPlanRequest $planRequest): CombatRequest
     {
-        $defenderStation = $this->stationService->findStationByUserId($planRequest->defender->id);
-        $attackerStation = $this->stationService->findStationByUserId($planRequest->attacker->id);
+        $defenderStation = $this->getStationForEntity($planRequest->defender);
+        $attackerStation = $this->getStationForEntity($planRequest->attacker);
         
         $attackerFormatted = $this->formatAttackerSpacecrafts($planRequest->spacecrafts, $planRequest->attacker);
         $defenderFormatted = [];
@@ -73,7 +74,19 @@ readonly class CombatService
                 'x' => $defenderStation->x,
                 'y' => $defenderStation->y,
             ],
+            $planRequest->isRebelCombat
         );
+    }
+
+    private function getStationForEntity(User|Rebel $entity)
+    {
+        if ($entity instanceof User) {
+            return $this->stationService->findStationByUserId($entity->id);
+        }
+        if ($entity instanceof Rebel) {
+            return $entity; // Rebel hat x,y direkt
+        }
+        throw new \InvalidArgumentException('Unknown entity type');
     }
 
     /**
@@ -143,12 +156,13 @@ readonly class CombatService
     /**
      * Führt einen vollständigen Kampf aus
      */
-    public function executeCombat(CombatRequest $combatRequest, User $attacker, User $defender): CombatResult
+    public function executeCombat(CombatRequest $combatRequest, User|Rebel $attacker, User|Rebel $defender): CombatResult
     {
         $result = $this->simulateBattle(
             $combatRequest->attackerSpacecrafts,
             $combatRequest->defenderSpacecrafts,
-            $defender->id
+            $defender->id,
+            $combatRequest->isRebelCombat
         );
 
         $result->attackerName = $combatRequest->attackerName;
@@ -157,9 +171,9 @@ readonly class CombatService
         return $result;
     }
 
-    public function saveCombatResult(int $attackerId, int $defenderId, CombatResult $result, array $plunderedResources = []): void
+    public function saveCombatResult(int $attackerId, int $defenderId, CombatResult $result, array $plunderedResources = [], string $defenderType = 'user'): void
     {
-        $this->combatRepository->saveCombatResult($attackerId, $defenderId, $result, $plunderedResources);
+        $this->combatRepository->saveCombatResult($attackerId, $defenderId, $result, $plunderedResources, $defenderType);
     }
 
     private function convertToShipCollection(array $ships): Collection
@@ -174,14 +188,14 @@ readonly class CombatService
             });
     }
 
-    private function calculateTotalCombatPower(Collection $attacker, Collection $defender, $userId): array
+    private function calculateTotalCombatPower(Collection $attacker, Collection $defender, $defenderId, $isRebelCombat): array
     {
         $calculateAttackPower = fn($ships) => $ships->sum(fn($ship) => $ship->attack * $ship->count);
         $calculateDefensePower = fn($ships) => $ships->sum(fn($ship) => $ship->defense * $ship->count);
 
         /* check if simulation or real fight */
-        if ($userId) {
-            $base_defense = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::BASE_DEFENSE);
+        if ($defenderId && !$isRebelCombat) {
+            $base_defense = $this->userAttributeService->getSpecificUserAttribute($defenderId, UserAttributeType::BASE_DEFENSE);
             $defense_multiplier = $base_defense ? $base_defense->attribute_value : 1;
         } else {
             $defense_multiplier = 1;
@@ -200,7 +214,7 @@ readonly class CombatService
 
     private function getRandomArbitrary(float $min, float $max): float
     {
-        return round(($min + lcg_value() * (abs($max - $min))), 3);
+        return round($min + mt_rand() / mt_getrandmax() * ($max - $min), 3);
     }
 
     private function calculateLuckModifier(float $winnerCombatValue, float $looserCombatValue): float

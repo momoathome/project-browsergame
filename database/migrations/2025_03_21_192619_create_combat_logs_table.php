@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('attacker_id');
             $table->unsignedBigInteger('defender_id');
+            $table->string('defender_type')->default('user'); // 'user' oder 'rebel'
             $table->string('winner');
             $table->json('attacker_losses');
             $table->json('defender_losses');

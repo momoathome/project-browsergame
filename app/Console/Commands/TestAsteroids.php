@@ -19,7 +19,6 @@ class TestAsteroids extends Command
         $debug = $this->option('debug');
 
         $generator = app(AsteroidGenerator::class);
-        $generator->debug = $debug;
 
         $sizes = ['small', 'medium', 'large', 'extreme'];
         $factors = ['min', 'avg', 'max'];

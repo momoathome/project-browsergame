@@ -12,6 +12,7 @@ export interface AsteroidResourceResponse {
 export interface AsteroidSearchResponse {
   searched_asteroids: { id: number; name: string; }[];
   searched_stations: number[];
+  searched_rebels: number[];
 }
 
 export interface AsteroidAutoMineMission {

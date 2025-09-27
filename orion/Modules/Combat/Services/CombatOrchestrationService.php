@@ -7,6 +7,7 @@ use App\Services\UserService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Station\Models\Station;
+use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
@@ -16,6 +17,7 @@ use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Influence\Services\InfluenceService;
+use Orion\Modules\Rebel\Services\RebelService;
 
 readonly class CombatOrchestrationService
 {
@@ -27,16 +29,21 @@ readonly class CombatOrchestrationService
         private readonly AsteroidExplorer $asteroidExplorer,
         private readonly CombatPlunderService $combatPlunderService,
         private readonly StationService $stationService,
-        private readonly InfluenceService $influenceService
+        private readonly InfluenceService $influenceService,
+        private readonly RebelService $rebelService,
     ) {
     }
 
     /**
      * Plant und sendet einen Kampf in die Warteschlange
      */
-    public function planAndQueueCombat($attacker, int $defenderId, array $attackerSpacecrafts, Station $defenderStation): void
+    public function planAndQueueCombat($attacker, int $defenderId, array $attackerSpacecrafts, Station|Rebel $defenderStation, bool $isRebel): void
     {
-        $defender = $this->userService->find($defenderId);
+        if ($isRebel) {
+            $defender = $defenderStation; // Rebel als Verteidiger
+        } else {
+            $defender = $this->userService->find($defenderId);
+        }
         
         // Erstelle einen Kampfplan mit allen notwendigen Informationen
         $combatPlanRequest = CombatPlanRequest::fromRequest(
@@ -78,10 +85,18 @@ readonly class CombatOrchestrationService
      */
     public function completeCombat(int $attackerId, int $defenderId, array $details): CombatResult
     {
+        $isRebelCombat = $details['is_rebel_combat'] ?? false;
+
         $attacker = $this->userService->find($attackerId);
-        $defender = $this->userService->find($defenderId);
-        
-        $defenderSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($defenderId);
+
+        if ($isRebelCombat) {
+            $defender = Rebel::find($defenderId);
+            $defenderSpacecrafts = $this->rebelService->getAvailableSpacecraftsByIdWithDetails($defenderId);
+        } else {
+            $defender = $this->userService->find($defenderId);
+            $defenderSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($defenderId);
+        }
+
         $attackerSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attackerId);
         $defenderFormatted = $this->combatService->formatDefenderSpacecrafts($defenderSpacecrafts);
         $attackerFormatted = $details['attacker_formatted'] ?? [];
@@ -94,7 +109,8 @@ readonly class CombatOrchestrationService
             $details['attacker_name'],
             $details['defender_name'],
             $details['attacker_coordinates'] ?? [],
-            $details['target_coordinates'] ?? []
+            $details['target_coordinates'] ?? [],
+            $isRebelCombat
         );
 
         // Simuliere den Kampf und speichere das Ergebnis
@@ -111,10 +127,15 @@ readonly class CombatOrchestrationService
         );
 
         try {
-            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts) {
+            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts, $isRebelCombat) {
                 // Update spacecraft counts in database
                 $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
-                $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
+                if ($isRebelCombat) {
+                    $this->rebelService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount);
+                    /* $this->rebelService->updateLastInteraction($defender->id); */
+                } else {
+                    $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
+                }
                 // Free spacecrafts from locked_count
                 $formattedSpacecrafts = $this->combatService->formatModelsForLocking($attackerSpacecrafts);
                 $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
@@ -138,19 +159,18 @@ readonly class CombatOrchestrationService
             $attacker->id,
             $defender->id,
             $result,
-            $plunderedResources
+            $plunderedResources,
+            $isRebelCombat ? 'rebel' : 'user'
         );
 
         $this->influenceService->handleCombatResult(
             attacker: $attacker,
             defender: $defender,
             result: $result,
-            attackerLosses: $result->getLossesCollection('attacker')->toArray(),
-            defenderLosses: $result->getLossesCollection('defender')->toArray(),
-            plunderedResources: $plunderedResources
+            attackerLosses: $result->getLossesCollection('attacker'),
+            defenderLosses: $result->getLossesCollection('defender')
         );
 
-        
         return $result;
     }
 }

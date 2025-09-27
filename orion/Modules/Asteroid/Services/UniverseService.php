@@ -9,6 +9,7 @@ use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Station\Models\StationRegion;
+use Orion\Modules\Rebel\Models\Rebel;
 
 class UniverseService
 {
@@ -201,5 +202,98 @@ class UniverseService
         }
         return false;
     }
+
+    /**
+     * Findet gültige Koordinaten für einen Rebellen unter Berücksichtigung der Abstandsregeln
+     */
+    public function findValidRebelCoordinates(string $faction): ?array
+    {
+        $universeSize = $this->config['size'];
+        $rebelDistance = $this->config['rebel_distance'];
+        $rebelToStationDistance = $this->config['rebel_to_station_distance'];
+        $rebelInnerRadius = $this->config['rebel_inner_radius'];
+
+        $area = $this->getFactionSpawnArea($faction, $universeSize);
+
+        $maxAttempts = 2000;
+        $attempts = 0;
+
+        $existingRebels = Rebel::all(['x', 'y']);
+        $stations = Station::all(['x', 'y']);
+        $existingRegions = StationRegion::all(['x', 'y'])->toArray();
+
+        while ($attempts < $maxAttempts) {
+            $x = rand($area['min_x'], $area['max_x']);
+            $y = rand($area['min_y'], $area['max_y']);
+
+            // Abstand zu anderen Rebellen prüfen
+            $tooCloseToRebel = false;
+            foreach ($existingRebels as $rebel) {
+                $distance = sqrt(pow($rebel->x - $x, 2) + pow($rebel->y - $y, 2));
+                if ($distance < $rebelDistance) {
+                    $tooCloseToRebel = true;
+                    break;
+                }
+            }
+            if ($tooCloseToRebel) {
+                $attempts++;
+                continue;
+            }
+
+            // Abstand zu Stationen prüfen
+            $tooCloseToStation = false;
+            foreach ($stations as $station) {
+                $distance = sqrt(pow($station->x - $x, 2) + pow($station->y - $y, 2));
+                if ($distance < $rebelToStationDistance) {
+                    $tooCloseToStation = true;
+                    break;
+                }
+            }
+            if ($tooCloseToStation) {
+                $attempts++;
+                continue;
+            }
+
+            if ($this->isTooCloseToOtherStationRegions($x, $y, $existingRegions, $rebelToStationDistance)) {
+                $attempts++;
+                continue;
+            }
+
+            if ($this->isCollidingWithAsteroid($x, $y, $rebelInnerRadius)) {
+                $attempts++;
+                continue;
+            }
+
+            return ['x' => $x, 'y' => $y];
+        }
+
+        return null;
+    }
+
+    private function getFactionSpawnArea(string $faction, int $universeSize): array
+    {
+        $factions = $this->config['rebel_faction_distribution'];
+        $index = array_search($faction, $factions);
+
+        if ($index === false) {
+            throw new \Exception("Faction {$faction} not in config.");
+        }
+
+        $count = count($factions);
+        $gridSize = ceil(sqrt($count)); // z.B. 4 Fraktionen = 2x2, 9 = 3x3
+
+        $cellSize = (int) ($universeSize / $gridSize);
+
+        $row = intdiv($index, $gridSize); // z.B. 0,1,2
+        $col = $index % $gridSize;
+
+        return [
+            'min_x' => $col * $cellSize,
+            'max_x' => ($col + 1) * $cellSize - 1,
+            'min_y' => $row * $cellSize,
+            'max_y' => ($row + 1) * $cellSize - 1,
+        ];
+    }
+
 
 }

@@ -301,3 +301,20 @@ export interface QueueItem {
   endTime: string;
   details: MissionDetails;
 }
+
+export interface Rebel {
+  id: number;
+  name: string;
+  faction: string;
+  x: number;
+  y: number;
+  difficulty_level: number;
+  last_interaction: string;
+  defeated_count: number;
+  fleet_cap: number;
+  fleet_growth_rate: number;
+  loot_multiplier: number;
+  adaptation_level: number;
+  behavior: string;
+  base_chance: number;
+}

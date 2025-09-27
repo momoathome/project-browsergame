@@ -26,4 +26,10 @@ class Resource extends Model
         return $this->belongsToMany(Resource::class, 'user_resources', 'user_id', 'resource_id')
             ->withPivot('amount');
     }
+
+    public function rebelResources()
+    {
+        return $this->belongsToMany(Resource::class, 'rebel_resources', 'rebel_id', 'resource_id')
+            ->withPivot('amount');
+    }
 }

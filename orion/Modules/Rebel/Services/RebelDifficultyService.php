@@ -40,6 +40,6 @@ class RebelDifficultyService
      */
     public function getResourceCap(Rebel $rebel, float $globalDifficulty): int
     {
-        return intval(1000 * ($rebel->difficulty_level + $globalDifficulty));
+        return intval(800 * ($rebel->difficulty_level + $globalDifficulty));
     }
 }

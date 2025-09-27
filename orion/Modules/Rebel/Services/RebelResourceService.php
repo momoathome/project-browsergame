@@ -85,8 +85,8 @@ class RebelResourceService
     {
         $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
 
-        if ($avgMiner < 15) return 'early';
-        if ($avgMiner < 75) return 'mid';
+        if ($avgMiner < 25) return 'early';
+        if ($avgMiner < 100) return 'mid';
         return 'late';
     }
     

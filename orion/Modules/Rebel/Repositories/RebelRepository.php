@@ -26,5 +26,10 @@ readonly class RebelRepository
          return Rebel::where('faction', $faction)->first();
      }
 
+    public function updateLastInteraction(int $id): void
+    {
+        Rebel::where('id', $id)->update(['last_interaction' => now()]);
+    }
+
     // Add repository methods here
 }

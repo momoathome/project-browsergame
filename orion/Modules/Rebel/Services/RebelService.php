@@ -72,4 +72,9 @@ readonly class RebelService
         });
     }
 
+    public function updateLastInteraction(int $id): void
+    {
+        $this->rebelRepository->updateLastInteraction($id);
+    }
+
 }

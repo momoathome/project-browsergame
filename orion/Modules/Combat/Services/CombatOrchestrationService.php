@@ -132,6 +132,7 @@ readonly class CombatOrchestrationService
                 $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
                 if ($isRebelCombat) {
                     $this->rebelService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount);
+                    /* $this->rebelService->updateLastInteraction($defender->id); */
                 } else {
                     $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
                 }
@@ -166,12 +167,10 @@ readonly class CombatOrchestrationService
             attacker: $attacker,
             defender: $defender,
             result: $result,
-            attackerLosses: $result->getLossesCollection('attacker')->toArray(),
-            defenderLosses: $result->getLossesCollection('defender')->toArray(),
-            plunderedResources: $plunderedResources
+            attackerLosses: $result->getLossesCollection('attacker'),
+            defenderLosses: $result->getLossesCollection('defender')
         );
 
-        
         return $result;
     }
 }

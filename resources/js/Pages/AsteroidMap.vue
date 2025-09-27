@@ -836,7 +836,7 @@ const {
     <!-- Influence Toggle Button -->
     <button
       class="fixed top-48 right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
-      :style="(showInfluenceSidebar || showSidebarOverview) ? 'transform: translateX(-12vw)' : ''"
+      :class="(showInfluenceSidebar || showSidebarOverview) ? 'transformed-button' : ''"
       @click="[showInfluenceSidebar ? closeInfluenceSidebar() : openInfluenceSidebar(), toggleInfluence()]"
     >
       <img v-show="!showInfluenceSidebar" src="/images/attributes/influence.png" alt="Toggle Influence" class="h-8 w-8" />
@@ -848,7 +848,7 @@ const {
     <!-- Overview Toggle Button -->
     <button
       class="fixed top-[272px] right-0 z-[40] h-16 w-16 px-3 flex items-center justify-center border border-r-0 border-[#6b7280]/40 bg-root text-white rounded-l-md hover:bg-[hsl(217,24%,6%)] transition duration-300"
-      :style="(showSidebarOverview || showInfluenceSidebar) ? 'transform: translateX(-12vw)' : ''"
+      :class="(showSidebarOverview || showInfluenceSidebar) ? 'transformed-button' : ''"
       @click="showSidebarOverview ? closeSidebarOverview() : openSidebarOverview()"
     >
       <img v-show="!showSidebarOverview" src="/images/navigation/overview.png" alt="Toggle overview" class="h-8 w-8" />
@@ -892,6 +892,22 @@ const {
 </template>
 
 <style scoped>
+.transformed-button {
+  transform: translateX(-16vw);
+}
+
+@media (max-width: 1700px) {
+  .transformed-button {
+    transform: translateX(-18vw);
+  }
+}
+
+@media (min-width: 2160px) {
+  .transformed-button {
+    transform: translateX(-12vw);
+  }
+}
+
 ul::-webkit-scrollbar-track {
   border-radius: 16px;
   background-color: hsl(263, 45%, 7%);

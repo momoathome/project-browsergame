@@ -3,6 +3,7 @@
 namespace Orion\Modules\Influence\Services;
 
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Rebel\Models\Rebel;
@@ -18,7 +19,7 @@ class InfluenceService
     /**
      * Berechne und speichere Einfluss nach einem Kampf.
      */
-    public function handleCombatResult(User|Rebel $attacker, User|Rebel $defender, $result, array $attackerLosses, array $defenderLosses, array $plunderedResources = []): void
+    public function handleCombatResult(User|Rebel $attacker, User|Rebel $defender, $result, Collection $attackerLosses, Collection $defenderLosses): void
     {
         $attackerLossCombatPower = $this->calculateLossesCombatPower($attackerLosses);
         $defenderLossCombatPower = $this->calculateLossesCombatPower($defenderLosses);
@@ -31,23 +32,28 @@ class InfluenceService
 
         if ($result->winner === 'attacker') {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            $winBonus = ($totalCombatPower / 100) + ($defenderLossCombatPower * 0.1);
+            if (abs($attackerTotalCombatPower - $defenderTotalCombatPower) < 0.3 * $totalCombatPower) {
+                $winBonus = min(($totalCombatPower / 200) + ($defenderLossCombatPower * 0.1), 200);
+            } else {
+                $winBonus = 0;
+            }
 
             $attackerDelta += $defenderLossCombatPower / 50;
-            $attackerDelta -= $attackerLossCombatPower / 75;
+            $attackerDelta -= $attackerLossCombatPower / 30;
             $attackerDelta += $winBonus;
 
-            $defenderDelta -= $defenderLossCombatPower / 100;
+            $defenderDelta -= $defenderLossCombatPower / 75;
         } else {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            $defenseBonus = ($totalCombatPower / 90) + ($attackerLossCombatPower * 0.1);
+            $defenseBonus = ($totalCombatPower / 150) + ($attackerLossCombatPower * 0.1);
 
             $defenderDelta += $defenseBonus;
-            $attackerDelta -= $attackerLossCombatPower / 75;
+            $attackerDelta -= $attackerLossCombatPower / 50;
         }
 
-        Log::info("Combat Influence Change: Attacker {$attacker->id} delta: {$attackerDelta}, Defender {$defender->id} delta: {$defenderDelta}");
+        Log::info("Combat Influence Change: Attacker delta: {$attackerDelta}, Defender delta: {$defenderDelta}");
         Log::info("Combat Losses: Attacker CP lost: {$attackerLossCombatPower}, Defender CP lost: {$defenderLossCombatPower}");
+        Log::info("Combat Total CP: Attacker CP: {$attackerTotalCombatPower}, Defender CP: {$defenderTotalCombatPower}, total CP: {$totalCombatPower}");
 
         $this->applyInfluenceChange($attacker->id, $attackerDelta, 'combat', [
             'opponent' => $defender->id,
@@ -106,13 +112,18 @@ class InfluenceService
         ]);
     }
 
-    private function calculateLossesCombatPower(array $losses): float 
+    private function calculateLossesCombatPower(iterable $losses): float 
     {
         $total = 0;
         foreach ($losses as $loss) {
-            // Annahme: $loss ist ein Objekt mit 'combat' und 'losses' Property
-            $total += ($loss->combat ?? 0) * ($loss->losses ?? 0);
+            // Annahme: $loss ist ein Objekt mit 'attack', 'defense', 'losses' Property
+            $attack = is_array($loss) ? ($loss['attack'] ?? 0) : ($loss->attack ?? 0);
+            $defense = is_array($loss) ? ($loss['defense'] ?? 0) : ($loss->defense ?? 0);
+            $count = is_array($loss) ? ($loss['losses'] ?? 0) : ($loss->losses ?? 0);
+            $combatPower = $attack + $defense;
+            $total += $combatPower * $count;
         }
+
         return $total;
     }
 

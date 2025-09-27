@@ -162,7 +162,7 @@ readonly class CombatService
             $combatRequest->attackerSpacecrafts,
             $combatRequest->defenderSpacecrafts,
             $defender->id,
-            $isRebelCombat = $combatRequest->isRebelCombat
+            $combatRequest->isRebelCombat
         );
 
         $result->attackerName = $combatRequest->attackerName;

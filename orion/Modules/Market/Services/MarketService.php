@@ -136,8 +136,6 @@ readonly class MarketService
             DB::transaction(function () use ($user, $giveRes, $giveQty, $receiveRes, $finalQty) {
                 $userGiveRes = $this->userResourceService->getSpecificUserResource($user->id, $giveRes->resource_id);
 
-                Log::info("Trading {$giveQty} of {$giveRes->resource->name} is {$userGiveRes->amount} for {$finalQty} of {$receiveRes->resource->name}");
-
                 if (!$userGiveRes || $userGiveRes->amount < $giveQty) {
                     throw new InsufficientResourceException();
                 }

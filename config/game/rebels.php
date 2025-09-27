@@ -3,9 +3,7 @@
 return [
 
     'resources_per_tick' => 10,         // Basisrate der Ressourcengenerierung
-    'tick_interval_minutes' => 10,      // Minuten pro Tick
-    'spacecraft_produce_speed' => 1.0,
-    'spacecraft_flight_speed' => 1.0,
+    'tick_interval_minutes' => 0.5,      // Minuten pro Tick
 
     /*
     |--------------------------------------------------------------------------

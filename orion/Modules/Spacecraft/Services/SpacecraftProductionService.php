@@ -226,16 +226,6 @@ class SpacecraftProductionService
         $status = $inProgressProduction < $productionSlots
             ? QueueStatusType::STATUS_IN_PROGRESS
             : QueueStatusType::STATUS_PENDING;
-
-        Log::info("Adding spacecraft production to queue", [
-            'user_id' => $userId,
-            'spacecraft_id' => $spacecraft->id,
-            'quantity' => $quantity,
-            'target_quantity' => $targetQuantity,
-            'production_slots' => $productionSlots,
-            'in_progress_production' => $inProgressProduction,
-            'status' => $status
-        ]);
     
         $build_time = $this->calculateSpacecraftBuildTime($userId, $spacecraft, $quantity);
 

@@ -30,9 +30,11 @@ class RebelResourceService
 
         $last = $rebel->last_interaction ?? now();
         $now = now();
-        $tickMinutes = config('game.rebels.tick_interval_minutes', 15); // Minuten pro Tick
-        $ticks = $ticks ?? max(0, floor($now->diffInMinutes($last) / $tickMinutes));
-
+        $tickMinutes = config('game.rebels.tick_interval_minutes', 10); // Minuten pro Tick
+        
+        $minutes = $last->diffInMinutes($now); 
+        $ticks = $ticks ?? max(0, floor($minutes / $tickMinutes));
+        
         if ($ticks < 1) {
             return;
         }
@@ -81,8 +83,7 @@ class RebelResourceService
     // TODO: write gamephase in DB or implement Global difficulty
     public function getGamePhase()
     {
-        $avgMiner = 50; //$this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count')
-        Log::info("Average Miner spacecrafts per user: $avgMiner");
+        $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
 
         if ($avgMiner < 15) return 'early';
         if ($avgMiner < 75) return 'mid';

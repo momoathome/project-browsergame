@@ -6,6 +6,10 @@ use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use App\Jobs\ProcessActionQueue;
 use App\Jobs\ProcessActionQueueBatch;
+use Orion\Modules\Rebel\Models\Rebel;
+use Orion\Modules\Rebel\Services\RebelResourceService;
+use Orion\Modules\Rebel\Services\RebelSpacecraftService;
+
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -53,3 +57,14 @@ Artisan::command('actionqueue:processbatch', function () {
             }
         });
 })->purpose('Process the action queue')->everyMinute();
+
+Artisan::command('game:rebel-generate-all', function (
+    RebelResourceService $resourceService,
+    RebelSpacecraftService $spacecraftService
+) {
+    foreach (Rebel::all() as $rebel) {
+        $resourceService->generateResources($rebel);
+        $spacecraftService->spendResourcesForFleet($rebel);
+    }
+    $this->info('Ressourcen und Spacecrafts generiert!');
+})->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->everyFifteenMinutes();

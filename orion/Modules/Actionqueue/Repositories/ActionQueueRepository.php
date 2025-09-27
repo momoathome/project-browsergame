@@ -89,9 +89,15 @@ readonly class ActionQueueRepository
                 ->lockForUpdate()
                 ->exists();
     
-            if ($exists && $actionType !== QueueActionType::ACTION_TYPE_MINING) {
-                $status = QueueStatusType::STATUS_PENDING;
-            }
+                if (
+                    $exists &&
+                    !in_array($actionType, [
+                        QueueActionType::ACTION_TYPE_MINING,
+                        QueueActionType::ACTION_TYPE_PRODUCE // <- PRODUCE darf mehrfach IN_PROGRESS sein!
+                    ])
+                ) {
+                    $status = QueueStatusType::STATUS_PENDING;
+                }
 
             return ActionQueue::create([
                 'user_id' => $userId,

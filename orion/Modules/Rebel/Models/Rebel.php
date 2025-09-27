@@ -24,6 +24,10 @@ class Rebel extends Model
         'base_chance',
     ];
 
+    protected $casts = [
+        'last_interaction' => 'datetime',
+    ];
+
     public function toSearchableArray(): array
     {
         return [

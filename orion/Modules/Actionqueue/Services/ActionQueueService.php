@@ -56,7 +56,7 @@ class ActionQueueService
             $targetId,
             $duration,
             $details,
-            $status
+            $status,
         );
 
         // Wenn es sich um einen Kampf handelt, informiere den Verteidiger
@@ -180,11 +180,16 @@ class ActionQueueService
         $action->save();
 
         if ($action->status === QueueStatusType::STATUS_COMPLETED) {
-            $this->actionqueueRepository->promoteNextPending(
-                $action->user_id,
-                $actionType,
-                $action->target_id
-            );
+            // Unterschied nach ActionType
+            if ($actionType === QueueActionType::ACTION_TYPE_PRODUCE) {
+                // productionSlots aus details holen, fallback 1
+                $productionSlots = $action->details['production_slots'] ?? 1;
+                $this->promoteNextPendingProduce($action->user_id, $productionSlots);
+            } elseif ($actionType === QueueActionType::ACTION_TYPE_BUILDING) {
+                $this->promoteNextPendingBuilding($action->user_id, $action->target_id);
+            } else {
+                // Optional: für andere Typen nichts tun oder eigene Logik
+            }
         }
     }
 
@@ -200,9 +205,107 @@ class ActionQueueService
         }
     }
 
-    public function deleteFromQueue(int $id)
+    /**
+     * Fügt einen Spacecraft-Produktionsauftrag hinzu (Slots global pro User)
+     */
+    public function addSpacecraftToQueue(
+        int $userId,
+        int $targetId,
+        int $duration,
+        array $details,
+        int $productionSlots = 1
+    ): ActionQueue {
+        $inProgressCount = $this->actionqueueRepository->countInProgressProduceByUser($userId);
+
+        $status = $inProgressCount < $productionSlots
+            ? QueueStatusType::STATUS_IN_PROGRESS
+            : QueueStatusType::STATUS_PENDING;
+
+        return $this->actionqueueRepository->create([
+            'user_id' => $userId,
+            'action_type' => QueueActionType::ACTION_TYPE_PRODUCE,
+            'target_id' => $targetId,
+            'start_time' => now(),
+            'end_time' => now()->addSeconds($duration),
+            'status' => $status,
+            'details' => $details,
+        ]);
+    }
+
+    /**
+     * Fügt einen Gebäude-Upgrade-Auftrag hinzu (Slots pro Gebäude)
+     */
+    public function addBuildingToQueue(
+        int $userId,
+        int $targetId,
+        int $duration,
+        array $details,
+        int $buildingSlots = 1
+    ): ActionQueue {
+        // Global: Wie viele Gebäude-Upgrades laufen gerade?
+        $globalInProgress = $this->actionqueueRepository->countInProgressBuildingByUser($userId);
+        // Pro Gebäude: Läuft für dieses Gebäude schon ein Upgrade?
+        $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
+
+        $status = ($globalInProgress < $buildingSlots && $buildingInProgress === 0)
+            ? QueueStatusType::STATUS_IN_PROGRESS
+            : QueueStatusType::STATUS_PENDING;
+
+        return $this->actionqueueRepository->create([
+            'user_id' => $userId,
+            'action_type' => QueueActionType::ACTION_TYPE_BUILDING,
+            'target_id' => $targetId,
+            'start_time' => now(),
+            'end_time' => now()->addSeconds($duration),
+            'status' => $status,
+            'details' => $details,
+        ]);
+    }
+
+    /**
+     * Promotet das nächste Pending für Spacecrafts (global slots)
+     */
+    public function promoteNextPendingProduce(int $userId, int $productionSlots = 1): void
     {
-        return $this->actionqueueRepository->deleteFromQueue($id);
+        $inProgressCount = $this->actionqueueRepository->countInProgressProduceByUser($userId);
+
+        if ($inProgressCount < $productionSlots) {
+            $pending = $this->actionqueueRepository->getFirstPendingProduceByUser($userId);
+            if ($pending) {
+                $duration = $pending->details['duration'] ?? 60;
+                $this->actionqueueRepository->update($pending, [
+                    'status' => QueueStatusType::STATUS_IN_PROGRESS,
+                    'start_time' => now(),
+                    'end_time' => now()->addSeconds($duration),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Promotet das nächste Pending für Gebäude (pro Gebäude)
+     */
+    public function promoteNextPendingBuilding(int $userId, int $targetId, int $buildingSlots = 1): void
+    {
+        $globalInProgress = $this->actionqueueRepository->countInProgressBuildingByUser($userId);
+        $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
+
+        if ($globalInProgress < $buildingSlots && $buildingInProgress === 0) {
+            $pending = $this->actionqueueRepository->getFirstPendingBuildingByUserAndTarget($userId, $targetId);
+            if ($pending) {
+                $duration = $pending->details['duration'] ?? 60;
+                $this->actionqueueRepository->update($pending, [
+                    'status' => QueueStatusType::STATUS_IN_PROGRESS,
+                    'start_time' => now(),
+                    'end_time' => now()->addSeconds($duration),
+                ]);
+            }
+        }
+    }
+
+    public function deleteFromQueue(int $id): bool
+    {
+        return $this->actionqueueRepository->delete($id);
     }
 
 }

@@ -89,15 +89,9 @@ readonly class ActionQueueRepository
                 ->lockForUpdate()
                 ->exists();
     
-                if (
-                    $exists &&
-                    !in_array($actionType, [
-                        QueueActionType::ACTION_TYPE_MINING,
-                        QueueActionType::ACTION_TYPE_PRODUCE // <- PRODUCE darf mehrfach IN_PROGRESS sein!
-                    ])
-                ) {
-                    $status = QueueStatusType::STATUS_PENDING;
-                }
+            if ($exists && $actionType !== QueueActionType::ACTION_TYPE_MINING) {
+                $status = QueueStatusType::STATUS_PENDING;
+            }
 
             return ActionQueue::create([
                 'user_id' => $userId,
@@ -142,10 +136,63 @@ readonly class ActionQueueRepository
         }
     }
 
-    public function deleteFromQueue($id)
+    public function create(array $data): ActionQueue
     {
-        return ActionQueue::where('id', $id)
-            ->delete();
+        return ActionQueue::create($data);
+    }
+
+    public function countInProgressProduceByUser(int $userId): int
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_PRODUCE)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->count();
+    }
+
+    public function countInProgressBuildingByUser(int $userId): int
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->count();
+    }
+
+    public function countInProgressBuildingByUserAndTarget(int $userId, int $targetId): int
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('target_id', $targetId)
+            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->count();
+    }
+
+    public function getFirstPendingProduceByUser(int $userId): ?ActionQueue
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_PRODUCE)
+            ->where('status', QueueStatusType::STATUS_PENDING)
+            ->orderBy('created_at')
+            ->first();
+    }
+
+    public function getFirstPendingBuildingByUserAndTarget(int $userId, int $targetId): ?ActionQueue
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('target_id', $targetId)
+            ->where('status', QueueStatusType::STATUS_PENDING)
+            ->orderBy('created_at')
+            ->first();
+    }
+
+    public function update(ActionQueue $queue, array $data): bool
+    {
+        return $queue->update($data);
+    }
+
+    public function delete(int $id): bool
+    {
+        return ActionQueue::where('id', $id)->delete() > 0;
     }
 
     public function getQueuedUpgrades(int $userId, int $targetId, QueueActionType $actionType): Collection

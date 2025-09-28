@@ -165,21 +165,10 @@ class BuildingUpgradeService
             $buildingSlots = $extra['building_slots'] ?? 1;
         }
 
-        $inProgressUpgrades = $this->queueService->getInProgressQueuesFromUserByType(
-            $userId,
-            QueueActionType::ACTION_TYPE_BUILDING
-        )->count();
-
-        // Status bestimmen
-        $status = $inProgressUpgrades < $buildingSlots
-            ? QueueStatusType::STATUS_IN_PROGRESS
-            : QueueStatusType::STATUS_PENDING;
-
         $build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $targetLevel);
 
-        $this->queueService->addToQueue(
+        $this->queueService->addBuildingToQueue(
             $userId,
-            QueueActionType::ACTION_TYPE_BUILDING,
             $building->id,
             $build_time,
             [
@@ -188,7 +177,7 @@ class BuildingUpgradeService
                 'next_level' => $targetLevel,
                 'duration' => $build_time
             ],
-            $status
+            $buildingSlots
         );
     }
 

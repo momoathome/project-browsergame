@@ -216,22 +216,11 @@ class SpacecraftProductionService
             $extra = app(BuildingEffectService::class)->getEffects('Shipyard', $shipyardBuilding->level);
             $productionSlots = $extra['production_slots'] ?? 1;
         }
-
-        $inProgressProduction = $this->queueService->getInProgressQueuesFromUserByType(
-            $userId,
-            QueueActionType::ACTION_TYPE_PRODUCE
-        )->count();
-
-        // Status bestimmen
-        $status = $inProgressProduction < $productionSlots
-            ? QueueStatusType::STATUS_IN_PROGRESS
-            : QueueStatusType::STATUS_PENDING;
-    
+        
         $build_time = $this->calculateSpacecraftBuildTime($userId, $spacecraft, $quantity);
 
-        $this->queueService->addToQueue(
+        $this->queueService->addSpacecraftToQueue(
             $userId,
-            QueueActionType::ACTION_TYPE_PRODUCE,
             $spacecraft->id,
             $build_time,
             [
@@ -239,9 +228,10 @@ class SpacecraftProductionService
                 'current_quantity' => $targetQuantity - $quantity,
                 'next_quantity' => $targetQuantity,
                 'quantity' => $quantity,
-                'duration' => $build_time
+                'duration' => $build_time,
+                'production_slots' => $productionSlots
             ],
-            $status
+            $productionSlots
         );
     }
 

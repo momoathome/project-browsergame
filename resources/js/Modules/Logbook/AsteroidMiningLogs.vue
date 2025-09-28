@@ -21,9 +21,9 @@ const resourceMap = computed(() => {
 const spacecraftMap = computed(() => {
   const map = {};
   props.spacecrafts.forEach(sc => {
-    map[sc.details.name] = {
-      type: sc.details.type,
-      image: sc.details.image,
+    map[sc.name] = {
+      type: sc.type,
+      image: sc.image,
       attack: sc.attack,
       defense: sc.defense,
       cargo: sc.cargo

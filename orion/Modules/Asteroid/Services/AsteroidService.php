@@ -126,28 +126,24 @@ class AsteroidService
             throw new \Exception("Not enough dock slots available. Current: $currentMiningOperations, Max: $dockSlots");
         }
 
-        // Prüfe, ob der User genug freie (nicht gelockte) Spacecrafts besitzt
-        // Hole alle Spacecrafts des Users inkl. locked_count
-        $userSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
-        // Erstelle ein Array: [name => [total, locked]] (Name aus details-Relation)
-        $spacecraftStatus = [];
-        foreach ($userSpacecrafts as $sc) {
-            $type = $sc->details->name ?? $sc->details_id; // Fallback auf ID, falls Name nicht geladen
-            $spacecraftStatus[$type] = [
-                'total' => $sc->count,
-                'locked' => $sc->locked_count,
-            ];
+        // Hole alle verfügbaren (nicht gelockten) Spacecrafts des Users
+        $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id);
+        
+        // Erstelle ein Array: [name => available_count]
+        $availableStatus = [];
+        foreach ($availableSpacecrafts as $sc) {
+            $type = $sc->details->name ?? $sc->details_id;
+            $availableStatus[$type] = $sc->available_count;
         }
-
-        // Für jeden Typ, der versendet werden soll, prüfen ob genug unlocked vorhanden sind
+        
+        // Für jeden Typ, der versendet werden soll, prüfen ob genug verfügbar sind
         foreach ($spaceCrafts as $type => $amount) {
             if ($amount <= 0) continue;
-            if (!isset($spacecraftStatus[$type])) {
+            if (!isset($availableStatus[$type])) {
                 throw new \Exception("User does not own spacecraft type: $type");
             }
-            $available = $spacecraftStatus[$type]['total'] - $spacecraftStatus[$type]['locked'];
-            if ($available < $amount) {
-                throw new \Exception("Not enough unlocked $type available. Requested: $amount, Available: $available");
+            if ($availableStatus[$type] < $amount) {
+                throw new \Exception("Not enough unlocked $type available. Requested: $amount, Available: {$availableStatus[$type]}");
             }
         }
 

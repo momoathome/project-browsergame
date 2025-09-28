@@ -18,9 +18,9 @@
                 </div>
                 <nav v-if="canLogin" class="flex items-center space-x-4">
                     <template v-if="$page.props.auth.user">
-                        <Link :href="route('overview')"
+                        <Link :href="route('buildings')"
                             class="flex px-4 py-2 rounded-lg text-white bg-primary font-medium outline-none transition hover:bg-primary-dark">
-                        overview
+                        station
                         </Link>
                         <!-- logout  -->
                         <form @submit.prevent="$inertia.post(route('logout'))">

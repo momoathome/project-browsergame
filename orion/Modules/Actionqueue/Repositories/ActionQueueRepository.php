@@ -185,6 +185,15 @@ readonly class ActionQueueRepository
             ->first();
     }
 
+    public function getAllPendingBuildingsByUser(int $userId): Collection
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('status', QueueStatusType::STATUS_PENDING)
+            ->orderBy('created_at')
+            ->get();
+    }
+
     public function update(ActionQueue $queue, array $data): bool
     {
         return $queue->update($data);

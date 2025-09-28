@@ -186,7 +186,8 @@ class ActionQueueService
                 $productionSlots = $action->details['production_slots'] ?? 1;
                 $this->promoteNextPendingProduce($action->user_id, $productionSlots);
             } elseif ($actionType === QueueActionType::ACTION_TYPE_BUILDING) {
-                $this->promoteNextPendingBuilding($action->user_id, $action->target_id);
+                $buildingSlots = $action->details['building_slots'] ?? 1;
+                $this->promoteNextPendingBuilding($action->user_id, $buildingSlots);
             } else {
                 // Optional: für andere Typen nichts tun oder eigene Logik
             }
@@ -283,22 +284,31 @@ class ActionQueueService
     }
 
     /**
-     * Promotet das nächste Pending für Gebäude (pro Gebäude)
+     * Promotet das nächste Pending für Gebäude
      */
-    public function promoteNextPendingBuilding(int $userId, int $targetId, int $buildingSlots = 1): void
+    public function promoteNextPendingBuilding(int $userId, int $buildingSlots = 1): void
     {
         $globalInProgress = $this->actionqueueRepository->countInProgressBuildingByUser($userId);
-        $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
-
-        if ($globalInProgress < $buildingSlots && $buildingInProgress === 0) {
-            $pending = $this->actionqueueRepository->getFirstPendingBuildingByUserAndTarget($userId, $targetId);
-            if ($pending) {
+    
+        if ($globalInProgress >= $buildingSlots) {
+            return;
+        }
+    
+        // Hole alle Pending-Buildings, sortiert nach Erstellungsdatum
+        $pendingBuildings = $this->actionqueueRepository->getAllPendingBuildingsByUser($userId);
+    
+        foreach ($pendingBuildings as $pending) {
+            $targetId = $pending->target_id;
+            $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
+    
+            if ($buildingInProgress === 0) {
                 $duration = $pending->details['duration'] ?? 60;
                 $this->actionqueueRepository->update($pending, [
                     'status' => QueueStatusType::STATUS_IN_PROGRESS,
                     'start_time' => now(),
                     'end_time' => now()->addSeconds($duration),
                 ]);
+                break; // Nur das erste passende Pending promoten!
             }
         }
     }

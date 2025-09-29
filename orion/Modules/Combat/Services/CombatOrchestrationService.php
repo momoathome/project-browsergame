@@ -93,7 +93,7 @@ readonly class CombatOrchestrationService
 
         if ($isRebelCombat) {
             $defender = Rebel::find($defenderId);
-            $defenderSpacecrafts = $this->rebelService->getAvailableSpacecraftsByIdWithDetails($defenderId);
+            $defenderSpacecrafts = $this->rebelService->getAllSpacecraftsByIdWithDetails($defenderId);
         } else {
             $defender = $this->userService->find($defenderId);
             $defenderSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($defenderId);

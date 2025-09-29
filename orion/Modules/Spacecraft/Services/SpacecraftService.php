@@ -40,10 +40,26 @@ readonly class SpacecraftService
 
     public function getAvailableSpacecraftsByUserIdWithDetails(int $userId): Collection
     {
-        return $this->getAllSpacecraftsByUserIdWithDetails($userId)
-            ->filter(fn($ship) => ($ship->count - $ship->locked_count) > 0)
-            ->map(function($ship) {
-                $ship->available_count = $ship->count - $ship->locked_count;
+        // Hole alle Raumschiffe mit Details
+        $spacecrafts = $this->getAllSpacecraftsByUserIdWithDetails($userId);
+    
+        // Hole alle aktiven Locks für den User
+        $locks = $this->spacecraftLockService->getLocksForUser($userId);
+    
+        // Summiere pro details_id die gelockte Anzahl
+        $lockedCounts = [];
+        foreach ($locks as $lock) {
+            $lockedCounts[$lock->spacecraft_details_id] = ($lockedCounts[$lock->spacecraft_details_id] ?? 0) + $lock->amount;
+        }
+    
+        // Filtere und setze available_count
+        return $spacecrafts->filter(function($ship) use ($lockedCounts) {
+                $locked = $lockedCounts[$ship->details->id] ?? 0;
+                return ($ship->count - $locked) > 0;
+            })
+            ->map(function($ship) use ($lockedCounts) {
+                $locked = $lockedCounts[$ship->details->id] ?? 0;
+                $ship->available_count = $ship->count - $locked;
                 return $ship;
             });
     }

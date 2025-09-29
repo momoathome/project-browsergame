@@ -11,7 +11,6 @@ import type { Spacecraft } from '@/types/types';
 import DialogModal from '@/Components/DialogModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
-import { space } from 'postcss/lib/list';
 
 const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 const { queueData, refreshQueue } = useQueueStore();
@@ -49,12 +48,6 @@ const totalQueuedCrew = computed(() => {
     return sum;
   }, 0);
 });
-
-const totalBuiltCrew = computed(() => {
-  return spacecrafts.value.reduce((sum, sc) => sum + (sc.count * sc.crew_limit), 0);
-});
-
-const totalUsedCrew = computed(() => totalBuiltCrew.value + totalQueuedCrew.value);
 
 function handleOpenCancelModal(spacecraft: Spacecraft) {
   selectedSpacecraft.value = spacecraft;

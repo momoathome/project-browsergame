@@ -37,16 +37,6 @@ readonly class RebelService
         return $this->rebelRepository->findRebelByFaction($faction);
     }
 
-    public function getAvailableSpacecraftsByIdWithDetails(int $id): Collection
-    {
-        return $this->getAllSpacecraftsByIdWithDetails($id)
-            ->filter(fn($ship) => ($ship->count - $ship->locked_count) > 0)
-            ->map(function($ship) {
-                $ship->available_count = $ship->count - $ship->locked_count;
-                return $ship;
-            });
-    }
-
     public function getAllSpacecraftsByIdWithDetails(int $id, ?Collection $filteredNames = null): Collection
     {
         $query = RebelSpacecraft::with('details')

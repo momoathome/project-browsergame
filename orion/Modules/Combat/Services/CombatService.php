@@ -119,7 +119,8 @@ readonly class CombatService
     public function formatDefenderSpacecrafts($defender_spacecrafts): array
     {
         return $defender_spacecrafts
-            ->filter(fn($spacecraft) => $spacecraft->available_count > 0)
+            ->filter(fn($spacecraft) =>
+                (isset($spacecraft->available_count) ? $spacecraft->available_count : $spacecraft->count) > 0)
             ->map(fn($spacecraft) => [
                 'name' => $spacecraft->details->name,
                 'attack' => $spacecraft->attack,

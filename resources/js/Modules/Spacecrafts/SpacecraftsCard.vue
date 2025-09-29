@@ -115,7 +115,6 @@ const crewLimitReachedNext = computed(() => {
 });
 
 function increment() {
-  console.log(maxSpacecraftCount.value, crewStatus.value.maxCount, crewStatus.value.available, crewStatus.value.crewLimit, crewStatus.value.totalUnits, props.queuedCrew);
   if (form.amount < maxSpacecraftCount.value) form.amount++;
 }
 function incrementBy10() {

@@ -32,22 +32,39 @@ class InfluenceService
 
         if ($result->winner === 'attacker') {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            if (abs($attackerTotalCombatPower - $defenderTotalCombatPower) < 0.3 * $totalCombatPower) {
-                $winBonus = min(($totalCombatPower / 200) + ($defenderLossCombatPower * 0.1), 200);
+            if (abs($attackerTotalCombatPower - $defenderTotalCombatPower) < 0.2 * $totalCombatPower) {
+                $winBonus = min(($totalCombatPower / 200) + ($defenderLossCombatPower * 0.1), 100);
             } else {
-                $winBonus = 0;
+                $winBonus = $totalCombatPower / 400;
             }
 
-            $attackerDelta += $defenderLossCombatPower / 50;
-            $attackerDelta -= $attackerLossCombatPower / 30;
+            $attackerDelta += $defenderLossCombatPower / 40;
+            $attackerDelta -= $attackerLossCombatPower / 60;
             $attackerDelta += $winBonus;
 
             $defenderDelta -= $defenderLossCombatPower / 75;
         } else {
             $totalCombatPower = max($attackerTotalCombatPower + $defenderTotalCombatPower, 1);
-            $defenseBonus = ($totalCombatPower / 150) + ($attackerLossCombatPower * 0.1);
-
+        
+            // Basis-Bonus
+            $defenseBonus = ($totalCombatPower / 80);
+        
+            // Progressiver Bonus: Je mehr der Angreifer verliert, desto mehr bekommt der Verteidiger
+            $attackerLossRatio = $attackerTotalCombatPower > 0
+                ? $attackerLossCombatPower / $attackerTotalCombatPower
+                : 0;
+        
+            // z.B. 0.2 Basis + progressiv bis zu 0.5 bei Totalverlust
+            $defenseBonus += $attackerLossCombatPower * (0.2 + 0.3 * $attackerLossRatio);
+        
+            // Knapper Sieg-Bonus
+            if (abs($attackerTotalCombatPower - $defenderTotalCombatPower) < 0.2 * $totalCombatPower) {
+                $defenseBonus += $totalCombatPower / 100;
+            }
+        
             $defenderDelta += $defenseBonus;
+            $defenderDelta -= $defenderLossCombatPower / 100;
+        
             $attackerDelta -= $attackerLossCombatPower / 50;
         }
 

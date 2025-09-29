@@ -18,7 +18,7 @@ class RebelSpacecraftService
     ) {
     }
 
-    public function spendResourcesForFleet(Rebel $rebel, int $globalDifficulty = 0)
+    public function spendResourcesForFleet(Rebel $rebel, ?float $globalDifficulty = 0)
     {
         $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
 

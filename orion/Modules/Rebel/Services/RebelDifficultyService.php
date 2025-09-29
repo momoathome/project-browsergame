@@ -3,6 +3,7 @@
 namespace Orion\Modules\Rebel\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Orion\Modules\Rebel\Models\Rebel;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Services\UserAttributeService;

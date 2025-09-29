@@ -20,7 +20,7 @@ class RebelResourceService
     ) {
     }
 
-    public function generateResources(Rebel $rebel, $ticks = null, int $globalDifficulty = 0)
+    public function generateResources(Rebel $rebel, $ticks = null, ?float $globalDifficulty = null)
     {
         // Falls globalDifficulty nicht mitgegeben → selbst berechnen
         $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();

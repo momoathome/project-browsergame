@@ -36,25 +36,25 @@ return [
     'max_resource_share' => [
         'small' => [
             'low_value' => 1.0,     // 100% erlaubt
-            'medium_value' => 0.8,  // max 80% der Gesamtmenge
+            'medium_value' => 0.7,  // max 70% der Gesamtmenge
             'high_value' => 0.5,    // max 50%
             'extreme_value' => 0.075, // max 7.5% auf Extreme
         ],
         'medium' => [
             'low_value' => 1.0,
-            'medium_value' => 0.8,
+            'medium_value' => 0.7,
             'high_value' => 0.2,
             'extreme_value' => 0.05, // max 5% auf Medium
         ],
         'large' => [
             'low_value' => 1.0,
-            'medium_value' => 0.8,
+            'medium_value' => 0.7,
             'high_value' => 0.1,
             'extreme_value' => 0.025, // max 2.5% auf Large
         ],
         'extreme' => [
             'low_value' => 1.0,
-            'medium_value' => 0.8,
+            'medium_value' => 0.7,
             'high_value' => 0.05,
             'extreme_value' => 0.02, // max 2% auf Extreme
         ],

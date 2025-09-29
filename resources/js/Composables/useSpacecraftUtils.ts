@@ -56,19 +56,31 @@ export function useSpacecraftUtils(
       }
     }
 
+    const RESOURCE_THRESHOLD = 20;
+    
     const processSpacecrafts = (filterFn: (spacecraft: Spacecraft) => boolean) => {
       spacecrafts.value
         .filter(filterFn)
         .forEach((spacecraft: Spacecraft) => {
-          if (remainingResources <= 0) {
+          if (remainingResources <= RESOURCE_THRESHOLD) {
             MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
             return;
           }
-
+    
           const availableCount = Math.max(0, spacecraft.count - (spacecraft.locked_count || 0));
-          const neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
+          // Berechne, wie viele Einheiten maximal sinnvoll sind
+          let neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
+    
+          // Prüfe, ob nach dem Einsatz einer weiteren Einheit der Rest unter Threshold fällt
+          while (
+            neededUnits > 0 &&
+            remainingResources - (neededUnits - 1) * spacecraft.cargo <= RESOURCE_THRESHOLD
+          ) {
+            neededUnits--;
+          }
+    
           const usedUnits = Math.min(neededUnits, availableCount);
-
+    
           MinNeededUnits[spacecraft.name] = usedUnits;
           remainingResources -= usedUnits * spacecraft.cargo;
         });

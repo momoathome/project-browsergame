@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Resource\Services\ResourceService;
-use Orion\Modules\User\Services\UserattributeService;
+use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 
 class BuildingProgressionService

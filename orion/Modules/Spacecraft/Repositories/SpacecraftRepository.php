@@ -55,45 +55,6 @@ readonly class SpacecraftRepository
         });
     }
 
-    public function lockSpacecrafts($user, Collection $filteredSpacecrafts): bool
-    {
-        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, true);
-    }
-    
-    public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
-    {
-        return $this->updateSpacecraftLockedCount($user->id, $filteredSpacecrafts, false);
-    }
-    
-    public function updateSpacecraftLockedCount(int $userId, Collection $filteredSpacecrafts, bool $increment = false): bool
-    {
-        return DB::transaction(function () use ($userId, $filteredSpacecrafts, $increment) {
-            foreach ($filteredSpacecrafts as $type => $amount) {
-                $spacecraft = Spacecraft::where('user_id', $userId)
-                    ->whereHas('details', fn($q) => $q->where('name', $type))
-                    ->lockForUpdate()
-                    ->first();
-    
-                if (!$spacecraft) {
-                    throw new \Exception("Spacecraft $type not found");
-                }
-    
-                if ($increment) {
-                    // Lock
-                    if (($spacecraft->count - $spacecraft->locked_count) < $amount) {
-                        throw new \Exception("Not enough $type available");
-                    }
-                    $spacecraft->locked_count += $amount;
-                } else {
-                    // Unlock
-                    $spacecraft->locked_count = max(0, $spacecraft->locked_count - $amount);
-                }
-                $spacecraft->save();
-            }
-            return true;
-        });
-    }
-
     // get all spacecrafts from all users where spacecraft.details.type = $type
     public function getAllSpacecraftsByType(string $type): Collection
     {

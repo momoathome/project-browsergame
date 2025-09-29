@@ -9,12 +9,6 @@ const props = defineProps<{
   spacecrafts: Spacecraft[],
 }>()
 
-onMounted(() => {
-  console.log(props.logs);
-  console.log(props.userResources);
-  console.log(props.spacecrafts);
-});
-
 const selectedLog = ref<any | null>(null);
 
 const resourceMap = computed(() => {
@@ -84,7 +78,7 @@ const getTypeIcon = (type) => {
                   <tr>
                     <th class="px-3 py-2 text-start">Spacecraft</th>
                     <th class="px-3 py-2 text-start">Type</th>
-                    <th class="px-3 py-2 text-start">Total Combat</th>
+                    <th class="px-3 py-2 text-start">Total Attack</th>
                     <th class="px-3 py-2 text-start">Quantity</th>
                     <th class="px-3 py-2 text-start">Losses</th>
                   </tr>
@@ -97,7 +91,7 @@ const getTypeIcon = (type) => {
                     <td class="px-3 py-2">
                       <img v-if="getTypeIcon(spacecraftMap[ship.name]?.type)" :src="getTypeIcon(spacecraftMap[ship.name]?.type)" class="w-6 h-6" />
                     </td>
-                    <td class="px-3 py-2">{{ numberFormat((ship.combat ?? spacecraftMap[ship.name]?.combat ?? 0) * ship.count) }}</td>
+                    <td class="px-3 py-2">{{ numberFormat((ship.attack ?? spacecraftMap[ship.name]?.attack ?? 0) * ship.count) }}</td>
                     <td class="px-3 py-2">{{ ship.count }}</td>
                     <td class="px-3 py-2 text-red-400">{{ ship.losses }}</td>
                   </tr>
@@ -112,7 +106,7 @@ const getTypeIcon = (type) => {
                   <tr>
                     <th class="px-3 py-2 text-start">Spacecraft</th>
                     <th class="px-3 py-2 text-start">Type</th>
-                    <th class="px-3 py-2 text-start">Total Combat</th>
+                    <th class="px-3 py-2 text-start">Total Defense</th>
                     <th class="px-3 py-2 text-start">Quantity</th>
                     <th class="px-3 py-2 text-start">Losses</th>
                   </tr>
@@ -125,7 +119,7 @@ const getTypeIcon = (type) => {
                     <td class="px-3 py-2">
                       <img v-if="getTypeIcon(spacecraftMap[ship.name]?.type)" :src="getTypeIcon(spacecraftMap[ship.name]?.type)" class="w-6 h-6" />
                     </td>
-                    <td class="px-3 py-2">{{ numberFormat((ship.combat ?? spacecraftMap[ship.name]?.combat ?? 0) * ship.count) }}</td>
+                    <td class="px-3 py-2">{{ numberFormat((ship.defense ?? spacecraftMap[ship.name]?.defense ?? 0) * ship.count) }}</td>
                     <td class="px-3 py-2">{{ ship.count }}</td>
                     <td class="px-3 py-2 text-red-400">{{ ship.losses }}</td>
                   </tr>

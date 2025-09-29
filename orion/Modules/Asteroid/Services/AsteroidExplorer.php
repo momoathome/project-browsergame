@@ -50,6 +50,36 @@ class AsteroidExplorer
             ->get();
     }
 
+    /**
+     * Liefert zu einer [name => amount]-Liste:
+     * - die passenden Spacecraft-Modelle mit Details
+     * - das Mapping [details_id => amount]
+     */
+    public function resolveSpacecraftsAndIds($user, Collection $spaceCrafts): array
+    {
+        // Hole alle passenden Spacecrafts mit Details
+        $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $spaceCrafts);
+    
+        // Mappe Name => details_id
+        $nameToId = [];
+        foreach ($spacecraftsWithDetails as $sc) {
+            $nameToId[$sc->details->name] = $sc->details->id;
+        }
+    
+        // Baue neues Array: [details_id => amount]
+        $mapped = collect();
+        foreach ($spaceCrafts as $name => $amount) {
+            if (isset($nameToId[$name])) {
+                $mapped[$nameToId[$name]] = $amount;
+            }
+        }
+    
+        return [
+            'spacecraftsWithDetails' => $spacecraftsWithDetails,
+            'spacecraftsById' => $mapped,
+        ];
+    }
+
     public function calculateTravelDuration(
         Collection $spacecrafts,
         $user,

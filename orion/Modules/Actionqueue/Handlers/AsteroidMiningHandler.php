@@ -17,7 +17,8 @@ class AsteroidMiningHandler
         $result = $this->asteroidService->completeAsteroidMining(
             $action->target_id, 
             $action->user_id,
-            $action->details
+            $action->details,
+            $action->id
         );
 
         // Wenn das Ergebnis false ist, gebe false zurück

@@ -17,7 +17,8 @@ class CombatHandler
         $result = $this->combatService->completeCombat(
             $action->user_id,
             $action->target_id,
-            $action->details
+            $action->details,
+            $action->id
         );
 
         return $result instanceof CombatResult ? $result->wasSuccessful() : (bool)$result;

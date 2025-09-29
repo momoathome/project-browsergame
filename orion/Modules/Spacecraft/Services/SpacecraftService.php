@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Spacecraft\Repositories\SpacecraftRepository;
+use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 
 readonly class SpacecraftService
 {
@@ -13,6 +14,7 @@ readonly class SpacecraftService
     public function __construct(
         private readonly SpacecraftRepository $spacecraftRepository,
         private readonly ActionQueueService $queueService,
+        private readonly SpacecraftLockService $spacecraftLockService,
     ) {
     }
 
@@ -82,16 +84,6 @@ readonly class SpacecraftService
         });
     }
 
-    public function lockSpacecrafts($user, Collection $filteredSpacecrafts): bool
-    {
-        return $this->spacecraftRepository->lockSpacecrafts($user, $filteredSpacecrafts);
-    }
-
-    public function freeSpacecrafts($user, Collection $filteredSpacecrafts): bool
-    {
-        return $this->spacecraftRepository->freeSpacecrafts($user, $filteredSpacecrafts);
-    }
-
     public function updateSpacecraftsCount($userId, Collection $spacecrafts): void
     {
         $this->spacecraftRepository->updateSpacecraftsCount($userId, $spacecrafts);
@@ -113,7 +105,16 @@ readonly class SpacecraftService
         $spacecrafts = $this->getAllSpacecraftsByUserIdWithQueueInformation($userId);
         $formattedSpacecrafts = [];
 
+        $locks = $this->spacecraftLockService->getLocksForUser($userId);
+        $lockedCounts = [];
+        foreach ($locks as $lock) {
+            $lockedCounts[$lock->spacecraft_details_id] = ($lockedCounts[$lock->spacecraft_details_id] ?? 0) + $lock->amount;
+        }
+
         foreach ($spacecrafts as $spacecraft) {
+            $detailsId = $spacecraft->details_id;
+            $spacecraft->locked_count = $lockedCounts[$detailsId] ?? 0;
+
             // instantiate SpacecraftProductionService here
             $spacecraftProductionService = app(SpacecraftProductionService::class);
 

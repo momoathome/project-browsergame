@@ -18,6 +18,7 @@ use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
+use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 
 class AsteroidAutoMineService
 {
@@ -30,6 +31,7 @@ class AsteroidAutoMineService
         private readonly SpacecraftService $spacecraftService,
         private readonly StationService $stationService,
         private readonly ActionQueueService $queueService,
+        private readonly SpacecraftLockService $spacecraftLockService,
     ) {}
 
     public function prepareAutoMineMissions(User $user, string $filter = 'overflow'): array
@@ -56,47 +58,32 @@ class AsteroidAutoMineService
             $resourceStorage[$userResource->resource_id] = $userResource->amount;
         }
 
-        $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id)
+        $miningSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id)
             ->filter(fn($sc) => $sc->details->type === 'Miner' || $sc->details->name === 'Titan');
-        
-        // get spacecrafts that are already in mining queues
-        $spacecraftsInQueues = $this->queueService
-            ->getInProgressQueuesByUser($user->id)
-            ->pluck('details')
-            ->toArray();
 
-        $spacecraftsInQueuesCounts = [];
-        foreach ($spacecraftsInQueues as $details) {
-            if (isset($details['spacecrafts']) && is_array($details['spacecrafts'])) {
-                foreach ($details['spacecrafts'] as $type => $count) {
-                    $spacecraftsInQueuesCounts[$type] = ($spacecraftsInQueuesCounts[$type] ?? 0) + $count;
-                }
-            }
-            if (isset($details['attacker_formatted']) && is_array($details['attacker_formatted'])) {
-                foreach ($details['attacker_formatted'] as $sc) {
-                    if (isset($sc['name'], $sc['count'])) {
-                        $type = $sc['name'];
-                        $count = $sc['count'];
-                        $spacecraftsInQueuesCounts[$type] = ($spacecraftsInQueuesCounts[$type] ?? 0) + $count;
-                    }
-                }
-            }
+        $locks = $this->spacecraftLockService->getLocksForUser($user->id);
+
+        $lockedCounts = [];
+        foreach ($locks as $lock) {
+            $lockedCounts[$lock->spacecraft_details_id] = ($lockedCounts[$lock->spacecraft_details_id] ?? 0) + $lock->amount;
         }
 
-        $trueAvailableSpacecrafts = $this->getTrueAvailableSpacecrafts(
-            $availableSpacecrafts->map(function($sc) {
-                return [
-                    'name' => $sc->details->name,
-                    'cargo' => (int)($sc->cargo ?? 0),
-                    'count' => $sc->count,
-                    'locked_count' => $sc->locked_count ?? 0,
-                    'speed' => $sc->speed ?? 1,
-                    'operation_speed' => $sc->operation_speed ?? 1,
-                    'details' => $sc->details,
-                ];
-            })->toArray(),
-            $spacecraftsInQueuesCounts
-        );
+        $availableSpacecrafts = [];
+        foreach ($miningSpacecrafts as $sc) {
+            $detailsId = $sc->details->id;
+            $locked = $lockedCounts[$detailsId] ?? 0;
+            $available = max(0, $sc->count - $locked);
+
+            $availableSpacecrafts[$sc->details->name] = [
+                'count' => $available,
+                'cargo' => (int)($sc->cargo ?? 0),
+                'speed' => $sc->speed ?? 1,
+                'operation_speed' => $sc->operation_speed ?? 1,
+                'locked_count' => $locked,
+                'total_count' => $sc->count,
+                'details' => $sc->details,
+            ];
+        }
 
         $hangarBuilding = Building::where('user_id', $user->id)
         ->whereHas('details', function ($query) {
@@ -117,36 +104,13 @@ class AsteroidAutoMineService
 
         switch ($filter) {
             case 'overflow':
-                return $this->extractOverflow($asteroids, $trueAvailableSpacecrafts, $user, $dockSlots, $currentMiningOperations);
+                return $this->extractOverflow($asteroids, $availableSpacecrafts, $user, $dockSlots, $currentMiningOperations);
             case 'smart':
-                return $this->extractSmart($user, $asteroids, $trueAvailableSpacecrafts, $resourceStorage, $storageLimit);
+                return $this->extractSmart($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit);
             case 'minimal':
             default:
-                return $this->extractMinimal($user, $asteroids, $trueAvailableSpacecrafts, $resourceStorage, $storageLimit);
+                return $this->extractMinimal($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit);
         }
-    }
-
-    private function getTrueAvailableSpacecrafts(array $availableSpacecraftsArr, array $spacecraftCounts): array
-    {
-        $result = [];
-        foreach ($availableSpacecraftsArr as $sc) {
-            $name = $sc['name'];
-            $lockedInQueue = $spacecraftCounts[$name] ?? 0;
-            $lockedInDb = $sc['locked_count'] ?? 0;
-            $reallyLocked = min($lockedInQueue, $lockedInDb);
-            $available = max(0, $sc['count'] - $reallyLocked);
-
-            $result[$name] = [
-                'count' => $available,
-                'cargo' => $sc['cargo'],
-                'speed' => $sc['speed'],
-                'operation_speed' => $sc['operation_speed'],
-                'locked_count' => $reallyLocked,
-                'total_count' => $sc['count'],
-                'details' => $sc['details'],
-            ];
-        }
-        return $result;
     }
 
     private function buildMinerPool($availableSpacecrafts): array
@@ -360,7 +324,7 @@ class AsteroidAutoMineService
     // Smart: Maximale Ressourcen, minimaler Overflow
     private function extractSmart($user, $asteroids, $availableSpacecrafts, $resourceStorage, $storageLimit): array
     {
-       
+       //
     }
 
 }

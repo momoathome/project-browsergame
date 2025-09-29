@@ -174,6 +174,9 @@ const canScanAsteroid = computed(() => {
 });
 
 const isSubmitting = ref(false);
+const noSpacecraftSelected = computed(() =>
+  Object.values(form.spacecrafts).every((value) => value === 0)
+);
 
 async function exploreAsteroid() {
   if (isSubmitting.value) return;
@@ -181,8 +184,7 @@ async function exploreAsteroid() {
     form.asteroid_id = asteroid.value.id;
   }
 
-  const noSpacecraftSelected = Object.values(form.spacecrafts).every((value) => value === 0);
-  if (noSpacecraftSelected) return;
+  if (noSpacecraftSelected.value) return;
 
   isSubmitting.value = true;
   try {
@@ -461,7 +463,7 @@ function availableCount(s) {
                       </span>
                     </div>
                     <button @click="startMission" @shift.click="fastExploreAsteroid"
-                      :disabled="isSubmitting || (Number(dockSlots) > 0 && totalMiningOperations >= Number(dockSlots))"
+                      :disabled="isSubmitting || noSpacecraftSelected || (Number(dockSlots) > 0 && totalMiningOperations >= Number(dockSlots))"
                       class="px-4 py-2 bg-cyan-700 text-light rounded-xl font-semibold transition border border-cyan-700/30 hover:bg-cyan-600 hover:text-cyan-100 text-base shadow disabled:cursor-not-allowed disabled:opacity-40">
                       <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
                       <span v-else>Start Attack</span>

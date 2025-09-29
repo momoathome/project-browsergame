@@ -15,6 +15,7 @@ use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Influence\Services\InfluenceService;
 use Orion\Modules\Rebel\Services\RebelService;
@@ -31,6 +32,7 @@ readonly class CombatOrchestrationService
         private readonly StationService $stationService,
         private readonly InfluenceService $influenceService,
         private readonly RebelService $rebelService,
+        private readonly SpacecraftLockService $spacecraftLockService,
     ) {
     }
 
@@ -44,46 +46,46 @@ readonly class CombatOrchestrationService
         } else {
             $defender = $this->userService->find($defenderId);
         }
-        
+    
         // Erstelle einen Kampfplan mit allen notwendigen Informationen
         $combatPlanRequest = CombatPlanRequest::fromRequest(
             $attacker,
             $defender,
             $attackerSpacecrafts,
         );
-        
+    
         // Formatiere und bereite den Kampf vor
         $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
+    
+        $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($attacker, collect($attackerSpacecrafts));
 
-        // Formatiere die Raumschiffe des Angreifers für die Sperre
-        $filteredSpacecrafts = $this->combatService->formatSpacecraftsForLocking($combatRequest->attackerSpacecrafts);
-        $spacecraftsWithDetails = $this->asteroidExplorer->getSpacecraftsWithDetails($attacker, $filteredSpacecrafts);
-        
-        // Berechne die Reisedauer
+        $spacecraftsWithDetails = $result['spacecraftsWithDetails'];
+        $filteredSpacecraftsById = $result['spacecraftsById'];
+
         $duration = $this->asteroidExplorer->calculateTravelDuration(
             $spacecraftsWithDetails,
             $attacker,
             $defenderStation,
             QueueActionType::ACTION_TYPE_COMBAT
         );
-        
-        // Sperre die Raumschiffe für andere Aktionen
-        $this->spacecraftService->lockSpacecrafts($attacker, $filteredSpacecrafts);
-        
+    
         // Füge den Kampf zur Warteschlange hinzu
-        $this->queueService->addToQueue(
+        $queueEntry = $this->queueService->addToQueue(
             $attacker->id,
             QueueActionType::ACTION_TYPE_COMBAT,
             $defenderId,
             $duration,
             $combatRequest->toArray()
         );
+    
+        // Sperre die Raumschiffe für andere Aktionen
+        $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
     }
     
     /**
      * Führt einen geplanten Kampf durch
      */
-    public function completeCombat(int $attackerId, int $defenderId, array $details): CombatResult
+    public function completeCombat(int $attackerId, int $defenderId, array $details, int $actionQueueId): CombatResult
     {
         $isRebelCombat = $details['is_rebel_combat'] ?? false;
 
@@ -127,7 +129,7 @@ readonly class CombatOrchestrationService
         );
 
         try {
-            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts, $isRebelCombat) {
+            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts, $isRebelCombat, $actionQueueId) {
                 // Update spacecraft counts in database
                 $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
                 if ($isRebelCombat) {
@@ -136,10 +138,8 @@ readonly class CombatOrchestrationService
                 } else {
                     $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
                 }
-                // Free spacecrafts from locked_count
-                $formattedSpacecrafts = $this->combatService->formatModelsForLocking($attackerSpacecrafts);
-                $this->spacecraftService->freeSpacecrafts($attacker, $formattedSpacecrafts);
 
+                $this->spacecraftLockService->freeForQueue($actionQueueId);
             });
         } catch (\Exception $e) {
             Log::error('Error occurred while completing combat: ' . $e->getMessage());

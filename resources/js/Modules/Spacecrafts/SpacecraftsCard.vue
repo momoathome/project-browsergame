@@ -11,7 +11,8 @@ const props = defineProps<{
   spacecraft: Spacecraft,
   queuedCrew: number,
   userAttributes: UserAttributes[],
-  userResources: UserResources[]
+  userResources: UserResources[],
+  maxBuildCount: number
 }>();
 
 const emit = defineEmits<{
@@ -90,6 +91,8 @@ const crewStatus = computed(() => {
   const availableUnitSlots = crewLimit - totalUnits - props.queuedCrew;
   const maxCrewCount = Math.floor(availableUnitSlots / props.spacecraft.crew_limit);
   return {
+    crewLimit: crewLimit,
+    totalUnits: totalUnits,
     available: availableUnitSlots,
     required: props.spacecraft.crew_limit,
     maxCount: Math.max(0, maxCrewCount),
@@ -112,6 +115,7 @@ const crewLimitReachedNext = computed(() => {
 });
 
 function increment() {
+  console.log(maxSpacecraftCount.value, crewStatus.value.maxCount, crewStatus.value.available, crewStatus.value.crewLimit, crewStatus.value.totalUnits, props.queuedCrew);
   if (form.amount < maxSpacecraftCount.value) form.amount++;
 }
 function incrementBy10() {

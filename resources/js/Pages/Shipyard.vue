@@ -11,6 +11,7 @@ import type { Spacecraft } from '@/types/types';
 import DialogModal from '@/Components/DialogModal.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TertiaryButton from '@/Components/TertiaryButton.vue';
+import { space } from 'postcss/lib/list';
 
 const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 const { queueData, refreshQueue } = useQueueStore();
@@ -32,24 +33,28 @@ function getActiveProduction(spacecraft: Spacecraft | null) {
   return 0;
 }
 
-const queuedCrewMap = computed(() => {
-  const map: Record<number, number> = {};
-  (queueData.value ?? []).forEach(item => {
+const totalQueuedCrew = computed(() => {
+  return (queueData.value ?? []).reduce((sum, item) => {
     if (
       item.actionType === 'produce' &&
-      item.details?.quantity &&
       (item.status === 'in_progress' || item.status === 'pending') &&
       typeof item.targetId === 'number'
     ) {
-      // Das passende Spacecraft suchen:
       const spacecraft = spacecrafts.value.find(sc => sc.id === item.targetId);
       if (spacecraft) {
-        map[item.targetId] = (map[item.targetId] || 0) + (spacecraft.crew_limit * item.details.quantity);
+        const quantity = item.details?.quantity ?? 0;
+        return sum + (spacecraft.crew_limit * quantity);
       }
     }
-  });
-  return map;
+    return sum;
+  }, 0);
 });
+
+const totalBuiltCrew = computed(() => {
+  return spacecrafts.value.reduce((sum, sc) => sum + (sc.count * sc.crew_limit), 0);
+});
+
+const totalUsedCrew = computed(() => totalBuiltCrew.value + totalQueuedCrew.value);
 
 function handleOpenCancelModal(spacecraft: Spacecraft) {
   selectedSpacecraft.value = spacecraft;
@@ -82,7 +87,7 @@ function handleProduceSpacecraft() {
     <SpacecraftsCard v-for="spacecraft in unlockedSpacecrafts" 
     :key="spacecraft.id" 
     :spacecraft="spacecraft"
-    :queued-crew="queuedCrewMap[spacecraft.id] || 0"
+    :queued-crew="totalQueuedCrew"
     :userAttributes="userAttributes"
     :userResources="userResources"
     @open-cancel-modal="handleOpenCancelModal"

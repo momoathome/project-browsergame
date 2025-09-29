@@ -48,11 +48,12 @@ class SpacecraftProductionService
 
         $targetQuantity = $spacecraft->count + $queuedQuantity + $quantity;
 
+        Log::info("Starting production of {$spacecraft}");
         try {
             DB::transaction(function () use ($user, $spacecraft, $quantity, $targetQuantity) {
                 $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);
 
-                $this->validateCrewCapacity($user->id, $spacecraft->crew_limit * $quantity);
+                $this->validateCrewCapacity($user->id, $spacecraft->id, $quantity);
 
                 $this->userResourceService->validateUserHasEnoughResources($user->id, $totalCosts);
 
@@ -167,7 +168,7 @@ class SpacecraftProductionService
         })->keyBy('id');
     }
 
-    private function validateCrewCapacity(int $userId, int $requiredCapacity): void
+    private function validateCrewCapacity(int $userId, int $requiredSpacecraftId, int $requiredQuantity): void
     {
         // Crew-Limit des Users holen
         $crewLimitAttr = $this->userAttributeService->getSpecificUserAttribute($userId, UserAttributeType::CREW_LIMIT);
@@ -176,9 +177,14 @@ class SpacecraftProductionService
         }
         $crewLimit = (int)$crewLimitAttr->attribute_value;
     
-        // Crewbedarf aller offenen Produktionen (pending + in_progress)
-        $queuedCrew = 0;
+        // Alle Schiffe des Users holen
+        $allSpacecrafts = $this->spacecraftRepository->getAllSpacecraftsByUserIdWithDetails($userId);
+    
+        // Crewbedarf aller Schiffe berechnen (inkl. Queue)
         $queueEntries = $this->queueService->getUserQueue($userId);
+    
+        // Map: spacecraft_id => queued_quantity
+        $queuedQuantities = [];
         foreach ($queueEntries as $entry) {
             $actionType = $entry->action_type ?? $entry->actionType ?? null;
             $status = $entry->status ?? $entry->Status ?? null;
@@ -186,19 +192,28 @@ class SpacecraftProductionService
                 $actionType === QueueActionType::ACTION_TYPE_PRODUCE &&
                 in_array($status, [QueueStatusType::STATUS_IN_PROGRESS, QueueStatusType::STATUS_PENDING])
             ) {
-                $sc = $this->spacecraftRepository->findSpacecraftById($entry->targetId, $userId);
                 $details = is_string($entry->details) ? json_decode($entry->details, true) : $entry->details;
                 $quantity = $details['quantity'] ?? 1;
-                if ($sc) {
-                    $queuedCrew += $sc->crew_limit * (int)$quantity;
+                $spacecraftId = $entry->targetId ?? $entry->target_id ?? null;
+                if ($spacecraftId) {
+                    $queuedQuantities[$spacecraftId] = ($queuedQuantities[$spacecraftId] ?? 0) + (int)$quantity;
                 }
             }
         }
     
-        // Gesamter Crewbedarf inkl. aktueller Produktion
-        $usedCrew = $queuedCrew + $requiredCapacity;
-
-        if ($usedCrew > $crewLimit) {
+        // Jetzt die Crew für alle Schiffe berechnen (inkl. der neuen Produktion)
+        $totalCrew = 0;
+        foreach ($allSpacecrafts as $sc) {
+            $count = $sc->count;
+            $queued = $queuedQuantities[$sc->id] ?? 0;
+            // Wenn es das aktuell zu bauende Schiff ist, die neue Menge addieren
+            if ($sc->id == $requiredSpacecraftId) {
+                $queued += $requiredQuantity;
+            }
+            $totalCrew += $sc->crew_limit * ($count + $queued);
+        }
+    
+        if ($totalCrew > $crewLimit) {
             throw new InsufficientCrewCapacityException();
         }
     }

@@ -20,32 +20,59 @@ class AsteroidExplorer
     ) {
     }
 
-    public function calculateCapacityAndMinerStatus(User $user, Collection $filteredSpacecrafts): array
+    public function calculateCapacityAndMinerStatus(User $user, Collection $spacecrafts): array
     {
-        $totalCargoCapacity = 0;
+        $totalCargo = 0;
         $hasMiner = false;
         $hasTitan = false;
 
-        $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $filteredSpacecrafts);
+        $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $spacecrafts);
 
         foreach ($spacecraftsWithDetails as $spacecraft) {
-            $amountOfSpacecrafts = $filteredSpacecrafts[$spacecraft->details->name];
-            $totalCargoCapacity += $amountOfSpacecrafts * $spacecraft->cargo;
+            $amount = $spacecrafts[$spacecraft->details->name];
+            $totalCargo += $amount * $spacecraft->cargo;
             $hasMiner = $hasMiner || ($spacecraft->details->type === 'Miner');
-            if (strtolower($spacecraft->details->name) === 'titan' && $amountOfSpacecrafts > 0) {
-                $hasTitan = true;
-            }
+            $hasTitan = $hasTitan || (strtolower($spacecraft->details->name) === 'titan' && $amount > 0);
         }
 
-        return [$totalCargoCapacity, $hasMiner, $hasTitan];
+        return [$totalCargo, $hasMiner, $hasTitan];
     }
 
-    public function getSpacecraftsWithDetails($user, Collection $filteredSpacecrafts): Collection
+    public function extractResources(Asteroid $asteroid, int $capacity, bool $hasMiner, bool $hasTitan): array
+    {
+        $resources = $asteroid->resources()->get();
+
+        // Titan benötigt für extreme Asteroiden
+        if ($asteroid->size === 'extreme' && !$hasTitan) {
+            return [[], $resources->pluck('amount', 'resource_type')->toArray()];
+        }
+
+        $multiplier = $hasMiner ? 1 : 0.5;
+        $resourcesExtracted = [];
+        $remainingResources = [];
+
+        $totalAvailable = $resources->sum(fn($res) => min($res->amount, floor($capacity * $multiplier)));
+
+        $ratio = $totalAvailable > $capacity ? $capacity / $totalAvailable : 1;
+
+        foreach ($resources as $res) {
+            $available = min($res->amount, floor($capacity * $multiplier));
+            $extracted = floor($available * $ratio);
+
+            $resourceId = $this->resourceService->findResourceByType($res->resource_type)?->id;
+            $resourcesExtracted[$resourceId] = $extracted;
+            $remainingResources[$res->resource_type] = $res->amount - $extracted;
+        }
+
+        return [$resourcesExtracted, $remainingResources];
+    }
+
+    public function getSpacecraftsWithDetails($user, Collection $spacecrafts): Collection
     {
         return $user->spacecrafts()
             ->with('details')
-            ->whereHas('details', function ($query) use ($filteredSpacecrafts) {
-                $query->whereIn('name', $filteredSpacecrafts->keys());
+            ->whereHas('details', function ($query) use ($spacecrafts) {
+                $query->whereIn('name', $spacecrafts->keys());
             })
             ->get();
     }
@@ -210,41 +237,5 @@ class AsteroidExplorer
         );
 
         return (int) round($distance);
-    }
-
-    public function calculateResourceExtraction(Collection $asteroidResources, int $totalCargoCapacity, bool $hasMiner): array
-    {
-        $resourcesExtracted = [];
-        $remainingResources = [];
-        $extractionMultiplier = $hasMiner ? 1 : 0.5;
-
-        // Calculate total available resources and initial extraction amounts
-        $totalAvailable = 0;
-        $initialExtraction = [];
-
-        foreach ($asteroidResources as $asteroidResource) {
-            $resource = $this->resourceService->findResourceByType($asteroidResource->resource_type);
-            $availableAmount = min($asteroidResource->amount, floor($totalCargoCapacity * $extractionMultiplier));
-            $totalAvailable += $availableAmount;
-            $initialExtraction[$resource->id] = $availableAmount;
-            $remainingResources[$asteroidResource->resource_type] = $asteroidResource->amount;
-        }
-
-        // Calculate the extraction ratio if total available exceeds cargo capacity
-        $extractionRatio = $totalAvailable > $totalCargoCapacity ? $totalCargoCapacity / $totalAvailable : 1;
-
-        // Adjust extraction amounts based on the ratio
-        foreach ($initialExtraction as $resourceId => $amount) {
-            $extractedAmount = floor($amount * $extractionRatio);
-            $resourcesExtracted[$resourceId] = $extractedAmount;
-
-            $resourceType = $asteroidResources->first(function ($item) use ($resourceId) {
-                return $this->resourceService->findResourceByType($item->resource_type)->id == $resourceId;
-            })->resource_type;
-
-            $remainingResources[$resourceType] -= $extractedAmount;
-        }
-
-        return [$resourcesExtracted, $remainingResources];
     }
 }

@@ -23,11 +23,6 @@ readonly class ResourceService
         return $this->resourceRepository->findResourceById($id);
     }
 
-    public function findResourceByName(string $name)
-    {
-        return $this->resourceRepository->findResourceByName($name);
-    }
-
     public function findResourceByType(string $resourceType)
     {
         return $this->resourceRepository->findResourceByType($resourceType);

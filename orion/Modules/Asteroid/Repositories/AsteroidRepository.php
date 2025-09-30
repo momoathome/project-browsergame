@@ -13,9 +13,9 @@ use Orion\Modules\Logbook\Models\AsteroidMiningLog;
 
 class AsteroidRepository
 {
-    public function find(int $id): ?Asteroid
+    public function find(int $asteroidId): ?Asteroid
     {
-        return Asteroid::where('id', $id)->first();
+        return Asteroid::find($asteroidId);
     }
     
     public function loadWithResources(Asteroid $asteroid): Asteroid
@@ -48,7 +48,44 @@ class AsteroidRepository
         })->values();
     }
 
-    public function saveAsteroidMiningResult(User $user, Asteroid $asteroid, ExplorationResult $result, $filteredSpacecrafts): void
+    public function getRecentAsteroidMines(int $userId, int $limit = 10)
+    {
+        return AsteroidMiningLog::with(['user:id,name',])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function updateAsteroidResources(Asteroid $asteroid, array $remainingResources): void
+    {
+        foreach ($remainingResources as $type => $amount) {
+            $res = AsteroidResource::where('asteroid_id', $asteroid->id)
+                ->where('resource_type', $type)
+                ->first();
+
+            if ($amount > 0) {
+                $res ? $res->update(['amount' => $amount]) : null;
+            } else {
+                $res?->delete();
+            }
+        }
+
+        $this->cleanupAsteroid($asteroid);
+    }
+
+    private function cleanupAsteroid(Asteroid $asteroid): void
+    {
+        $totalAmount = $asteroid->resources()->sum('amount');
+        $percentThreshold = max(1, floor($asteroid->value * 0.01)); // mindestens 1%
+        $flatThreshold = 40; // mindestens über 40 ressourcen gesamt
+
+        if ($totalAmount < $flatThreshold || $totalAmount < $percentThreshold) {
+            $asteroid->delete();
+        }
+    }
+
+    public function logMiningResult(User $user, Asteroid $asteroid, array $resourcesExtracted, Collection $spacecrafts): void
     {
         AsteroidMiningLog::create([
             'user_id' => $user->id,
@@ -58,49 +95,9 @@ class AsteroidRepository
                 'y' => $asteroid->y,
                 'size' => $asteroid->size,
             ],
-            'resources_extracted' => $result->resourcesExtracted,
-            'spacecrafts_used' => $filteredSpacecrafts,
+            'resources_extracted' => $resourcesExtracted,
+            'spacecrafts_used' => $spacecrafts,
         ]);
     }
 
-    public function getRecentAsteroidMines(int $userId, int $limit = 10)
-    {
-        return AsteroidMiningLog::with(['user:id,name',])
-            ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->limit($limit)
-            ->get();
-    }
-    
-    public function updateAsteroidResources(Asteroid $asteroid, array $remainingResources): void
-    {
-        foreach ($remainingResources as $resourceType => $amount) {
-            $asteroidResource = AsteroidResource::where('asteroid_id', $asteroid->id)
-                ->where('resource_type', $resourceType)
-                ->first();
-                
-            if ($amount > 0) {
-                if ($asteroidResource) {
-                    $asteroidResource->amount = $amount;
-                    $asteroidResource->save();
-                }
-            } else {
-                if ($asteroidResource) {
-                    $asteroidResource->delete();
-                }
-            }
-        }
-        
-        $totalAmount = $asteroid->resources()->sum('amount');
-        $percentThreshold = max(1, floor($asteroid->value * 0.01)); // mindestens 1%
-        $flatThreshold = 40; // mindestens über 40 ressourcen gesamt
-
-        if (
-            $asteroid->resources()->count() == 0 ||
-            $totalAmount < $flatThreshold ||
-            $totalAmount < $percentThreshold
-        ) {
-            $asteroid->delete();
-        }
-    }
 }

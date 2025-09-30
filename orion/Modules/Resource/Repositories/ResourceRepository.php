@@ -17,11 +17,6 @@ readonly class ResourceRepository
         return Resource::find($id);
     }
 
-    public function findResourceByName(string $name)
-    {
-        return Resource::where('name', $name)->first();
-    }
-
     public function findResourceByType(string $resourceType)
     {
         return Resource::where('name', $resourceType)->first();

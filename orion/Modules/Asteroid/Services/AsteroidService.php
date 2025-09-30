@@ -4,28 +4,27 @@ namespace Orion\Modules\Asteroid\Services;
 
 use App\Models\User;
 use App\Services\UserService;
+use App\Events\AsteroidMined;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
 use Illuminate\Support\Facades\Log;
-use App\Events\ReloadFrontendCanvas;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
+use Orion\Modules\Rebel\Services\RebelService;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\User\Services\UserResourceService;
 use Orion\Modules\User\Services\UserAttributeService;
-use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
-use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
-use Orion\Modules\Rebel\Services\RebelService;
 use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
+use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
 
 
 class AsteroidService
@@ -192,12 +191,6 @@ class AsteroidService
     public function completeAsteroidMining(int $asteroidId, int $userId, array $details, int $actionQueueId)
     {
         $user = $this->userService->find($userId);
-        if (!$user) {
-            return false;
-        }
-
-        // Statt filteredSpacecrafts zu entspernen, Locks für diesen Auftrag freigeben
-        $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($details['spacecrafts']);
 
         $asteroid = $this->find($asteroidId);
         if (!$asteroid) {
@@ -205,104 +198,61 @@ class AsteroidService
             return false;
         }
 
-        list($totalCargoCapacity, $hasMiner, $hasTitan) = $this->asteroidExplorer->calculateCapacityAndMinerStatus(
-            $user,
-            $filteredSpacecrafts
+        $spacecrafts = $this->spacecraftService->filterSpacecrafts($details['spacecrafts']);
+        [$capacity, $hasMiner, $hasTitan] = $this->asteroidExplorer->calculateCapacityAndMinerStatus($user, $spacecrafts);
+
+        // Ressourcenberechnung
+        [$resourcesExtracted, $remainingResources] = $this->asteroidExplorer->extractResources(
+            $asteroid,
+            $capacity,
+            $hasMiner,
+            $hasTitan
         );
-
-        $asteroidResources = $this->asteroidRepository->getAsteroidResources($asteroid);
-
-        if ($asteroid->size === 'extreme' && !$hasTitan) {
-            $resourcesExtracted = [];
-            $remainingResources = [];
-            foreach ($asteroidResources as $asteroidResource) {
-                $remainingResources[$asteroidResource->resource_type] = $asteroidResource->amount;
-            }
-        } else {
-            list($resourcesExtracted, $remainingResources) = $this->asteroidExplorer->calculateResourceExtraction(
-                $asteroidResources,
-                $totalCargoCapacity,
-                $hasMiner
-            );
-        }
-
+        
         try {
-            DB::transaction(function () use ($asteroid, $remainingResources, $user, $resourcesExtracted, $actionQueueId) {
+            DB::transaction(function () use ($user, $asteroid, $resourcesExtracted, $remainingResources, $actionQueueId, $spacecrafts) {
                 $this->updateUserResources($user, $resourcesExtracted);
                 $this->asteroidRepository->updateAsteroidResources($asteroid, $remainingResources);
+                $this->asteroidRepository->logMiningResult($user, $asteroid, $resourcesExtracted, $spacecrafts);
                 $this->spacecraftLockService->freeForQueue($actionQueueId);
             });
         } catch (\Throwable $e) {
-            Log::error('AsteroidMining DB-Transaktion fehlgeschlagen', [
-                'asteroidId' => $asteroidId,
-                'userId' => $userId,
+            Log::error('Asteroid mining transaction failed', [
+                'asteroidId' => $asteroid->id,
+                'userId' => $user->id,
                 'error' => $e->getMessage(),
             ]);
-            // Cleanup: Versuche Locks zu entsperren
             $this->spacecraftLockService->freeForQueue($actionQueueId);
             return false;
         }
 
-        // TODO: Refactor this into a dedicated service with live broadcasting
-        try {
-            $asteroidGenerator = app(AsteroidGenerator::class);
-            $radius = 15000;
-            $asteroidGenerator->generateAsteroids(
-                rand(0, 2),
-                $asteroid->x,
-                $asteroid->y,
-                $radius
-            );
-        } catch (\Exception $e) {
-            Log::error('Fehler beim Generieren eines neuen Asteroiden: ' . $e->getMessage());
-        }
+        AsteroidMined::dispatch($asteroid, $user, $resourcesExtracted);
 
-        // removes mined asteroid from map in real-time
-        broadcast(new ReloadFrontendCanvas($asteroid));
-
-        $this->asteroidRepository->saveAsteroidMiningResult(
-            $user,
-            $asteroid,
-            new ExplorationResult(
-                $resourcesExtracted,
-                $totalCargoCapacity,
-                $asteroid->id,
-                $hasMiner
-            ),
-            $filteredSpacecrafts
-        );
-
-        return new ExplorationResult(
-            $resourcesExtracted,
-            $totalCargoCapacity,
-            $asteroid->id,
-            $hasMiner
-        );
+        return new ExplorationResult($resourcesExtracted, $capacity, $asteroid->id, $hasMiner);
     }
 
-    public function updateUserResources(User $user, array $resourcesExtracted): void
+    public function updateUserResources(User $user, array $resources): void
     {
-        $storageAttribute = $this->userAttributeService->getSpecificUserAttribute(
+        $storageCapacity = $this->userAttributeService->getSpecificUserAttribute(
             $user->id,
             UserAttributeType::STORAGE
-        );
+        )->attribute_value;
 
-        $storageCapacity = $storageAttribute->attribute_value;
+        foreach ($resources as $resourceId => $amount) {
+            if ($amount <= 0) continue;
 
-        foreach ($resourcesExtracted as $resourceId => $extractedAmount) {
-            $userResource = $this->userResourceService->getSpecificUserResource(
-                $user->id,
-                $resourceId
-            );
+            $userResource = $this->userResourceService->getSpecificUserResource($user->id, $resourceId);
+            $current = $userResource?->amount ?? 0;
+            $availableStorage = max(0, $storageCapacity - $current);
 
-            $currentAmount = $userResource ? $userResource->amount : 0;
-            $availableStorage = $storageCapacity - $currentAmount;
-            $amountToAdd = min($extractedAmount, $availableStorage);
+            $toAdd = min($amount, $availableStorage);
 
-            if ($userResource) {
-                $this->userResourceService->addResourceAmount($user, $resourceId, $amountToAdd);
-            } else {
-                $this->userResourceService->createUserResource($user->id, $resourceId, $amountToAdd);
+            if ($toAdd > 0) {
+                if ($userResource) {
+                    $this->userResourceService->addResourceAmount($user, $resourceId, $toAdd);
+                } else {
+                    $this->userResourceService->createUserResource($user->id, $resourceId, $toAdd);
+                }
             }
         }
 
@@ -317,10 +267,5 @@ class AsteroidService
     public function getAllAsteroids(): Collection
     {
         return $this->asteroidRepository->getAllAsteroids();
-    }
-
-    public function saveAsteroidMiningResult(User $user, Asteroid $asteroid, ExplorationResult $result, $filteredSpacecrafts): void
-    {
-        $this->asteroidRepository->saveAsteroidMiningResult($user, $asteroid, $result, $filteredSpacecrafts);
     }
 }

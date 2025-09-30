@@ -164,9 +164,6 @@ class ActionQueueService
             } else {
                 $action->status = QueueStatusType::STATUS_FAILED;
             }
-
-            $this->archiveCompletedQueue($action);
-
         } catch (\Exception $e) {
             Log::error("Fehler bei der Aktionsverarbeitung", [
                 'action_id' => $action->id,
@@ -178,6 +175,7 @@ class ActionQueueService
         }
 
         $action->save();
+        $this->archiveCompletedQueue($action);
 
         if ($action->status === QueueStatusType::STATUS_COMPLETED) {
             // Unterschied nach ActionType

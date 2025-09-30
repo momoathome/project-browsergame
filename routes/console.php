@@ -67,4 +67,4 @@ Artisan::command('game:rebel-generate-all', function (
         $spacecraftService->spendResourcesForFleet($rebel);
     }
     $this->info('Ressourcen und Spacecrafts generiert!');
-})->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->everyHour();
+})->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->hourly();

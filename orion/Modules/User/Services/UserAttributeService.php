@@ -3,6 +3,7 @@
 namespace Orion\Modules\User\Services;
 
 use Illuminate\Support\Collection;
+use Orion\Modules\User\Models\UserAttribute;
 use Orion\Modules\User\Enums\UserAttributeType;
 use Orion\Modules\User\Handlers\UserAttributeHandler;
 use Orion\Modules\User\Repositories\UserAttributeRepository;
@@ -66,6 +67,38 @@ class UserAttributeService
         
         return null;
     }
+
+    public function updateUserAttributesBatch(int $userId, array $updates, bool $multiply = false, bool $replace = false): void
+    {
+        $now = now();
+        $attributes = [];
+
+        foreach ($updates as $update) {
+            $attributeName = $update['name'];
+            $value = (float) $update['value'];
+
+            // Bestimme den neuen Wert basierend auf der Operation
+            if ($replace) {
+                $newValue = $value;
+            } elseif ($multiply) {
+                $newValue = round($value);
+            } else {
+                $newValue = $value;
+            }
+
+            // Füge das Attribut zur Liste hinzu
+            $attributes[] = [
+                'user_id' => $userId,
+                'attribute_name' => $attributeName,
+                'attribute_value' => max(0, $newValue), // Sicherstellen, dass der Wert nicht negativ ist
+                'updated_at' => $now,
+            ];
+        }
+
+        // Verwende fillAndInsert, um die Datensätze zu speichern
+        UserAttribute::fillAndInsert($attributes, ['user_id', 'attribute_name'], ['attribute_value', 'updated_at']);
+    }
+
 
     public function addAttributeAmount(int $userId, UserAttributeType $attributeName, int $amount)
     {

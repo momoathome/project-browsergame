@@ -173,28 +173,23 @@ class BuildingUpgradeService
         );
     }
 
-    public function upgradeBuilding(int $userId, Building $building)
+    public function upgradeBuilding(int $userId, Building $building): Building
     {
-        return DB::transaction(function () use ($userId, $building) {
-            $building->level += 1;
-            $baseEffects = $this->buildingProgressionService->calculateBaseEffectValue($building);
-            $allEffects = $this->buildingProgressionService->calculateEffectValue($building);
+        $building->level += 1;
+        $baseEffects = $this->buildingProgressionService->calculateBaseEffectValue($building);
+        $allEffects = $this->buildingProgressionService->calculateEffectValue($building);
 
-            // Extrahiere den ersten Wert aus dem Array
-            $effectValue = is_array($baseEffects) ? reset($baseEffects) : $baseEffects;
+        $building->effect_value = is_array($baseEffects) ? reset($baseEffects) : $baseEffects;
+        $building->effects = $allEffects;
+        $building->build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $building->level);
+        $building->save();
 
-            $building->effect_value = $effectValue;
-            $building->effects = $allEffects;
-            $building->build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $building->level);
-            $building->save();
-
-            return $building;
-        });
+        return $building;
     }
+
 
     public function completeUpgrade(int $buildingId, int $userId): array
     {
-        // Gebäude abrufen mit Validierung
         $building = $this->buildingService->getOneBuildingByUserId($buildingId, $userId);
 
         if (!$building) {

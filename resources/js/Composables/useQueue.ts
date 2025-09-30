@@ -1,293 +1,238 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useQueueStore } from '@/Composables/useQueueStore'
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore'
-import { useBuildingStore } from '@/Composables/useBuildingStore';
-import { useAttributeStore } from './useAttributeStore';
-import { useResourceStore } from './useResourceStore';
+import { useBuildingStore } from '@/Composables/useBuildingStore'
+import { useAttributeStore } from './useAttributeStore'
+import { useResourceStore } from './useResourceStore'
 import { timeFormat } from '@/Utils/format'
-import type { SavedQueueItemState, RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
+import type { RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
 import { api } from '@/Services/api'
 
-const PROCESS_INTERVAL = 15_000
-const REFRESH_TIMEOUT = 10_000
-const PROCESS_THROTTLE = 5_000 // min. Abstand zwischen zwei processQueue() Calls
+const PROCESS_DEBOUNCE = 2000 // ms
+const POLL_INTERVAL = 30_000 // 30 Sekunden als Fallback
 
-function loadQueueItemStates(userId: number): SavedQueueItemState[] {
-    const key = `queueItemStates_${userId}`
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : []
+// ===== Singleton State =====
+const queueState = {
+    initialized: false,
+    timerInterval: undefined as number | undefined,
+    pollInterval: undefined as number | undefined,
+    debounceTimeout: undefined as number | undefined,
+    processRunning: false,
+    processTriggerPending: false,
+    processingLock: new Set<number>(),
+    processedQueueItems: ref<ProcessedQueueItem[]>([])
 }
 
-function saveQueueItemStates(userId: number, states: SavedQueueItemState[]) {
-    const key = `queueItemStates_${userId}`
-    localStorage.setItem(key, JSON.stringify(states))
+// ===== ActionType Mapping =====
+const actionTypeConfig: Record<
+    string,
+    {
+        image: string
+        getName: (details?: QueueItemDetails) => string
+        getDetails: (details?: QueueItemDetails) => string | number
+    }
+> = {
+    building: {
+        image: '/images/navigation/buildings.png',
+        getName: d => d?.building_name || 'Building',
+        getDetails: d => d?.next_level ?? 1
+    },
+    produce: {
+        image: '/images/navigation/shipyard.png',
+        getName: d => d?.spacecraft_name || 'Spacecraft',
+        getDetails: d => d?.quantity ?? 1
+    },
+    mining: {
+        image: '/images/navigation/asteroidmap.png',
+        getName: () => 'Mining',
+        getDetails: d => d?.asteroid_name || 'Asteroid'
+    },
+    combat: {
+        image: '/images/navigation/simulator.png',
+        getName: () => 'Combat',
+        getDetails: d => `attack ${d?.defender_name || 'Defender'}`
+    },
+    research: {
+        image: '/images/navigation/research.png',
+        getName: () => 'Research',
+        getDetails: () => ''
+    }
 }
 
-export function useQueue(userId: number) {
+// ===== Helpers =====
+function calculateItemState(rawItem: RawQueueItem): ProcessedQueueItem {
+    const config = actionTypeConfig[rawItem.actionType] ?? actionTypeConfig['building']
+    const processedItem: ProcessedQueueItem = {
+        id: rawItem.id,
+        name: config.getName(rawItem.details),
+        image: config.image,
+        details: config.getDetails(rawItem.details),
+        completed: false,
+        rawData: rawItem,
+        remainingTime: 0,
+        formattedTime: '00:00',
+        processing: false,
+        status: rawItem.status ?? 'pending'
+    }
+
+    if (rawItem.endTime) {
+        const endTime = new Date(rawItem.endTime).getTime()
+        const currentTime = Date.now()
+        const diff = Math.max(0, endTime - currentTime)
+        processedItem.remainingTime = diff
+        processedItem.formattedTime = diff > 0 ? timeFormat(Math.floor(diff / 1000)) : '00:00'
+        processedItem.completed = diff <= 0
+    }
+
+    return processedItem
+}
+
+function clearAllTimers() {
+    if (queueState.timerInterval) clearInterval(queueState.timerInterval)
+    if (queueState.pollInterval) clearInterval(queueState.pollInterval)
+    if (queueState.debounceTimeout) clearTimeout(queueState.debounceTimeout)
+    queueState.timerInterval = queueState.pollInterval = queueState.debounceTimeout = undefined
+}
+
+// ===== Main Composable =====
+export function useQueue() {
     const { queueData, refreshQueue } = useQueueStore()
     const { refreshSpacecrafts } = useSpacecraftStore()
     const { refreshBuildings } = useBuildingStore()
     const { refreshAttributes } = useAttributeStore()
     const { refreshResources } = useResourceStore()
 
-    // ---- REACTIVE STATE ----
-    const queueItemStates = ref<SavedQueueItemState[]>(loadQueueItemStates(userId))
-    const processedQueueItems = ref<ProcessedQueueItem[]>([])
-    
-    let timerInterval: number | undefined
-    let processInterval: number | undefined
-    let processTimeout: number | undefined
-    let lastProcessCall = 0
+    // ---- Initialization ----
+    queueState.timerInterval = window.setInterval(updateTimers, 1000)
+    startPollInterval()
+    processQueueData()
 
+    watch(queueData, processQueueData, { deep: true })
 
-    // ---- API HELFER MIT THROTTLING ----
-    const processQueueThrottled = async () => {
-        const now = Date.now()
-        if (now - lastProcessCall < PROCESS_THROTTLE) return
-        lastProcessCall = now
+    // ---- API: Debounced & Locked ----
+    function processQueueDebounced() {
+        if (queueState.processTriggerPending) return
+        queueState.processTriggerPending = true
 
-        await api.queue.processQueue()
-        await refreshQueue()
-        await refreshSpacecrafts()
-        await refreshBuildings()
-        await refreshAttributes()
-        await refreshResources()
+        queueState.debounceTimeout = window.setTimeout(async () => {
+            queueState.debounceTimeout = undefined
+            await processQueueLocked()
+            queueState.processTriggerPending = false
+        }, PROCESS_DEBOUNCE)
     }
 
-    // ---- CALLBACKS ----
-    const timerCompleteCallbacks: ((item: ProcessedQueueItem) => void)[] = []
-    const onTimerComplete = (cb: (item: ProcessedQueueItem) => void) => {
-        timerCompleteCallbacks.push(cb)
+    async function processQueueLocked() {
+        if (queueState.processRunning) return
+        queueState.processRunning = true
+        try {
+            await api.queue.processQueue()
+            await Promise.all([
+                refreshQueue(),
+                refreshSpacecrafts(),
+                refreshBuildings(),
+                refreshAttributes(),
+                refreshResources()
+            ])
+        } finally {
+            queueState.processRunning = false
+        }
     }
 
-    // ---- ITEM STATE HELFER ----
-    const findState = (id: number) => queueItemStates.value.find(s => s.id === id)
-    const upsertState = (state: SavedQueueItemState) => {
-        const idx = queueItemStates.value.findIndex(s => s.id === state.id)
-        if (idx === -1) queueItemStates.value.push(state)
-        else queueItemStates.value[idx] = state
-        saveQueueItemStates(userId, queueItemStates.value)
-    }
-    const removeState = (id: number) => {
-        queueItemStates.value = queueItemStates.value.filter(s => s.id !== id)
-        saveQueueItemStates(userId, queueItemStates.value)
-    }
-
-      // ---- TIMER ----
-    const updateItemTimer = (item: ProcessedQueueItem) => {
+    // ---- Timer Handling ----
+    function updateItemTimer(item: ProcessedQueueItem) {
         if (!item.rawData.endTime || item.completed || item.status === 'pending') return
-        const endTime = new Date(item.rawData.endTime).getTime()
-        const currentTime = Date.now()
-        const diff = endTime - currentTime
-        if (diff <= 0) {
-            item.remainingTime = 0
-            item.formattedTime = '00:00'
-            item.completed = true
+
+        const updated = calculateItemState(item.rawData)
+        item.remainingTime = updated.remainingTime
+        item.formattedTime = updated.formattedTime
+        item.completed = updated.completed
+
+        if (item.completed) {
             item.processing = true
+            if (queueState.processingLock.has(item.id)) return
 
-            if (!item._callbackFired) { 
-                item._callbackFired = true
-                scheduleRefresh(item)
-                timerCompleteCallbacks.forEach(cb => cb(item))
+            queueState.processingLock.add(item.id)
+            try {
+                processQueueDebounced()
+            } finally {
+                setTimeout(() => queueState.processingLock.delete(item.id), 200)
             }
-
-            return
-        }
-        item.remainingTime = diff
-        item.formattedTime = timeFormat(Math.floor(diff / 1000))
-    }
-
-    const updateTimers = () => {
-        if (!processedQueueItems.value.length) return
-        processedQueueItems.value.forEach(updateItemTimer)
-        const hasActiveItems = processedQueueItems.value.some(item => !item.completed)
-        if (!hasActiveItems && timerInterval) {
-        clearInterval(timerInterval)
-        timerInterval = undefined
         }
     }
 
-      // ---- QUEUE REFRESH ----
+    function updateTimers() {
+        if (!queueState.processedQueueItems.value.length) return
+        queueState.processedQueueItems.value.forEach(updateItemTimer)
+
+        const hasActiveItems = queueState.processedQueueItems.value.some(item => !item.completed)
+        if (!hasActiveItems && queueState.timerInterval) {
+            clearInterval(queueState.timerInterval)
+            queueState.timerInterval = undefined
+        }
+    }
+
+    // ---- Queue Refresh ----
     async function refresh() {
         processQueueData()
         await refreshQueue()
     }
 
-    function scheduleRefresh(item: ProcessedQueueItem) {
-        if (processTimeout) return
-        processTimeout = window.setTimeout(async () => {
-            removeQueueItem(item.id)
+    // ---- Polling ----
+    function startPollInterval() {
+        stopPollInterval()
+        queueState.pollInterval = window.setInterval(async () => {
             await refresh()
-            processTimeout = undefined
-        }, REFRESH_TIMEOUT)
+        }, POLL_INTERVAL)
     }
 
-    function startProcessInterval() {
-        stopProcessInterval()
-        processInterval = window.setInterval(async () => {
-        if (processedQueueItems.value.some(item => item.processing)) {
-            await processQueueThrottled()
-        }
-        }, PROCESS_INTERVAL)
+    function stopPollInterval() {
+        if (queueState.pollInterval) clearInterval(queueState.pollInterval)
+        queueState.pollInterval = undefined
     }
 
-    function stopProcessInterval() {
-        if (processInterval) clearInterval(processInterval)
-        processInterval = undefined
-    }
-
-    const createOrUpdateItemState = (itemId: number): { itemState: SavedQueueItemState; isNew: boolean; hasChanged: boolean } => {
-        let itemState = findState(itemId)
-        let hasChanged = false
-
-        if (!itemState) {
-            itemState = { id: itemId, seen: false, showInfos: false }
-            upsertState(itemState)
-            hasChanged = true
-        }
-
-        const isNew = !itemState.seen
-        if (isNew) {
-            itemState.seen = true
-            hasChanged = true
-            upsertState(itemState)
-        }
-
-        return { itemState, isNew, hasChanged }
-    }
-
-    const getImageByActionType = (actionType: string): string => {
-        const images: Record<string, string> = {
-            building: '/images/navigation/buildings.png',
-            produce: '/images/navigation/shipyard.png',
-            mining: '/images/navigation/asteroidmap.png',
-            research: '/images/navigation/research.png',
-            combat: '/images/navigation/simulator.png',
-        }
-        return images[actionType] ?? images['building'] ?? ''
-    }
-
-    const getNameByActionType = (actionType: string, details?: QueueItemDetails): string => {
-        if (!details) return actionType
-
-        if (actionType === 'building') return details.building_name || 'Building'
-        if (actionType === 'produce') return details.spacecraft_name || 'Spacecraft'
-        if (actionType === 'mining') return 'Mining'
-        if (actionType === 'combat') return 'Combat'
-        return actionType
-    }
-
-    const getDetailsByActionType = (actionType: string, details?: QueueItemDetails): string | number => {
-        if (!details) return ''
-
-        if (actionType === 'building') return details.next_level ?? 1
-        if (actionType === 'produce') return details.quantity ?? 1
-        if (actionType === 'mining') return details.asteroid_name || 'Asteroid'
-        if (actionType === 'combat') return `attack ${details.defender_name || 'Defender'}`
-        return ''
-    }
-
-    // ---- DATEN VERARBEITEN ----
+    // ---- Data Processing ----
     function processQueueData(): void {
-    if (!(queueData.value?.length)) {
-        processedQueueItems.value = []
-        return
-    }
-
-    const newItems: ProcessedQueueItem[] = []
-
-    queueData.value.forEach(rawItem => {
-        const { itemState, isNew, hasChanged } = createOrUpdateItemState(rawItem.id)
-
-        const processedItem: ProcessedQueueItem = {
-        id: rawItem.id,
-        name: getNameByActionType(rawItem.actionType, rawItem.details),
-        image: getImageByActionType(rawItem.actionType),
-        details: getDetailsByActionType(rawItem.actionType, rawItem.details),
-        showInfos: itemState.showInfos,
-        isNew,
-        rawData: rawItem,
-        completed: false,
-        remainingTime: 0,
-        formattedTime: '00:00',
-        processing: false,
-        status: rawItem.status ?? 'pending'
+        if (!(queueData.value?.length)) {
+            queueState.processedQueueItems.value = []
+            return
         }
 
-        if (rawItem.endTime) {
-            updateItemTimer(processedItem)
+        const newItems: ProcessedQueueItem[] = []
+        queueData.value.forEach(rawItem => {
+            newItems.push(calculateItemState(rawItem))
+        })
+
+        queueState.processedQueueItems.value = newItems
+
+        // Falls Timer nicht läuft → neu starten
+        if (!queueState.timerInterval && newItems.length > 0) {
+            queueState.timerInterval = window.setInterval(updateTimers, 1000)
         }
-
-        // Wenn das Item bereits abgeschlossen ist, sofort Callbacks ausführen
-        if (processedItem.completed) {
-            timerCompleteCallbacks.forEach(cb => cb(processedItem))
-        }
-
-        newItems.push(processedItem)
-    })
-
-    // Reset des "isNew"-Flags nach kurzer Verzögerung (für Animationen)
-    newItems.forEach(item => {
-        if (item.isNew) {
-        setTimeout(() => {
-            const foundItem = processedQueueItems.value.find(i => i.id === item.id)
-            if (foundItem) foundItem.isNew = false
-        }, 1000)
-        }
-    })
-
-    processedQueueItems.value = newItems
     }
 
     function removeQueueItem(id: number) {
-        removeState(id)
-        processedQueueItems.value = processedQueueItems.value.filter(i => i.id !== id)
+        queueState.processedQueueItems.value = queueState.processedQueueItems.value.filter(i => i.id !== id)
     }
-
-    const toggleInfo = (item: ProcessedQueueItem): void => {
-        const foundItem = processedQueueItems.value.find(i => i.id === item.id)
-        if (foundItem) {
-            foundItem.showInfos = !foundItem.showInfos
-            const itemState = findState(item.id)
-            if (itemState) {
-                itemState.showInfos = foundItem.showInfos
-                upsertState(itemState)
-            }
-        }
-    }
-
-    const isDefendCombatAction = (item: RawQueueItem): boolean => {
-        return item.actionType === 'combat' && item.details?.defender_id === userId
-    }
-
-    // ---- LIFECYCLE ----
-    onMounted(() => {
-        processQueueData()
-        timerInterval = window.setInterval(updateTimers, 1000)
-        startProcessInterval()
-    })
-
-    onUnmounted(() => {
-        if (timerInterval) clearInterval(timerInterval)
-        stopProcessInterval()
-        if (processTimeout) clearTimeout(processTimeout)
-    })
-
-    watch(queueData, processQueueData, { deep: true })
 
     return {
-        queueItemStates,
-        processedQueueItems,
+        processedQueueItems: queueState.processedQueueItems,
         processQueueData,
-        processQueueThrottled,
-        startProcessInterval,
-        stopProcessInterval,
+        processQueueDebounced,
+        startPollInterval,
+        stopPollInterval,
         refresh,
         updateTimers,
         updateItemTimer,
-        toggleInfo,
-        removeQueueItem,
-        isDefendCombatAction,
-        onTimerComplete, // <--- Callback registrieren
+        removeQueueItem
     }
+}
+
+// ===== Cleanup =====
+export function resetQueueSingleton() {
+    queueState.initialized = false
+    clearAllTimers()
+    queueState.processRunning = false
+    queueState.processTriggerPending = false
+    queueState.processingLock.clear()
+    queueState.processedQueueItems.value = []
 }

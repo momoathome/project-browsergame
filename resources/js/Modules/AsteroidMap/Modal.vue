@@ -12,7 +12,6 @@ import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useSpacecraftUtils } from '@/Composables/useSpacecraftUtils';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
-import { useQueue } from '@/Composables/useQueue'
 import type { Station, Spacecraft, Asteroid, Rebel } from '@/types/types';
 
 type Role = 'Fighter' | 'Miner' | 'Transporter'
@@ -73,18 +72,16 @@ const rebel = computed<Rebel>(() => props.content.data as Rebel);
 const userStation = usePage().props.stations.find(station =>
   station.user_id === usePage().props.auth.user.id
 );
-const { refreshQueue } = useQueueStore();
+const { queueData, refreshQueue } = useQueueStore();
 const { refreshSpacecrafts } = useSpacecraftStore();
 const { buildings } = useBuildingStore();
-
-const { processedQueueItems } = useQueue(usePage().props.auth.user.id)
 
 const dockSlots = computed(() => {
   const hangar = buildings.value.find(b => b.effect?.current?.dock_slots);
   return hangar?.effect?.current?.dock_slots ?? 0;
 });
-const totalMiningOperations = computed(() => (processedQueueItems.value ?? []).reduce((acc, item) => {
-  if (item.rawData.actionType === 'mining') {
+const totalMiningOperations = computed(() => (queueData.value ?? []).reduce((acc, item) => {
+  if (item.actionType === 'mining') {
     acc++;
   }
   return acc;

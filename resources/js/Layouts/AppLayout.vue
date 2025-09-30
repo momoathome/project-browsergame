@@ -9,7 +9,7 @@ import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useAttributeStore } from '@/Composables/useAttributeStore';
 import { useResourceStore } from '@/Composables/useResourceStore';
-import { useQueue } from '@/Composables/useQueue'
+import { useQueueStore } from '@/Composables/useQueueStore';
 
 const props = defineProps<{
   title: string
@@ -22,42 +22,18 @@ declare global {
 }
 
 const page = usePage()
-const userId = page.props.auth?.user?.id ?? null;
 const mainRef = ref<HTMLElement | null>(null)
 const showSideOverview = ref(true)
 let observer: MutationObserver | null = null
 
-const {
-  processedQueueItems,
-  isDefendCombatAction,
-  onTimerComplete,
-  refresh,
-  processQueueThrottled, // throttled API call
-  startProcessInterval,
-  stopProcessInterval
-} = useQueue(userId)
-
 onMounted(async () => {
-  // wenn Timer von einem Item endet → Composable triggert Refresh selbst
-  onTimerComplete(async (item) => {
-    //
-  })
-
-  await refresh()
-  await useSpacecraftStore().refreshSpacecrafts();
-  await useBuildingStore().refreshBuildings();
-  await useAttributeStore().refreshAttributes();
-  await useResourceStore().refreshResources();
-
-  window.Echo.private(`user.combat.${userId}`)
-    .listen('.user.attacked', refresh)
-
-  // Falls schon aktive Items → sofort manuell anstoßen
-  if (processedQueueItems.value.some(i => i.processing && i.rawData.actionType !== 'mining')) {
-    await processQueueThrottled()
-  }
-
-  startProcessInterval()
+  await Promise.all([
+      useQueueStore().refreshQueue(),
+      useSpacecraftStore().refreshSpacecrafts(),
+      useBuildingStore().refreshBuildings(),
+      useAttributeStore().refreshAttributes(),
+      useResourceStore().refreshResources()
+  ])
 })
 
 function checkCanvas() {
@@ -70,11 +46,6 @@ onMounted(() => {
   if (mainRef.value) {
     observer.observe(mainRef.value, { childList: true, subtree: true })
   }
-})
-
-onUnmounted(() => {
-  stopProcessInterval()
-  observer?.disconnect()
 })
 </script>
 

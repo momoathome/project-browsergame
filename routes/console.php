@@ -39,7 +39,7 @@ Artisan::command('actionqueue:reset-stuck', function () {
 
 Artisan::command('actionqueue:processbatch', function () {
     $batchSize = 5;  // Anzahl der IDs pro Job
-    $chunkSize = 50; // Anzahl der IDs, die auf einmal aus DB geholt werden
+    $chunkSize = 25; // Anzahl der IDs, die auf einmal aus DB geholt werden
 
     ActionQueue::where('status', QueueStatusType::STATUS_IN_PROGRESS)
         ->where('end_time', '<=', now())
@@ -67,4 +67,4 @@ Artisan::command('game:rebel-generate-all', function (
         $spacecraftService->spendResourcesForFleet($rebel);
     }
     $this->info('Ressourcen und Spacecrafts generiert!');
-})->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->everyFifteenMinutes();
+})->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->everyHour();

@@ -243,8 +243,6 @@ export interface ProcessedQueueItem {
   name: string;
   image: string;
   details: string | number;
-  showInfos: boolean;
-  isNew: boolean;
   rawData: RawQueueItem;
   remainingTime?: number;
   formattedTime?: string;
@@ -252,12 +250,6 @@ export interface ProcessedQueueItem {
   processing: boolean;
   status: string;
   _callbackFired?: boolean;
-}
-
-export interface SavedQueueItemState {
-  id: number;
-  seen: boolean;
-  showInfos: boolean;
 }
 
 // Typ für Spacecraft-Flotten in Missionen

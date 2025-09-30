@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { useQueueStore } from '@/Composables/useQueueStore';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueue } from '@/Composables/useQueue'
@@ -9,10 +8,10 @@ import QueueSlot from '@/Modules/App/QueueSlot.vue';
 import { timeFormat, numberFormat } from '@/Utils/format';
 
 const page = usePage()
-
+const userId = page.props.auth?.user?.id ?? null;
 const { spacecrafts } = useSpacecraftStore();
 const { buildings } = useBuildingStore();
-const { processedQueueItems } = useQueue(page.props.auth.user.id)
+const { processedQueueItems, refresh } = useQueue()
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -80,15 +79,15 @@ const totalCombatOperations = computed(() => (sortedQueueItems.value ?? []).redu
 }, 0));
 
 const buildingSlots = computed(() => {
-  const core = buildings.value.find(b => b.effect?.current?.building_slots);
+  const core = buildings.value?.find(b => b.effect?.current?.building_slots);
   return core?.effect?.current?.building_slots ?? 0;
 });
 const productionSlots = computed(() => {
-  const shipyard = buildings.value.find(b => b.effect?.current?.production_slots);
+  const shipyard = buildings.value?.find(b => b.effect?.current?.production_slots);
   return shipyard?.effect?.current?.production_slots ?? 0;
 });
 const dockSlots = computed(() => {
-  const hangar = buildings.value.find(b => b.effect?.current?.dock_slots);
+  const hangar = buildings.value?.find(b => b.effect?.current?.dock_slots);
   return hangar?.effect?.current?.dock_slots ?? 0;
 });
 
@@ -103,14 +102,18 @@ onMounted(() => {
   if (stored !== null) {
     miningSlotsCollapsed.value = stored === 'true';
   }
+
+  window.Echo.private(`user.combat.${userId}`)
+    .listen('.user.attacked', refresh)
 });
 
 const fleetSummary = computed(() => ({
-  totalCount: spacecrafts.value.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
-  totalCombat: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.combat * spacecraft.count), 0),
-  totalCargo: spacecrafts.value.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
+  totalCount: spacecrafts.value?.reduce((acc, spacecraft) => acc + spacecraft.count, 0),
+  totalAttack: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.attack * spacecraft.count), 0),
+  totalDefense: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.defense * spacecraft.count), 0),
+  totalCargo: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
+  totalInOrbit: spacecrafts.value?.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0),
   totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
-  totalInOrbit: spacecrafts.value.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0),
 }));
 
 const totalInCombat = computed(() => {

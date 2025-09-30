@@ -48,7 +48,6 @@ class SpacecraftProductionService
 
         $targetQuantity = $spacecraft->count + $queuedQuantity + $quantity;
 
-        Log::info("Starting production of {$spacecraft}");
         try {
             DB::transaction(function () use ($user, $spacecraft, $quantity, $targetQuantity) {
                 $totalCosts = $this->getSpacecraftsProductionCosts($spacecraft, $quantity);

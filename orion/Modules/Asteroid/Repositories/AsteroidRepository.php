@@ -80,10 +80,14 @@ class AsteroidRepository
                 ->first();
                 
             if ($amount > 0) {
-                $asteroidResource->amount = $amount;
-                $asteroidResource->save();
+                if ($asteroidResource) {
+                    $asteroidResource->amount = $amount;
+                    $asteroidResource->save();
+                }
             } else {
-                $asteroidResource->delete();
+                if ($asteroidResource) {
+                    $asteroidResource->delete();
+                }
             }
         }
         

@@ -8,7 +8,7 @@ import { timeFormat } from '@/Utils/format'
 import type { RawQueueItem, ProcessedQueueItem, QueueItemDetails } from '@/types/types'
 import { api } from '@/Services/api'
 
-const PROCESS_DEBOUNCE = 2000 // ms
+const PROCESS_DEBOUNCE = 5000 // ms
 const POLL_INTERVAL = 30_000 // 30 Sekunden als Fallback
 
 // ===== Singleton State =====

@@ -61,12 +61,12 @@ class BuildingUpgradeService
             $this->userResourceService->validateUserHasEnoughResources($user->id, $currentCosts);
 
             // Führe das Upgrade durch
-            DB::transaction(function () use ($user, $building, $currentCosts, $targetLevel) {
+            DB::transaction(function () use ($user, $building, $currentCosts, $targetLevel, $coreBuilding) {
                 // Ressourcen abziehen
                 $this->userResourceService->decrementUserResources($user, $currentCosts);
 
                 // Upgrade zur Queue hinzufügen
-                $this->addBuildingUpgradeToQueue($user->id, $building, $targetLevel);
+                $this->addBuildingUpgradeToQueue($user->id, $building, $targetLevel, $coreBuilding);
             });
 
             broadcast(new UpdateUserResources($user));
@@ -151,19 +151,10 @@ class BuildingUpgradeService
         }
     }
 
-    private function addBuildingUpgradeToQueue(int $userId, Building $building, int $targetLevel): void
+    private function addBuildingUpgradeToQueue(int $userId, Building $building, int $targetLevel, Building $coreBuilding): void
     {
-        $coreBuilding = Building::where('user_id', $userId)
-        ->whereHas('details', function ($query) {
-            $query->where('name', BuildingType::CORE->value);
-        })
-        ->first();
-
-        $buildingSlots = 1;
-        if ($coreBuilding) {
-            $extra = app(BuildingEffectService::class)->getEffects('Core', $coreBuilding->level);
-            $buildingSlots = $extra['building_slots'] ?? 1;
-        }
+        $extra = app(BuildingEffectService::class)->getEffects('Core', $coreBuilding->level);
+        $buildingSlots = $extra['building_slots'] ?? 1;
 
         $build_time = $this->buildingProgressionService->calculateBuildTime($userId, $building, $targetLevel);
 
@@ -175,7 +166,8 @@ class BuildingUpgradeService
                 'building_name' => $building->details->name,
                 'current_level' => $targetLevel - 1,
                 'next_level' => $targetLevel,
-                'duration' => $build_time
+                'duration' => $build_time,
+                'building_slots' => $buildingSlots
             ],
             $buildingSlots
         );
@@ -233,6 +225,7 @@ class BuildingUpgradeService
 
                 $this->influenceService->handleBuildingUpgradeCompleted($userId, $this->buildingProgressionService->calculateUpgradeCost($building, $building->level));
 
+                /* unlock spacecrafts */
                 if ($building->details->name === BuildingType::SHIPYARD->value) {
                     $this->shipyardEffectHandlerService->handleShipyardUpgrade($userId, $upgradedBuilding);
                 }

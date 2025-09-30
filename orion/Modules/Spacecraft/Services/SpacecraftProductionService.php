@@ -225,11 +225,8 @@ class SpacecraftProductionService
         })
         ->first();
 
-        $productionSlots = 1;
-        if ($shipyardBuilding) {
-            $extra = app(BuildingEffectService::class)->getEffects('Shipyard', $shipyardBuilding->level);
-            $productionSlots = $extra['production_slots'] ?? 1;
-        }
+        $extra = app(BuildingEffectService::class)->getEffects('Shipyard', $shipyardBuilding->level);
+        $productionSlots = $extra['production_slots'] ?? 1;
         
         $build_time = $this->calculateSpacecraftBuildTime($userId, $spacecraft, $quantity);
 

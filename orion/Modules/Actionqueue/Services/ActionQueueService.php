@@ -214,7 +214,7 @@ class ActionQueueService
         int $targetId,
         int $duration,
         array $details,
-        int $productionSlots = 1
+        int $productionSlots
     ): ActionQueue {
         $inProgressCount = $this->actionqueueRepository->countInProgressProduceByUser($userId);
 
@@ -241,12 +241,12 @@ class ActionQueueService
         int $targetId,
         int $duration,
         array $details,
-        int $buildingSlots = 1
+        int $buildingSlots
     ): ActionQueue {
         // Global: Wie viele Gebäude-Upgrades laufen gerade?
         $globalInProgress = $this->actionqueueRepository->countInProgressBuildingByUser($userId);
         // Pro Gebäude: Läuft für dieses Gebäude schon ein Upgrade?
-        $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
+        $buildingInProgress = $this->actionqueueRepository->countInProgressOrPendingBuildingByUserAndTarget($userId, $targetId);
 
         $status = ($globalInProgress < $buildingSlots && $buildingInProgress === 0)
             ? QueueStatusType::STATUS_IN_PROGRESS
@@ -266,7 +266,7 @@ class ActionQueueService
     /**
      * Promotet das nächste Pending für Spacecrafts (global slots)
      */
-    public function promoteNextPendingProduce(int $userId, int $productionSlots = 1): void
+    public function promoteNextPendingProduce(int $userId, int $productionSlots): void
     {
         $inProgressCount = $this->actionqueueRepository->countInProgressProduceByUser($userId);
 
@@ -286,7 +286,7 @@ class ActionQueueService
     /**
      * Promotet das nächste Pending für Gebäude
      */
-    public function promoteNextPendingBuilding(int $userId, int $buildingSlots = 1): void
+    public function promoteNextPendingBuilding(int $userId, int $buildingSlots): void
     {
         $globalInProgress = $this->actionqueueRepository->countInProgressBuildingByUser($userId);
     
@@ -294,13 +294,16 @@ class ActionQueueService
             return;
         }
     
-        // Hole alle Pending-Buildings, sortiert nach Erstellungsdatum
         $pendingBuildings = $this->actionqueueRepository->getAllPendingBuildingsByUser($userId);
     
         foreach ($pendingBuildings as $pending) {
+            if ($globalInProgress >= $buildingSlots) {
+                break; // Alle Slots sind belegt
+            }
             $targetId = $pending->target_id;
             $buildingInProgress = $this->actionqueueRepository->countInProgressBuildingByUserAndTarget($userId, $targetId);
     
+            // Nur wenn für dieses Gebäude kein anderes Upgrade läuft
             if ($buildingInProgress === 0) {
                 $duration = $pending->details['duration'] ?? 60;
                 $this->actionqueueRepository->update($pending, [
@@ -308,7 +311,7 @@ class ActionQueueService
                     'start_time' => now(),
                     'end_time' => now()->addSeconds($duration),
                 ]);
-                break; // Nur das erste passende Pending promoten!
+                $globalInProgress++; // Slot belegen
             }
         }
     }

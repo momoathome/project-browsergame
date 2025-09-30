@@ -166,6 +166,18 @@ readonly class ActionQueueRepository
             ->count();
     }
 
+    public function countInProgressOrPendingBuildingByUserAndTarget(int $userId, int $targetId): int
+    {
+        return ActionQueue::where('user_id', $userId)
+            ->where('action_type', QueueActionType::ACTION_TYPE_BUILDING)
+            ->where('target_id', $targetId)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PENDING
+            ])
+            ->count();
+    }
+
     public function getFirstPendingProduceByUser(int $userId): ?ActionQueue
     {
         return ActionQueue::where('user_id', $userId)

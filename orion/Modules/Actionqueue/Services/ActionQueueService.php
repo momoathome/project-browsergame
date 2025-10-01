@@ -184,6 +184,10 @@ class ActionQueueService
                 $action->status = QueueStatusType::STATUS_FAILED;
             }
 
+            $action->save();
+            $this->archiveCompletedQueue($action);
+            $this->afterActionCompleted($action, $actionType);
+
             return $result;
         } catch (\Exception $e) {
             Log::error("Fehler bei der Aktionsverarbeitung", [
@@ -194,23 +198,6 @@ class ActionQueueService
             ]);
             $action->status = QueueStatusType::STATUS_FAILED;
             return null;
-        }
-
-        $action->save();
-        $this->archiveCompletedQueue($action);
-
-        if ($action->status === QueueStatusType::STATUS_COMPLETED) {
-            // Unterschied nach ActionType
-            if ($actionType === QueueActionType::ACTION_TYPE_PRODUCE) {
-                // productionSlots aus details holen, fallback 1
-                $productionSlots = $action->details['production_slots'] ?? 1;
-                $this->promoteNextPendingProduce($action->user_id, $productionSlots);
-            } elseif ($actionType === QueueActionType::ACTION_TYPE_BUILDING) {
-                $buildingSlots = $action->details['building_slots'] ?? 1;
-                $this->promoteNextPendingBuilding($action->user_id, $buildingSlots);
-            } else {
-                // Optional: für andere Typen nichts tun oder eigene Logik
-            }
         }
     }
 
@@ -223,6 +210,23 @@ class ActionQueueService
             // Kopiere in Archive-Tabelle und lösche original
             $this->actionQueueArchiveService->createArchiveEntry($action);
             $this->deleteFromQueue($action->id);
+        }
+    }
+
+    private function afterActionCompleted(ActionQueue $action, QueueActionType $actionType)
+    {
+        if ($action->status === QueueStatusType::STATUS_COMPLETED) {
+            // Unterschied nach ActionType
+            if ($actionType === QueueActionType::ACTION_TYPE_PRODUCE) {
+                // productionSlots aus details holen, fallback 1
+                $productionSlots = $action->details['production_slots'] ?? 1;
+                $this->promoteNextPendingProduce($action->user_id, $productionSlots);
+            } elseif ($actionType === QueueActionType::ACTION_TYPE_BUILDING) {
+                $buildingSlots = $action->details['building_slots'] ?? 1;
+                $this->promoteNextPendingBuilding($action->user_id, $buildingSlots);
+            } else {
+                // Optional: für andere Typen nichts tun oder eigene Logik
+            }
         }
     }
 

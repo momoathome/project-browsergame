@@ -76,7 +76,7 @@ class SpacecraftProductionService
                 'message' => $e->getMessage()
             ];
         } catch (\Exception $e) {
-            \Log::error("Error occurred while starting spacecraft production:", [
+            Log::error("Error occurred while starting spacecraft production:", [
                 'user_id' => $user->id,
                 'spacecraft_id' => $spacecraft->id,
                 'quantity' => $quantity,

@@ -56,8 +56,8 @@ readonly class CombatOrchestrationService
     
         // Formatiere und bereite den Kampf vor
         $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
-    
-        $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($attacker, collect($attackerSpacecrafts));
+        $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attacker->id);
+        $result = $this->asteroidExplorer->resolveSpacecraftsAndIds(collect($attackerSpacecrafts), $allSpacecrafts);
 
         $spacecraftsWithDetails = $result['spacecraftsWithDetails'];
         $filteredSpacecraftsById = $result['spacecraftsById'];

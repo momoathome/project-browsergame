@@ -161,49 +161,6 @@ class AsteroidAutoMineService
         return [$minerAssignment, $cargoAssigned];
     }
 
-    public function startAutoMineMissions($user, array $missions): array
-    {
-        $results = [];
-        // Nur einmal laden!
-        $availableSpacecrafts = $this->spacecraftService->getAvailableSpacecraftsByUserIdWithDetails($user->id);
-
-        foreach (array_chunk($missions, 20) as $missionBatch) {
-            foreach ($missionBatch as $mission) {
-                $asteroidId = $mission['asteroid_id'];
-                $spacecrafts = collect($mission['spacecrafts']);
-
-                // Prüfe, ob noch genug Raumschiffe verfügbar sind
-                foreach ($spacecrafts as $type => $amount) {
-                    $available = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type)?->available_count ?? 0;
-                    if ($available < $amount) {
-                        $results[] = [
-                            'success' => false,
-                            'message' => "Not enough $type available for asteroid $asteroidId.",
-                        ];
-                        continue 2; // nächste Mission
-                    }
-                }
-
-                // Lokale Kopie aktualisieren (Raumschiffe abziehen)
-                foreach ($spacecrafts as $type => $amount) {
-                    $sc = $availableSpacecrafts->first(fn($sc) => $sc->details->name === $type);
-                    if ($sc) {
-                        $sc->available_count -= $amount;
-                    }
-                }
-
-                $result = $this->asteroidService->startAsteroidMining($user, new AsteroidExploreRequest([
-                    'asteroid_id' => $asteroidId,
-                    'spacecrafts' => $spacecrafts,
-                ]));
-                $results[] = $result;
-            }
-        }
-        usleep(1000000);
-
-        return $results;
-    }
-
     // Overflow: Ignoriere Storage-Limit, extrahiere alles
     private function extractOverflow($asteroids, $availableSpacecrafts, $user, $dockSlots = 1, $currentMiningOperations = 0): array
     {

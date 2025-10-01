@@ -82,11 +82,8 @@ class AsteroidExplorer
      * - die passenden Spacecraft-Modelle mit Details
      * - das Mapping [details_id => amount]
      */
-    public function resolveSpacecraftsAndIds($user, Collection $spaceCrafts): array
+    public function resolveSpacecraftsAndIds(Collection $spacecrafts, Collection $spacecraftsWithDetails): array
     {
-        // Hole alle passenden Spacecrafts mit Details
-        $spacecraftsWithDetails = $this->getSpacecraftsWithDetails($user, $spaceCrafts);
-    
         // Mappe Name => details_id
         $nameToId = [];
         foreach ($spacecraftsWithDetails as $sc) {
@@ -95,7 +92,7 @@ class AsteroidExplorer
     
         // Baue neues Array: [details_id => amount]
         $mapped = collect();
-        foreach ($spaceCrafts as $name => $amount) {
+        foreach ($spacecrafts as $name => $amount) {
             if (isset($nameToId[$name])) {
                 $mapped[$nameToId[$name]] = $amount;
             }

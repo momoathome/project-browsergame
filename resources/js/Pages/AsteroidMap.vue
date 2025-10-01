@@ -615,7 +615,7 @@ function drawInfluenceLayer() {
   ctx.translate(pointX.value, pointY.value);
   ctx.scale(zoomLevel.value, zoomLevel.value);
 
-  const influenceScale = 20;
+  const influenceScale = 25;
 
   playerInfluences.value.forEach(player => {
     const radius = Math.max(20, Math.sqrt(player.influence) * influenceScale);

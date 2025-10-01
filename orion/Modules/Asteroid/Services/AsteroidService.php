@@ -69,24 +69,34 @@ class AsteroidService
             $asteroidId = $request->integer('asteroid_id');
             $spacecrafts = $request->collect('spacecrafts');
             $asteroid = $this->find($asteroidId);
+
+            $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spacecrafts);
+            $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+            $locks = $this->spacecraftLockService->getLocksForUser($user->id);
+            $dockSlots = $this->getDockSlotsForUser($user);
+            $currentMiningOperations = $this->queueService
+                ->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_MINING)
+                ->count();
+
+            $asteroid = $this->validateMiningOperation(
+                $asteroid,
+                $spacecrafts,
+                $allSpacecrafts,
+                $locks,
+                $dockSlots,
+                $currentMiningOperations
+            );
+
+            $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
+            $duration = $this->asteroidExplorer->calculateTravelDuration(
+                $result['spacecraftsWithDetails'],
+                $user,
+                $asteroid,
+                QueueActionType::ACTION_TYPE_MINING,
+                $filteredSpacecrafts
+            );
     
-            DB::transaction(function () use ($user, $asteroid, $spacecrafts) {
-                $asteroid = $this->validateMiningOperation($asteroid, $user, $spacecrafts);
-
-                $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spacecrafts);
-
-                $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($user, $filteredSpacecrafts);
-
-                $spacecraftsWithDetails = $result['spacecraftsWithDetails'];
-                $filteredSpacecraftsById = $result['spacecraftsById'];
-
-                $duration = $this->asteroidExplorer->calculateTravelDuration(
-                    $spacecraftsWithDetails,
-                    $user,
-                    $asteroid,
-                    QueueActionType::ACTION_TYPE_MINING,
-                    $filteredSpacecrafts
-                );
+            DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $result, $duration) {
 
                 $queueEntry = $this->queueService->addToQueue(
                     $user->id,
@@ -104,7 +114,7 @@ class AsteroidService
                 );
 
                 // Sperre die Raumschiffe für andere Aktionen
-                $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
+                $this->spacecraftLockService->lockForQueue($queueEntry->id, $result['spacecraftsById']);
             });
     
             return [
@@ -121,43 +131,114 @@ class AsteroidService
         }
     }
 
-    private function validateMiningOperation(Asteroid $asteroid, User $user, Collection $spaceCrafts): Asteroid
+    public function startAsteroidMiningBatch(User $user, array $missions): array
     {
-        if (!$asteroid) {
-            throw new \Exception("Asteroid not found");
+        $results = [];
+
+        // Preload einmal
+        $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+        $locks = $this->spacecraftLockService->getLocksForUser($user->id);
+        $dockSlots = $this->getDockSlotsForUser($user);
+        $currentMiningOperations = $this->queueService
+            ->getInProgressQueuesFromUserByType($user->id, QueueActionType::ACTION_TYPE_MINING)
+            ->count();
+
+        foreach ($missions as $mission) {
+            try {
+                $asteroid = $this->find($mission['asteroid_id']);
+                $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts(collect($mission['spacecrafts']));
+
+                // Validierung mit bereits geladenen Daten
+                $this->validateMiningOperation(
+                    $asteroid,
+                    $filteredSpacecrafts,
+                    $allSpacecrafts,
+                    $locks,
+                    $dockSlots,
+                    $currentMiningOperations
+                );
+
+                // Auflösen & Dauer berechnen
+                $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
+                $duration = $this->asteroidExplorer->calculateTravelDuration(
+                    $result['spacecraftsWithDetails'],
+                    $user,
+                    $asteroid,
+                    QueueActionType::ACTION_TYPE_MINING,
+                    $filteredSpacecrafts
+                );
+
+                // Queue + Locks atomar schreiben
+                DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $result, $duration) {
+                    $queueEntry = $this->queueService->addToQueue(
+                        $user->id,
+                        QueueActionType::ACTION_TYPE_MINING,
+                        $asteroid->id,
+                        $duration,
+                        [
+                            'asteroid_name' => $asteroid->name,
+                            'spacecrafts' => $filteredSpacecrafts,
+                            'target_coordinates' => [
+                                'x' => $asteroid->x,
+                                'y' => $asteroid->y,
+                            ],
+                        ]
+                    );
+
+                    $this->spacecraftLockService->lockForQueue($queueEntry->id, $result['spacecraftsById']);
+                });
+
+                // Zähler hoch → damit Folge-Missionen korrekte DockSlot-Prüfung haben
+                $currentMiningOperations++;
+
+                $results[] = [
+                    'success' => true,
+                    'asteroid' => $asteroid->name,
+                    'message' => "Mining operation for asteroid {$asteroid->name} started.",
+                ];
+            } catch (\Exception $e) {
+                $results[] = [
+                    'success' => false,
+                    'asteroid' => $mission['asteroid_id'],
+                    'message' => "Failed: " . $e->getMessage(),
+                ];
+            }
         }
-    
-        if ($spaceCrafts->isEmpty()) {
-            throw new \Exception("No spacecrafts selected");
-        }
-    
+
+        return $results;
+    }
+
+    private function getDockSlotsForUser(User $user): int
+    {
         $hangarBuilding = Building::where('user_id', $user->id)
             ->whereHas('details', function ($query) {
                 $query->where('name', BuildingType::HANGAR->value);
             })
             ->first();
-    
+
         $dockSlots = 1;
         if ($hangarBuilding) {
             $extra = app(BuildingEffectService::class)->getEffects('Hangar', $hangarBuilding->level);
             $dockSlots = $extra['dock_slots'] ?? 1;
         }
+
+        return $dockSlots;
+    }
+
+    private function validateMiningOperation(Asteroid $asteroid, Collection $spacecrafts, Collection $allSpacecrafts, Collection $locks, int $dockSlots, int $currentMiningOperations): Asteroid
+    {
+        if (!$asteroid) {
+            throw new \Exception("Asteroid not found");
+        }
     
-        $currentMiningOperations = $this->queueService->getInProgressQueuesFromUserByType(
-            $user->id,
-            QueueActionType::ACTION_TYPE_MINING
-        )->count();
-    
+        if ($spacecrafts->isEmpty()) {
+            throw new \Exception("No spacecrafts selected");
+        }
+
         if ($currentMiningOperations >= $dockSlots) {
             throw new \Exception("Not enough dock slots available. Current: $currentMiningOperations, Max: $dockSlots");
         }
-    
-        // Hole alle Spacecrafts mit Details
-        $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
-    
-        // Hole alle aktiven Locks für den User
-        $locks = $this->spacecraftLockService->getLocksForUser($user->id);
-    
+
         // Summiere pro Typ (details_id) die gelockte Anzahl
         $lockedCounts = [];
         foreach ($locks as $lock) {
@@ -175,7 +256,7 @@ class AsteroidService
         }
     
         // Für jeden Typ, der versendet werden soll, prüfen ob genug verfügbar sind
-        foreach ($spaceCrafts as $type => $amount) {
+        foreach ($spacecrafts as $type => $amount) {
             if ($amount <= 0) continue;
             if (!isset($availableStatus[$type])) {
                 throw new \Exception("User does not own spacecraft type: $type");

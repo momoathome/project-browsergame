@@ -86,7 +86,7 @@ class AsteroidController extends Controller
         $user = $this->authManager->user();
         $missions = $request->input('missions', []);
 
-        $results = $this->asteroidAutoMineService->startAutoMineMissions($user, $missions);
+        $results = $this->asteroidService->startAsteroidMiningBatch($user, $missions);
 
         return response()->json([
             'results' => $results

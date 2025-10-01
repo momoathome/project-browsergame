@@ -31,7 +31,6 @@ class HandleAsteroidMined
                 $event->asteroid->y,
                 15000
             );
-            Log::info('Asteroids generated successfully');
         } catch (\Exception $e) {
             Log::error('Asteroid generation failed: '.$e->getMessage());
         }

@@ -17,10 +17,13 @@ class ReloadFrontendCanvas implements ShouldBroadcastNow
 {
     use InteractsWithSockets, SerializesModels;
 
-    public $asteroid;
-    public function __construct(Asteroid $asteroid)
+    public $asteroids;
+    public $newAsteroids;
+
+    public function __construct(?array $asteroids = null, ?array $newAsteroids = null)
     {
-        $this->asteroid = $asteroid;
+        $this->asteroids = $asteroids;
+        $this->newAsteroids = $newAsteroids;
     }
 
     public function broadcastOn()
@@ -36,7 +39,8 @@ class ReloadFrontendCanvas implements ShouldBroadcastNow
     public function broadcastWith()
     {
         return [
-            'asteroid' => $this->asteroid->load(['resources']),
+            'mined_asteroids' => $this->asteroids,
+            'new_asteroids' => $this->newAsteroids,
         ];
     }
 }

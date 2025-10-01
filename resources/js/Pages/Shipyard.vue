@@ -15,7 +15,7 @@ import TertiaryButton from '@/Components/TertiaryButton.vue';
 const { spacecrafts, refreshSpacecrafts } = useSpacecraftStore();
 const { queueData, refreshQueue } = useQueueStore();
 const { userAttributes, refreshAttributes } = useAttributeStore();
-const { userResources } = useResourceStore();
+const { userResources, refreshResources } = useResourceStore();
 
 const unlockedSpacecrafts = computed(() => {
   return spacecrafts.value.filter(spacecraft => spacecraft.unlocked);
@@ -63,6 +63,7 @@ function handleCancelProduction() {
     onSuccess: () => {
       refreshQueue();
       refreshSpacecrafts();
+      refreshResources();
       showCancelModal.value = false;
       selectedSpacecraft.value = null;
     }
@@ -72,6 +73,7 @@ function handleCancelProduction() {
 function handleProduceSpacecraft() {
   refreshQueue(); 
   refreshSpacecrafts();
+  refreshResources();
 }
 </script>
 

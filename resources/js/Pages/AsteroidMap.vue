@@ -21,7 +21,7 @@ import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useAttributeStore } from '@/Composables/useAttributeStore';
 import { useResourceStore } from '@/Composables/useResourceStore';
 import * as config from '@/config';
-import type { Asteroid, Station, ShipRenderObject, QueueItem, SpacecraftFleet, Spacecraft, Rebel } from '@/types/types';
+import type { Asteroid, Station, Rebel } from '@/types/types';
 import {
   asteroidImages,
   rebelImageMap,
@@ -60,8 +60,9 @@ onMounted(async () => {
   : unlocks === 'auto_mining';
 });
 
+const localAsteroids = ref([...props.asteroids]);
 const asteroidsWithImages = computed(() =>
-  props.asteroids.map(asteroid => ({
+  localAsteroids.value.map(asteroid => ({
     ...asteroid,
     imageIndex: asteroid.id % asteroidImages.length
   }))
@@ -209,15 +210,27 @@ onMounted(() => {
   }
 
   initQuadtree();
+
   window.addEventListener('resize', adjustCanvasSize);
   /*   window.addEventListener('keydown', onKeyDown); */
 
   window.Echo.channel('canvas')
     .listen('.reload.canvas', (data) => {
-      const asteroidData = data.asteroid
-      if (asteroidData.resources.length === 0) {
+      if (Array.isArray(data.mined_asteroids)) {
         // delete from asteroidsQuadtree
-        asteroidsQuadtree.value?.remove({ x: asteroidData.x, y: asteroidData.y });
+        console.log('Deleting asteroid from quadtree:', data.mined_asteroids);
+        data.mined_asteroids.forEach(asteroid => {
+          asteroidsQuadtree.value?.remove({ x: asteroid.x, y: asteroid.y });
+          localAsteroids.value = localAsteroids.value.filter(a => a.id !== asteroid.id);
+        });
+      }
+      // Neue Asteroiden hinzufügen
+      if (Array.isArray(data.new_asteroids)) {
+        console.log('Adding new asteroids to quadtree:', data.new_asteroids);
+        data.new_asteroids.forEach(newAsteroid => {
+          asteroidsQuadtree.value?.insert({ x: newAsteroid.x, y: newAsteroid.y, data: newAsteroid });
+          localAsteroids.value.push(newAsteroid);
+        });
       }
       drawScene();
     })

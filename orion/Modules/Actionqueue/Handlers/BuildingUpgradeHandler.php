@@ -19,7 +19,7 @@ class BuildingUpgradeHandler
             $action->user_id
         );
         
-        // Überprüfen Sie den success-Schlüssel im zurückgegebenen Array
+        // gebe status zurück
         return isset($result['success']) && $result['success'] === true;
     }
 }

@@ -140,8 +140,6 @@ class CombatPlunderService
             $userResource->amount += $amountToAdd;
             $userResource->save();
         });
-
-        broadcast(new UpdateUserResources($attacker));
     }
 
     /**

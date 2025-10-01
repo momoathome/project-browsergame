@@ -12,7 +12,7 @@ class AsteroidMiningHandler
         private readonly AsteroidService $asteroidService
     ) {}
 
-    public function handle(ActionQueue $action): bool
+    public function handle(ActionQueue $action): ExplorationResult|bool
     {
         $result = $this->asteroidService->completeAsteroidMining(
             $action->target_id, 
@@ -21,8 +21,8 @@ class AsteroidMiningHandler
             $action->id
         );
 
-        // Wenn das Ergebnis false ist, gebe false zurück
-        // Wenn das Ergebnis ein ExplorationResult ist, prüfe ob es erfolgreich war
-        return $result instanceof ExplorationResult ? $result->wasSuccessful() : (bool)$result;
+
+        // gebe das exploration result zurück
+        return $result;
     }
 }

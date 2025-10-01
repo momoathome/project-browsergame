@@ -4,11 +4,11 @@ namespace Orion\Modules\Asteroid\Services;
 
 use App\Models\User;
 use App\Services\UserService;
-use App\Events\AsteroidMined;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Events\UpdateUserResources;
 use Illuminate\Support\Facades\Log;
+use App\Events\ReloadFrontendCanvas;
 use Orion\Modules\Asteroid\Models\Asteroid;
 use Orion\Modules\Building\Models\Building;
 use Orion\Modules\Building\Enums\BuildingType;
@@ -23,6 +23,7 @@ use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
+use Orion\Modules\Asteroid\Repositories\AsteroidSpawnRequestRepository;
 use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
 
@@ -31,6 +32,7 @@ class AsteroidService
 {
     public function __construct(
         private readonly AsteroidRepository $asteroidRepository,
+        private readonly AsteroidSpawnRequestRepository $asteroidSpawnRequestRepository,
         private readonly AsteroidExplorer $asteroidExplorer,
         private readonly ActionQueueService $queueService,
         private readonly SpacecraftService $spacecraftService,
@@ -307,9 +309,14 @@ class AsteroidService
             return false;
         }
 
-        AsteroidMined::dispatch($asteroid, $user, $resourcesExtracted);
+        $this->asteroidSpawnRequestRepository->create(
+            $asteroid->id,
+            $user->id,
+            $asteroid->x,
+            $asteroid->y
+        );
 
-        return new ExplorationResult($resourcesExtracted, $capacity, $asteroid->id, $hasMiner);
+        return new ExplorationResult($resourcesExtracted, $capacity, $asteroid, $hasMiner);
     }
 
     public function updateUserResources(User $user, array $resources): void
@@ -336,8 +343,6 @@ class AsteroidService
                 }
             }
         }
-
-        broadcast(new UpdateUserResources($user));
     }
 
     public function find(int $id): ?Asteroid

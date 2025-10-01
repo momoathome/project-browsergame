@@ -69,7 +69,6 @@ class BuildingUpgradeService
                 $this->addBuildingUpgradeToQueue($user->id, $building, $targetLevel, $coreBuilding);
             });
 
-            broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
                 'message' => "Upgrade of {$building->details->name} successfully started"
@@ -131,7 +130,6 @@ class BuildingUpgradeService
                 }
             });
     
-            broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
                 'message' => "All upgrades for {$building->details->name} have been cancelled. Resources have been refunded (pending: 100%, active: 80%)."

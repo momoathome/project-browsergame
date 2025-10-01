@@ -155,8 +155,6 @@ readonly class MarketService
                 $this->userResourceService->addResourceAmount($user, $receiveRes->resource_id, $finalQty);
             });
 
-            broadcast(new UpdateUserResources($user));
-
             return [
                 'success' => true,
                 'message' => "Successfully exchanged {$giveQty} {$giveRes->resource->name} for {$finalQty} {$receiveRes->resource->name}."

@@ -1,15 +1,17 @@
 <?php
 
+use App\Jobs\ProcessActionQueue;
 use Illuminate\Foundation\Inspiring;
+use App\Jobs\ProcessActionQueueBatch;
+use Orion\Modules\Rebel\Models\Rebel;
 use Illuminate\Support\Facades\Artisan;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
-use App\Jobs\ProcessActionQueue;
-use App\Jobs\ProcessActionQueueBatch;
-use Orion\Modules\Rebel\Models\Rebel;
+use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Rebel\Services\RebelResourceService;
 use Orion\Modules\Rebel\Services\RebelSpacecraftService;
-
+use Orion\Modules\Asteroid\Repositories\AsteroidSpawnRequestRepository;
+use Orion\Modules\Asteroid\Services\AsteroidSpawnRequestService;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -68,3 +70,12 @@ Artisan::command('game:rebel-generate-all', function (
     }
     $this->info('Ressourcen und Spacecrafts generiert!');
 })->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->hourly();
+
+Artisan::command('game:generate-scheduled-asteroids', function (
+    AsteroidSpawnRequestService $service,
+) {
+    $service->processRequestedAsteroidSpawns();
+
+    $this->info("Processed asteroid spawn requests.");
+
+})->purpose('Generiert planmäßig Asteroiden')->everyFifteenMinutes();

@@ -8,8 +8,10 @@ use App\Models\ActionQueueArchive;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use App\Events\ReloadFrontendCanvas;
 use Orion\Modules\Actionqueue\Dto\ActionQueueDTO;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
+use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
 use Orion\Modules\Actionqueue\Handlers\CombatHandler;
@@ -97,9 +99,26 @@ class ActionQueueService
     public function processQueueForUser($userId): void
     {
         $completedActions = $this->actionqueueRepository->processQueueForUser($userId) ?? [];
+        $miningResults = [];
 
         foreach ($completedActions as $action) {
-            $this->completeAction($action);
+            $result = $this->completeAction($action);
+            // Prüfe ob Mining und ob ExplorationResult zurückgegeben wurde
+            if ($action->action_type === QueueActionType::ACTION_TYPE_MINING && $result instanceof ExplorationResult) {
+                $miningResults[] = $result;
+            }
+        }
+
+        // Sammel-Broadcast am Ende
+        if (!empty($miningResults)) {
+            $asteroids = array_map(fn($r) => [
+                'id' => $r->getAsteroid()->id,
+                'x' => $r->getAsteroid()->x,
+                'y' => $r->getAsteroid()->y,
+                'pixel_size' => $r->getAsteroid()->pixel_size,
+            ], $miningResults);
+
+            broadcast(new ReloadFrontendCanvas($asteroids, null));
         }
     }
 
@@ -113,7 +132,7 @@ class ActionQueueService
         }
     }
 
-    public function completeAction(ActionQueue $action): void
+    public function completeAction(ActionQueue $action)
     {
         // Aktionstyp normalisieren - falls als String statt Enum
         $actionType = $action->action_type;
@@ -157,13 +176,15 @@ class ActionQueueService
         $handler = App::make($handlerClass);
 
         try {
-            $success = $handler->handle($action);
+            $result = $handler->handle($action);
 
-            if ($success) {
+            if ($result === true || ($result instanceof ExplorationResult && $result->wasSuccessful())) {
                 $action->status = QueueStatusType::STATUS_COMPLETED;
             } else {
                 $action->status = QueueStatusType::STATUS_FAILED;
             }
+
+            return $result;
         } catch (\Exception $e) {
             Log::error("Fehler bei der Aktionsverarbeitung", [
                 'action_id' => $action->id,
@@ -172,6 +193,7 @@ class ActionQueueService
                 'trace' => $e->getTraceAsString()
             ]);
             $action->status = QueueStatusType::STATUS_FAILED;
+            return null;
         }
 
         $action->save();

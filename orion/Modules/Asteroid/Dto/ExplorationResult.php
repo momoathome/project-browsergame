@@ -2,12 +2,14 @@
 
 namespace Orion\Modules\Asteroid\Dto;
 
+use Orion\Modules\Asteroid\Models\Asteroid;
+
 class ExplorationResult
 {
     public function __construct(
         public readonly array $resourcesExtracted,
         public readonly int $totalCargoCapacity,
-        public readonly int $asteroidId,
+        public readonly Asteroid $asteroid,
         public readonly bool $hasMiner
     ) {
     }
@@ -22,9 +24,9 @@ class ExplorationResult
         return $this->totalCargoCapacity;
     }
 
-    public function getAsteroidId(): int
+    public function getAsteroid(): Asteroid
     {
-        return $this->asteroidId;
+        return $this->asteroid;
     }
 
     public function hasMiner(): bool

@@ -5,6 +5,7 @@ import BuildingsCard from '@/Modules/Buildings/BuildingsCard.vue';
 import { useBuildingStore } from '@/Composables/useBuildingStore';
 import { useQueueStore } from '@/Composables/useQueueStore';
 import { useResourceStore } from '@/Composables/useResourceStore';
+import { useAttributeStore } from '@/Composables/useAttributeStore';
 import type { Building } from '@/types/types';
 
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -14,7 +15,8 @@ import BuildingsInfoModal from '@/Modules/Buildings/BuildingsInfoModal.vue';
 
 const { buildings, refreshBuildings } = useBuildingStore();
 const { queueData, refreshQueue } = useQueueStore();
-const { userResources } = useResourceStore();
+const { userResources, refreshResources } = useResourceStore();
+const { userAttributes, refreshAttributes } = useAttributeStore();
 
 const coreBuilding = computed(() => buildings.value.find(b => b.name === 'Core'));
 
@@ -52,6 +54,8 @@ function handleCancelUpgrade() {
     onFinish: () => {
       refreshBuildings();
       refreshQueue();
+      refreshResources();
+      refreshAttributes();
       showCancelModal.value = false;
       selectedBuilding.value = null;
     },
@@ -79,6 +83,8 @@ function upgradeBuilding() {
       onFinish: () => { 
         refreshQueue();
         refreshBuildings();
+        refreshResources();
+        refreshAttributes();
         selectedBuilding.value = null;
         isSubmitting.value = false;
       },

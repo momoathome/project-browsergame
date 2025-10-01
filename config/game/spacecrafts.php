@@ -56,7 +56,7 @@ return [
             'speed' => 150,
             'operation_speed' => 0,
             'crew_limit' => 2,
-            'build_time' => 180,
+            'build_time' => 120,
             'research_cost' => 4,
             'unlocked' => false,
             'costs' => [
@@ -77,7 +77,7 @@ return [
             'speed' => 125,
             'operation_speed' => 0,
             'crew_limit' => 2,
-            'build_time' => 240,
+            'build_time' => 160,
             'research_cost' => 6,
             'unlocked' => false,
             'costs' => [
@@ -99,7 +99,7 @@ return [
             'speed' => 120,
             'operation_speed' => 0,
             'crew_limit' => 4,
-            'build_time' => 600,
+            'build_time' => 300,
             'research_cost' => 9,
             'unlocked' => false,
             'costs' => [
@@ -122,7 +122,7 @@ return [
             'speed' => 100,
             'operation_speed' => 0,
             'crew_limit' => 6,
-            'build_time' => 1200,
+            'build_time' => 600,
             'research_cost' => 12,
             'unlocked' => false,
             'costs' => [
@@ -147,7 +147,7 @@ return [
             'speed' => 80,
             'operation_speed' => 0,
             'crew_limit' => 8,
-            'build_time' => 3600,
+            'build_time' => 720,
             'research_cost' => 15,
             'unlocked' => false,
             'costs' => [
@@ -173,7 +173,7 @@ return [
             'speed' => 60,
             'operation_speed' => 0,
             'crew_limit' => 15,
-            'build_time' => 7200,
+            'build_time' => 1200,
             'research_cost' => 21,
             'unlocked' => false,
             'costs' => [
@@ -201,7 +201,7 @@ return [
             'speed' => 50,
             'operation_speed' => 0,
             'crew_limit' => 50,
-            'build_time' => 10800,
+            'build_time' => 2400,
             'research_cost' => 30,
             'unlocked' => false,
             'costs' => [
@@ -231,7 +231,7 @@ return [
             'speed' => 50,
             'operation_speed' => 60,
             'crew_limit' => 1,
-            'build_time' => 60,
+            'build_time' => 50,
             'research_cost' => 1,
             'unlocked' => true,
             'costs' => [
@@ -252,7 +252,7 @@ return [
             'speed' => 75,
             'operation_speed' => 300,
             'crew_limit' => 5,
-            'build_time' => 300,
+            'build_time' => 240,
             'research_cost' => 5,
             'unlocked' => false,
             'costs' => [
@@ -297,7 +297,7 @@ return [
             'speed' => 80,
             'operation_speed' => 480,
             'crew_limit' => 8,
-            'build_time' => 480,
+            'build_time' => 300,
             'research_cost' => 6,
             'unlocked' => false,
             'costs' => [
@@ -321,7 +321,7 @@ return [
             'speed' => 60,
             'operation_speed' => 120,
             'crew_limit' => 1,
-            'build_time' => 120,
+            'build_time' => 60,
             'research_cost' => 3,
             'unlocked' => false,
             'costs' => [
@@ -343,7 +343,7 @@ return [
             'speed' => 100,
             'operation_speed' => 720,
             'crew_limit' => 4,
-            'build_time' => 720,
+            'build_time' => 360,
             'research_cost' => 5,
             'unlocked' => false,
             'costs' => [

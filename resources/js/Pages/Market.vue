@@ -16,7 +16,7 @@ const props = defineProps<{
   prefill_amounts?: string,
 }>();
 
-const { userResources } = useResourceStore();
+const { userResources, refreshResources } = useResourceStore();
 
 const selectedGive = ref<formattedMarketResource | null>(null);
 const selectedReceive = ref<formattedMarketResource | null>(null);
@@ -154,6 +154,9 @@ function executeTrade() {
     onSuccess: () => {
       tradeForm.reset('give_resource_id', 'receive_resource_id', 'give_amount');
       selectedReceive.value = null;
+    },
+    onFinish: () => {
+      refreshResources();
     },
     onError: () => {
       // Fehlerbehandlung

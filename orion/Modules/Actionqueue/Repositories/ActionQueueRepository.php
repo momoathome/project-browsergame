@@ -264,7 +264,10 @@ readonly class ActionQueueRepository
     public function processQueueForUserInstant(int $userId): Collection
     {
         return ActionQueue::where('user_id', $userId)
-            ->where('status', QueueStatusType::STATUS_IN_PROGRESS)
+            ->whereIn('status', [
+                QueueStatusType::STATUS_IN_PROGRESS,
+                QueueStatusType::STATUS_PROCESSING
+            ])
             ->lockForUpdate()
             ->get();
     }

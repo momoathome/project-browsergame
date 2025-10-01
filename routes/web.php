@@ -1,7 +1,6 @@
 <?php
 
 use Inertia\Inertia;
-use App\Events\ReloadFrontendCanvas;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Controllers\ImageController;

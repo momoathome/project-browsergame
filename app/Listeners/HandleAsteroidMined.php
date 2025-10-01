@@ -14,9 +14,9 @@ class HandleAsteroidMined
     /**
      * Create the event listener.
      */
-    public function __construct()
-    {
-        //
+    public function __construct(
+        private readonly AsteroidGenerator $asteroidGenerator
+    ) {
     }
 
     /**
@@ -25,7 +25,7 @@ class HandleAsteroidMined
     public function handle(AsteroidMined $event): void
     {
         try {
-            app(AsteroidGenerator::class)->generateAsteroids(
+            $asteroids = $this->asteroidGenerator->generateAsteroids(
                 rand(0, 2),
                 $event->asteroid->x,
                 $event->asteroid->y,

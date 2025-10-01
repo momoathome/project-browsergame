@@ -23,6 +23,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('actionqueue:reset-stuck')->everyFiveMinutes();
 
         $schedule->command('game:rebel-generate-all')->everyFifteenMinutes();
+
+        $schedule->command('game:generate-scheduled-asteroids')->everyFifteenMinutes();
     }
 
     /**

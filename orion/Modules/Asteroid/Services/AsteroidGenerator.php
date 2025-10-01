@@ -24,10 +24,10 @@ class AsteroidGenerator
     private array $config = [];
     private array $stations = [];
 
-    public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null)
+    public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null): array
     {
         $asteroids = [];
-        $maxFailures = $count * 0.1;
+        $maxFailures = max(100, (int)($count * 0.1));
         $failures = 0;
         $batchSize = 100;
         $asteroidBatch = [];
@@ -345,7 +345,7 @@ class AsteroidGenerator
 
     private function generateAsteroidCoordinateInRadius(int $centerX, int $centerY, int $radius, int $minStationDistance, array $resources = [], string $size = 'small'): array
     {
-        $maxAttempts = 5000;
+        $maxAttempts = 500;
         $attempts = 0;
         do {
             $angle = mt_rand(0, 360);
@@ -386,7 +386,7 @@ class AsteroidGenerator
             'max_x' => $this->config['size'],
             'max_y' => $this->config['size'],
         ];
-        $maxAttempts = 5000;
+        $maxAttempts = 1000;
         $attempts = 0;
         $resourceLevel = $this->determineResourceLevel($resources);
 

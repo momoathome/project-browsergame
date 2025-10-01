@@ -61,7 +61,6 @@ class SpacecraftProductionService
                 $this->addSpacecraftUpgradeToQueue($user->id, $spacecraft, $quantity, $targetQuantity);
             });
 
-            broadcast(new UpdateUserResources($user));
             return [
                 'success' => true,
                 'message' => "Production of {$spacecraft->details->name} x{$quantity} successfully started"
@@ -137,7 +136,6 @@ class SpacecraftProductionService
                 $this->queueService->deleteFromQueue($queueEntry->id);
             });
 
-            broadcast(new UpdateUserResources($this->userService->find($user->id)));
             return [
                 'success' => true,
                 'message' => 'Production successfully canceled. 80% of resources have been refunded.'

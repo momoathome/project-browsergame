@@ -7,7 +7,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Asteroid\Models\Asteroid;
-use Orion\Modules\Asteroid\Dto\ExplorationResult;
 use Orion\Modules\Asteroid\Models\AsteroidResource;
 use Orion\Modules\Logbook\Models\AsteroidMiningLog;
 
@@ -57,7 +56,7 @@ class AsteroidRepository
             ->get();
     }
 
-    public function updateAsteroidResources(Asteroid $asteroid, array $remainingResources): void
+    public function updateAsteroidResources(Asteroid $asteroid, array $remainingResources): bool
     {
         foreach ($remainingResources as $type => $amount) {
             $res = AsteroidResource::where('asteroid_id', $asteroid->id)
@@ -71,10 +70,10 @@ class AsteroidRepository
             }
         }
 
-        $this->cleanupAsteroid($asteroid);
+        return $this->cleanupAsteroid($asteroid);
     }
 
-    private function cleanupAsteroid(Asteroid $asteroid): void
+    private function cleanupAsteroid(Asteroid $asteroid): bool
     {
         $totalAmount = $asteroid->resources()->sum('amount');
         $percentThreshold = max(1, floor($asteroid->value * 0.01)); // mindestens 1%
@@ -82,7 +81,11 @@ class AsteroidRepository
 
         if ($totalAmount < $flatThreshold || $totalAmount < $percentThreshold) {
             $asteroid->delete();
+            return true;
+        } else {
+            return false;
         }
+        
     }
 
     public function logMiningResult(User $user, Asteroid $asteroid, array $resourcesExtracted, Collection $spacecrafts): void

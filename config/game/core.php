@@ -9,7 +9,7 @@ return [
     /* Core */
     'building_produce_speed' => 1.0,
     'spacecraft_produce_speed' => 1.0,
-    'spacecraft_flight_speed' => 10.0,
+    'spacecraft_flight_speed' => 1.0,
 
     /* Universe */
     'size' => $universe_size,                           // Größe des Universums

@@ -17,7 +17,6 @@ use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Building\Services\BuildingEffectService;
 use Orion\Modules\Asteroid\Repositories\AsteroidRepository;
-use Orion\Modules\Asteroid\Http\Requests\AsteroidExploreRequest;
 use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 
 class AsteroidAutoMineService
@@ -85,17 +84,7 @@ class AsteroidAutoMineService
             ];
         }
 
-        $hangarBuilding = Building::where('user_id', $user->id)
-        ->whereHas('details', function ($query) {
-            $query->where('name', BuildingType::HANGAR->value);
-        })
-        ->first();
-
-        $dockSlots = 1;
-        if ($hangarBuilding) {
-            $extra = app(BuildingEffectService::class)->getEffects('Hangar', $hangarBuilding->level);
-            $dockSlots = $extra['dock_slots'] ?? 1;
-        }
+        $dockSlots = $this->asteroidService->getDockSlotsForUser($user);
 
         $currentMiningOperations = $this->queueService->getInProgressQueuesFromUserByType(
             $user->id,

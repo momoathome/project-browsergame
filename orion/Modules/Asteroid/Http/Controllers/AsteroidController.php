@@ -64,8 +64,7 @@ class AsteroidController extends Controller
 
     private function renderAsteroidMap()
     {
-        $user = $this->authManager->user();
-        $viewData = $this->asteroidService->getAsteroidMapData($user);
+        $viewData = $this->asteroidService->getAsteroidMapData();
 
         return Inertia::render('AsteroidMap', $viewData);
     }

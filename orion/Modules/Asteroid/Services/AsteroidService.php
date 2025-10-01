@@ -48,7 +48,7 @@ class AsteroidService
         return $this->asteroidRepository->loadWithResources($asteroid);
     }
 
-    public function getAsteroidMapData($user): array
+    public function getAsteroidMapData(): array
     {
         $asteroids = $this->asteroidRepository->getAllAsteroids();
         $stations = $this->stationService->getAllStations();
@@ -208,7 +208,7 @@ class AsteroidService
         return $results;
     }
 
-    private function getDockSlotsForUser(User $user): int
+    public function getDockSlotsForUser(User $user): int
     {
         $hangarBuilding = Building::where('user_id', $user->id)
             ->whereHas('details', function ($query) {

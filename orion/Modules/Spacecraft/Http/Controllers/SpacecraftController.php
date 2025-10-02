@@ -50,10 +50,14 @@ class SpacecraftController extends Controller
         $result = $this->spacecraftProductionService->startSpacecraftProduction($user, $spacecraft, $quantity);
 
         if ($result['success']) {
-            return redirect()->route('shipyard')->banner($result['message']);
-        } else {
-            return redirect()->route('shipyard')->dangerBanner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
+
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
     public function unlock(Spacecraft $spacecraft)
@@ -63,10 +67,14 @@ class SpacecraftController extends Controller
         $result = $this->spacecraftProductionService->unlockSpacecraft($user->id, $spacecraft);
 
         if ($result['success']) {
-            return redirect()->route('shipyard')->banner($result['message']);
-        } else {
-            return redirect()->route('shipyard')->dangerBanner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
+
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
     public function cancel(Spacecraft $spacecraft)
@@ -76,10 +84,14 @@ class SpacecraftController extends Controller
         $result = $this->spacecraftProductionService->cancelSpacecraftProduction($user, $spacecraft);
 
         if ($result['success']) {
-            return redirect()->route('shipyard')->banner($result['message']);
-        } else {
-            return redirect()->route('shipyard')->dangerBanner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
+
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
     /**

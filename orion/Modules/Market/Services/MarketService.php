@@ -57,7 +57,7 @@ readonly class MarketService
     /**
      * Tauscht eine Ressource gegen eine andere auf Basis ihrer Kostenwerte
      */
-    public function tradeResources($user, Market $giveRes, int $giveQty, Market $receiveRes): array
+    public function tradeResources($user, Market $giveRes, int $receiveQty, Market $receiveRes): array
     {
         // ==========================================================
         // Resource Trade Calculation
@@ -118,12 +118,24 @@ readonly class MarketService
             ];
         }
 
-        $giveValue = $giveQty * $categoryValues[$giveCategory];
-        $receiveQty = (int) floor($giveValue / $categoryValues[$receiveCategory]);
+        // Berechne benötigte giveQty basierend auf gewünschter receiveQty
+        $receiveCatValue = $categoryValues[$receiveCategory];
+        $giveCatValue = $categoryValues[$giveCategory];
+        if ($giveCatValue === 0) {
+            return [
+                'success' => false,
+                'message' => 'Invalid category value for given resource.'
+            ];
+        }
 
-        // 5% Marktgebühr
-        $fee = (int) floor($receiveQty * 0.05);
-        $finalQty = max($receiveQty - $fee, 0);
+        // Rückwärtsrechnung: giveQty = ceil(receiveQty * receiveCatValue / giveCatValue / 0.95)
+        $giveQty = (int) ceil($receiveQty * $receiveCatValue / $giveCatValue / 0.95);
+
+        // Berechne, wie viel der User tatsächlich bekommt (wegen Rundung und Fee)
+        $giveValue = $giveQty * $giveCatValue;
+        $rawReceiveQty = $giveValue / $receiveCatValue;
+        $fee = (int) floor($rawReceiveQty * 0.05);
+        $finalQty = max((int) floor($rawReceiveQty) - $fee, 0);
 
         if ($finalQty <= 0) {
             return [
@@ -132,15 +144,22 @@ readonly class MarketService
             ];
         }
 
+        if ($finalQty < $receiveQty) {
+            return [
+                'success' => false,
+                'message' => 'Trade not possible: Not enough resources given for desired amount after fees.'
+            ];
+        }
+
         try {
-            DB::transaction(function () use ($user, $giveRes, $giveQty, $receiveRes, $finalQty) {
+            DB::transaction(function () use ($user, $giveRes, $giveQty, $receiveRes, $receiveQty) {
                 $userGiveRes = $this->userResourceService->getSpecificUserResource($user->id, $giveRes->resource_id);
 
                 if (!$userGiveRes || $userGiveRes->amount < $giveQty) {
                     throw new InsufficientResourceException();
                 }
 
-                if ($receiveRes->stock < $finalQty) {
+                if ($receiveRes->stock < $receiveQty) {
                     throw new InsufficientResourceException();
                 }
 
@@ -149,20 +168,20 @@ readonly class MarketService
 
                 // Marktstock aktualisieren
                 $this->marketRepository->increaseStock($giveRes->resource_id, $giveQty);
-                $this->marketRepository->decreaseStock($receiveRes->resource_id, $finalQty);
+                $this->marketRepository->decreaseStock($receiveRes->resource_id, $receiveQty);
 
                 // Spieler erhält Zielressource
-                $this->userResourceService->addResourceAmount($user, $receiveRes->resource_id, $finalQty);
+                $this->userResourceService->addResourceAmount($user, $receiveRes->resource_id, $receiveQty);
             });
 
             return [
                 'success' => true,
-                'message' => "Successfully exchanged {$giveQty} {$giveRes->resource->name} for {$finalQty} {$receiveRes->resource->name}."
+                'message' => "Successfully traded {$giveQty} {$giveRes->resource->name} for {$receiveQty} {$receiveRes->resource->name}."
             ];
         } catch (InsufficientResourceException $e) {
             return [
                 'success' => false,
-                'message' => 'Not enough resources for the player or market.'
+                'message' => 'Not enough resources available for trade.'
             ];
         } catch (\Exception $e) {
             return [

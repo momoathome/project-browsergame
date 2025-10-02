@@ -3,7 +3,6 @@ import { computed, ref, onMounted, watch } from 'vue';
 import { usePage, useForm } from '@inertiajs/vue3';
 import MarketCard from '@/Modules/Market/MarketCard.vue';
 import AppInput from '@/Modules/Shared/AppInput.vue';
-import MarketPlaceholder from '@/Modules/Market/MarketPlaceholder.vue';
 import AppTooltip from '@/Modules/Shared/AppTooltip.vue';
 import { useResourceStore } from '@/Composables/useResourceStore';
 import type { Market, formattedMarketResource } from '@/types/types';
@@ -25,7 +24,7 @@ const prefillReceiveAmount = ref<number | null>(null);
 const tradeForm = useForm({
   give_resource_id: null as number | null,
   receive_resource_id: null as number | null,
-  give_amount: 0
+  receive_amount: 0
 });
 
 const formattedResources = computed(() => props.market.map(m => ({
@@ -51,17 +50,17 @@ const getCategory = (resource: formattedMarketResource) => {
   return resource.category;
 };
 
-const calculatedReceiveAmount = computed(() => {
+const calculatedGiveAmount = computed(() => {
   if (!selectedGive.value || !selectedReceive.value) return 0;
   const giveCategory = getCategory(selectedGive.value);
   const receiveCategory = getCategory(selectedReceive.value);
 
   if (!giveCategory || !receiveCategory) return 0;
 
-  const giveValue = tradeForm.give_amount * (props.categoryValues[giveCategory] ?? 0);
-  const receiveQtyRaw = giveValue / (props.categoryValues[receiveCategory] ?? 1);
-  const fee = Math.floor(receiveQtyRaw * 0.05);
-  return Math.max(Math.floor(receiveQtyRaw) - fee, 0);
+  const giveCatValue = props.categoryValues[giveCategory] ?? 1;
+  const receiveCatValue = props.categoryValues[receiveCategory] ?? 1;
+  if (giveCatValue === 0) return 0;
+  return Math.ceil((tradeForm.receive_amount * receiveCatValue) / giveCatValue / 0.95);
 });
 
 const tradeRatio = computed(() => {
@@ -78,7 +77,7 @@ const tradeRatio = computed(() => {
 });
 
 const tradeTooltip = computed(() => {
-  return 'You exchange ' + tradeForm.give_amount + ' ' + (selectedGive.value?.name || '') + ' for ' + calculatedReceiveAmount.value + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee is applied on each trade.';
+  return 'You give ' + calculatedGiveAmount.value + ' ' + (selectedGive.value?.name || '') + ' for ' + tradeForm.receive_amount + ' ' + (selectedReceive.value?.name || '') + '. A 5% fee will be charged.';
 });
 
 onMounted(() => {
@@ -100,10 +99,7 @@ onMounted(() => {
 // Watcher für automatische Anpassung
 watch([selectedGive, selectedReceive], ([give, receive]) => {
   if (give && receive && prefillReceiveAmount.value) {
-    const giveCatValue = props.categoryValues[give.category] ?? 1;
-    const receiveCatValue = props.categoryValues[receive.category] ?? 1;
-    // Formel: gewünschte Menge * Kategorie-Wert / eigener Kategorie-Wert / 0.95 (Fee)
-    tradeForm.give_amount = Math.ceil((prefillReceiveAmount.value * receiveCatValue) / giveCatValue / 0.95);
+    tradeForm.receive_amount = prefillReceiveAmount.value;
   }
 });
 
@@ -134,8 +130,8 @@ function onDropReceive(event: DragEvent) {
 
 function clearGive() {
   selectedGive.value = null;
-  if (tradeForm.give_amount > 0) {
-    tradeForm.give_amount = 0;
+  if (tradeForm.receive_amount > 0) {
+    tradeForm.receive_amount = 0;
   }
 }
 
@@ -147,16 +143,21 @@ function executeTrade() {
   if (!selectedGive.value || !selectedReceive.value) return;
   tradeForm.give_resource_id = selectedGive.value.id;
   tradeForm.receive_resource_id = selectedReceive.value.id;
-
+  // give_amount wird aus calculatedGiveAmount berechnet
+  const payload = {
+    give_resource_id: tradeForm.give_resource_id,
+    receive_resource_id: tradeForm.receive_resource_id,
+    give_amount: calculatedGiveAmount.value,
+    receive_amount: tradeForm.receive_amount
+  };
   tradeForm.post(route('market.trade'), {
+    ...payload,
     preserveState: true,
     preserveScroll: true,
     onSuccess: () => {
-      tradeForm.reset('give_resource_id', 'receive_resource_id', 'give_amount');
-      selectedReceive.value = null;
-    },
-    onFinish: () => {
+      tradeForm.reset('give_resource_id', 'receive_resource_id', 'receive_amount');
       refreshResources();
+      selectedReceive.value = null;
     },
     onError: () => {
       // Fehlerbehandlung
@@ -303,51 +304,55 @@ function executeTrade() {
 
       <!-- Trade Controls -->
       <div v-if="selectedGive && selectedReceive" class="flex flex-col gap-6 items-center mt-8 ">
-        <div class="flex items-center w-full justify-center">
-          <button
-            class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-r border-primary/60 rounded-l-md focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
-            @click="tradeForm.give_amount = 0"
-            :disabled="selectedGive.amount == 0 || tradeForm.give_amount <= 0"
-            aria-label="Clear"
-            type="button"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 21 21">
-              <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(2 2)">
-                <circle cx="8.5" cy="8.5" r="8"/>
-                <path d="m5.5 5.5l6 6m0-6l-6 6"/>
-              </g>
-            </svg>
-          </button>
+        <div class="flex flex-col items-center gap-2">
+          <p class="text-sm text-secondary">You take</p>
 
-          <AppInput v-model="tradeForm.give_amount" :maxlength="5" :maxInputValue="selectedGive.amount"
-            class="!bg-primary/30 text-center py-2 !w-28 text-lg font-semibold" />
-          
-          <button
-            class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-l border-primary/60 focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
-            :disabled="selectedGive.amount == 0 || tradeForm.give_amount >= selectedGive.amount"
-            @click="tradeForm.give_amount = selectedGive.amount"
-            type="button"
-            aria-label="Maximum"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> 
-              <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
-            </svg>
-          </button>
+          <div class="flex items-center w-full justify-center">
+            <button
+              class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-r border-primary/60 rounded-l-md focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
+              @click="tradeForm.receive_amount = 0"
+              :disabled="tradeForm.receive_amount <= 0"
+              aria-label="Clear"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 21 21">
+                <g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" transform="translate(2 2)">
+                  <circle cx="8.5" cy="8.5" r="8"/>
+                  <path d="m5.5 5.5l6 6m0-6l-6 6"/>
+                </g>
+              </svg>
+            </button>
 
-          <button
-            class="px-4 py-2 h-11 bg-primary/30 text-light font-semibold rounded-r-md transition border-l border-primary/60 hover:bg-primary/60 focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
-            :disabled="tradeForm.give_amount <= 0 || calculatedReceiveAmount <= 0 || tradeForm.give_amount > selectedGive.amount"
-            @click="executeTrade"
-            type="button"
-          >
-            <span>Exchange</span>
-          </button>
+            <AppInput v-model="tradeForm.receive_amount" :maxlength="5" :maxInputValue="selectedReceive.stock"
+              class="!bg-primary/30 text-center py-2 !w-28 text-lg font-semibold" />
+
+            <button
+              class="px-2 py-2 h-11 bg-primary/30 text-light hover:bg-primary/60 transition font-semibold border-l border-primary/60 focus:outline-none disabled:hover:bg-primary/40 disabled:opacity-40 disabled:cursor-not-allowed"
+              :disabled="tradeForm.receive_amount >= selectedReceive.stock"
+              @click="tradeForm.receive_amount = selectedReceive.stock"
+              type="button"
+              aria-label="Maximum"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"> 
+                <path fill="currentColor" d="M9.575 12L5.7 8.1q-.275-.275-.288-.687T5.7 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T5.7 17.3q-.275-.275-.275-.7t.275-.7zm6.6 0L12.3 8.1q-.275-.275-.288-.687T12.3 6.7q.275-.275.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.687.288T12.3 17.3q-.275-.275-.275-.7t.275-.7z"/>
+              </svg>
+            </button>
+
+            <button
+              class="px-4 py-2 h-11 bg-primary/30 text-light font-semibold rounded-r-md transition border-l border-primary/60 hover:bg-primary/60 focus:outline-none disabled:hover:bg-primary-dark disabled:opacity-40 disabled:cursor-not-allowed"
+              :disabled="tradeForm.receive_amount <= 0 || calculatedGiveAmount <= 0 || calculatedGiveAmount > selectedGive.amount"
+              @click="executeTrade"
+              type="button"
+            >
+              <span>Exchange</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-col items-center">
-          <p class="text-sm text-secondary">You receive</p>
+          <p class="text-sm text-secondary">You give</p>
           <p class="text-xl font-bold text-secondary">
-            {{ numberFormat(calculatedReceiveAmount) }} {{ selectedReceive.name }}
+            {{ numberFormat(calculatedGiveAmount) }} {{ selectedGive.name }}
           </p>
         </div>
       </div>

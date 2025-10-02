@@ -50,7 +50,7 @@ class MarketController extends Controller
         $validated = $request->validate([
             'give_resource_id' => 'required|integer|different:receive_resource_id',
             'receive_resource_id' => 'required|integer',
-            'give_amount' => 'required|integer|min:1',
+            'receive_amount' => 'required|integer|min:1',
         ]);
 
         $user = $this->authManager->user();
@@ -61,13 +61,17 @@ class MarketController extends Controller
         $giveRes = Market::with('resource')->findOrFail($validated['give_resource_id']);
         $receiveRes = Market::with('resource')->findOrFail($validated['receive_resource_id']);
 
-        $result = $this->marketService->tradeResources($user, $giveRes, $validated['give_amount'], $receiveRes);
+        $result = $this->marketService->tradeResources($user, $giveRes, $validated['receive_amount'], $receiveRes);
 
         if ($result['success']) {
-            return redirect()->route('market')->banner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
 
-        return redirect()->route('market')->dangerBanner($result['message']);
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
 }

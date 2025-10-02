@@ -47,11 +47,16 @@ class BuildingController extends Controller
         }
         
         $result = $this->buildingUpgradeService->startBuildingUpgrade($user, $building);
+
         if ($result['success']) {
-            return redirect()->route('buildings')->banner($result['message']);
-        } else {
-            return redirect()->route('buildings')->dangerBanner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
+
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
     public function cancel(Building $building)
@@ -61,10 +66,14 @@ class BuildingController extends Controller
         $result = $this->buildingUpgradeService->cancelBuildingUpgrade($user, $building);
 
         if ($result['success']) {
-            return redirect()->route('buildings')->banner($result['message']);
-        } else {
-            return redirect()->route('buildings')->dangerBanner($result['message']);
+            return back()->with([
+                'flash' => ['banner' => $result['message'], 'type' => 'success']
+            ]);
         }
+
+        return back()->with([
+            'flash' => ['banner' => $result['message'], 'type' => 'error']
+        ]);
     }
 
     public function getBuildingInfo(Building $building)

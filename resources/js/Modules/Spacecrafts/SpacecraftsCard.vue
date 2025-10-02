@@ -69,7 +69,6 @@ function isResourceSufficientForNext(resourceId: number): boolean {
   return status.userAmount >= status.required * (form.amount + 1);
 }
 
-// TODO: needs refactor because of new market
 function goToMarketWithMissingResources() {
   const missing = props.spacecraft.resources
     .map(resource => {

@@ -25,9 +25,9 @@ class AsteroidGenerator
     private array $config = [];
     private array $stations = [];
 
-    public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null): array
+    public function generateAsteroids($count, $centerX = null, $centerY = null, $radius = null): Collection
     {
-        $asteroids = [];
+        $asteroids = collect();
         $maxFailures = max(100, (int)($count * 0.1));
         $failures = 0;
         $batchSize = 100;
@@ -54,7 +54,7 @@ class AsteroidGenerator
                 if (count($asteroidBatch) >= $batchSize) {
                     $createdAsteroids = $this->saveBatchedAsteroids($asteroidBatch);
                     $this->saveBatchedResources($createdAsteroids, $resourceBatch);
-                    $asteroids = array_merge($asteroids, $createdAsteroids);
+                    $asteroids = $asteroids->merge($createdAsteroids);
                     $asteroidBatch = [];
                     $resourceBatch = [];
                 }
@@ -72,7 +72,7 @@ class AsteroidGenerator
         if (count($asteroidBatch) > 0) {
             $createdAsteroids = $this->saveBatchedAsteroids($asteroidBatch);
             $this->saveBatchedResources($createdAsteroids, $resourceBatch);
-            $asteroids = array_merge($asteroids, $createdAsteroids);
+            $asteroids = $asteroids->merge($createdAsteroids);
         }
 
         return $asteroids;

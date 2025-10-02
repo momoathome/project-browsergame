@@ -30,7 +30,7 @@ readonly class AsteroidSpawnRequestService
             $grouped[$userId][] = $request;
         }
 
-        $newAsteroids = [];
+        $newAsteroids = collect();
         foreach ($grouped as $userRequests) {
             $user = $userRequests[0]->user;
             $station = $user->stations->first();
@@ -46,12 +46,12 @@ readonly class AsteroidSpawnRequestService
                 $scanRange
             );
 
-            $newAsteroids = array_merge($newAsteroids, $asteroids);
+            $newAsteroids = $newAsteroids->merge($asteroids);
         }
 
         $this->repository->clear();
 
-        $filteredNewAsteroids = array_map(function($a) {
+        $filteredNewAsteroids = $newAsteroids->map(function($a) {
             return [
                 'id' => $a['id'],
                 'x' => $a['x'],
@@ -61,7 +61,7 @@ readonly class AsteroidSpawnRequestService
         }, $newAsteroids);
 
         $chunkSize = 50;
-        $chunks = array_chunk($filteredNewAsteroids, $chunkSize);
+        $chunks = array_chunk($filteredNewAsteroids->toArray(), $chunkSize);
 
         foreach ($chunks as $chunk) {
             broadcast(new ReloadFrontendCanvas(null, $chunk));

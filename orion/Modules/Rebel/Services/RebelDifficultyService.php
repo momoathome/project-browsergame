@@ -25,7 +25,7 @@ class RebelDifficultyService
             
         $averageInfluence = $totalPlayerInfluence / $playerCount;
 
-        return ($averageInfluence / 100) * 0.1;
+        return round($averageInfluence / 100 * 0.1, 2);
     }
 
     /**

@@ -80,16 +80,15 @@ class RebelResourceService
         $rebel->save();
     }
     
-    // TODO: write gamephase in DB or implement Global difficulty
-    public function getGamePhase()
+    public function getGamePhase(): string
     {
-        $avgMiner = $this->spacecraftService->getAllSpacecraftsByType('Miner')->avg('count');
+        $globalDifficulty = $this->difficultyService->calculateGlobalDifficulty();
 
-        if ($avgMiner < 25) return 'early';
-        if ($avgMiner < 100) return 'mid';
+        if ($globalDifficulty < 5) return 'early';
+        if ($globalDifficulty < 10) return 'mid';
         return 'late';
     }
-    
+
     protected function getScaledRatios($faction, $phase)
     {
         $baseRatios = config('game.rebels.resource_ratios')[$faction] ?? [];

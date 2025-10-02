@@ -112,6 +112,7 @@ const fleetSummary = computed(() => ({
   totalAttack: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.attack * spacecraft.count), 0),
   totalDefense: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.defense * spacecraft.count), 0),
   totalCargo: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
+  totalMiner: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.type === 'Miner' ? spacecraft.count : 0), 0),
   totalInOrbit: spacecrafts.value?.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0),
   totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
 }));
@@ -155,7 +156,7 @@ const displayQueueTime = (item) => {
       </div>
       <div class="flex items-center gap-2">
         <img src="/images/asteroid.png" alt="asteroid" class="h-5" />
-        <h2 class="font-semibold text-sm">active Miner • {{ totalMinersInOperation }}</h2>
+        <h2 class="font-semibold text-sm">active Miner • {{ totalMinersInOperation }} / {{ fleetSummary.totalMiner }}</h2>
       </div>
       <div class="flex items-center gap-2">
         <img src="/images/combat.png" alt="combat" class="h-5" />

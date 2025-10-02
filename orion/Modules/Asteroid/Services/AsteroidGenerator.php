@@ -2,6 +2,7 @@
 
 namespace Orion\Modules\Asteroid\Services;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Orion\Modules\Asteroid\Models\Asteroid;
@@ -77,29 +78,46 @@ class AsteroidGenerator
         return $asteroids;
     }
 
-    private function saveBatchedAsteroids(array $asteroids): array
+    private function saveBatchedAsteroids(array $asteroids): Collection
     {
-        Asteroid::insert($asteroids);
-        $names = array_column($asteroids, 'name');
-        return Asteroid::whereIn('name', $names)->get()->toArray();
+        return DB::transaction(function () use ($asteroids) {
+            Asteroid::insert($asteroids);
+
+            $names = array_column($asteroids, 'name');
+            $createdAsteroids = Asteroid::whereIn('name', $names)->get();
+
+            return $createdAsteroids;
+        });
     }
 
-    private function saveBatchedResources(array $asteroids, array $resourcesData): void
+    private function saveBatchedResources(Collection $asteroids, array $resourcesData): void
     {
-        $resourcesForInsert = [];
-        foreach ($asteroids as $index => $asteroid) {
-            if (!isset($resourcesData[$index])) continue;
-            foreach ($resourcesData[$index] as $resourceType => $amount) {
-                $resourcesForInsert[] = [
-                    'asteroid_id' => $asteroid['id'],
-                    'resource_type' => $resourceType,
-                    'amount' => $amount
-                ];
+        DB::transaction(function () use ($asteroids, $resourcesData) {
+            $resourcesForInsert = [];
+
+            foreach ($asteroids as $index => $asteroid) {
+                if (!isset($resourcesData[$index])) continue;
+
+                foreach ($resourcesData[$index] as $resourceType => $amount) {
+                    $resourcesForInsert[] = [
+                        'asteroid_id'   => $asteroid->id,
+                        'resource_type' => $resourceType,
+                        'amount'        => $amount,
+                    ];
+                }
             }
-        }
-        if ($resourcesForInsert) {
-            AsteroidResource::insert($resourcesForInsert);
-        }
+
+            if ($resourcesForInsert) {
+                AsteroidResource::insert($resourcesForInsert);
+
+                // Asteroiden mit ihren Ressourcen nochmal laden
+                $ids = $asteroids->pluck('id')->toArray();
+                $updatedAsteroids = Asteroid::with('resources')->whereIn('id', $ids)->get();
+
+                // Alles in Scout-Index pushen
+                $updatedAsteroids->searchable();
+            }
+        });
     }
 
     public function generateAsteroid(?string $asteroidSize = null): array

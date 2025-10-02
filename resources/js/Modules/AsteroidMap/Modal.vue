@@ -293,6 +293,13 @@ async function startMission() {
   }
 }
 
+const noDockslotsAvailable = computed(() => {
+  if (actionType.value === QueueActionType.MINING) {
+    return (Number(dockSlots.value) > 0 && totalMiningOperations.value >= Number(dockSlots.value));
+  }
+  return false;
+});
+
 const resetForm = () => {
   resetSpacecraftsForm();
   form.asteroid_id = null;
@@ -337,6 +344,8 @@ onUnmounted(() => {
 function availableCount(s) {
   return s.count - (s.locked_count || 0)
 }
+
+
 
 // Extraktions-Schätzung für Asteroiden (Frontend-Logik analog Backend)
 /* const estimatedExtraction = computed(() => {
@@ -468,7 +477,7 @@ function availableCount(s) {
                       </span>
                     </div>
                     <button @click="startMission" @shift.click="fastExploreAsteroid"
-                      :disabled="isSubmitting || noSpacecraftSelected || (Number(dockSlots) > 0 && totalMiningOperations >= Number(dockSlots))"
+                      :disabled="isSubmitting || noSpacecraftSelected || noDockslotsAvailable"
                       class="px-4 py-2 bg-cyan-700 text-light rounded-xl font-semibold transition border border-cyan-700/30 hover:bg-cyan-600 hover:text-cyan-100 text-base shadow disabled:cursor-not-allowed disabled:opacity-40">
                       <span v-if="actionType === QueueActionType.MINING">Start Mining</span>
                       <span v-else>Start Attack</span>

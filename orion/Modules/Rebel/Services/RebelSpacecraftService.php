@@ -77,7 +77,7 @@ class RebelSpacecraftService
             $maxBuild = $fleetCap - $currentFleetSize;
 
             foreach ($ship['costs'] as $cost) {
-                $resource = $resources[Resource::where('name', $cost['resource_name'])->value('id')] ?? null;
+                $resource = $resources[$this->rebelResourceService->getResourceId($cost['resource_name'])] ?? null;
                 $possible = $resource ? floor($resource->amount / $cost['amount']) : 0;
                 $maxBuild = min($maxBuild, $possible);
             }
@@ -93,7 +93,7 @@ class RebelSpacecraftService
             );
             // Ressourcen abziehen
             foreach ($ship['costs'] as $cost) {
-                $resourceId = Resource::where('name', $cost['resource_name'])->value('id');
+                $resourceId = $this->rebelResourceService->getResourceId($cost['resource_name']);
                 $resources[$resourceId]->decrement('amount', $cost['amount'] * $buildCount);
             }
 
@@ -115,7 +115,6 @@ class RebelSpacecraftService
             $targetCount -= $buildCount;
         }
     }
-
 
     private function calculateBuildCount(int $difficulty, int $targetCount, int $maxBuild): int
     {

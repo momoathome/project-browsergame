@@ -14,6 +14,8 @@ use Orion\Modules\Rebel\Services\RebelDifficultyService;
 
 class RebelResourceService
 {
+    protected array $resourceIdCache = [];
+
     public function __construct(
         private readonly SpacecraftService $spacecraftService,
         private readonly RebelDifficultyService $difficultyService,
@@ -117,17 +119,12 @@ class RebelResourceService
             ->toArray();
     }
 
-    public function getResourceId($name)
+    public function getResourceId(string $name): int
     {
-        // Hole die Resource-ID anhand des Namens
-        return Resource::where('name', $name)->value('id');
-    }
-
-    public function getRebelResource(Rebel $rebel, array $cost)
-    {
-        return RebelResource::where('rebel_id', $rebel->id)
-                ->where('resource_id', $this->getResourceId($cost['resource_name']))
-                ->first();
+        if (!isset($this->resourceIdCache[$name])) {
+            $this->resourceIdCache[$name] = Resource::where('name', $name)->value('id');
+        }
+        return $this->resourceIdCache[$name];
     }
 
     public function getAllRebelResourcesById(int $id): Collection

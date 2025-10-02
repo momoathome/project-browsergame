@@ -7,10 +7,9 @@ use Orion\Modules\Rebel\Models\Rebel;
 use Illuminate\Support\Facades\Artisan;
 use Orion\Modules\Actionqueue\Models\ActionQueue;
 use Orion\Modules\Actionqueue\Enums\QueueStatusType;
-use Orion\Modules\Asteroid\Services\AsteroidGenerator;
 use Orion\Modules\Rebel\Services\RebelResourceService;
+use Orion\Modules\Rebel\Services\RebelDifficultyService;
 use Orion\Modules\Rebel\Services\RebelSpacecraftService;
-use Orion\Modules\Asteroid\Repositories\AsteroidSpawnRequestRepository;
 use Orion\Modules\Asteroid\Services\AsteroidSpawnRequestService;
 
 Artisan::command('inspire', function () {
@@ -62,12 +61,16 @@ Artisan::command('actionqueue:processbatch', function () {
 
 Artisan::command('game:rebel-generate-all', function (
     RebelResourceService $resourceService,
-    RebelSpacecraftService $spacecraftService
+    RebelSpacecraftService $spacecraftService,
+    RebelDifficultyService $difficultyService
 ) {
+    $globalDifficulty = $difficultyService->calculateGlobalDifficulty();
+
     foreach (Rebel::all() as $rebel) {
-        $resourceService->generateResources($rebel);
-        $spacecraftService->spendResourcesForFleet($rebel);
+        $resourceService->generateResources($rebel, null, $globalDifficulty);
+        $spacecraftService->spendResourcesForFleet($rebel, $globalDifficulty);
     }
+
     $this->info('Ressourcen und Spacecrafts generiert!');
 })->purpose('Generiert Ressourcen und Raumschiffe für alle Rebels')->hourly();
 

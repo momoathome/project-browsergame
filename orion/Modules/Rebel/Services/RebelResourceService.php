@@ -20,69 +20,73 @@ class RebelResourceService
     ) {
     }
 
-    public function generateResources(Rebel $rebel, $ticks = null, ?float $globalDifficulty = null)
+    public function generateResources(Rebel $rebel, $ticks = null, ?float $globalDifficulty = null): void
     {
-        // Falls globalDifficulty nicht mitgegeben → selbst berechnen
         $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
-
         $difficulty = $rebel->difficulty_level + $globalDifficulty;
-        $rate = config('game.rebels.resources_per_tick', 10) * $difficulty; // Ressourcen pro Tick
 
+        $rate = config('game.rebels.resources_per_tick', 10) * $difficulty;
         $last = $rebel->last_interaction ?? now();
         $now = now();
-        $tickMinutes = config('game.rebels.tick_interval_minutes', 10); // Minuten pro Tick
-        
-        $minutes = $last->diffInMinutes($now); 
+
+        $tickMinutes = config('game.rebels.tick_interval_minutes', 10);
+        $minutes = $last->diffInMinutes($now);
         $ticks = $ticks ?? max(0, floor($minutes / $tickMinutes));
-        
+
         if ($ticks < 1) {
             return;
         }
 
-        $phase = $this->getGamePhase();
+        $phase = $this->getGamePhase($globalDifficulty);
         $faction = $rebel->faction;
         $ratios = $this->getScaledRatios($faction, $phase);
 
-        foreach (config('game.resources.resources') as $resource) {
-            $name = $resource['name'] ?? null;
-            if (!$name) continue;
+        // --- PRELOAD ALL RESOURCES OF THIS REBEL ---
+        $existingResources = RebelResource::where('rebel_id', $rebel->id)
+            ->get()
+            ->keyBy('resource_id');
 
-            $ratio = $ratios[$name] ?? 0.0;
-            $amount = round($rate * $ticks * $ratio);
+        $resourceIds = Resource::pluck('id', 'name')->toArray();
 
-            if ($amount < 1) continue;
+        $cap = $this->difficultyService->getResourceCap($rebel, $globalDifficulty);
 
-            $resourceId = $this->getResourceId($name);
-            $rebelResource = RebelResource::where('rebel_id', $rebel->id)
-                ->where('resource_id', $resourceId)
-                ->first();
+        DB::transaction(function () use ($ratios, $ticks, $rate, $rebel, $existingResources, $resourceIds, $cap) {
+            foreach (config('game.resources.resources') as $resource) {
+                $name = $resource['name'] ?? null;
+                if (!$name) continue;
 
-            $currentAmount = $rebelResource?->amount ?? 0;
+                $ratio = $ratios[$name] ?? 0.0;
+                $amount = round($rate * $ticks * $ratio);
+                if ($amount < 1) continue;
 
-            // Cap über DifficultyService
-            $cap = $this->difficultyService->getResourceCap($rebel, $globalDifficulty);
+                $resourceId = $resourceIds[$name] ?? null;
+                if (!$resourceId) continue;
 
-            $amountToAdd = min($amount, max(0, $cap - $currentAmount));
-            if ($amountToAdd < 1) continue;
+                $rebelResource = $existingResources[$resourceId] ?? null;
+                $currentAmount = $rebelResource?->amount ?? 0;
 
-            if ($rebelResource) {
-                $rebelResource->increment('amount', $amountToAdd);
-            } else {
-                RebelResource::create([
-                    'rebel_id' => $rebel->id,
-                    'resource_id' => $resourceId,
-                    'amount' => $amountToAdd,
-                ]);
+                $amountToAdd = min($amount, max(0, $cap - $currentAmount));
+                if ($amountToAdd < 1) continue;
+
+                if ($rebelResource) {
+                    $rebelResource->increment('amount', $amountToAdd);
+                } else {
+                    RebelResource::create([
+                        'rebel_id' => $rebel->id,
+                        'resource_id' => $resourceId,
+                        'amount' => $amountToAdd,
+                    ]);
+                }
             }
-        }
 
-        $rebel->last_interaction = $now;
-        $rebel->save();
+            $rebel->last_interaction = now();
+            $rebel->save();
+        });
     }
-    
-    public function getGamePhase(): string
+
+    public function getGamePhase(?float $globalDifficulty = null): string
     {
-        $globalDifficulty = $this->difficultyService->calculateGlobalDifficulty();
+        $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
 
         if ($globalDifficulty < 5) return 'early';
         if ($globalDifficulty < 10) return 'mid';

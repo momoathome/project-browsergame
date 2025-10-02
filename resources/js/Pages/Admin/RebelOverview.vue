@@ -22,6 +22,7 @@ const props = defineProps<{
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Difficulty</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Defeated Count</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Fleet cap</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Resource cap</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Last interaction</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Position</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Ressourcen</th>
@@ -34,9 +35,10 @@ const props = defineProps<{
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.faction }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.behavior }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.difficulty_level }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.difficulty_level }} / {{ rebel.difficulty_total }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.defeated_count }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.fleet_cap }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.resource_cap }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">{{ rebel.last_interaction ? new Date(rebel.last_interaction).toLocaleString() : 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">(x {{ rebel.x }}, y {{ rebel.y }})</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-light">

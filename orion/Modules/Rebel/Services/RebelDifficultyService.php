@@ -33,7 +33,8 @@ class RebelDifficultyService
      */
     public function getFleetCap(Rebel $rebel, float $globalDifficulty): int
     {
-        return intval(10 * ($rebel->difficulty_level + $globalDifficulty));
+        $base = $rebel->difficulty_level + $globalDifficulty;
+        return intval(10 * pow($base, 1.05));
     }
 
     /**
@@ -41,6 +42,6 @@ class RebelDifficultyService
      */
     public function getResourceCap(Rebel $rebel, float $globalDifficulty): int
     {
-        return intval(800 * ($rebel->difficulty_level + $globalDifficulty));
+        return intval(500 * ($rebel->difficulty_level + $globalDifficulty));
     }
 }

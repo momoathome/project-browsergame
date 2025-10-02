@@ -568,7 +568,7 @@ function drawFlightPaths() {
       ? 'rgba(255, 0, 0, 0.7)' // rot für Angriffe auf mich
       : mission.actionType === 'combat'
         ? 'rgba(0, 255, 255, 0.4)' // cyan für andere Kampfmissionen
-        : 'rgba(255, 255, 255, 0.2)'; // weiß für Mining-Missionen
+        : 'rgba(255, 255, 255, 0.25)'; // weiß für Mining-Missionen
 
     context.beginPath();
 

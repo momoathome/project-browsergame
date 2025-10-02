@@ -18,7 +18,7 @@ class RebelSpacecraftService
     ) {
     }
 
-    public function spendResourcesForFleet(Rebel $rebel, ?float $globalDifficulty = 0)
+    public function spendResourcesForFleet(Rebel $rebel, ?float $globalDifficulty = null)
     {
         $globalDifficulty = $globalDifficulty ?? $this->difficultyService->calculateGlobalDifficulty();
 
@@ -43,6 +43,7 @@ class RebelSpacecraftService
 
         // FleetCap dynamisch
         $fleetCap = $this->difficultyService->getFleetCap($rebel, $globalDifficulty);
+        Log::info("Rebel {$rebel->name} (Diff {$rebel->difficulty_level}, GlobalDiff {$globalDifficulty}) has total resources {$totalResources}, budget {$resourceBudget} (reserve {$reservePercent}%), avg ship cost {$avgShipCost}, fleet cap {$fleetCap}");
 
         $totalShips = max(2, min(floor($resourceBudget / $avgShipCost), $fleetCap));
 

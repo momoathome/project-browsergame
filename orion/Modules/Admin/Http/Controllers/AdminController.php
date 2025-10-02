@@ -20,7 +20,7 @@ use Orion\Modules\User\Services\UserAttributeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftService;
 use Orion\Modules\Building\Services\BuildingUpgradeService;
 use Orion\Modules\Spacecraft\Services\SpacecraftProductionService;
-
+use Orion\Modules\Rebel\Services\RebelService;
 
 class AdminController extends Controller
 {
@@ -38,6 +38,7 @@ class AdminController extends Controller
         private readonly AuthManager $authManager,
         private readonly ResetUserData $resetUserData,
         private readonly SetupInitialMarket $setupInitialMarket,
+        private readonly RebelService $rebelService,
     ) {
         if (!$this->authManager->user()->hasRole('admin')) {
             return redirect()->route('overview');
@@ -201,7 +202,7 @@ class AdminController extends Controller
 
     public function rebelOverview()
     {
-        $rebels = \Orion\Modules\Rebel\Models\Rebel::with('resources.resource', 'spacecrafts.details')->orderBy('id', 'asc')->get();
+        $rebels = $this->rebelService->getAllRebelsWithData();
 
         return Inertia::render('Admin/RebelOverview', [
             'rebels' => $rebels,

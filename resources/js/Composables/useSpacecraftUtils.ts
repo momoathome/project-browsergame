@@ -33,6 +33,41 @@ export function useSpacecraftUtils(
     return MaxAvailableUnits;
   };
 
+  const categorizeShips = (ships: Spacecraft[]) => {
+    const attackShips: Spacecraft[] = [];
+    const defenseShips: Spacecraft[] = [];
+
+    ships.forEach((ship) => {
+      const attack = ship.attack ?? 0;
+      const defense = ship.defense ?? 0;
+
+      if (attack > defense * 1.15) {
+        attackShips.push(ship);
+      } else if (defense > attack * 1.2) {
+        defenseShips.push(ship);
+      } else {
+        attackShips.push(ship);
+      }
+    });
+    return { attackShips, defenseShips };
+  };
+
+  // Nur Angreifer-Schiffe zurückgeben
+  const setOnlyAttackUnits = () => {
+    const attackUnits: { [key: string]: number } = {};
+    const ships = spacecrafts.value ?? [];
+    const { attackShips } = categorizeShips(ships);
+    const allowedTypes = getAllowedTypes();
+
+    attackShips.forEach((spacecraft) => {
+      if (allowedTypes.includes(spacecraft.type)) {
+        attackUnits[spacecraft.name] = spacecraft.count - (spacecraft.locked_count || 0);
+      }
+    });
+
+    return attackUnits;
+  };
+
   const setMinNeededUnits = () => {
     const MinNeededUnits: { [key: string]: number } = {};
 
@@ -44,9 +79,10 @@ export function useSpacecraftUtils(
     let remainingResources = asteroid.resources.reduce((total, resource) => total + resource.amount, 0);
 
     const allowedTypes = getAllowedTypes();
+    const ships = spacecrafts.value ?? [];
 
     if (asteroid.size === 'extreme') {
-      const titan = spacecrafts.value.find(s => s.name === 'Titan');
+      const titan = ships.find(s => s.name === 'Titan');
       if (titan && allowedTypes.includes(titan.type)) {
         const availableCount = Math.max(0, titan.count - (titan.locked_count || 0));
         if (availableCount > 0) {
@@ -59,18 +95,18 @@ export function useSpacecraftUtils(
     const RESOURCE_THRESHOLD = 20;
     
     const processSpacecrafts = (filterFn: (spacecraft: Spacecraft) => boolean) => {
-      spacecrafts.value
+      (spacecrafts.value ?? [])
         .filter(filterFn)
         .forEach((spacecraft: Spacecraft) => {
           if (remainingResources <= RESOURCE_THRESHOLD) {
             MinNeededUnits[spacecraft.name] = MinNeededUnits[spacecraft.name] || 0;
             return;
           }
-    
+
           const availableCount = Math.max(0, spacecraft.count - (spacecraft.locked_count || 0));
           // Berechne, wie viele Einheiten maximal sinnvoll sind
           let neededUnits = Math.ceil(remainingResources / spacecraft.cargo);
-    
+
           // Prüfe, ob nach dem Einsatz einer weiteren Einheit der Rest unter Threshold fällt
           while (
             neededUnits > 0 &&
@@ -78,9 +114,9 @@ export function useSpacecraftUtils(
           ) {
             neededUnits--;
           }
-    
+
           const usedUnits = Math.min(neededUnits, availableCount);
-    
+
           MinNeededUnits[spacecraft.name] = usedUnits;
           remainingResources -= usedUnits * spacecraft.cargo;
         });
@@ -94,6 +130,7 @@ export function useSpacecraftUtils(
 
   return {
     setMaxAvailableUnits,
-    setMinNeededUnits
+    setMinNeededUnits,
+    setOnlyAttackUnits
   };
 }

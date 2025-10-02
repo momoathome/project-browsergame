@@ -301,9 +301,11 @@ export interface Rebel {
   x: number;
   y: number;
   difficulty_level: number;
+  difficulty_total: number;
   last_interaction: string;
   defeated_count: number;
   fleet_cap: number;
+  resource_cap: number;
   fleet_growth_rate: number;
   loot_multiplier: number;
   adaptation_level: number;

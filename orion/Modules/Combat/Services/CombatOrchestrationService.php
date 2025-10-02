@@ -129,12 +129,15 @@ readonly class CombatOrchestrationService
         );
 
         try {
-            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $attackerSpacecrafts, $isRebelCombat, $actionQueueId) {
+            DB::transaction(function () use ($attacker, $defender, $attackerSpacecraftsCount, $defenderSpacecraftsCount, $result, $isRebelCombat, $actionQueueId) {
                 // Update spacecraft counts in database
                 $this->spacecraftService->updateSpacecraftsCount($attacker->id, $attackerSpacecraftsCount);
                 if ($isRebelCombat) {
                     $this->rebelService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount);
                     /* $this->rebelService->updateLastInteraction($defender->id); */
+                    if ($result->winner === 'attacker' && $defender instanceof Rebel) {
+                        $this->rebelService->incrementDefeatedCount($defender->id);
+                    }
                 } else {
                     $this->spacecraftService->updateSpacecraftsCount($defender->id, $defenderSpacecraftsCount); 
                 }

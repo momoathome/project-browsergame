@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\DB;
 use Orion\Modules\Rebel\Models\RebelResource;
 use Orion\Modules\Rebel\Models\RebelSpacecraft;
 use Orion\Modules\Rebel\Repositories\RebelRepository;
+use Orion\Modules\Rebel\Services\RebelDifficultyService;
 
 readonly class RebelService
 {
 
     public function __construct(
-        private readonly RebelRepository $rebelRepository
+        private readonly RebelRepository $rebelRepository,
+        private readonly RebelDifficultyService $difficultyService,
     ) {
     }
 
@@ -65,6 +67,28 @@ readonly class RebelService
     public function updateLastInteraction(int $id): void
     {
         $this->rebelRepository->updateLastInteraction($id);
+    }
+
+    public function incrementDefeatedCount(int $id): void
+    {
+        $this->rebelRepository->incrementDefeatedCount($id);
+    }
+
+    public function getAllRebelsWithData()
+    {
+        $globalDifficulty = $this->difficultyService->calculateGlobalDifficulty();
+        $rebels = $this->rebelRepository->getAllRebelsWithRelations()->sortBy('id');
+
+        $rebels = $rebels->values();
+        // Daten anreichern
+        $rebels->transform(function ($rebel) use ($globalDifficulty) {
+            $rebel->difficulty_total = $rebel->difficulty_level + $globalDifficulty;
+            $rebel->fleet_cap = $this->difficultyService->getFleetCap($rebel, $globalDifficulty);
+            $rebel->resource_cap = $this->difficultyService->getResourceCap($rebel, $globalDifficulty);
+            return $rebel;
+        });
+
+        return $rebels;
     }
 
 }

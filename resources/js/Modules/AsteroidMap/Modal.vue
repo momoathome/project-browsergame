@@ -110,6 +110,7 @@ const { miningDuration } = useAsteroidMining(
 const {
   setMaxAvailableUnits,
   setMinNeededUnits,
+  setOnlyAttackUnits
 } = useSpacecraftUtils(
   computed(() => props.content),
   actionType,
@@ -201,7 +202,7 @@ async function exploreAsteroid() {
 
 function fastExploreAsteroid() {
   const minUnits = setMinNeededUnits();
-  Object.keys(form.spacecrafts).forEach(key => {
+  Object.keys(minUnits).forEach(key => {
     form.spacecrafts[key] = minUnits[key] || 0;
   });
   exploreAsteroid();
@@ -216,8 +217,15 @@ function setMaxUnits() {
 
 function setMinUnits() {
   const minUnits = setMinNeededUnits();
-  Object.keys(form.spacecrafts).forEach(key => {
+  Object.keys(minUnits).forEach(key => {
     form.spacecrafts[key] = minUnits[key] || 0;
+  });
+}
+
+function setAttackUnits() {
+  const attackUnits = setOnlyAttackUnits();
+  Object.keys(attackUnits).forEach(key => {
+    form.spacecrafts[key] = attackUnits[key] || 0;
   });
 }
 
@@ -431,11 +439,11 @@ function availableCount(s) {
                       <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.attack) }}</p>
                       <AppTooltip :label="'combat'" position="bottom" class="!mt-1" />
                     </div>
-                    <div class="flex relative group items-center gap-2">
+<!--                     <div class="flex relative group items-center gap-2">
                       <img src="/images/defense.png" class="h-5" alt="defense" />
                       <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.defense) }}</p>
                       <AppTooltip :label="'defense'" position="bottom" class="!mt-1" />
-                    </div>
+                    </div> -->
                     <div class="flex relative group items-center gap-2">
                       <img src="/images/cargo.png" class="h-5" alt="cargo" />
                       <p class="font-medium text-sm text-slate-400">{{ numberFormat(totals.cargo) }}</p>
@@ -482,16 +490,22 @@ function availableCount(s) {
                   </div>
 
                   <div class="flex gap-2 z-10">
+                    <button v-if="props.content.type === 'rebel' || props.content.type === 'station'"
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-sm shadow"
+                      @click="setAttackUnits" title="choose all available units for this category">
+                      <img src="/images/combat.png" alt="combat" class="h-4 w-4 mr-1" />
+                      Atk
+                    </button>
                     <button
-                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-sm shadow"
                       @click="setMaxUnits" title="choose all available units for this category">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 12h16M12 4v16" />
                       </svg>
                       Max
                     </button>
-                    <button
-                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                    <button v-if="props.content.type === 'asteroid'"
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-sm shadow"
                       @click="setMinUnits" title="Set the minimum required units for this category">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16" />
@@ -499,7 +513,7 @@ function availableCount(s) {
                       Min
                     </button>
                     <button
-                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-base shadow"
+                      class="flex items-center px-3 py-1 gap-1 rounded-xl bg-slate-900/10 text-white border border-cyan-700/30 hover:bg-cyan-900/30 font-semibold text-sm shadow"
                       @click="resetSpacecraftsForm" title="Set all units to 0">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />

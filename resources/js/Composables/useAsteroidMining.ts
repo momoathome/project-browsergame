@@ -14,11 +14,11 @@ export function useAsteroidMining(
   const { spacecrafts } = useSpacecraftStore();
 
   const applyDiminishingReturns = (speed: number) => {
-    const baseValue = Math.min(1, speed);
-    let remainingValue = 0;
-    if (speed > 1) {
-      remainingValue = 0.85 * (Math.log10(speed) + 1);
-    }
+    if (speed <= 1) return Math.max(1, speed);
+
+    const baseValue = 1;
+    const remainingValue = 0.85 * (Math.log10(speed) + 1);
+
     return Math.max(1, baseValue + remainingValue);
   };
 
@@ -54,12 +54,23 @@ export function useAsteroidMining(
     const travelFactor = 1;
     const spacecraftFlightSpeed = 1;
 
-    const baseDuration = Math.max(10, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
+    const baseDuration = Math.max(60, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
     let calculatedDuration = Math.max(
       baseDuration,
       Math.floor(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor)
     );
     calculatedDuration = Math.floor(calculatedDuration / spacecraftFlightSpeed);
+
+    // --- Mining-Basiszeit nach Asteroidgröße ---
+    // (z. B. small=60s, medium=180s, large=600s -> kannst du aus config ziehen oder direkt im Asteroidmodell speichern)
+    let baseMiningTime = 0;
+    switch (asteroid.value.size) {
+      case 'small': baseMiningTime = 60; break;
+      case 'medium': baseMiningTime = 90; break;
+      case 'large': baseMiningTime = 180; break;
+      case 'extreme': baseMiningTime = 300; break;
+      default: baseMiningTime = 60; // fallback
+    }
 
     // Prüfen, ob mindestens ein Miner ausgewählt ist
     let totalMiningSpeed = 0;
@@ -77,13 +88,14 @@ export function useAsteroidMining(
       }
     }
 
-    if (
-      actionType.value === QueueActionType.MINING &&
-      hasMiner &&
-      totalMiningSpeed > 0
-    ) {
+    // --- Miningdauer anwenden ---
+    if (actionType.value === QueueActionType.MINING && hasMiner && totalMiningSpeed > 0) {
       const effectiveOperationSpeed = applyDiminishingReturns(totalMiningSpeed);
-      calculatedDuration = Math.max(10, Math.floor(calculatedDuration / (effectiveOperationSpeed / 5)));
+
+      // Miningzeit wird zur Reisedauer addiert
+      const miningTime = Math.max(10, Math.floor(baseMiningTime / effectiveOperationSpeed));
+
+      calculatedDuration += miningTime;
     }
 
     return timeFormat(calculatedDuration);
@@ -97,3 +109,4 @@ export function useAsteroidMining(
     miningDuration
   };
 }
+

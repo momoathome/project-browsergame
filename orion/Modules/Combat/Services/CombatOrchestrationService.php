@@ -4,21 +4,22 @@ namespace Orion\Modules\Combat\Services;
 
 use App\Models\User;
 use App\Services\UserService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Rebel\Models\Rebel;
+use Orion\Modules\Station\Models\Station;
 use Orion\Modules\Combat\Dto\CombatResult;
 use Orion\Modules\Combat\Dto\CombatRequest;
+use Orion\Modules\Rebel\Services\RebelService;
 use Orion\Modules\Combat\Dto\CombatPlanRequest;
 use Orion\Modules\Station\Services\StationService;
 use Orion\Modules\Actionqueue\Enums\QueueActionType;
 use Orion\Modules\Asteroid\Services\AsteroidExplorer;
-use Orion\Modules\Spacecraft\Services\SpacecraftService;
-use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
-use Orion\Modules\Actionqueue\Services\ActionQueueService;
 use Orion\Modules\Influence\Services\InfluenceService;
-use Orion\Modules\Rebel\Services\RebelService;
+use Orion\Modules\Spacecraft\Services\SpacecraftService;
+use Orion\Modules\Actionqueue\Services\ActionQueueService;
+use Orion\Modules\Spacecraft\Services\SpacecraftLockService;
 
 readonly class CombatOrchestrationService
 {
@@ -53,22 +54,20 @@ readonly class CombatOrchestrationService
             $defender,
             $attackerSpacecrafts,
         );
-    
-        // Formatiere und bereite den Kampf vor
-        $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
-        $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attacker->id);
-        $result = $this->asteroidExplorer->resolveSpacecraftsAndIds(collect($attackerSpacecrafts), $allSpacecrafts);
 
-        $spacecraftsWithDetails = $result['spacecraftsWithDetails'];
-        $filteredSpacecraftsById = $result['spacecraftsById'];
+        // Formatiere und bereite den Kampf vor
+        $attackerSpacecrafts = $this->spacecraftService->filterSpacecrafts($attackerSpacecrafts);
+        $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($attacker->id, $attackerSpacecrafts);
+        $filteredSpacecraftsById = $this->asteroidExplorer->resolveSpacecraftsAndIds($attackerSpacecrafts, $allSpacecrafts);
 
         $duration = $this->asteroidExplorer->calculateTravelDuration(
-            $spacecraftsWithDetails,
+            $allSpacecrafts,
             $attacker,
             $defenderStation,
             QueueActionType::ACTION_TYPE_COMBAT
         );
     
+        $combatRequest = $this->combatService->prepareCombatPlan($combatPlanRequest);
         // Füge den Kampf zur Warteschlange hinzu
         $queueEntry = $this->queueService->addToQueue(
             $attacker->id,
@@ -77,7 +76,7 @@ readonly class CombatOrchestrationService
             $duration,
             $combatRequest->toArray()
         );
-    
+
         // Sperre die Raumschiffe für andere Aktionen
         $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
     }

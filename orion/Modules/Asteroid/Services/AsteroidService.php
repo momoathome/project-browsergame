@@ -73,7 +73,7 @@ class AsteroidService
             $asteroid = $this->find($asteroidId);
 
             $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts($spacecrafts);
-            $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id);
+            $allSpacecrafts = $this->spacecraftService->getAllSpacecraftsByUserIdWithDetails($user->id, $filteredSpacecrafts);
             $locks = $this->spacecraftLockService->getLocksForUser($user->id);
             $dockSlots = $this->getDockSlotsForUser($user);
             $currentMiningOperations = $this->queueService
@@ -89,17 +89,16 @@ class AsteroidService
                 $currentMiningOperations
             );
 
-            $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
             $duration = $this->asteroidExplorer->calculateTravelDuration(
-                $result['spacecraftsWithDetails'],
+                $allSpacecrafts,
                 $user,
                 $asteroid,
                 QueueActionType::ACTION_TYPE_MINING,
                 $filteredSpacecrafts
             );
     
-            DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $result, $duration) {
-
+            $filteredSpacecraftsById = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
+            DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $filteredSpacecraftsById, $duration) {
                 $queueEntry = $this->queueService->addToQueue(
                     $user->id,
                     QueueActionType::ACTION_TYPE_MINING,
@@ -116,7 +115,7 @@ class AsteroidService
                 );
 
                 // Sperre die Raumschiffe für andere Aktionen
-                $this->spacecraftLockService->lockForQueue($queueEntry->id, $result['spacecraftsById']);
+                $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
             });
     
             return [
@@ -149,29 +148,32 @@ class AsteroidService
             try {
                 $asteroid = $this->find($mission['asteroid_id']);
                 $filteredSpacecrafts = $this->spacecraftService->filterSpacecrafts(collect($mission['spacecrafts']));
+                $missionSpacecrafts = $allSpacecrafts->filter(function ($sc) use ($filteredSpacecrafts) {
+                    return $filteredSpacecrafts->has($sc->details->name ?? $sc->details_id);
+                });
 
                 // Validierung mit bereits geladenen Daten
                 $this->validateMiningOperation(
                     $asteroid,
                     $filteredSpacecrafts,
-                    $allSpacecrafts,
+                    $missionSpacecrafts,
                     $locks,
                     $dockSlots,
                     $currentMiningOperations
                 );
 
                 // Auflösen & Dauer berechnen
-                $result = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
                 $duration = $this->asteroidExplorer->calculateTravelDuration(
-                    $result['spacecraftsWithDetails'],
+                    $missionSpacecrafts,
                     $user,
                     $asteroid,
                     QueueActionType::ACTION_TYPE_MINING,
                     $filteredSpacecrafts
                 );
 
+                $filteredSpacecraftsById = $this->asteroidExplorer->resolveSpacecraftsAndIds($missionSpacecrafts, $allSpacecrafts);
                 // Queue + Locks atomar schreiben
-                DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $result, $duration) {
+                DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $filteredSpacecraftsById, $duration) {
                     $queueEntry = $this->queueService->addToQueue(
                         $user->id,
                         QueueActionType::ACTION_TYPE_MINING,
@@ -187,7 +189,7 @@ class AsteroidService
                         ]
                     );
 
-                    $this->spacecraftLockService->lockForQueue($queueEntry->id, $result['spacecraftsById']);
+                    $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
                 });
 
                 // Zähler hoch → damit Folge-Missionen korrekte DockSlot-Prüfung haben

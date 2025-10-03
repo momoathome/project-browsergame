@@ -82,7 +82,7 @@ class AsteroidExplorer
      * - die passenden Spacecraft-Modelle mit Details
      * - das Mapping [details_id => amount]
      */
-    public function resolveSpacecraftsAndIds(Collection $spacecrafts, Collection $spacecraftsWithDetails): array
+    public function resolveSpacecraftsAndIds(Collection $spacecrafts, Collection $spacecraftsWithDetails)
     {
         // Mappe Name => details_id
         $nameToId = [];
@@ -97,11 +97,8 @@ class AsteroidExplorer
                 $mapped[$nameToId[$name]] = $amount;
             }
         }
-    
-        return [
-            'spacecraftsWithDetails' => $spacecraftsWithDetails,
-            'spacecraftsById' => $mapped,
-        ];
+
+        return $mapped;
     }
 
     public function calculateTravelDuration(
@@ -118,13 +115,17 @@ class AsteroidExplorer
 
         // Grundlegende Reisedauer berechnen
         $travelFactor = 1;
-        $baseDuration = max(10, round($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1)));
-        $calculatedDuration = max($baseDuration, (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor))  / $spacecraft_flight_speed;
+        $baseDuration = max(60, round($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1)));
+        $calculatedDuration = max(
+            $baseDuration,
+            (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor)
+        ) / $spacecraft_flight_speed;
 
-        // Aktionstyp-spezifische Zeitberechnung
-        if ($actionType !== null) {
-            $calculatedDuration = $this->applyOperationSpeedByActionType(
-                $calculatedDuration,
+
+        // Mining-/Salvaging-Zeit addieren
+        if ($actionType === QueueActionType::ACTION_TYPE_MINING || $actionType === QueueActionType::ACTION_TYPE_SALVAGING) {
+            $calculatedDuration += $this->applyOperationSpeedByActionType(
+                $target,
                 $actionType,
                 $spacecrafts,
                 $filteredSpacecrafts
@@ -137,44 +138,41 @@ class AsteroidExplorer
     /**
      * Findet die niedrigste Geschwindigkeit in einer Sammlung von Raumschiffen
      */
-    private function findLowestSpeedOfSpacecrafts($spacecrafts): int
+    private function findLowestSpeedOfSpacecrafts(Collection $spacecrafts): int
     {
-        $lowestSpeed = 0;
-    
-        foreach ($spacecrafts as $spacecraft) {
-            $speed = is_array($spacecraft) ? ($spacecraft['speed'] ?? 0) : ($spacecraft->speed ?? 0);
-            if ($speed > 0 && ($lowestSpeed === 0 || $speed < $lowestSpeed)) {
-                $lowestSpeed = $speed;
-            }
-        }
-    
-        return $lowestSpeed;
+        return $spacecrafts->pluck('speed')->filter()->min() ?? 1;
     }
 
     /**
-     * Berechnet die aktionsspezifische Operationsgeschwindigkeit und wendet sie auf die Dauer an
+     * Berechnet die aktionsspezifische Operationsdauer und gibt sie zurück
      */
     private function applyOperationSpeedByActionType(
-        int $duration,
+        Asteroid|Station|Rebel $target,
         QueueActionType $actionType,
         Collection $spacecrafts,
         ?Collection $filteredSpacecrafts = null
     ): int {
-        $totalMiningSpeed = $this->calculateTotalOperationSpeedByType($spacecrafts, 'Miner', $filteredSpacecrafts);
-        $totalSalvagingSpeed = $this->calculateTotalOperationSpeedByType($spacecrafts, 'Salvager', $filteredSpacecrafts);
-
-        if ($actionType === QueueActionType::ACTION_TYPE_MINING) {
-            // Anwendung von diminishing returns auf Mining-Geschwindigkeit
+        if ($actionType === QueueActionType::ACTION_TYPE_MINING && $target instanceof Asteroid) {
+            $totalMiningSpeed = $this->calculateTotalOperationSpeedByType($spacecrafts, 'Miner', $filteredSpacecrafts);
             $effectiveOperationSpeed = $this->applyDiminishingReturns($totalMiningSpeed);
-            $result = max(10, (int) ($duration / ($effectiveOperationSpeed / 5)));
-            return $result;
-        } else if ($actionType === QueueActionType::ACTION_TYPE_SALVAGING) {
-            // Anwendung von diminishing returns auf Salvaging-Geschwindigkeit
+
+            $baseMiningTime = $this->getBaseMiningTimeByAsteroid($target);
+            $miningTime = (int) ($baseMiningTime / $effectiveOperationSpeed);
+
+            return max(10, $miningTime);
+
+        } elseif ($actionType === QueueActionType::ACTION_TYPE_SALVAGING) {
+            $totalSalvagingSpeed = $this->calculateTotalOperationSpeedByType($spacecrafts, 'Salvager', $filteredSpacecrafts);
             $effectiveOperationSpeed = $this->applyDiminishingReturns($totalSalvagingSpeed);
-            return max(10, (int) ($duration / ($effectiveOperationSpeed / 5)));
+
+            // Salvaging hat eine fixe Basiszeit (z. B. 600s) → kannst du in config auslagern
+            $baseSalvagingTime = 120; // 2 min
+            $salvagingTime = (int) ($baseSalvagingTime / $effectiveOperationSpeed);
+
+            return max(10, $salvagingTime);
         }
 
-        return $duration;
+        return 0;
     }
 
     /**
@@ -182,19 +180,14 @@ class AsteroidExplorer
      */
     private function applyDiminishingReturns(int $speed): float
     {
-        // Basis-Geschwindigkeit (erster Miner/Salvager hat vollen Effekt)
-        $baseValue = min(1, $speed);
-
-        // Restliche Geschwindigkeit mit abnehmendem Rückgabewert
-        $remainingValue = 0;
-        if ($speed > 1) {
-            // Logarithmische Funktion für abnehmende Rückgabewerte
-            // Wir verwenden log10($speed) + 1, damit der Wert nicht zu stark abfällt
-            // Der Faktor 0.5 kann angepasst werden, um die Stärke des abnehmenden Effekts zu steuern
-            $remainingValue = 0.85 * (log10($speed) + 1);
+        if ($speed <= 1) {
+            return max(1, $speed);
         }
 
-        // Kombiniere Basis- und abnehmenden Wert, aber nie unter 1
+        // Erster hat vollen Effekt, Rest mit diminishing returns
+        $baseValue = 1;
+        $remainingValue = 0.85 * (log10($speed) + 1);
+
         return max(1, $baseValue + $remainingValue);
     }
 
@@ -210,9 +203,7 @@ class AsteroidExplorer
 
         foreach ($spacecrafts as $spacecraft) {
             if (isset($spacecraft->details) && $spacecraft->details->type === $type) {
-                // Anzahl der Raumschiffe aus den filteredSpacecrafts ermitteln
                 $count = 1;
-
                 if ($filteredSpacecrafts && $filteredSpacecrafts->has($spacecraft->details->name)) {
                     $count = $filteredSpacecrafts[$spacecraft->details->name];
                 }
@@ -223,6 +214,21 @@ class AsteroidExplorer
 
         return $totalSpeed;
     }
+
+    /**
+     * Basis-Miningzeit je nach Asteroidgröße
+     */
+    private function getBaseMiningTimeByAsteroid(Asteroid $asteroid): int
+    {
+        return match ($asteroid->size) {
+            'small'   => 60,   // 1 min
+            'medium'  => 90,   // 1.5 min
+            'large'   => 180,  // 3 min
+            'extreme' => 300,  // 5 min
+            default   => 60,   // Fallback 1 min
+        };
+    }
+
 
     private function calculateDistanceToTarget(User $user, Asteroid|Station|Rebel $target): int
     {

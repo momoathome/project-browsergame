@@ -76,7 +76,16 @@ class AsteroidController extends Controller
         $missions = $this->asteroidAutoMineService->prepareAutoMineMissions($user, $filter);
 
         return response()->json([
-            'missions' => $missions
+            'missions' => $missions->map(function ($mission) {
+                return [
+                    'asteroid' => $mission['asteroid'],
+                    'resources' => $mission['resources'],
+                    'duration' => $mission['duration'],
+                    // Spacecrafts wieder als Key/Value-Map für das Frontend
+                    'spacecrafts' => collect($mission['spacecrafts'])
+                        ->mapWithKeys(fn($s) => [$s['name'] => $s['count']])
+                ];
+            })
         ], 200);
     }
 

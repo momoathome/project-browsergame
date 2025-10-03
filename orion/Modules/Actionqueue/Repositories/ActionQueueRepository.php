@@ -89,7 +89,7 @@ readonly class ActionQueueRepository
                 ->lockForUpdate()
                 ->exists();
     
-            if ($exists && $actionType !== QueueActionType::ACTION_TYPE_MINING) {
+            if ($exists && $actionType !== QueueActionType::ACTION_TYPE_MINING && $actionType !== QueueActionType::ACTION_TYPE_COMBAT) {
                 $status = QueueStatusType::STATUS_PENDING;
             }
 

@@ -115,32 +115,34 @@ class AsteroidAutoMineService
     {
         $assignments = collect();
         $cargoAssigned = 0;
-
+    
         // Extrem-Asteroid benötigt Titan
-        if ($isExtreme && (!$minerPool->has('Titan') || $minerPool['Titan']['count'] <= 0)) {
+        if ($isExtreme && (!$minerPool->has('Titan') || $minerPool->get('Titan')['count'] <= 0)) {
             return collect();
         }
-
+    
         // Titan forcieren
-        if ($isExtreme && $minerPool->has('Titan') && $minerPool['Titan']['count'] > 0) {
+        if ($isExtreme && $minerPool->has('Titan') && $minerPool->get('Titan')['count'] > 0) {
+            $titan = $minerPool->get('Titan');
             $assignments->push([
                 'name' => 'Titan',
                 'count' => 1,
-                'cargo' => $minerPool['Titan']['cargo'],
-                'speed' => $minerPool['Titan']['speed'],
-                'operation_speed' => $minerPool['Titan']['operation_speed'],
+                'cargo' => $titan['cargo'],
+                'speed' => $titan['speed'],
+                'operation_speed' => $titan['operation_speed'],
             ]);
-            $cargoAssigned += $minerPool['Titan']['cargo'];
-            $minerPool['Titan']['count']--;
+            $cargoAssigned += $titan['cargo'];
+            $titan['count']--;
+            $minerPool->put('Titan', $titan);
         }
-
-        foreach ($minerPool as $name => &$data) {
+    
+        foreach ($minerPool as $name => $data) {
             if ($data['count'] <= 0) continue;
             if (strtolower($name) === 'titan' && $isSmall) continue;
-
+    
             $needed = min($data['count'], ceil(($totalResources - $cargoAssigned) / $data['cargo']));
             if ($needed <= 0) continue;
-
+    
             $assignments->push([
                 'name' => $name,
                 'count' => $needed,
@@ -149,15 +151,14 @@ class AsteroidAutoMineService
                 'operation_speed' => $data['operation_speed'],
                 'model' => $data['model'],
             ]);
-
+    
             $cargoAssigned += $needed * $data['cargo'];
-            $minerPool->put($name, array_merge($data, [
-                'count' => $data['count'] - $needed
-            ]));
-
+            $data['count'] -= $needed;
+            $minerPool->put($name, $data);
+    
             if ($cargoAssigned >= $totalResources) break;
         }
-
+    
         return $assignments;
     }
 

@@ -218,7 +218,6 @@ onMounted(() => {
     .listen('.reload.canvas', (data) => {
       if (Array.isArray(data.mined_asteroids)) {
         // delete from asteroidsQuadtree
-        console.log('Deleting asteroid from quadtree:', data.mined_asteroids);
         data.mined_asteroids.forEach(asteroid => {
           asteroidsQuadtree.value?.remove({ x: asteroid.x, y: asteroid.y });
           localAsteroids.value = localAsteroids.value.filter(a => a.id !== asteroid.id);
@@ -226,7 +225,6 @@ onMounted(() => {
       }
       // Neue Asteroiden hinzufügen
       if (Array.isArray(data.new_asteroids)) {
-        console.log('Adding new asteroids to quadtree:', data.new_asteroids);
         data.new_asteroids.forEach(newAsteroid => {
           asteroidsQuadtree.value?.insert({ x: newAsteroid.x, y: newAsteroid.y, data: newAsteroid });
           localAsteroids.value.push(newAsteroid);

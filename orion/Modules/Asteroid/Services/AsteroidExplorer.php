@@ -121,7 +121,6 @@ class AsteroidExplorer
             (int) ($distance / ($lowestSpeed > 0 ? $lowestSpeed : 1) * $travelFactor)
         ) / $spacecraft_flight_speed;
 
-
         // Mining-/Salvaging-Zeit addieren
         if ($actionType === QueueActionType::ACTION_TYPE_MINING || $actionType === QueueActionType::ACTION_TYPE_SALVAGING) {
             $calculatedDuration += $this->applyOperationSpeedByActionType(

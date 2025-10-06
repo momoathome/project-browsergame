@@ -47,7 +47,7 @@ class AsteroidRepository
         })->values();
     }
 
-    public function getRecentAsteroidMines(int $userId, int $limit = 10)
+    public function getRecentAsteroidMines(int $userId, int $limit = 25)
     {
         return AsteroidMiningLog::with(['user:id,name',])
             ->where('user_id', $userId)

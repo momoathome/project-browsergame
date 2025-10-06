@@ -63,25 +63,21 @@ class AsteroidAutoMineService
         $miningSpacecrafts = $this->spacecraftService
             ->getAllSpacecraftsByUserIdWithDetails($user->id)
             ->filter(fn($sc) => in_array($sc->details->type, ['Miner']) || $sc->details->name === 'Titan');
-
+        
         $locks = $this->spacecraftLockService->getLocksForUser($user->id)
             ->groupBy('spacecraft_details_id')
             ->map(fn($g) => $g->sum('amount'));
-
-        // verfügbare Schiffe inkl. Lock-Berechnung
-        $availableSpacecrafts = $miningSpacecrafts->mapWithKeys(function ($sc) use ($locks) {
+        
+        $availableSpacecrafts = collect();
+        foreach ($miningSpacecrafts as $sc) {
             $locked = $locks[$sc->details->id] ?? 0;
             $available = max(0, $sc->count - $locked);
-            return [$sc->details->name => [
-                'count' => $available,
-                'cargo' => (int)($sc->cargo ?? 0),
-                'speed' => $sc->speed ?? 1,
-                'operation_speed' => $sc->operation_speed ?? 1,
-                'locked_count' => $locked,
-                'total_count' => $sc->count,
-                'details' => $sc->details,
-            ]];
-        });
+            if ($available > 0) {
+                for ($i = 0; $i < $available; $i++) {
+                    $availableSpacecrafts->push($sc);
+                }
+            }
+        }
 
         $dockSlots = $this->asteroidService->getDockSlotsForUser($user);
         $currentMiningOperations = $this->queueService
@@ -98,14 +94,21 @@ class AsteroidAutoMineService
 
     private function buildMinerPool(Collection $availableSpacecrafts): Collection
     {
-        return $availableSpacecrafts->mapWithKeys(fn($sc, $name) =>
-            $sc['count'] > 0 ? [$name => [
-                'count' => $sc['count'],
-                'cargo' => $sc['cargo'],
-                'speed' => $sc['speed'],
-                'operation_speed' => $sc['operation_speed'],
-            ]] : []
-        );
+        return $availableSpacecrafts->mapWithKeys(function ($sc) {
+            if ($sc->count <= 0) {
+                return [];
+            }
+
+            return [
+                $sc->details->name => [
+                    'model' => $sc, 
+                    'count' => $sc->count,
+                    'cargo' => $sc->cargo,
+                    'speed' => $sc->speed,
+                    'operation_speed' => $sc->operation_speed,
+                ]
+            ];
+        });
     }
 
     private function assignMinersToAsteroid(Collection &$minerPool, $asteroid, int $totalResources, bool $isExtreme = false, bool $isSmall = false): Collection
@@ -144,10 +147,13 @@ class AsteroidAutoMineService
                 'cargo' => $data['cargo'],
                 'speed' => $data['speed'],
                 'operation_speed' => $data['operation_speed'],
+                'model' => $data['model'],
             ]);
 
             $cargoAssigned += $needed * $data['cargo'];
-            $data['count'] -= $needed;
+            $minerPool->put($name, array_merge($data, [
+                'count' => $data['count'] - $needed
+            ]));
 
             if ($cargoAssigned >= $totalResources) break;
         }
@@ -179,13 +185,19 @@ class AsteroidAutoMineService
                 return [$res->resource_type => $extractAmount];
             });
 
+            $missionSpacecrafts = $assignments->pluck('model')->filter();
+
             $missions->push([
                 'asteroid' => $asteroid,
                 'spacecrafts' => $assignments,
                 'resources' => $resourcesExtracted,
                 'duration' => $this->asteroidExplorer->calculateTravelDuration(
-                    $assignments, $user, $asteroid, QueueActionType::ACTION_TYPE_MINING
-                ),
+                    $missionSpacecrafts,
+                    $user,
+                    $asteroid,
+                    QueueActionType::ACTION_TYPE_MINING,
+                    $assignments->mapWithKeys(fn($a) => [$a['name'] => $a['count']])
+                )
             ]);
 
             if (++$missionCount >= $dockSlots) break;

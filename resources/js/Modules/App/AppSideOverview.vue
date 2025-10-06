@@ -113,7 +113,7 @@ const fleetSummary = computed(() => ({
   totalDefense: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.defense * spacecraft.count), 0),
   totalCargo: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.cargo * spacecraft.count), 0),
   totalMiner: spacecrafts.value?.reduce((acc, spacecraft) => acc + (spacecraft.type === 'Miner' ? spacecraft.count : 0), 0),
-  totalInOrbit: spacecrafts.value?.reduce((acc, item) => { acc += (item.locked_count || 0); return acc; }, 0),
+  totalInOrbit: totalInCombat.value + totalMinersInOperation.value,
   totalCrew: page.props.userAttributes?.find(item => item.attribute_name === 'total_units')?.attribute_value || 0,
 }));
 

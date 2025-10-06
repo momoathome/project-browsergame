@@ -30,8 +30,13 @@ readonly class CombatRepository
     public function getRecentCombatsForUser(int $userId, int $limit = 10)
     {
         return CombatLog::with(['attacker:id,name', 'defender'])
-            ->where('attacker_id', $userId)
-            ->orWhere('defender_id', $userId)
+            ->where(function ($query) use ($userId) {
+                $query->where('attacker_id', $userId)
+                      ->orWhere(function ($q) use ($userId) {
+                          $q->where('defender_id', $userId)
+                            ->where('defender_type', 'user');
+                      });
+            })
             ->orderBy('date', 'desc')
             ->limit($limit)
             ->get();

@@ -77,11 +77,6 @@ class AsteroidExplorer
             ->get();
     }
 
-    /**
-     * Liefert zu einer [name => amount]-Liste:
-     * - die passenden Spacecraft-Modelle mit Details
-     * - das Mapping [details_id => amount]
-     */
     public function resolveSpacecraftsAndIds(Collection $spacecrafts, Collection $spacecraftsWithDetails)
     {
         // Mappe Name => details_id

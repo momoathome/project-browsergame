@@ -117,7 +117,7 @@ class AsteroidService
                 // Sperre die Raumschiffe für andere Aktionen
                 $this->spacecraftLockService->lockForQueue($queueEntry->id, $filteredSpacecraftsById);
             });
-    
+
             return [
                 'success' => true,
                 'message' => "Mining operation for asteroid {$asteroid->name} successfully started.",
@@ -171,7 +171,7 @@ class AsteroidService
                     $filteredSpacecrafts
                 );
 
-                $filteredSpacecraftsById = $this->asteroidExplorer->resolveSpacecraftsAndIds($missionSpacecrafts, $allSpacecrafts);
+                $filteredSpacecraftsById = $this->asteroidExplorer->resolveSpacecraftsAndIds($filteredSpacecrafts, $allSpacecrafts);
                 // Queue + Locks atomar schreiben
                 DB::transaction(function () use ($user, $asteroid, $filteredSpacecrafts, $filteredSpacecraftsById, $duration) {
                     $queueEntry = $this->queueService->addToQueue(

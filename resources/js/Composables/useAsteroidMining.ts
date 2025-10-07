@@ -1,3 +1,4 @@
+
 import { usePage } from '@inertiajs/vue3';
 import { timeFormat } from '@/Utils/format';
 import type { Asteroid } from '@/types/types';
@@ -13,14 +14,38 @@ export function useAsteroidMining(
 ) {
   const { spacecrafts } = useSpacecraftStore();
 
-  const applyDiminishingReturns = (speed: number) => {
-    if (speed <= 1) return Math.max(1, speed);
+  // Backend-Formel: Diminishing Returns
+  function applyDiminishingReturns(spacecraftsForm: any, spacecraftsArr: any[]) {
+    const miners: number[] = [];
+    for (const name in spacecraftsForm) {
+      const count = spacecraftsForm[name];
+      if (count > 0) {
+        const sc = spacecraftsArr.find(s => s.name === name && s.type === 'Miner');
+        if (sc) {
+          for (let i = 0; i < count; i++) {
+            miners.push(sc.operation_speed || 1);
+          }
+        }
+      }
+    }
+    miners.sort((a, b) => b - a);
+    let effectiveSpeed = 0;
+    for (let i = 0; i < miners.length; i++) {
+      effectiveSpeed += miners[i] * Math.pow(0.85, i);
+    }
+    return Math.max(1, Math.round(effectiveSpeed * 100) / 100);
+  }
 
-    const baseValue = 1;
-    const remainingValue = 0.85 * (Math.log10(speed) + 1);
-
-    return Math.max(1, baseValue + remainingValue);
-  };
+  // Backend-Formel: OperationValue je nach Asteroidgröße
+  function getOperationValueByAsteroid(size: string): number {
+    switch (size) {
+      case 'small': return 300;
+      case 'medium': return 600;
+      case 'large': return 1200;
+      case 'extreme': return 2400;
+      default: return 300;
+    }
+  }
 
   const miningDuration = computed(() => {
     if (!asteroid.value) return '00:00';
@@ -50,55 +75,34 @@ export function useAsteroidMining(
       Math.pow(userStation.y - asteroid.value.y, 2)
     );
 
-    // Grundlegende Reisedauer berechnen
-    const travelFactor = 1;
-    const spacecraftFlightSpeed = 1;
+    // Backend-Formel: travelFactor und spacecraftFlightSpeed ggf. aus Config holen
+    const travelFactor = 1; // ggf. dynamisch machen
+    const spacecraftFlightSpeed = 1; // ggf. dynamisch machen
 
-    const baseDuration = Math.max(60, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
-    let calculatedDuration = Math.max(
-      baseDuration,
-      Math.floor(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor)
-    );
-    calculatedDuration = Math.floor(calculatedDuration / spacecraftFlightSpeed);
-
-    // --- Mining-Basiszeit nach Asteroidgröße ---
-    // (z. B. small=60s, medium=180s, large=600s -> kannst du aus config ziehen oder direkt im Asteroidmodell speichern)
-    let baseMiningTime = 0;
-    switch (asteroid.value.size) {
-      case 'small': baseMiningTime = 60; break;
-      case 'medium': baseMiningTime = 90; break;
-      case 'large': baseMiningTime = 180; break;
-      case 'extreme': baseMiningTime = 300; break;
-      default: baseMiningTime = 60; // fallback
-    }
+    const baseDuration = Math.max(60, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor));
+    let calculatedDuration = baseDuration / spacecraftFlightSpeed;
 
     // Prüfen, ob mindestens ein Miner ausgewählt ist
-    let totalMiningSpeed = 0;
     let hasMiner = false;
-
     for (const spacecraftName in spacecraftsForm) {
       const count = spacecraftsForm[spacecraftName];
       if (count > 0) {
         const spacecraft = spacecrafts.value.find(s => s.name === spacecraftName);
         if (spacecraft && spacecraft.type === 'Miner') {
-          const opSpeed = spacecraft.operation_speed || 1;
-          totalMiningSpeed += count * opSpeed;
           hasMiner = true;
+          break;
         }
       }
     }
 
-    // --- Miningdauer anwenden ---
-    if (actionType.value === QueueActionType.MINING && hasMiner && totalMiningSpeed > 0) {
-      const effectiveOperationSpeed = applyDiminishingReturns(totalMiningSpeed);
-
-      // Miningzeit wird zur Reisedauer addiert
-      const miningTime = Math.max(10, Math.floor(baseMiningTime / effectiveOperationSpeed));
-
-      calculatedDuration += miningTime;
+    if (actionType.value === QueueActionType.MINING && hasMiner) {
+      const effectiveOperationSpeed = applyDiminishingReturns(spacecraftsForm, spacecrafts.value);
+      const operationValue = getOperationValueByAsteroid(asteroid.value.size);
+      const miningTime = Math.round((operationValue / Math.max(1, effectiveOperationSpeed)) * 60);
+      calculatedDuration += Math.max(10, miningTime);
     }
 
-    return timeFormat(calculatedDuration);
+    return timeFormat(Math.round(calculatedDuration));
   });
 
   return {

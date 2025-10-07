@@ -1,7 +1,7 @@
 <?php
 
-$asteroid_count = 7000;
-$asteroid_density = 30;                                     // kleinere Zahl = dichter besiedelt
+$asteroid_count = 6000;
+$asteroid_density = 35;                                     // kleinere Zahl = dichter besiedelt
 $universe_size = $asteroid_count * $asteroid_density;       // Größe des Universums
 
 return [
@@ -10,6 +10,8 @@ return [
     'building_produce_speed' => 1.0,
     'spacecraft_produce_speed' => 1.0,
     'spacecraft_flight_speed' => 1.0,
+    'spacecraft_combat_travel_factor' => 3.5,           // Faktor für die Reisezeitberechnung (je höher, desto länger die Reisen)
+    'spacecraft_mining_travel_factor' => 1.0,           // Faktor für die Reisezeitberechnung bei Mining (je höher, desto länger die Reisen)
 
     /* Universe */
     'size' => $universe_size,                           // Größe des Universums

@@ -72,10 +72,11 @@ class AsteroidAutoMineService
         foreach ($miningSpacecrafts as $sc) {
             $locked = $locks[$sc->details->id] ?? 0;
             $available = max(0, $sc->count - $locked);
+
             if ($available > 0) {
-                for ($i = 0; $i < $available; $i++) {
-                    $availableSpacecrafts->push($sc);
-                }
+                $clone = clone $sc;
+                $clone->count = $available;
+                $availableSpacecrafts->push($clone);
             }
         }
 

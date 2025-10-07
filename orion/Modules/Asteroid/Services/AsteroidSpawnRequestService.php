@@ -34,7 +34,7 @@ readonly class AsteroidSpawnRequestService
         foreach ($grouped as $userRequests) {
             $user = $userRequests[0]->user;
             $station = $user->stations->first();
-            $scanRange = 6000 + $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::SCAN_RANGE)->attribute_value ?? 0;
+            $scanRange = 10000 + $this->userAttributeService->getSpecificUserAttribute($user->id, UserAttributeType::SCAN_RANGE)->attribute_value ?? 0;
 
             // Anzahl der Requests = Anzahl der zu generierenden Asteroiden
             $count = count($userRequests);

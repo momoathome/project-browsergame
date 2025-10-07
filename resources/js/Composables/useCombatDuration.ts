@@ -4,12 +4,18 @@ import { timeFormat } from '@/Utils/format';
 import type { Station, Rebel } from '@/types/types';
 import type { Ref, ComputedRef } from 'vue';
 import { useSpacecraftStore } from '@/Composables/useSpacecraftStore';
+import { QueueActionType } from '@/types/actionTypes';
 
 export function useCombatDuration(
   target: Ref<Station | Rebel>,
-  spacecraftsForm: any
+  spacecraftsForm: any,
+  actionType: Ref<QueueActionType> | ComputedRef<QueueActionType> = ref(QueueActionType.COMBAT)
 ) {
   const { spacecrafts } = useSpacecraftStore();
+
+  const COMBAT_TRAVEL_FACTOR = 3.5;
+  const MINING_TRAVEL_FACTOR = 1.0;
+  const SPACECRAFT_FLIGHT_SPEED = 1.0;
 
   const combatDuration = computed(() => {
     if (!target.value) return '00:00';
@@ -37,16 +43,14 @@ export function useCombatDuration(
       Math.pow(userStation.y - target.value.y, 2)
     );
 
-    const travelFactor = 1;
-    const spacecraftFlightSpeed = 1;
+    // travelFactor abhängig vom actionType
+    let travelFactor = COMBAT_TRAVEL_FACTOR;
+    if (actionType.value === QueueActionType.MINING || actionType.value === QueueActionType.SALVAGING) {
+      travelFactor = MINING_TRAVEL_FACTOR;
+    }
 
-    const baseDuration = Math.max(60, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1)));
-    let calculatedDuration = Math.max(
-      baseDuration,
-      Math.floor(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor)
-    );
-
-    calculatedDuration = Math.floor(calculatedDuration / spacecraftFlightSpeed);
+    const baseDuration = Math.max(60, Math.round(distance / (lowestSpeed > 0 ? lowestSpeed : 1) * travelFactor));
+    let calculatedDuration = Math.floor(baseDuration / SPACECRAFT_FLIGHT_SPEED);
 
     return timeFormat(calculatedDuration);
   });
